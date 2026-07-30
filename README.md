@@ -61,6 +61,8 @@ En **Configuración → Contactar a RouteHub**, cada usuario puede enviar fallas
 
 Avance aproximado: **60%**. Ya existen pantallas y formularios locales para contactos y solicitudes, además del canal de soporte para usuarios. Falta conectar Supabase, autocomplete, permisos de Counter Sales y asignación persistente a rutas.
 
+> **Pendiente antes de producción:** reactivar el middleware de autenticación de Google. Actualmente está desactivado temporalmente para desarrollo del CEO.
+
 El MVP no incluye optimización automática ni SMS.
 
 ## Funciones futuras opcionales
