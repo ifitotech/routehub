@@ -1,0 +1,11 @@
+{
+  "name": "RouteHub",
+  "short_name": "RouteHub",
+  "description": "Rutas simples para equipos de entrega",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#135dcc",
+  "lang": "es",
+  "icons": []
+}
