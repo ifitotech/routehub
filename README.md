@@ -65,6 +65,8 @@ Avance aproximado: **60%**. Ya existen pantallas y formularios locales para cont
 
 El MVP no incluye optimización automática ni SMS.
 
+Los estados oficiales son: rutas `draft`, `published`, `active`, `paused`, `completed`, `cancelled`; paradas `pending`, `active`, `completed`, `issue`, `skipped`, `cancelled`. La configuración puede definirse por empresa en `company_settings` y sobrescribirse por sucursal en `branch_settings`.
+
 ## Funciones futuras opcionales
 
 - **Packing list por ruta o parada:** quien crea la ruta podrá adjuntar una foto o PDF. El driver podrá abrirlo desde la parada para verificar lo que recoge o entrega.
