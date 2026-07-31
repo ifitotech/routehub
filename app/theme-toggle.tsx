@@ -1,0 +1,5 @@
+'use client'
+import {useEffect,useState} from 'react'
+import {Moon,Sun,Monitor} from 'lucide-react'
+type Theme='auto'|'light'|'dark'
+export default function ThemeToggle(){const[theme,setTheme]=useState<Theme>('auto');useEffect(()=>{const saved=(localStorage.getItem('routehub-theme') as Theme)||'auto';setTheme(saved);apply(saved)},[]);const apply=(value:Theme)=>{const dark=value==='dark'||(value==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=value;document.documentElement.classList.toggle('dark',dark)};const change=()=>{const next:Theme=theme==='auto'?'light':theme==='light'?'dark':'auto';setTheme(next);localStorage.setItem('routehub-theme',next);apply(next)};const Icon=theme==='dark'?Moon:theme==='light'?Sun:Monitor;return <button className="theme-switch" onClick={change} aria-label={`Tema ${theme}. Cambiar tema`} title="Cambiar tema"><Icon size={17}/><span>{theme==='auto'?'Auto':theme==='light'?'Claro':'Oscuro'}</span></button>}
