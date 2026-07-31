@@ -114,3 +114,5 @@ html.dark{--color-background:#101827;--color-surface:#182436;--color-text:#edf3f
 html.dark .stat-card{background:var(--color-surface);border-color:var(--color-border);color:var(--color-text)}
 html.dark .stat-card .stat-link{color:#8db8ff}
 html.dark .dashboard-tip{color:var(--color-text)}
+html.dark .role-list b,html.dark .role-list small,html.dark .back-button,html.dark .role-list>a>svg{color:var(--color-text)}
+html.dark .role-list small{color:var(--color-muted)}
