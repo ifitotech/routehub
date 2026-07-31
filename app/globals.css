@@ -29,3 +29,38 @@ input,select,textarea{min-height:48px;max-width:100%}
   footer{flex-wrap:wrap;gap:8px}
 }
 @media(orientation:landscape) and (max-height:600px){.shell{padding-top:12px;padding-bottom:20px}.summary{padding:12px 16px}.tabs{margin:10px 0}.card{padding:12px}}
+
+/* Visual organization pass: consistent hierarchy without changing routes */
+:root{--blue:#135dcc;--blue-dark:#0d47a1;--ink:#142338;--muted-strong:#53657a;--line:#dbe3ed;--surface:#fff;--canvas:#f5f7fa}
+body{background:var(--canvas);color:var(--ink);line-height:1.45}
+.shell{max-width:960px;padding:30px 24px 48px}
+h1{font-size:clamp(26px,4vw,34px);letter-spacing:-.02em;line-height:1.15;margin:8px 0 26px}
+h2{font-size:22px;letter-spacing:-.01em;margin:0 0 14px}
+h3{line-height:1.25}
+.topbar{gap:18px;margin-bottom:18px}
+.head-actions{gap:10px}
+.head-actions select,.theme{min-height:44px;border-radius:10px;padding:9px 12px}
+.summary{min-height:104px;padding:22px 24px;border-radius:18px;background:linear-gradient(135deg,var(--blue),#1f6bd9);box-shadow:0 8px 22px #135dcc22}
+.summary strong{font-size:24px}
+.tabs{gap:2px;margin:24px 0 28px;border-bottom:1px solid var(--line)}
+.tabs button{min-height:50px;padding:13px 18px;border-radius:10px 10px 0 0;font-weight:600}
+.tabs button:hover{background:#eaf2ff;color:var(--blue)}
+.section-head{margin:24px 0 14px;align-items:center}
+.section-head .primary{box-shadow:0 4px 10px #135dcc2b}
+.primary{min-height:48px;padding:12px 17px;border-radius:11px;background:var(--blue);transition:background .15s,transform .15s}
+.primary:hover{background:var(--blue-dark);transform:translateY(-1px)}
+.card{border-color:var(--line);border-radius:16px;padding:20px;box-shadow:0 3px 12px #1423380b}
+.cards{gap:16px}
+.card-top{gap:12px}
+.label{font-size:12px;letter-spacing:.02em;text-transform:uppercase}
+.muted{color:var(--muted-strong)}
+.form{gap:13px}
+.form label{display:grid;gap:6px;font-weight:700;color:var(--ink)}
+.form input,.form select,.form textarea,input,select,textarea{border:1px solid #cbd7e5;border-radius:10px;background:var(--surface);padding:12px 13px;min-height:48px;color:var(--ink)}
+.form input:focus,.form select:focus,.form textarea:focus,input:focus,select:focus,textarea:focus{outline:3px solid #135dcc26;border-color:var(--blue)}
+.quick{gap:12px}
+.quick button,.assign{min-height:48px;border-radius:11px}
+.assign{padding:11px 14px}
+footer{border-top:1px solid var(--line);padding-top:18px}
+@media(min-width:760px){.form-grid{gap:18px}.form-grid>.card{min-width:0}.quick{grid-template-columns:1fr 1fr}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.shell{padding:18px 14px 34px}.topbar{align-items:flex-start}.head-actions{flex-wrap:wrap;justify-content:flex-end}.summary{min-height:92px;padding:17px}.tabs{margin:16px 0 22px}.tabs button{padding:11px 13px}.section-head{align-items:stretch;flex-direction:column}.section-head .primary{width:100%;justify-content:center}.card{padding:16px}.quick{grid-template-columns:1fr}.route-stop{align-items:flex-start;gap:12px}.route-stop>div{display:flex;flex-wrap:wrap;gap:6px}.route-stop button{margin:0}}
