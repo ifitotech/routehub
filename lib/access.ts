@@ -1,8 +1,4 @@
-export type Role = 'branch_manager'|'operations_manager'|'sales_representative'|'counter_sales'|'driver'
-
-export const canManageUsers = (role: Role) => role === 'branch_manager'
-export const canManageRoutes = (role: Role) => ['branch_manager','operations_manager','sales_representative'].includes(role)
-export const canCreateRequests = (role: Role) => ['branch_manager','operations_manager','sales_representative','counter_sales'].includes(role)
-export const canExecuteStops = (role: Role) => role === 'driver'
-
-/** Never use client-provided role values for authorization; enforce the same rules in Supabase RLS. */
+import {getSupabase} from './supabase'
+export type AppRole='branch_manager'|'operations_manager'|'sales_representative'|'counter_sales'|'driver'|'ceo'
+export type AccessProfile={role:AppRole;isCeo:boolean;canManageRoutes:boolean;canViewReports:boolean;canViewAdmin:boolean;canCreateRequests:boolean;canDrive:boolean}
+export async function getAccessProfile():Promise<AccessProfile>{const s=getSupabase();const{data:user}=await s.auth.getUser();if(!user.user)throw new Error('Not signed in');const{data:membership}=await s.from('company_users').select('role').eq('user_id',user.user.id).maybeSingle();const{data:admin}=await s.from('platform_admins').select('user_id').eq('user_id',user.user.id).maybeSingle();const isCeo=!!admin;const role=(isCeo?'ceo':membership?.role||'counter_sales') as AppRole;return{role,isCeo,canManageRoutes:isCeo||['branch_manager','operations_manager','sales_representative'].includes(role),canViewReports:isCeo||['branch_manager','operations_manager','sales_representative'].includes(role),canViewAdmin:isCeo,canCreateRequests:isCeo||['branch_manager','operations_manager','sales_representative','counter_sales'].includes(role),canDrive:isCeo||role==='driver'}}
