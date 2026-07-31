@@ -1,0 +1,4 @@
+'use client'
+import Link from 'next/link'
+import {Home,Route,Truck,ClipboardList,BarChart3,ShieldCheck,Settings} from 'lucide-react'
+export default function QuickNav(){return <nav className="quick-nav" aria-label="Accesos rápidos"><Link href="/" title="Dashboard"><Home size={18}/><span>Inicio</span></Link><Link href="/routes" title="Crear ruta"><Route size={18}/><span>Rutas</span></Link><Link href="/driver" title="Driver"><Truck size={18}/><span>Driver</span></Link><Link href="/requests" title="Solicitudes"><ClipboardList size={18}/><span>Solicitudes</span></Link><Link href="/reports" title="Reportes"><BarChart3 size={18}/><span>Reportes</span></Link><Link href="/admin" title="CEO Admin"><ShieldCheck size={18}/><span>Admin</span></Link><Link href="/settings/contact" title="Settings"><Settings size={18}/><span>Settings</span></Link></nav>}
