@@ -116,3 +116,6 @@ html.dark .stat-card .stat-link{color:#8db8ff}
 html.dark .dashboard-tip{color:var(--color-text)}
 html.dark .role-list b,html.dark .role-list small,html.dark .back-button,html.dark .role-list>a>svg{color:var(--color-text)}
 html.dark .role-list small{color:var(--color-muted)}
+/* RouteHub brand mark: uses the existing PWA icon everywhere the wordmark appears. */
+.brand{display:inline-flex;align-items:center;gap:9px}
+.brand::before{content:"";width:28px;height:28px;display:inline-block;border-radius:8px;background:#135dcc url('/icon-192.svg') center/cover no-repeat;box-shadow:0 3px 8px rgba(19,93,204,.22)}
