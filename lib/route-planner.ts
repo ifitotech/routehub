@@ -1,0 +1,11 @@
+export type MissionStatus='pending'|'active'|'paused'|'completed'|'issue'|'cancelled'
+export type Mission={id:string;position:number;status:MissionStatus;type:string;origin_address?:string|null;origin_name?:string|null;destination_address?:string|null;destination_name?:string|null;previous_route_id?:string|null;priority?:string|null}
+export function canReorder(m:Mission){return !['completed','cancelled'].includes(m.status)}
+export function recalculatePositions(ms:Mission[]){return ms.map((m,i)=>({...m,position:i+1}))}
+export function reorderMissions(ms:Mission[],from:number,to:number){if(from===to)return recalculatePositions(ms);const source=ms[from];if(!source||!canReorder(source))return ms;const copy=ms.slice();copy.splice(from,1);copy.splice(Math.max(0,Math.min(to,copy.length)),0,source);return relinkOrigins(recalculatePositions(copy))}
+export function resolveOrigin(m:Mission,ordered:Mission[],branch?:{name:string;address?:string|null},lastLocation?:string){if(m.origin_address)return m.origin_address;if(m.origin_name==='driver_location')return lastLocation||'';if(m.origin_name==='branch')return branch?.address||'';if(m.previous_route_id){const previous=ordered.find(x=>x.id===m.previous_route_id);return previous?.destination_address||''}return ''}
+export function relinkOrigins(ms:Mission[]){return ms.map((m,i)=>{if(m.origin_name!=='previous_route')return m;const previous=ms[i-1];return {...m,previous_route_id:previous?.id||null,origin_address:previous?.destination_address||''}})}
+export function insertUrgent(ms:Mission[],newMission:Mission){const first=Math.max(0,ms.findIndex(m=>canReorder(m)));return relinkOrigins(recalculatePositions([...ms.slice(0,first),{...newMission,priority:'urgent',status:newMission.status||'pending'},...ms.slice(first)]))}
+export function pauseCurrent(ms:Mission[]){return ms.map((m,i)=>i===ms.findIndex(x=>x.status==='active')?{...m,status:'paused'}:m)}
+export function currentMission(ms:Mission[]){return ms.find(m=>m.status==='active')||ms.find(m=>m.status==='pending')||null}
+export function nextMissions(ms:Mission[]){const current=currentMission(ms);return ms.filter(m=>m.id!==current?.id&&['pending','paused'].includes(m.status)).sort((a,b)=>a.position-b.position)}
