@@ -101,6 +101,7 @@ html.dark{--color-background:#101827;--color-surface:#182436;--color-text:#edf3f
 /* Route workspace navigation */
 .route-hub-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
 .route-hub-link{display:flex;flex-direction:column;gap:5px;padding:15px 16px;border:1px solid var(--color-border);border-radius:16px;background:var(--color-surface);color:var(--color-text);text-decoration:none;box-shadow:var(--shadow-card);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.route-hub-link{font:inherit;text-align:left;cursor:pointer;width:100%}
 .route-hub-link:hover,.route-hub-link:focus-visible{transform:translateY(-2px);border-color:var(--color-primary);box-shadow:0 8px 22px rgba(20,70,140,.12);outline:none}
 .route-hub-link small{color:var(--color-muted);line-height:1.35}
 .route-hub-link.active{border-color:var(--color-primary);background:#eef5ff}
