@@ -10,6 +10,7 @@ export default function QuickNav(){
   if(access?.canDrive&&!access?.canManageRoutes&&!access?.canViewAdmin){return <nav className="quick-nav driver-nav" aria-label="Navegacion del Driver"><Link href="/driver" title="Inicio"><Truck size={18}/><span>Inicio</span></Link><Link href="/reports" title="Historial"><ClipboardList size={18}/><span>Historial</span></Link><Link href="/driver/settings" title="Settings"><Settings size={18}/><span>Settings</span></Link></nav>}
   const items=[
     {href:'/',label:'Inicio',icon:Home,show:true},
+    {href:'/counter',label:'Counter',icon:ClipboardList,show:access?.role==='counter_sales'},
     {href:'/contacts',label:'Contactos',icon:Users,show:!!access?.canCreateRequests},
     {href:'/routes',label:'Rutas',icon:Route,show:!!access?.canManageRoutes},
     {href:'/manager',label:'Manager',icon:Briefcase,show:!!access?.isCeo},
