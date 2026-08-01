@@ -8,8 +8,9 @@ export default function QuickNav(){
   const[access,setAccess]=useState<AccessProfile|null>(null)
   useEffect(()=>{getAccessProfile().then(setAccess).catch(()=>setAccess(null))},[])
   if(access?.canDrive&&!access?.canManageRoutes&&!access?.canViewAdmin){return <nav className="quick-nav driver-nav" aria-label="Navegacion del Driver"><Link href="/driver" title="Inicio"><Truck size={18}/><span>Inicio</span></Link><Link href="/reports" title="Historial"><ClipboardList size={18}/><span>Historial</span></Link><Link href="/driver/settings" title="Settings"><Settings size={18}/><span>Settings</span></Link></nav>}
+  const homeHref=access?.isCeo?'/admin':access?.role==='counter_sales'?'/counter':access?.canManageRoutes?'/manager':'/'
   const items=[
-    {href:'/',label:'Inicio',icon:Home,show:true},
+    {href:homeHref,label:'Inicio',icon:Home,show:true},
     {href:'/counter',label:'Counter',icon:WalletCards,show:access?.role==='counter_sales'},
     {href:'/contacts',label:'Contactos',icon:Users,show:!!access?.canCreateRequests},
     {href:'/routes',label:'Rutas',icon:Route,show:!!access?.canManageRoutes},
