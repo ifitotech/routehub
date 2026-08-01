@@ -19,6 +19,6 @@ export default function QuickNav(){
     {href:'/settings/contact',label:'Settings',icon:Settings,show:true}
   ]
   const visible=items.filter(i=>i.show||access?.isCeo)
-  const navItems=access?.isCeo?visible:visible.slice(0,5)
+  const navItems=access?.isCeo||access?.canManageRoutes?visible:visible.slice(0,5)
   return <nav className="quick-nav" aria-label="Navegacion principal">{navItems.map(({href,label,icon:Icon})=><Link href={href} title={label} key={href}><Icon size={18}/><span>{label}</span></Link>)}</nav>
 }
