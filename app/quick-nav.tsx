@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect,useState} from 'react'
-import {Home,Route,BarChart3,Settings,ShieldCheck,Truck,Users,ClipboardList} from 'lucide-react'
+import {Home,Route,BarChart3,Settings,ShieldCheck,Truck,Users,ClipboardList,Briefcase} from 'lucide-react'
 import {getAccessProfile,AccessProfile} from '../lib/access'
 
 export default function QuickNav(){
@@ -12,6 +12,7 @@ export default function QuickNav(){
     {href:'/',label:'Inicio',icon:Home,show:true},
     {href:'/contacts',label:'Contactos',icon:Users,show:!!access?.canCreateRequests},
     {href:'/routes',label:'Rutas',icon:Route,show:!!access?.canManageRoutes},
+    {href:'/manager',label:'Manager',icon:Briefcase,show:!!access?.isCeo},
     {href:'/reports',label:'Reportes',icon:BarChart3,show:!!access?.canViewReports},
     {href:'/requests?view=requests',label:'Solicitudes',icon:ClipboardList,show:!!access?.canCreateRequests},
     {href:'/driver',label:'Ruta',icon:Truck,show:!!access?.canDrive},
