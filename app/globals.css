@@ -146,3 +146,16 @@ html.dark .stat-icon.orange{background:#4d381d;color:#ffd38a}html.dark .stat-ico
 html.dark .status-info{background:#1d3d68;color:#b9d4ff}html.dark .status-success{background:#17452f;color:#a4e7be}html.dark .status-warning{background:#4d381d;color:#ffd38a}html.dark .status-danger{background:#4a2528;color:#ffb1ab}
 .counter-primary{display:flex;margin:1.25rem 0}.counter-primary .primary{display:inline-flex;align-items:center;gap:.5rem;min-height:48px}
 .saved-route-list{display:grid;gap:12px}.saved-route-card{display:flex;align-items:center;gap:12px}.saved-route-position{display:flex;align-items:center;gap:3px;color:var(--color-muted);font-weight:700}.saved-route-main{flex:1;min-width:0}.saved-route-head{display:flex;align-items:center;gap:12px}.saved-route-head .muted{display:flex;align-items:center;gap:4px}.saved-route-main h3{display:flex;align-items:center;gap:7px;margin:8px 0;font-size:17px}.saved-route-card>.assign{display:flex;align-items:center;gap:5px;text-decoration:none;white-space:nowrap}.configured-routes{margin:22px 0}.configured-routes .section-head{margin-bottom:12px}
+
+/* Premium polish: subtle depth and motion, preserving every existing control. */
+body{background:radial-gradient(circle at 8% -10%,#eaf2ff 0,transparent 34%),var(--color-background)}
+.shell{animation:page-in .35s ease both}
+.card,.stat-card,.route-card,.dispatch-card,.route-hub-link,.role-list a{position:relative;overflow:hidden}
+.card::after,.stat-card::after,.route-card::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.38),transparent 30%);opacity:.55}
+.primary{box-shadow:0 6px 16px rgba(36,104,223,.18)}
+.primary:hover{box-shadow:0 9px 22px rgba(36,104,223,.27)}
+.quick-nav a[aria-current="page"]{box-shadow:inset 0 -2px 0 var(--color-primary)}
+@keyframes page-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+html.dark body{background:radial-gradient(circle at 8% -10%,#1b3556 0,transparent 34%),var(--color-background)}
+html.dark .card::after,html.dark .stat-card::after,html.dark .route-card::after{background:linear-gradient(115deg,rgba(255,255,255,.06),transparent 30%)}
+@media(prefers-reduced-motion:reduce){.shell{animation:none}}
