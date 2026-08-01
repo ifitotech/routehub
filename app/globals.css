@@ -118,7 +118,7 @@ html.dark .role-list b,html.dark .role-list small,html.dark .back-button,html.da
 html.dark .role-list small{color:var(--color-muted)}
 /* RouteHub brand mark: uses the existing PWA icon everywhere the wordmark appears. */
 .brand{display:inline-flex;align-items:center;gap:9px}
-.brand::before{content:"";width:28px;height:28px;display:inline-block;border-radius:8px;background:#135dcc url('/icon-192.svg') center/cover no-repeat;box-shadow:0 3px 8px rgba(19,93,204,.22)}
+.brand::before{content:"";width:28px;height:28px;display:inline-block;border-radius:8px;background:#135dcc url('/routehub-logo.png') center/cover no-repeat;box-shadow:0 3px 8px rgba(19,93,204,.22)}
 @media (min-width:900px){
   .quick-nav{position:sticky;top:12px;bottom:auto;z-index:20;width:min(58vw,760px);margin:12px auto 0;border-radius:18px;padding:8px 12px;display:flex;justify-content:center;gap:6px;background:var(--color-surface);border:1px solid var(--color-border);box-shadow:0 5px 18px rgba(20,35,59,.08)}
   .quick-nav a{min-width:112px;flex-direction:row;justify-content:center;gap:7px;border-radius:10px;padding:10px 14px;color:var(--color-muted)}
