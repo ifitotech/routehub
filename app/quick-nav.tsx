@@ -9,7 +9,7 @@ export default function QuickNav(){
   useEffect(()=>{getAccessProfile().then(setAccess).catch(()=>setAccess(null))},[])
   const items=[
     {href:'/',label:'Inicio',icon:Home,show:true},
-    {href:'/requests?view=contacts',label:'Contactos',icon:Users,show:!!access?.canCreateRequests},
+    {href:'/contacts',label:'Contactos',icon:Users,show:!!access?.canCreateRequests},
     {href:'/routes',label:'Rutas',icon:Route,show:!!access?.canManageRoutes},
     {href:'/reports',label:'Reportes',icon:BarChart3,show:!!access?.canViewReports},
     {href:'/requests?view=requests',label:'Solicitudes',icon:ClipboardList,show:!!access?.canCreateRequests},
