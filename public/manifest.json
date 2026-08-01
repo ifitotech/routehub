@@ -3,7 +3,7 @@
   "short_name": "RouteHub",
   "id": "/?app=routehub-v2",
   "description": "Rutas simples para equipos de entrega",
-  "start_url": "/",
+  "start_url": "/manager",
   "display": "standalone",
   "background_color": "#f5f7fa",
   "theme_color": "#135dcc",
