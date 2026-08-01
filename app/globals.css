@@ -141,3 +141,4 @@ html.dark .form input,html.dark .form select,html.dark .form textarea,html.dark 
 html.dark .form input::placeholder,html.dark .form textarea::placeholder,html.dark input::placeholder,html.dark textarea::placeholder{color:#9eafc3}
 html.dark .stat-icon.orange{background:#4d381d;color:#ffd38a}html.dark .stat-icon.green{background:#183d2d;color:#8de0b1}html.dark .stat-icon.red{background:#4a2528;color:#ffb1ab}
 html.dark .status-info{background:#1d3d68;color:#b9d4ff}html.dark .status-success{background:#17452f;color:#a4e7be}html.dark .status-warning{background:#4d381d;color:#ffd38a}html.dark .status-danger{background:#4a2528;color:#ffb1ab}
+.counter-primary{display:flex;margin:1.25rem 0}.counter-primary .primary{display:inline-flex;align-items:center;gap:.5rem;min-height:48px}
