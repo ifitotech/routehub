@@ -1,0 +1,14 @@
+{
+  "name": "RouteHub Driver",
+  "short_name": "RouteHub Driver",
+  "description": "Misiones de entrega de RouteHub",
+  "start_url": "/driver",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#135dcc",
+  "lang": "es",
+  "icons": [
+    {"src":"/icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"/icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
