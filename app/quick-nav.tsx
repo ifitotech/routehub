@@ -1,13 +1,15 @@
 'use client'
 import Link from 'next/link'
 import {useEffect,useState} from 'react'
+import {usePathname} from 'next/navigation'
 import {Home,Route,BarChart3,Settings,ShieldCheck,Truck,Users,ClipboardList,Briefcase,WalletCards} from 'lucide-react'
 import {getAccessProfile,AccessProfile} from '../lib/access'
 
 export default function QuickNav(){
+  const pathname=usePathname()
   const[access,setAccess]=useState<AccessProfile|null>(null)
   useEffect(()=>{getAccessProfile().then(setAccess).catch(()=>setAccess(null))},[])
-  if(access?.canDrive&&!access?.canManageRoutes&&!access?.canViewAdmin){return <nav className="quick-nav driver-nav" aria-label="Navegacion del Driver"><Link href="/driver" title="Inicio"><Truck size={18}/><span>Inicio</span></Link><Link href="/reports" title="Historial"><ClipboardList size={18}/><span>Historial</span></Link><Link href="/driver/settings" title="Settings"><Settings size={18}/><span>Settings</span></Link></nav>}
+  if(pathname?.startsWith('/driver')||access?.role==='driver'){return <nav className="quick-nav driver-nav" aria-label="Driver navigation"><Link href="/driver" title="Home"><Truck size={18}/><span>Home</span></Link><Link href="/reports" title="History"><ClipboardList size={18}/><span>History</span></Link><Link href="/driver/settings" title="Settings"><Settings size={18}/><span>Settings</span></Link></nav>}
   const homeHref=access?.isCeo?'/admin':access?.role==='counter_sales'?'/counter':access?.canManageRoutes?'/manager':'/'
   const items=[
     {href:homeHref,label:'Inicio',icon:Home,show:true},
