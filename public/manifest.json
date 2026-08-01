@@ -1,6 +1,7 @@
 {
   "name": "RouteHub",
   "short_name": "RouteHub",
+  "id": "/?app=routehub-v2",
   "description": "Rutas simples para equipos de entrega",
   "start_url": "/",
   "display": "standalone",
