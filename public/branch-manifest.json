@@ -1,0 +1,11 @@
+{
+  "name":"RouteHub Branch Manager",
+  "short_name":"RouteHub Manager",
+  "start_url":"/branch",
+  "scope":"/",
+  "display":"standalone",
+  "background_color":"#f6f8fb",
+  "theme_color":"#2468df",
+  "lang":"en",
+  "icons":[{"src":"/routehub-logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
+}
