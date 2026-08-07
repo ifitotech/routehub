@@ -12,14 +12,14 @@ export default function QuickNav(){
   if(pathname?.startsWith('/driver')||access?.role==='driver'){return <nav className="quick-nav driver-nav" aria-label="Driver navigation"><Link href="/driver" title="Home"><Truck size={18}/><span>Home</span></Link><Link href="/reports" title="History"><ClipboardList size={18}/><span>History</span></Link><Link href="/driver/settings" title="Settings"><Settings size={18}/><span>Settings</span></Link></nav>}
   const homeHref=access?.isCeo?'/admin':access?.role==='counter_sales'?'/counter':access?.canManageRoutes?'/manager':'/'
   const items=[
-    {href:homeHref,label:'Inicio',icon:Home,show:true},
+    {href:homeHref,label:'Home',icon:Home,show:true},
     {href:'/counter',label:'Counter',icon:WalletCards,show:access?.role==='counter_sales'},
-    {href:'/contacts',label:'Contactos',icon:Users,show:!!access?.canCreateRequests},
-    {href:'/routes',label:'Rutas',icon:Route,show:!!access?.canManageRoutes},
+    {href:'/contacts',label:'Contacts',icon:Users,show:!!access?.canCreateRequests},
+    {href:'/routes',label:'Routes',icon:Route,show:!!access?.canManageRoutes},
     {href:'/manager',label:'Manager',icon:Briefcase,show:!!access?.isCeo},
-    {href:'/reports',label:'Reportes',icon:BarChart3,show:!!access?.canViewReports},
-    {href:'/requests?view=requests',label:'Solicitudes',icon:ClipboardList,show:!!access?.canCreateRequests},
-    {href:'/driver',label:'Ruta',icon:Truck,show:!!access?.canDrive},
+    {href:'/reports',label:'Reports',icon:BarChart3,show:!!access?.canViewReports},
+    {href:'/requests?view=requests',label:'Requests',icon:ClipboardList,show:!!access?.canCreateRequests},
+    {href:'/driver',label:'Route',icon:Truck,show:!!access?.canDrive},
     {href:'/admin',label:'Admin',icon:ShieldCheck,show:!!access?.canViewAdmin},
     {href:'/settings/contact',label:'Settings',icon:Settings,show:true}
   ]
