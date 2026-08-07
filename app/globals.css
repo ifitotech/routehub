@@ -159,3 +159,4 @@ body{background:radial-gradient(circle at 8% -10%,#eaf2ff 0,transparent 34%),var
 html.dark body{background:radial-gradient(circle at 8% -10%,#1b3556 0,transparent 34%),var(--color-background)}
 html.dark .card::after,html.dark .stat-card::after,html.dark .route-card::after{background:linear-gradient(115deg,rgba(255,255,255,.06),transparent 30%)}
 @media(prefers-reduced-motion:reduce){.shell{animation:none}}
+.login-form{max-width:460px;margin:24px auto}.login-divider{display:flex;align-items:center;gap:10px;color:var(--color-muted);margin:4px 0}.login-divider::before,.login-divider::after{content:"";height:1px;background:var(--color-border);flex:1}.login-divider span{font-size:12px;text-transform:uppercase;letter-spacing:.08em}
