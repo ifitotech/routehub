@@ -10,6 +10,15 @@ create table if not exists public.invitations (
   created_at timestamptz not null default now(),
   revoked_at timestamptz
 );
+-- Complete an older invitations table without deleting existing data.
+alter table public.invitations add column if not exists company_id uuid;
+alter table public.invitations add column if not exists branch_id uuid;
+alter table public.invitations add column if not exists email text;
+alter table public.invitations add column if not exists role text;
+alter table public.invitations add column if not exists status text default 'pending';
+alter table public.invitations add column if not exists created_by uuid;
+alter table public.invitations add column if not exists created_at timestamptz default now();
+alter table public.invitations add column if not exists revoked_at timestamptz;
 create index if not exists invitations_company_idx on public.invitations(company_id, status);
 alter table public.invitations enable row level security;
 drop policy if exists "members read company invitations" on public.invitations;
