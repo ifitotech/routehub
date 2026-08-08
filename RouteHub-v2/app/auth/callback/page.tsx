@@ -1,0 +1,4 @@
+'use client'
+import {useEffect,useState} from 'react'
+import {getSupabase} from '../../../lib/supabase'
+export default function Callback(){const[message,setMessage]=useState('Verifying your session…');useEffect(()=>{(async()=>{try{const s=getSupabase();const code=new URLSearchParams(window.location.search).get('code');if(code){const{error}=await s.auth.exchangeCodeForSession(code);if(error)throw error}const{data}=await s.auth.getSession();if(!data.session)throw new Error('No active session.');window.location.replace('/')}catch(e){setMessage(e instanceof Error?e.message:'Unable to verify the session.')}})()},[]);return <main className="app"><div className="card" style={{maxWidth:520,margin:'80px auto',textAlign:'center'}}><div className="brand">ROUTEHUB</div><h1>{message}</h1><p className="muted">You can close this page after the redirect completes.</p></div></main>}

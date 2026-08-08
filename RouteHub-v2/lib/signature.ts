@@ -1,0 +1,2 @@
+import {uploadEvidence} from './evidence'
+export async function saveCustomerSignature(canvas:HTMLCanvasElement,input:{companyId:string;userId:string;missionId:string}){const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('Unable to create signature image.');return uploadEvidence(new File([blob],`signature-${input.missionId}.png`,{type:'image/png'}),input)}

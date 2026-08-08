@@ -1,0 +1,2 @@
+import Link from 'next/link'
+export default function Counter(){return <main className="app"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link></header><p className="muted">Counter Sales workspace</p><h1>Front desk</h1><p className="muted">Create requests quickly without access to dispatch controls.</p><div className="actions"><Link className="primary" href="/requests">New request</Link><Link className="secondary" href="/contacts">Contacts</Link></div></main>}

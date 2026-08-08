@@ -1,0 +1,13 @@
+'use client'
+import Link from 'next/link'
+import {useEffect,useState} from 'react'
+import {getSupabase} from '../../lib/supabase'
+import {currentAccess} from '../../lib/data'
+
+export default function Reports(){
+  const[rows,setRows]=useState<any[]>([]),[from,setFrom]=useState(''),[to,setTo]=useState(''),[message,setMessage]=useState('Loading activity...')
+  useEffect(()=>{(async()=>{try{const access=await currentAccess();const s=getSupabase();let q=s.from('activity_logs').select('id,action,created_at,user_id,record_id,after_value').order('created_at',{ascending:false}).limit(100);if(access.membership?.company_id)q=q.eq('company_id',access.membership.company_id);const{data,error}=await q;if(error)throw error;setRows(data||[]);setMessage('')}catch(e){setMessage(e instanceof Error?e.message:'Unable to load reports.')}})()},[])
+  const filtered=rows.filter(r=>(!from||r.created_at.slice(0,10)>=from)&&(!to||r.created_at.slice(0,10)<=to))
+  const csv=()=>{const content=['action,user_id,created_at,record_id',...filtered.map(r=>`${r.action},${r.user_id},${r.created_at},${r.record_id||''}`)].join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));a.download='routehub-report.csv';a.click()}
+  return <main className="app"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link><div className="actions"><button className="secondary" onClick={()=>window.print()}>Export PDF</button><button className="secondary" onClick={csv}>Export CSV</button></div></header><h1>Reports</h1><p className="muted">Real activity from your company workspace.</p><section className="card" style={{display:'grid',gap:12,marginTop:22}}><label>From<input type="date" value={from} onChange={e=>setFrom(e.target.value)} style={{display:'block',width:'100%',padding:12,marginTop:6}}/></label><label>To<input type="date" value={to} onChange={e=>setTo(e.target.value)} style={{display:'block',width:'100%',padding:12,marginTop:6}}/></label></section>{message&&<p className="muted" role="status">{message}</p>}<p className="muted">{filtered.length} activity records</p><section style={{display:'grid',gap:12}}>{filtered.map(r=>{const meta=r.after_value||{};return <article className="card" key={r.id}><strong>{String(r.action).replaceAll('_',' ')}</strong><p className="muted">{new Date(r.created_at).toLocaleString()} · {r.user_id}</p>{r.action==='delivery_completed'&&<p className="muted">Completion: {meta.method||'manual'}{meta.location?.accuracy!=null?` · GPS accuracy ${Math.round(meta.location.accuracy)} m`:''}</p>}</article>})}{!filtered.length&&!message&&<section className="card"><h2>No activity yet</h2><p className="muted">Completed routes and changes will appear here.</p></section>}</section></main>
+}

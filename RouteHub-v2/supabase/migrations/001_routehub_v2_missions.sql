@@ -1,0 +1,21 @@
+-- RouteHub v2: additive migration. Execute after reviewing the existing schema.
+alter table if exists public.routes add column if not exists mission_type text;
+alter table if exists public.routes add column if not exists priority text default 'normal';
+alter table if exists public.routes add column if not exists origin_name text;
+alter table if exists public.routes add column if not exists origin_address text;
+alter table if exists public.routes add column if not exists destination_name text;
+alter table if exists public.routes add column if not exists destination_address text;
+alter table if exists public.routes add column if not exists scheduled_at timestamptz;
+alter table if exists public.routes add column if not exists order_number text;
+alter table if exists public.routes add column if not exists position integer default 1;
+alter table if exists public.routes add column if not exists updated_version bigint default 0;
+create index if not exists routes_v2_driver_position_idx on public.routes(driver_id,position);
+create index if not exists routes_v2_status_idx on public.routes(status);
+create index if not exists routes_v2_scheduled_idx on public.routes(scheduled_at);
+create table if not exists public.route_evidence_v2(id uuid primary key default gen_random_uuid(),company_id uuid not null,mission_id uuid not null,user_id uuid not null,storage_path text not null,kind text not null default 'photo',created_at timestamptz not null default now());
+create index if not exists route_evidence_v2_mission_idx on public.route_evidence_v2(mission_id);
+alter table public.route_evidence_v2 enable row level security;
+drop policy if exists "route evidence company read" on public.route_evidence_v2;
+create policy "route evidence company read" on public.route_evidence_v2 for select to authenticated using (exists(select 1 from public.company_users cu where cu.company_id=route_evidence_v2.company_id and cu.user_id=auth.uid()));
+drop policy if exists "route evidence owner insert" on public.route_evidence_v2;
+create policy "route evidence owner insert" on public.route_evidence_v2 for insert to authenticated with check (user_id=auth.uid() and exists(select 1 from public.company_users cu where cu.company_id=route_evidence_v2.company_id and cu.user_id=auth.uid()));

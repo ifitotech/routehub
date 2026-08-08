@@ -1,0 +1,3 @@
+import {getSupabase} from './supabase'
+import {uploadEvidence} from './evidence'
+export async function uploadMissionEvidence(file:File,missionId:string){const s=getSupabase();const{data:user}=await s.auth.getUser();if(!user.user)throw new Error('Sign in first.');const{data:mission,error}=await s.from('routes').select('company_id').eq('id',missionId).single();if(error||!mission)throw new Error('Mission not found.');const evidence=await uploadEvidence(file,{companyId:mission.company_id,userId:user.user.id,missionId});const{error:insertError}=await s.from('route_evidence_v2').insert({company_id:mission.company_id,mission_id:missionId,user_id:user.user.id,storage_path:evidence.path,kind:'photo'});if(insertError)throw insertError;return evidence}

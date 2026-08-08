@@ -1,0 +1,2 @@
+import Link from 'next/link'
+export default function Sales(){return <main className="app"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link><div className="avatar">SA</div></header><p className="muted">Sales workspace</p><h1>Customer operations</h1><p className="muted">Create requests and manage customer information.</p><div className="actions"><Link className="primary" href="/requests">New request</Link><Link className="secondary" href="/contacts">Contacts</Link><Link className="secondary" href="/routes">Create route</Link></div></main>}
