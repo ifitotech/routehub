@@ -9,6 +9,13 @@ create table if not exists public.platform_manager_approvals (
   created_at timestamptz not null default now(),
   constraint platform_manager_approvals_email_unique unique (email)
 );
+-- Complete an older approvals table without deleting existing records.
+alter table public.platform_manager_approvals add column if not exists email text;
+alter table public.platform_manager_approvals add column if not exists company_name text;
+alter table public.platform_manager_approvals add column if not exists status text default 'pending';
+alter table public.platform_manager_approvals add column if not exists approved_by uuid;
+alter table public.platform_manager_approvals add column if not exists approved_at timestamptz;
+alter table public.platform_manager_approvals add column if not exists created_at timestamptz default now();
 alter table public.platform_manager_approvals enable row level security;
 drop policy if exists "ceo manages manager approvals" on public.platform_manager_approvals;
 create policy "ceo manages manager approvals" on public.platform_manager_approvals for all to authenticated using (exists (select 1 from public.platform_admins pa where pa.user_id=auth.uid())) with check (exists (select 1 from public.platform_admins pa where pa.user_id=auth.uid()));
