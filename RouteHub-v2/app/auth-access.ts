@@ -11,14 +11,20 @@ export async function resolveAccess(client: SupabaseClient): Promise<ResolvedAcc
   const user = userData.user
   const [{data: admin}, {data: memberships, error: membershipError}] = await Promise.all([
     client.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
-    client.from('company_users').select('role').eq('user_id', user.id),
+    client.from('company_users').select('role,company_id').eq('user_id', user.id),
   ])
   if (admin) return {user, role: 'ceo', isCeo: true}
   if (membershipError) throw new Error('ROLE_LOOKUP_FAILED')
   const roles = Array.from(new Set((memberships || []).map(row => row.role as Role).filter(role => knownRoles.includes(role))))
   if (roles.length === 0) throw new Error('ROLE_NOT_ASSIGNED')
   if (roles.length > 1) throw new Error('MULTIPLE_ROLES')
-  return {user, role: roles[0], isCeo: false}
+  const role = roles[0]
+  const membership = (memberships || []).find(row => row.role === role)
+  if (role === 'branch_manager' && membership?.company_id) {
+    const {data: trial} = await client.from('platform_manager_approvals').select('status,trial_ends_at').eq('company_id', membership.company_id).maybeSingle()
+    if (trial?.status === 'pending' && trial.trial_ends_at && new Date(trial.trial_ends_at).getTime() < Date.now()) throw new Error('TRIAL_EXPIRED')
+  }
+  return {user, role, isCeo: false}
 }
 
 export function workspaceForStrictRole(role: Role) {
