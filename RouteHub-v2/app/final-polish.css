@@ -8,16 +8,18 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (min-width: 900px) {
-  .nav { top: calc(12px + env(safe-area-inset-top)); right: 24px; bottom: auto; left: auto; transform: none; border: 1px solid rgb(255 255 255 / 12%); }
+  .nav { top: auto; right: auto; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); border: 1px solid rgb(255 255 255 / 12%); }
   .nav a { border-radius: 11px; transition: background .18s ease; }
   .nav a:hover { background: rgb(255 255 255 / 12%); }
 }
 
-/* Keep navigation and branding in one compact, non-blocking top chrome. */
-.nav { top: calc(10px + env(safe-area-inset-top)); bottom: auto; padding-left: 42px; }
-.nav::before { content: ''; position: absolute; left: 9px; top: 50%; width: 25px; height: 25px; transform: translateY(-50%); background: url('/routehub-icon-192.png') center / contain no-repeat; }
+/* Center the brand above the page and keep role navigation at the bottom. */
+.nav { top: auto; bottom: calc(14px + env(safe-area-inset-bottom)); padding-left: 8px; }
+.nav::before { content: none; }
 .global-chrome~main.app { padding-top: calc(88px + env(safe-area-inset-top)); }
-.global-chrome { transition: opacity .2s ease, transform .2s ease; }
+.global-chrome { left: 0; right: 0; justify-content: center; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+.global-chrome .global-back { position: absolute; left: 18px; pointer-events: auto; }
+.global-chrome .global-logo { pointer-events: auto; transition: width .2s ease, opacity .2s ease, transform .2s ease; }
 .global-chrome.is-scrolled .global-logo { width: 0; opacity: 0; transform: translateY(-8px); pointer-events: none; }
 .settings-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .settings-card-heading h2 { margin: 0; }
@@ -29,7 +31,8 @@
 
 @media (max-width: 640px) {
   .global-chrome~main.app { padding-top: 150px !important; }
-  .nav { left: 12px; right: 12px; width: auto; justify-content: space-around; transform: none; padding-left: 42px; }
+  .global-chrome .global-back { left: 12px; }
+  .nav { top: auto; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); width: auto; justify-content: space-around; transform: none; padding-left: 8px; }
   .nav a { flex: 1; text-align: center; padding-inline: 8px; }
 }
 
