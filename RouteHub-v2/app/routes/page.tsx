@@ -24,6 +24,7 @@ import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
 import styles from './routes.module.css'
+import contrast from './route-contrast.module.css'
 
 type Contact = {
   id: string
@@ -403,7 +404,7 @@ export default function Routes() {
 
     {open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">
-        <div className={styles.builderHeader}>
+        <div className={`${styles.builderHeader} ${contrast.header}`}>
           <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{c.create}</h2></div>
           <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
         </div>
@@ -414,7 +415,7 @@ export default function Routes() {
             <div className={styles.previewSummary}><span><i>1</i>{form.origin.trim() || c.branch}</span><span><i>2</i>{selectedContact?.company_name || form.destination.trim() || c.chooseDestination}</span></div>
           </div>
 
-          <div className={styles.formColumn}>
+          <div className={`${styles.formColumn} ${contrast.form}`}>
             <fieldset className={styles.fieldset}>
               <legend>{c.routeType}</legend>
               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{typeLabel(type.value,c)}</button>)}</div>

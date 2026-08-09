@@ -32,6 +32,10 @@
 .field input:focus,.field select:focus { border-color: var(--primary); outline: 3px solid rgb(37 99 235 / 13%); }
 .saveButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--primary); color: white; font: inherit; font-weight: 800; cursor: pointer; }
 .saveButton:disabled { opacity: .5; cursor: not-allowed; }
+.formActions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.cancelButton, .iconButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 750; cursor: pointer; }
+.cancelButton:hover, .iconButton:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+.iconButton { min-width: 42px; padding: 0 10px; margin-left: 4px; }
 
 .status { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: #edf4ff; color: #1d4ed8; font-size: .88rem; font-weight: 650; }
 .sectionLabel { margin: 28px 0 12px; color: var(--ink); font-size: 1.1rem; }
