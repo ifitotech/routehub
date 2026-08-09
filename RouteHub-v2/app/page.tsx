@@ -1,3 +1,16 @@
 'use client'
-import {useEffect,useState} from 'react';import {useRouter} from 'next/navigation';import {getSupabase} from '../lib/supabase';import {currentAccess} from '../lib/data';import {workspaceForRole} from '../lib/workspace'
-export default function Home(){const router=useRouter(),[ready,setReady]=useState(false),[error,setError]=useState('');useEffect(()=>{(async()=>{const{data}=await getSupabase().auth.getSession();if(!data.session){router.replace('/login');return}try{const access=await currentAccess();router.replace(workspaceForRole(access.role))}catch(e){setError(e instanceof Error?e.message:'Unable to determine your workspace.');setReady(true)}})()},[router]);if(!ready)return <main className="app"><div className="brand">ROUTEHUB</div><section className="card" style={{marginTop:80,textAlign:'center'}}><h1>Loading workspace…</h1><p className="muted">Opening your role dashboard.</p></section></main>;return <main className="app"><div className="brand">ROUTEHUB</div><section className="card" style={{marginTop:80,textAlign:'center'}}><h1>Workspace unavailable</h1><p className="muted">{error}</p></section></main>}
+
+import {useEffect} from 'react'
+import {useRouter} from 'next/navigation'
+import {getSupabase} from '../lib/supabase'
+import {resolveAccess, workspaceForStrictRole} from './auth-access'
+
+export default function Home() {
+  const router = useRouter()
+  useEffect(() => {
+    resolveAccess(getSupabase())
+      .then(access => router.replace(workspaceForStrictRole(access.role)))
+      .catch(() => router.replace('/login'))
+  }, [router])
+  return <main className="app"><section className="card" style={{marginTop: 72, textAlign: 'center'}}><h1>RouteHub</h1><p className="muted">Opening your role dashboard…</p></section></main>
+}

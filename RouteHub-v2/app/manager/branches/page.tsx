@@ -1,4 +1,45 @@
 'use client'
-import Link from 'next/link';import {useEffect,useState} from 'react';import {getSupabase} from '../../../lib/supabase'
-type Branch={id:string;name:string;address?:string;active?:boolean}
-export default function Branches(){const[branches,setBranches]=useState<Branch[]>([]),[form,setForm]=useState({name:'',address:''}),[message,setMessage]=useState('Loading branches…'),[company,setCompany]=useState<string>('');const load=async()=>{try{const s=getSupabase(),{data:u}=await s.auth.getUser();if(!u.user)throw Error('Sign in to manage branches.');const{data:m}=await s.from('company_users').select('company_id').eq('user_id',u.user.id).limit(1).maybeSingle();if(!m)throw Error('No company membership.');setCompany(m.company_id);const{data,error}=await s.from('branches').select('*').eq('company_id',m.company_id).order('name');if(error)throw error;setBranches(data||[]);setMessage('')}catch(e){setMessage(e instanceof Error?e.message:'Unable to load branches.')}};useEffect(()=>{load()},[]);const save=async()=>{if(!form.name.trim()||!company)return;const{error}=await getSupabase().from('branches').insert({company_id:company,name:form.name.trim(),address:form.address.trim()||null});setMessage(error?error.message:'Branch saved.');if(!error){setForm({name:'',address:''});await load()}};return <main className="app"><header className="topbar"><Link className="brand" href="/manager">ROUTEHUB</Link></header><p className="muted">Manager · Branches</p><h1>Branches</h1><p className="muted">Manage branch locations used as route starting points.</p><section className="card" style={{marginTop:22}}><h2>Add branch</h2><input placeholder="Branch name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/><input placeholder="Branch address" value={form.address} onChange={e=>setForm({...form,address:e.target.value})}/><button className="primary" disabled={!form.name.trim()} onClick={save}>Save branch</button></section>{message&&<p className="muted" role="status">{message}</p>}<section style={{display:'grid',gap:12,marginTop:20}}>{branches.map(b=><article className="card" key={b.id}><h2>{b.name}</h2>{b.address&&<p className="muted">{b.address}</p>}</article>)}{!branches.length&&!message&&<section className="card"><h2>No branches yet</h2><p className="muted">Add your first branch to configure route origins.</p></section>}</section></main>}
+
+import {Building2, MapPin, Plus} from 'lucide-react'
+import {useCallback, useEffect, useState} from 'react'
+import {getSupabase} from '../../../lib/supabase'
+import {useLocale} from '../../../lib/use-preferences'
+import styles from '../manager-tools.module.css'
+
+type Branch = {id: string; name: string; address?: string; active?: boolean}
+
+export default function Branches() {
+  const {t} = useLocale()
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [form, setForm] = useState({name: '', address: ''})
+  const [message, setMessage] = useState('')
+  const [company, setCompany] = useState('')
+  const [saving, setSaving] = useState(false)
+  const load = useCallback(async () => {
+    try {
+      setMessage(t.loadingBranches)
+      const supabase = getSupabase(); const {data: userData} = await supabase.auth.getUser()
+      if (!userData.user) throw new Error(t.signInBranches)
+      const {data: membership} = await supabase.from('company_users').select('company_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
+      if (!membership) throw new Error(t.noMembership)
+      setCompany(membership.company_id)
+      const {data, error} = await supabase.from('branches').select('*').eq('company_id', membership.company_id).order('name')
+      if (error) throw error
+      setBranches(data || []); setMessage('')
+    } catch (error) { setMessage(error instanceof Error ? error.message : t.unableLoadBranches) }
+  }, [t.loadingBranches, t.signInBranches, t.noMembership, t.unableLoadBranches])
+  useEffect(() => { void load() }, [load])
+  const save = async () => {
+    if (!form.name.trim() || !company || saving) return
+    setSaving(true)
+    const {error} = await getSupabase().from('branches').insert({company_id: company, name: form.name.trim(), address: form.address.trim() || null})
+    setMessage(error ? error.message : t.branchSaved)
+    if (!error) { setForm({name: '', address: ''}); await load() }
+    setSaving(false)
+  }
+  return <main className="app"><div className={styles.page}>
+    <header className={styles.header}><div><p className={styles.eyebrow}>{t.managerOrganization}</p><h1 className={styles.title}>{t.branches}</h1><p className={styles.subtitle}>{t.branchesHelp}</p></div></header>
+    <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{t.addBranch}</h2><p>{t.addBranchHelp}</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header><div className={styles.formGrid}><label className={styles.field}>{t.branchName}<input placeholder={t.mainBranch} value={form.name} onChange={event => setForm({...form, name: event.target.value})}/></label><label className={styles.field}>{t.streetAddress}<input placeholder={t.addressPlaceholder} value={form.address} onChange={event => setForm({...form, address: event.target.value})}/></label><button className={styles.saveButton} disabled={saving || !form.name.trim()} onClick={save}><Plus size={18}/>{saving ? t.saving : t.saveBranch}</button></div></section>
+    {message && <p className={styles.status} role="status" aria-live="polite">{message}</p>}<h2 className={styles.sectionLabel}>{t.branchLocations}</h2><section className={styles.list} aria-label={t.branchLocations}>{branches.map(branch => <article className={styles.rowCard} key={branch.id}><span className={styles.locationIcon}><MapPin size={20}/></span><div className={styles.identity}><h2>{branch.name}</h2><p>{branch.address || t.addressNotConfigured}</p></div><span className={styles.statusBadge} data-status={branch.active === false ? 'revoked' : 'active'}>{branch.active === false ? t.inactive : t.active}</span></article>)}{!branches.length && !message && <section className={styles.empty}><span><MapPin size={24}/></span><h2>{t.noBranches}</h2><p>{t.noBranchesHelp}</p></section>}</section>
+  </div></main>
+}

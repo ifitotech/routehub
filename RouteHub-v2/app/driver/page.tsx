@@ -1,18 +1,65 @@
 'use client'
-import Link from 'next/link'
-import {useCallback,useEffect,useRef,useState} from 'react'
-import {getSupabase} from '../../lib/supabase'
-import {completeMission} from '../../lib/data'
-import {getCurrentLocation} from '../../lib/location'
-import {uploadMissionEvidence} from '../../lib/mission-evidence'
-import {getLocale,translations,type Locale} from '../../lib/i18n'
 
-type Mission={id:string;status:string;origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number}
-function MapPreview({address}:{address?:string}){if(!address)return null;return <div className="embedded-map"><iframe title="Route map" src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`} loading="lazy"/><a className="map-fallback" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer">Open in Google Maps</a></div>}
-export default function Driver(){const[m,setM]=useState<Mission[]>([]),[msg,setMsg]=useState(''),[modal,setModal]=useState(false),[photo,setPhoto]=useState<File|null>(null),[note,setNote]=useState(''),[locale,setLocale]=useState<Locale>('en');const file=useRef<HTMLInputElement>(null),t=translations[locale]
- const load=useCallback(async()=>{try{const s=getSupabase(),{data:u}=await s.auth.getUser();if(!u.user)throw Error(t.signIn);const{data,error}=await s.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position').eq('driver_id',u.user.id).in('status',['published','active','paused']).order('position');if(error)throw error;setM(data||[]);setMsg('')}catch(e){setMsg(e instanceof Error?e.message:'Unable to load routes.')}},[t.signIn])
- useEffect(()=>{setLocale(getLocale());load();const timer=setInterval(load,30000);return()=>clearInterval(timer)},[load])
- const cur=m[0],next=m[1]
- const update=async(status:string)=>{if(!cur)return;try{if(status==='completed'){if(!photo){file.current?.click();return}await uploadMissionEvidence(photo,cur.id);await completeMission(cur.id)}else{const{error}=await getSupabase().from('routes').update({status,notes:status==='issue'?note:undefined,updated_version:Date.now()}).eq('id',cur.id);if(error)throw error}setModal(false);setPhoto(null);setNote('');await load()}catch(e){setMsg(e instanceof Error?e.message:'Unable to update route.')}}
- return <main className="app"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link><div className="avatar">DR</div></header><p className="muted">{t.driverWorkspace}</p><h1>{t.routes}</h1>{msg&&<p className="muted" role="status">{msg}</p>}{cur?<><section className="card"><small className="muted">{t.currentRoute} · {cur.priority||'normal'}</small><h2>{cur.destination_name||cur.destination_address||t.destination}</h2><p className="muted">{cur.origin_address||t.origin} → {cur.destination_address||t.destination}</p><MapPreview address={cur.destination_address}/>{cur.notes&&<p>{cur.notes}</p>}<div className="actions"><a className="primary" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(cur.destination_address||'')}`} target="_blank" rel="noreferrer">{t.navigate}</a>{cur.status==='published'&&<button className="secondary" onClick={()=>update('active')}>{t.start}</button>}{cur.status==='active'&&<><button className="primary" onClick={()=>setModal(true)}>{t.complete}</button><button className="secondary" onClick={()=>update('paused')}>{t.pause}</button></>}{cur.status==='paused'&&<button className="primary" onClick={()=>update('active')}>{t.resume}</button>}</div></section><section className="card" style={{marginTop:16}}><small className="muted">{t.nextRoute}</small><h2>{next?.destination_name||next?.destination_address||t.noNext}</h2></section></>:!msg&&<section className="card"><h2>{t.noRoute}</h2></section>}{modal&&<div className="modal-backdrop"><div className="card modal"><button className="close" onClick={()=>setModal(false)}>×</button><h2>{t.complete}</h2><p className="muted">{t.photo}</p><input ref={file} hidden type="file" accept="image/*" capture="environment" onChange={e=>setPhoto(e.target.files?.[0]||null)}/><button className="success" onClick={()=>photo?update('completed'):file.current?.click()}>{photo?t.completeWithPhoto:t.addPhoto}</button><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder={t.reason}/><button className="danger-outline" disabled={!note.trim()} onClick={()=>update('issue')}>{t.couldNotDeliver}</button></div></div>}<nav className="nav"><Link href="/driver">{t.home}</Link><Link href="/driver/history">{t.history}</Link><Link href="/driver/settings">{t.settings}</Link></nav></main>
+import Link from 'next/link'
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {Camera, Check, MapPin, Navigation, Pause, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
+import {completeMission} from '../../lib/data'
+import {uploadMissionEvidence} from '../../lib/mission-evidence'
+import {getSupabase} from '../../lib/supabase'
+import {useLocale} from '../../lib/use-preferences'
+import styles from './driver.module.css'
+
+type Mission = {id:string;status:string;origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string}
+
+function MapPreview({address, title}: {address?:string;title:string}) {
+  if (!address) return <div className={styles.mapEmpty}><MapPin/><span>{title}</span></div>
+  const query=encodeURIComponent(address)
+  return <div className={styles.map}><iframe title={title} src={`https://www.google.com/maps?q=${query}&output=embed`} loading="lazy"/></div>
+}
+
+export default function Driver() {
+  const [missions,setMissions]=useState<Mission[]>([])
+  const [message,setMessage]=useState('')
+  const [busy,setBusy]=useState(false)
+  const [modal,setModal]=useState(false)
+  const [issueMode,setIssueMode]=useState(false)
+  const [photo,setPhoto]=useState<File|null>(null)
+  const [issueNote,setIssueNote]=useState('')
+  const fileInput=useRef<HTMLInputElement>(null)
+  const {t}=useLocale()
+
+  const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
+  useEffect(()=>{void load();const timer=setInterval(load,30000);return()=>clearInterval(timer)},[load])
+
+  const current=missions.find(item=>item.status==='active')||missions[0]
+  const upcoming=missions.filter(item=>item.id!==current?.id)
+  const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}`
+  const update=async(status:string)=>{if(!current||busy)return;setBusy(true);try{if(status==='completed'){if(!photo){fileInput.current?.click();return}await uploadMissionEvidence(photo,current.id);await completeMission(current.id)}else{const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error}setModal(false);setIssueMode(false);setPhoto(null);setIssueNote('');await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
+  const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('');setPhoto(null)}
+
+  return <main className={`app ${styles.page}`}>
+    <header className={styles.header}><div><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div><div className="avatar">DR</div></header>
+    {message&&<div className={styles.toast} role="status">{message}</div>}
+    {current?<>
+      <section className={styles.mission}>
+        <div className={styles.missionTop}><span>{t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
+        <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
+        <h2>{current.destination_name||current.destination_address||t.destination}</h2>
+        <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
+        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div><div><small>{t.createdAt}</small><strong>{current.scheduled_at?new Date(current.scheduled_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):t.notRecorded}</strong></div></div>
+        {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
+      </section>
+      <MapPreview address={current.destination_address} title={t.routeMap}/>
+      <div className={styles.primaryActions}>
+        <a className={styles.navigate} href={navigateUrl} target="_blank" rel="noreferrer"><Navigation size={19}/>{t.navigate}</a>
+        {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><Play size={19}/>{t.start}</button>}
+        {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>setModal(true)}><Check size={19}/>{t.complete}</button>}
+        {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
+      </div>
+      {current.status==='active'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>void update('paused')}><Pause size={18}/>{t.pause}</button><button onClick={()=>{setIssueMode(true);setModal(true)}}><TriangleAlert size={18}/>{t.reportProblem}</button></div>}
+      <section className={styles.next}><div className={styles.sectionTitle}><span>{t.nextRoute}</span><b>{upcoming.length}</b></div>{upcoming.length?upcoming.slice(0,3).map((item,index)=><article key={item.id}><span className={styles.number}>{index+2}</span><div><small>{(item.mission_type||'delivery').toUpperCase()}</small><strong>{item.destination_name||item.destination_address||t.destination}</strong><span>{item.destination_address}</span></div><span className={item.priority==='urgent'?styles.urgentDot:styles.dot}/></article>):<div className={styles.noNext}>{t.noNext}</div>}</section>
+    </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRouteHelp}</p></section>}
+    {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>setPhoto(event.target.files?.[0]||null)}/><button className={styles.photoButton} disabled={busy} onClick={()=>photo?void update('completed'):fileInput.current?.click()}><Camera/>{photo?t.completeWithPhoto:t.addPhoto}</button>{photo&&<small className={styles.fileName}>{photo.name}</small>}<button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
+    <nav className="nav"><Link href="/driver">{t.home}</Link><Link href="/driver/history">{t.history}</Link><Link href="/driver/settings">{t.settings}</Link></nav>
+  </main>
 }

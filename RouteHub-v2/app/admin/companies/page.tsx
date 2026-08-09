@@ -1,5 +1,49 @@
 'use client'
-import Link from 'next/link';import {useState} from 'react'
-type Company={id:number;name:string;branch:string;status:'Active'|'Trial'|'Paused';users:number}
-const seed:Company[]=[{id:1,name:'Example HVAC Supply',branch:'Main branch',status:'Trial',users:3}]
-export default function Companies(){const[companies,setCompanies]=useState(seed),[open,setOpen]=useState(false),[form,setForm]=useState({name:'',branch:''});const save=()=>{if(!form.name.trim())return;setCompanies([...companies,{id:Date.now(),name:form.name.trim(),branch:form.branch.trim()||'Main branch',status:'Trial',users:0}]);setForm({name:'',branch:''});setOpen(false)};return <main className="app"><header className="topbar"><Link className="brand" href="/admin">ROUTEHUB</Link><button className="primary" onClick={()=>setOpen(true)}>Add company</button></header><p className="muted">CEO / Admin · Organizations</p><h1>Companies</h1><p className="muted">Manage organizations without exposing private route data.</p><section style={{display:'grid',gap:14,marginTop:24}}>{companies.map(c=><article className="card" key={c.id}><div style={{display:'flex',justifyContent:'space-between',gap:12}}><div><h2 style={{margin:'0 0 6px'}}>{c.name}</h2><p className="muted" style={{margin:0}}>{c.branch}</p></div><strong>{c.status}</strong></div><p className="muted">{c.users} team members</p><div className="actions"><button className="secondary">View organization</button><button className="secondary">Edit</button></div></article>)}</section>{open&&<section className="card" style={{marginTop:20}}><h2>New company</h2><input aria-label="Company name" placeholder="Company name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} style={{display:'block',width:'100%',padding:12,margin:'10px 0'}}/><input aria-label="First branch" placeholder="First branch" value={form.branch} onChange={e=>setForm({...form,branch:e.target.value})} style={{display:'block',width:'100%',padding:12,margin:'10px 0'}}/><div className="actions"><button className="primary" onClick={save}>Create company</button><button className="secondary" onClick={()=>setOpen(false)}>Cancel</button></div></section>}</main>}
+
+import {Building2, Plus} from 'lucide-react'
+import {useState} from 'react'
+import styles from '../admin.module.css'
+
+type Company = {id: number; name: string; branch: string; status: 'Active' | 'Trial' | 'Paused'; users: number}
+
+const seed: Company[] = [{id: 1, name: 'Example HVAC Supply', branch: 'Main branch', status: 'Trial', users: 3}]
+
+export default function Companies() {
+  const [companies, setCompanies] = useState(seed)
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState({name: '', branch: ''})
+
+  const save = () => {
+    if (!form.name.trim()) return
+    setCompanies([...companies, {id: Date.now(), name: form.name.trim(), branch: form.branch.trim() || 'Main branch', status: 'Trial', users: 0}])
+    setForm({name: '', branch: ''})
+    setOpen(false)
+  }
+
+  return <main className="app">
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div><p className={styles.eyebrow}>CEO / Admin · Organizations</p><h1 className={styles.title}>Companies</h1><p className={styles.subtitle}>Manage organizations and workspace status without exposing their private route data.</p></div>
+        <button className={styles.primaryButton} onClick={() => setOpen(value => !value)}><Plus size={18}/>{open ? 'Close form' : 'Add company'}</button>
+      </header>
+
+      {open && <section className={styles.panel}>
+        <header className={styles.panelHeader}><div><h2>New company</h2><p>Create the organization and its first branch.</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header>
+        <div className={styles.formGrid}>
+          <label className={styles.field}>Company name<input aria-label="Company name" placeholder="Company name" value={form.name} onChange={event => setForm({...form, name: event.target.value})}/></label>
+          <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Main branch" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label>
+          <button className={styles.primaryButton} disabled={!form.name.trim()} onClick={save}>Create company</button>
+        </div>
+      </section>}
+
+      <h2 className={styles.sectionLabel}>Organizations</h2>
+      <section className={styles.list} aria-label="Companies">
+        {companies.map(company => <article className={styles.rowCard} key={company.id}>
+          <span className={styles.rowIcon}><Building2 size={20}/></span>
+          <div className={styles.identity}><h2>{company.name}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p></div>
+          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><button className={styles.secondaryButton}>View organization</button><button className={styles.secondaryButton}>Edit</button></div>
+        </article>)}
+      </section>
+    </div>
+  </main>
+}

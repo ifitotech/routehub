@@ -1,6 +1,53 @@
 'use client'
-import Link from 'next/link'
-import {useEffect,useMemo,useState} from 'react'
+
+import {Phone, Search, UserRound, X} from 'lucide-react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
-type Contact={id:string;company_name:string;contact_name?:string|null;address:string;phone?:string|null}
-export default function Contacts(){const[items,setItems]=useState<Contact[]>([]),[query,setQuery]=useState(''),[open,setOpen]=useState(false),[message,setMessage]=useState(''),[form,setForm]=useState({company_name:'',contact_name:'',address:'',phone:''});const load=async()=>{try{const s=getSupabase();const{data:user}=await s.auth.getUser();if(!user.user)throw new Error('Sign in to view contacts.');const{data:membership,error:mError}=await s.from('company_users').select('company_id,branch_id').eq('user_id',user.user.id).limit(1).maybeSingle();if(mError||!membership)throw new Error('No company membership.');const{data,error}=await s.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id',membership.company_id).order('company_name');if(error)throw error;setItems(data||[])}catch(e){setMessage(e instanceof Error?e.message:'Unable to load contacts.')}};useEffect(()=>{load()},[]);const filtered=useMemo(()=>items.filter(c=>`${c.company_name} ${c.contact_name||''} ${c.address}`.toLowerCase().includes(query.toLowerCase())),[items,query]);const save=async()=>{if(!form.company_name||!form.address)return;try{const s=getSupabase();const{data:user}=await s.auth.getUser();if(!user.user)throw new Error('Sign in first.');const{data:membership}=await s.from('company_users').select('company_id,branch_id').eq('user_id',user.user.id).limit(1).maybeSingle();if(!membership)throw new Error('No company membership.');const{error}=await s.from('contacts').insert({...form,company_id:membership.company_id,branch_id:membership.branch_id});if(error)throw error;setMessage('Contact saved.');setForm({company_name:'',contact_name:'',address:'',phone:''});setOpen(false);await load()}catch(e){setMessage(e instanceof Error?e.message:'Unable to save contact.')}};return <main className="app"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link><button className="primary" onClick={()=>setOpen(true)}>Add contact</button></header><h1>Contacts</h1><p className="muted">Search by company, person or address.</p><input aria-label="Search contacts" placeholder="Search contacts" value={query} onChange={e=>setQuery(e.target.value)} style={{width:'100%',padding:14,border:'1px solid var(--line)',borderRadius:12}}/><section style={{display:'grid',gap:12,marginTop:20}}>{filtered.map(c=><article className="card" key={c.id}><h2 style={{marginTop:0}}>{c.company_name}</h2><p>{c.contact_name||'Contact'}</p><p className="muted">{c.address}</p><div className="actions">{c.phone&&<a className="secondary" href={`tel:${c.phone}`}>Call</a>}</div></article>)}{!filtered.length&&<section className="card"><h2>No contacts found</h2><p className="muted">Add a contact or change your search.</p></section>}</section>{open&&<section className="card" style={{marginTop:20}}><h2>New contact</h2>{(['company_name','contact_name','address','phone'] as const).map(k=><input key={k} placeholder={k==='company_name'?'Company':k==='contact_name'?'Contact person':k==='address'?'Address':'Phone'} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})} style={{display:'block',width:'100%',padding:12,margin:'10px 0'}}/>)}<div className="actions"><button className="primary" onClick={save}>Save contact</button><button className="secondary" onClick={()=>setOpen(false)}>Cancel</button></div></section>}{message&&<p className="muted" role="status">{message}</p>}</main>}
+import {useLocale} from '../../lib/use-preferences'
+import styles from './contacts.module.css'
+
+type Contact = {id: string; company_name: string; contact_name?: string | null; address: string; phone?: string | null}
+const emptyForm = {company_name: '', contact_name: '', address: '', phone: ''}
+
+export default function Contacts() {
+  const {t} = useLocale()
+  const [items, setItems] = useState<Contact[]>([])
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState(emptyForm)
+
+  const load = useCallback(async () => {
+    try {
+      const supabase = getSupabase(); const {data: user} = await supabase.auth.getUser()
+      if (!user.user) throw new Error(t.signInContacts)
+      const {data: membership, error: membershipError} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', user.user.id).limit(1).maybeSingle()
+      if (membershipError || !membership) throw new Error(t.noMembership)
+      const {data, error} = await supabase.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name')
+      if (error) throw error
+      setItems(data || [])
+    } catch (error) { setMessage(error instanceof Error ? error.message : t.unableLoadContacts) }
+  }, [t.signInContacts, t.noMembership, t.unableLoadContacts])
+  useEffect(() => { void load() }, [load])
+  const filtered = useMemo(() => { const term = query.trim().toLowerCase(); return items.filter(contact => `${contact.company_name} ${contact.contact_name || ''} ${contact.address}`.toLowerCase().includes(term)) }, [items, query])
+  const save = async () => {
+    if (!form.company_name.trim() || !form.address.trim() || saving) return
+    setSaving(true)
+    try {
+      const supabase = getSupabase(); const {data: user} = await supabase.auth.getUser()
+      if (!user.user) throw new Error(t.signInFirst)
+      const {data: membership} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', user.user.id).limit(1).maybeSingle()
+      if (!membership) throw new Error(t.noMembership)
+      const {error} = await supabase.from('contacts').insert({company_name: form.company_name.trim(), contact_name: form.contact_name.trim() || null, address: form.address.trim(), phone: form.phone.trim() || null, company_id: membership.company_id, branch_id: membership.branch_id})
+      if (error) throw error
+      setMessage(t.contactSaved); setForm(emptyForm); setOpen(false); await load()
+    } catch (error) { setMessage(error instanceof Error ? error.message : t.unableSaveContact) } finally { setSaving(false) }
+  }
+  return <main className="app"><div className={styles.page}>
+    <header className={styles.header}><div><p className={styles.eyebrow}>{t.organization}</p><h1>{t.contacts}</h1><p className={styles.subtitle}>{t.contactsHelp}</p></div><button className={styles.addButton} onClick={() => setOpen(true)}>{t.addContact}</button></header>
+    <div className={styles.searchPanel}><Search size={20} aria-hidden="true"/><input aria-label={t.searchContacts} placeholder={t.searchNameAddress} value={query} onChange={event => setQuery(event.target.value)}/><span className={styles.count}>{filtered.length} {filtered.length === 1 ? t.contact : t.contactsCount}</span></div>
+    <section className={styles.list} aria-label={t.contacts}>{filtered.map(contact => <article className={styles.contactCard} key={contact.id}><div className={styles.avatar} aria-hidden="true">{contact.company_name.slice(0, 2)}</div><div className={styles.identity}><h2>{contact.company_name}</h2><p className={styles.person}>{contact.contact_name || t.contactPerson}</p><p className={styles.address}>{contact.address}</p></div>{contact.phone && <a className={styles.callButton} href={`tel:${contact.phone}`} aria-label={`${t.call} ${contact.company_name}`}><Phone size={19}/></a>}</article>)}{!filtered.length && <section className={styles.empty}><span className={styles.emptyIcon}><UserRound size={24}/></span><h2>{t.noContacts}</h2><p>{query ? t.tryAnotherContact : t.addFirstContact}</p></section>}</section>
+    {message && <p className={styles.status} role="status" aria-live="polite">{message}</p>}
+  </div>{open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}><section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="new-contact-title"><header className={styles.dialogHeader}><div><h2 id="new-contact-title">{t.newContact}</h2><p>{t.newContactHelp}</p></div><button className={styles.closeButton} aria-label={t.close} onClick={() => setOpen(false)}><X size={20}/></button></header><div className={styles.form}>{(['company_name', 'contact_name', 'address', 'phone'] as const).map(key => <label className={styles.field} key={key}>{key === 'company_name' ? t.company : key === 'contact_name' ? t.contactPerson : key === 'address' ? t.address : t.phone}<input placeholder={key === 'company_name' ? 'ABC Supply' : key === 'contact_name' ? t.contactName : key === 'address' ? t.addressPlaceholder : '(000) 000-0000'} value={form[key]} onChange={event => setForm({...form, [key]: event.target.value})}/></label>)}<div className={styles.dialogActions}><button className={styles.cancelButton} onClick={() => setOpen(false)}>{t.cancel}</button><button className={styles.saveButton} disabled={saving || !form.company_name.trim() || !form.address.trim()} onClick={save}>{saving ? t.saving : t.saveContact}</button></div></div></section></div>}</main>
+}

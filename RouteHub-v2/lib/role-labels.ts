@@ -10,10 +10,5 @@ const labels: Record<Locale, Record<Role, string>> = {
   fr: {ceo:'PDG / Administrateur', branch_manager:'Responsable de succursale', operations_manager:'Responsable des opérations', sales_representative:'Représentant commercial', counter_sales:'Ventes au comptoir', driver:'Conducteur'}
 }
 
-export function roleLabel(role: Role, locale: Locale = 'en') {
-  return labels[locale][role] || labels.en[role] || role
-}
-
-export function roleLabelOptions(locale: Locale = 'en') {
-  return roleOptions.map(role => ({role, label: roleLabel(role, locale)}))
-}
+export function roleLabel(role: Role, locale: Locale = 'en') { return labels[locale][role] || labels.en[role] || role }
+export function roleLabelOptions(locale: Locale = 'en') { return roleOptions.map(role => ({role, label: roleLabel(role, locale)})) }

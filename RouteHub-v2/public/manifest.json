@@ -1,1 +1,24 @@
-{"id":"/","name":"RouteHub","short_name":"RouteHub","description":"Smarter routes. Better deliveries.","start_url":"/","scope":"/","display":"standalone","background_color":"#f5f8fc","theme_color":"#2468df","lang":"en","icons":[{"src":"/routehub-logo-transparent.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+  "id": "/",
+  "name": "RouteHub",
+  "short_name": "RouteHub",
+  "description": "Smarter routes. Better deliveries.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "lang": "en",
+  "categories": ["business", "productivity", "navigation"],
+  "icons": [
+    {"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png"}]},
+    {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png"}]}
+  ]
+}

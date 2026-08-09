@@ -1,18 +1,59 @@
 'use client'
-import Link from 'next/link'
-import {useEffect,useState} from 'react'
-import {getSupabase} from '../../../lib/supabase'
-import {getLocale} from '../../../lib/i18n'
+
+import {Mail, Send, UserPlus} from 'lucide-react'
+import {useCallback, useEffect, useState} from 'react'
 import {roleLabelOptions} from '../../../lib/role-labels'
+import {getSupabase} from '../../../lib/supabase'
+import {useLocale} from '../../../lib/use-preferences'
+import styles from '../manager-tools.module.css'
 
-type Invite={id:string;email:string;role:string;status:string;created_at?:string}
+type Invite = {id: string; email: string; role: string; status: string; created_at?: string}
 
-export default function Invitations(){
-  const [items,setItems]=useState<Invite[]>([]),[email,setEmail]=useState(''),[role,setRole]=useState('driver'),[message,setMessage]=useState('Loading invitations…'),[busy,setBusy]=useState(false)
-  const choices=roleLabelOptions(getLocale())
-  const load=async()=>{try{const s=getSupabase(),{data:u}=await s.auth.getUser();if(!u.user)throw Error('Sign in to manage invitations.');const{data:m}=await s.from('company_users').select('company_id').eq('user_id',u.user.id).limit(1).maybeSingle();if(!m)throw Error('No company membership.');const{data,error}=await s.from('invitations').select('id,email,role,status,created_at').eq('company_id',m.company_id).order('created_at',{ascending:false});if(error)throw error;setItems(data||[]);setMessage('')}catch(e){setMessage(e instanceof Error?e.message:'Unable to load invitations.')}}
-  useEffect(()=>{load()},[])
-  const send=async()=>{if(!email.trim()||busy)return;setBusy(true);try{const s=getSupabase(),{data:u}=await s.auth.getUser();if(!u.user)throw Error('Sign in first.');const{data:m}=await s.from('company_users').select('company_id,branch_id').eq('user_id',u.user.id).limit(1).maybeSingle();if(!m)throw Error('No company membership.');const{error}=await s.from('invitations').insert({email:email.trim().toLowerCase(),role,company_id:m.company_id,branch_id:m.branch_id,created_by:u.user.id,status:'pending'});if(error)throw error;setEmail('');setMessage('Invitation created.');await load()}catch(e){setMessage(e instanceof Error?e.message:'Unable to create invitation.')}finally{setBusy(false)}}
-  const revoke=async(id:string)=>{const{error}=await getSupabase().from('invitations').update({status:'revoked',revoked_at:new Date().toISOString()}).eq('id',id);setMessage(error?error.message:'Invitation revoked.');if(!error)load()}
-  return <main className="app"><header className="topbar"><Link className="brand" href="/manager">ROUTEHUB</Link></header><p className="muted">Manager · Invitations</p><h1>Team invitations</h1><p className="muted">Invite people using a role label that fits your company.</p><section className="card" style={{marginTop:22}}><h2>Invite a team member</h2><label>Email address<input type="email" placeholder="name@company.com" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Role<select value={role} onChange={e=>setRole(e.target.value)}>{choices.map(x=><option key={x.role} value={x.role}>{x.label}</option>)}</select></label><button className="primary" disabled={busy||!email.trim()} onClick={send}>{busy?'Sending…':'Send invitation'}</button></section>{message&&<p className="muted" role="status">{message}</p>}<section style={{display:'grid',gap:12,marginTop:20}}>{items.map(i=><article className="card" key={i.id}><h2>{i.email}</h2><p className="muted">{choices.find(x=>x.role===i.role)?.label||i.role} · {i.status}</p>{i.status==='pending'&&<button className="secondary" onClick={()=>revoke(i.id)}>Revoke invitation</button>}</article>)}</section></main>
+export default function Invitations() {
+  const {locale, t} = useLocale()
+  const [items, setItems] = useState<Invite[]>([])
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState('driver')
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const choices = roleLabelOptions(locale)
+
+  const load = useCallback(async () => {
+    try {
+      setMessage(t.loadingInvitations)
+      const supabase = getSupabase(); const {data: userData} = await supabase.auth.getUser()
+      if (!userData.user) throw new Error(t.signInInvitations)
+      const {data: membership} = await supabase.from('company_users').select('company_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
+      if (!membership) throw new Error(t.noMembership)
+      const {data, error} = await supabase.from('invitations').select('id,email,role,status,created_at').eq('company_id', membership.company_id).order('created_at', {ascending: false})
+      if (error) throw error
+      setItems(data || []); setMessage('')
+    } catch (error) { setMessage(error instanceof Error ? error.message : t.unableLoadInvitations) }
+  }, [t.loadingInvitations, t.signInInvitations, t.noMembership, t.unableLoadInvitations])
+  useEffect(() => { void load() }, [load])
+
+  const send = async () => {
+    if (!email.trim() || busy) return
+    setBusy(true)
+    try {
+      const supabase = getSupabase(); const {data: userData} = await supabase.auth.getUser()
+      if (!userData.user) throw new Error(t.signInFirst)
+      const {data: membership} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
+      if (!membership) throw new Error(t.noMembership)
+      const {error} = await supabase.from('invitations').insert({email: email.trim().toLowerCase(), role, company_id: membership.company_id, branch_id: membership.branch_id, created_by: userData.user.id, status: 'pending'})
+      if (error) throw error
+      setEmail(''); setMessage(t.invitationCreated); await load()
+    } catch (error) { setMessage(error instanceof Error ? error.message : t.unableCreateInvitation) } finally { setBusy(false) }
+  }
+  const revoke = async (id: string) => {
+    const {error} = await getSupabase().from('invitations').update({status: 'revoked', revoked_at: new Date().toISOString()}).eq('id', id)
+    setMessage(error ? error.message : t.invitationRevoked)
+    if (!error) await load()
+  }
+  const statusLabel = (status: string) => status === 'pending' ? t.pending : status === 'revoked' ? t.revoked : status === 'accepted' ? t.accepted : status
+  return <main className="app"><div className={styles.page}>
+    <header className={styles.header}><div><p className={styles.eyebrow}>{t.managerAccess}</p><h1 className={styles.title}>{t.teamInvitations}</h1><p className={styles.subtitle}>{t.invitationsHelp}</p></div></header>
+    <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{t.inviteTeamMember}</h2><p>{t.invitePendingHelp}</p></div><span className={styles.panelIcon}><UserPlus size={21}/></span></header><div className={styles.formGrid}><label className={styles.field}>{t.emailAddress}<input type="email" inputMode="email" autoComplete="email" placeholder="name@company.com" value={email} onChange={event => setEmail(event.target.value)}/></label><label className={styles.field}>{t.role}<select value={role} onChange={event => setRole(event.target.value)}>{choices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}</select></label><button className={styles.saveButton} disabled={busy || !email.trim()} onClick={send}><Send size={17}/>{busy ? t.sending : t.sendInvitation}</button></div></section>
+    {message && <p className={styles.status} role="status" aria-live="polite">{message}</p>}<h2 className={styles.sectionLabel}>{t.invitationActivity}</h2><section className={styles.list} aria-label={t.teamInvitationsLabel}>{items.map(invite => <article className={styles.rowCard} key={invite.id}><span className={styles.mailIcon}><Mail size={20}/></span><div className={styles.identity}><h2>{invite.email}</h2><p>{choices.find(choice => choice.role === invite.role)?.label || invite.role}</p></div><div className={styles.rowActions}><div><span className={styles.statusBadge} data-status={invite.status}>{statusLabel(invite.status)}</span>{invite.created_at && <div className={styles.date}>{new Date(invite.created_at).toLocaleDateString(locale)}</div>}</div>{invite.status === 'pending' && <button className={styles.revokeButton} onClick={() => revoke(invite.id)}>{t.revoke}</button>}</div></article>)}{!items.length && !message && <section className={styles.empty}><span><Mail size={24}/></span><h2>{t.noInvitations}</h2><p>{t.noInvitationsHelp}</p></section>}</section>
+  </div></main>
 }
