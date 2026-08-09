@@ -16,3 +16,18 @@
 @media (prefers-reduced-motion: reduce) {
   .spin { animation: none; }
 }
+
+.metric-card { color: var(--rh-text); text-decoration: none; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.metric-card:hover { transform: translateY(-3px); border-color: #9bbcf0; box-shadow: 0 16px 34px rgb(15 23 42 / 12%); }
+.metric-link { margin-top: auto; color: var(--rh-primary); font-size: 12px; font-weight: 800; }
+html[data-theme="dark"] .metric-card { color: var(--rh-text); }
+html[data-theme="dark"] .metric-card:hover { border-color: #5f83b4; }
+html[data-theme="dark"] .global-logo { background: #ffffff; border-radius: 14px; box-shadow: 0 8px 22px rgb(0 0 0 / 28%); }
+.global-logo { overflow: hidden; }
+.profile-editor { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
+.profile-avatar { width: 64px; height: 64px; overflow: hidden; display: grid; place-items: center; border-radius: 50%; background: var(--rh-primary-soft); color: var(--rh-primary); font-size: 20px; font-weight: 850; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.photo-picker { width: max-content; gap: 7px; cursor: pointer; }
+.photo-picker input { display: none; }
+.settings-card h2 { display: flex; align-items: center; gap: 8px; }
+.settings-card .primary, .settings-card .secondary { display: inline-flex; align-items: center; gap: 7px; }
