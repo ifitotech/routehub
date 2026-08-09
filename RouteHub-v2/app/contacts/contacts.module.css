@@ -149,6 +149,10 @@
 }
 
 .address { margin-top: 2px; }
+.cardActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cardActions a,.cardActions button { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--primary); font: inherit; font-size: .73rem; font-weight: 750; text-decoration: none; cursor: pointer; }
+.cardActions a:hover,.cardActions button:hover { background: #edf4ff; }
+.cardActions .dangerAction { color: #dc2626; }
 .callButton {
   display: grid;
   place-items: center;
@@ -207,6 +211,11 @@
   box-shadow: 0 28px 80px rgb(5 18 39 / 28%);
   animation: riseIn 220ms cubic-bezier(.2,.8,.2,1);
 }
+.confirmDialog { width: min(100%, 440px); padding: 28px; border-radius: 24px; background: var(--surface); color: var(--ink); text-align: center; box-shadow: 0 28px 80px rgb(5 18 39 / 28%); animation: riseIn 220ms cubic-bezier(.2,.8,.2,1); }
+.confirmDialog > svg { color: #dc2626; }
+.confirmDialog h2 { margin: 12px 0 6px; }
+.confirmDialog p { margin: 6px 0; color: var(--muted); }
+.deleteButton { min-height: 50px; border: 0; border-radius: 14px; background: #dc2626; color: white; font: inherit; font-weight: 800; cursor: pointer; }
 
 .dialogHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .dialogHeader h2 { margin: 0; color: var(--ink); font-size: 1.55rem; }
@@ -231,6 +240,7 @@
   .addButton::after { content: '+'; font-size: 1.7rem; line-height: 1; }
   .list { grid-template-columns: 1fr; }
   .contactCard { min-height: 86px; padding: 13px; }
+  .cardActions a span,.cardActions button span { display: none; }
   .dialog { padding: 20px; border-radius: 22px; }
 }
 
@@ -256,4 +266,3 @@
 :global([data-theme='dark']) .closeButton,
 :global([data-theme='dark']) .cancelButton,
 :global([data-theme='dark']) .field input { background: #0e1c2f; }
-

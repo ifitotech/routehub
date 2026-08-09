@@ -1,4 +1,5 @@
 import './globals.css'
+import './final-polish.css'
 import PwaRegister from './pwa-register'
 import ThemeBoot from './theme-boot'
 import GlobalChrome from './global-chrome'

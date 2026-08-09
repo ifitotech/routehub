@@ -21,6 +21,8 @@ import {
   X,
 } from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
+import {useLocale} from '../../lib/use-preferences'
+import {recordActivity} from '../../lib/activity'
 import styles from './routes.module.css'
 
 type Contact = {
@@ -81,6 +83,13 @@ const priorities: Array<{value: FormState['priority']; label: string}> = [
   {value: 'urgent', label: 'Urgent'},
 ]
 
+const routeCopy = {
+  en:{operations:'Route operations',title:'Routes',subtitle:'See every active assignment and publish the next route.',manage:'Manage routes',add:'Add route',assigned:'Assigned routes',assignedHelp:'Published, active and paused routes appear here.',active:'active',branch:'Branch',destinationPending:'Destination pending',noPo:'No PO',orderReference:'Order reference',viewManage:'View and manage',empty:'No active routes',emptyHelp:'Publish the first route for your team today.',newAssignment:'New assignment',create:'Create route',close:'Close route form',chooseDestination:'Choose destination',routeType:'Route type',driver:'Driver',chooseDriver:'Choose driver',startingPoint:'Starting point',originPlaceholder:'Branch or starting address',contactDestination:'Contact or destination',searchPlaceholder:'Search a contact or type an address',searchHelp:'Search by company or address, or enter a new address manually.',priority:'Priority',date:'Date',time:'Time',po:'PO or order number',optional:'Optional',poExample:'Example: PO-45872',notes:'Notes',notesPlaceholder:'Delivery instructions for the driver',publish:'Publish route',publishing:'Publishing...',published:'Route published successfully.',chooseRequired:'Choose a driver and enter a destination.',workspacePending:'The company workspace is not ready. Refresh and try again.',invalidDate:'Choose a valid date and time.',loadError:'Unable to load route information.',saveError:'Unable to save route.',preview:'Route preview',previewHelp:'Choose a contact or enter an address.',openMaps:'Open in Google Maps',teamDriver:'Team driver',route:'Route',inProgress:'In progress',statusPublished:'Published',paused:'Paused',issue:'Issue',draft:'Draft',pending:'Pending',noTime:'No time set',today:'Today',normal:'Normal',priorityName:'Priority',urgent:'Urgent',pickup:'Pickup',delivery:'Delivery',transfer:'Transfer',return:'Return'},
+  es:{operations:'Operaciones de rutas',title:'Rutas',subtitle:'Consulta las asignaciones activas y publica la próxima ruta.',manage:'Gestionar rutas',add:'Añadir ruta',assigned:'Rutas asignadas',assignedHelp:'Aquí aparecen las rutas publicadas, activas y pausadas.',active:'activas',branch:'Sucursal',destinationPending:'Destino pendiente',noPo:'Sin PO',orderReference:'Referencia de orden',viewManage:'Ver y gestionar',empty:'No hay rutas activas',emptyHelp:'Publica la primera ruta del equipo para hoy.',newAssignment:'Nueva asignación',create:'Crear ruta',close:'Cerrar formulario',chooseDestination:'Elige un destino',routeType:'Tipo de ruta',driver:'Conductor',chooseDriver:'Elige un conductor',startingPoint:'Punto de salida',originPlaceholder:'Sucursal o dirección de salida',contactDestination:'Contacto o destino',searchPlaceholder:'Busca un contacto o escribe una dirección',searchHelp:'Busca por empresa o dirección, o escribe una dirección manualmente.',priority:'Prioridad',date:'Fecha',time:'Hora',po:'PO o número de orden',optional:'Opcional',poExample:'Ejemplo: PO-45872',notes:'Notas',notesPlaceholder:'Instrucciones de entrega para el conductor',publish:'Publicar ruta',publishing:'Publicando...',published:'Ruta publicada correctamente.',chooseRequired:'Elige un conductor e introduce un destino.',workspacePending:'La empresa aún no está lista. Actualiza e inténtalo nuevamente.',invalidDate:'Elige una fecha y hora válidas.',loadError:'No se pudo cargar la información de las rutas.',saveError:'No se pudo guardar la ruta.',preview:'Vista previa de la ruta',previewHelp:'Elige un contacto o escribe una dirección.',openMaps:'Abrir en Google Maps',teamDriver:'Conductor del equipo',route:'Ruta',inProgress:'En progreso',statusPublished:'Publicada',paused:'Pausada',issue:'Incidencia',draft:'Borrador',pending:'Pendiente',noTime:'Sin hora',today:'Hoy',normal:'Normal',priorityName:'Prioridad',urgent:'Urgente',pickup:'Recogida',delivery:'Entrega',transfer:'Transferencia',return:'Regresar'},
+  fr:{operations:'Opérations des itinéraires',title:'Itinéraires',subtitle:'Consultez les affectations actives et publiez le prochain itinéraire.',manage:'Gérer les itinéraires',add:'Ajouter un itinéraire',assigned:'Itinéraires attribués',assignedHelp:'Les itinéraires publiés, actifs et en pause apparaissent ici.',active:'actifs',branch:'Succursale',destinationPending:'Destination en attente',noPo:'Sans PO',orderReference:'Référence de commande',viewManage:'Voir et gérer',empty:'Aucun itinéraire actif',emptyHelp:'Publiez le premier itinéraire de l’équipe pour aujourd’hui.',newAssignment:'Nouvelle affectation',create:'Créer un itinéraire',close:'Fermer le formulaire',chooseDestination:'Choisir une destination',routeType:'Type d’itinéraire',driver:'Conducteur',chooseDriver:'Choisir un conducteur',startingPoint:'Point de départ',originPlaceholder:'Succursale ou adresse de départ',contactDestination:'Contact ou destination',searchPlaceholder:'Rechercher un contact ou saisir une adresse',searchHelp:'Recherchez par entreprise ou adresse, ou saisissez une nouvelle adresse.',priority:'Priorité',date:'Date',time:'Heure',po:'PO ou numéro de commande',optional:'Facultatif',poExample:'Exemple : PO-45872',notes:'Notes',notesPlaceholder:'Instructions de livraison pour le conducteur',publish:'Publier l’itinéraire',publishing:'Publication...',published:'Itinéraire publié.',chooseRequired:'Choisissez un conducteur et saisissez une destination.',workspacePending:'L’espace entreprise n’est pas prêt. Actualisez et réessayez.',invalidDate:'Choisissez une date et une heure valides.',loadError:'Impossible de charger les itinéraires.',saveError:'Impossible d’enregistrer l’itinéraire.',preview:'Aperçu de l’itinéraire',previewHelp:'Choisissez un contact ou saisissez une adresse.',openMaps:'Ouvrir dans Google Maps',teamDriver:'Conducteur de l’équipe',route:'Itinéraire',inProgress:'En cours',statusPublished:'Publié',paused:'En pause',issue:'Incident',draft:'Brouillon',pending:'En attente',noTime:'Aucune heure',today:'Aujourd’hui',normal:'Normal',priorityName:'Priorité',urgent:'Urgent',pickup:'Collecte',delivery:'Livraison',transfer:'Transfert',return:'Retour'},
+}
+type RouteCopy = typeof routeCopy.en
+
 function localSchedule() {
   const now = new Date()
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString()
@@ -116,54 +125,56 @@ function friendlyName(email?: string | null) {
   return words.join(' ') || 'Team driver'
 }
 
-function driverDetails(driver?: Driver) {
+function driverDetails(driver?: Driver, fallback='Team driver') {
   const email = profileFor(driver || {user_id: ''})?.email || ''
-  return {name: friendlyName(email), email}
+  return {name: email ? friendlyName(email) : fallback, email}
 }
 
-function typeLabel(type?: string | null) {
-  return routeTypes.find(item => item.value === type)?.label || 'Route'
+function typeLabel(type: string | null | undefined, c: RouteCopy) {
+  return type === 'pickup' ? c.pickup : type === 'delivery' ? c.delivery : type === 'transfer' ? c.transfer : type === 'return' ? c.return : c.route
 }
 
-function statusLabel(status?: string | null) {
-  if (status === 'active') return 'In progress'
-  if (status === 'published') return 'Published'
-  if (status === 'paused') return 'Paused'
-  if (status === 'issue') return 'Issue'
-  if (status === 'draft') return 'Draft'
-  return 'Pending'
+function statusLabel(status: string | null | undefined, c: RouteCopy) {
+  if (status === 'active') return c.inProgress
+  if (status === 'published') return c.statusPublished
+  if (status === 'paused') return c.paused
+  if (status === 'issue') return c.issue
+  if (status === 'draft') return c.draft
+  return c.pending
 }
 
-function routeTime(route: RouteRecord) {
-  if (!route.scheduled_at) return 'No time set'
+function routeTime(route: RouteRecord, locale:string, c:RouteCopy) {
+  if (!route.scheduled_at) return c.noTime
   const date = new Date(route.scheduled_at)
-  if (Number.isNaN(date.getTime())) return 'No time set'
-  return new Intl.DateTimeFormat('en-US', {hour: 'numeric', minute: '2-digit'}).format(date)
+  if (Number.isNaN(date.getTime())) return c.noTime
+  return new Intl.DateTimeFormat(locale, {hour: 'numeric', minute: '2-digit'}).format(date)
 }
 
-function routeDate(route: RouteRecord) {
+function routeDate(route: RouteRecord, locale:string, c:RouteCopy) {
   const value = route.scheduled_at || route.route_date
-  if (!value) return 'Today'
+  if (!value) return c.today
   const date = new Date(value.length === 10 ? `${value}T12:00:00` : value)
-  if (Number.isNaN(date.getTime())) return 'Today'
+  if (Number.isNaN(date.getTime())) return c.today
   const today = new Date()
-  if (date.toDateString() === today.toDateString()) return 'Today'
-  return new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric'}).format(date)
+  if (date.toDateString() === today.toDateString()) return c.today
+  return new Intl.DateTimeFormat(locale, {month: 'short', day: 'numeric'}).format(date)
 }
 
-function MapPreview({address}: {address?: string}) {
+function MapPreview({address,c}: {address?: string;c:RouteCopy}) {
   const query = address?.trim() ? encodeURIComponent(address.trim()) : ''
   return <div className={styles.mapShell}>
     {query ? <iframe title="Destination map preview" src={`https://www.google.com/maps?q=${query}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"/> : <div className={styles.mapPlaceholder}>
       <div className={styles.mapGrid}/>
       <div className={styles.routeLine}><span/><i/><b/></div>
-      <div className={styles.mapCopy}><MapPin size={20}/><div><strong>Route preview</strong><span>Choose a contact or enter an address.</span></div></div>
+      <div className={styles.mapCopy}><MapPin size={20}/><div><strong>{c.preview}</strong><span>{c.previewHelp}</span></div></div>
     </div>}
-    {query && <a className={styles.mapLink} href={`https://www.google.com/maps/search/?api=1&query=${query}`} target="_blank" rel="noreferrer"><MapPin size={15}/>Open in Google Maps</a>}
+    {query && <a className={styles.mapLink} href={`https://www.google.com/maps/search/?api=1&query=${query}`} target="_blank" rel="noreferrer"><MapPin size={15}/>{c.openMaps}</a>}
   </div>
 }
 
 export default function Routes() {
+  const {locale}=useLocale()
+  const c=routeCopy[locale]
   const searchParams = useSearchParams()
   const requestedPriority = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
   const [form, setForm] = useState<FormState>(() => initialForm(requestedPriority))
@@ -171,6 +182,7 @@ export default function Routes() {
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [routes, setRoutes] = useState<RouteRecord[]>([])
   const [companyId, setCompanyId] = useState('')
+  const [currentUserId, setCurrentUserId] = useState('')
   const [branchId, setBranchId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -184,6 +196,7 @@ export default function Routes() {
       const {data: userData, error: userError} = await client.auth.getUser()
       if (userError) throw userError
       if (!userData.user) throw Error('Sign in to view routes.')
+      setCurrentUserId(userData.user.id)
 
       const {data: membership, error: membershipError} = await client
         .from('company_users')
@@ -213,20 +226,31 @@ export default function Routes() {
       setForm(current => current.driver_id || !availableDrivers[0] ? current : {...current, driver_id: availableDrivers[0].user_id})
       setMessage('')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to load route information.')
+      setMessage(error instanceof Error ? error.message : c.loadError)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [c.loadError])
 
   useEffect(() => { void loadWorkspace() }, [loadWorkspace])
 
   useEffect(() => {
-    if (searchParams.get('priority') === 'urgent') {
-      setForm(current => ({...current, priority: 'urgent'}))
+    const requestedContact = searchParams.get('contact')
+    const requestedDestination = searchParams.get('destination')
+    const requestedType = searchParams.get('type')
+    const requestedPriority = searchParams.get('priority')
+    if (requestedContact || requestedDestination || requestedPriority === 'urgent') {
+      const contact = contacts.find(item => item.id === requestedContact)
+      setForm(current => ({
+        ...current,
+        type: ['pickup','delivery','transfer','return'].includes(requestedType || '') ? requestedType as FormState['type'] : current.type,
+        priority: requestedPriority === 'urgent' || requestedPriority === 'priority' ? requestedPriority : current.priority,
+        contact_id: contact?.id || '',
+        destination: contact ? `${contact.company_name} - ${contact.address}` : requestedDestination || current.destination,
+      }))
       setOpen(true)
     }
-  }, [searchParams])
+  }, [contacts, searchParams])
 
   useEffect(() => {
     if (!open) return
@@ -258,20 +282,20 @@ export default function Routes() {
   const save = async () => {
     if (saving) return
     if (!form.destination.trim() || !form.driver_id) {
-      setMessage('Choose a driver and enter a destination.')
+      setMessage(c.chooseRequired)
       return
     }
     if (!companyId) {
-      setMessage('The company workspace is not ready. Refresh and try again.')
+      setMessage(c.workspacePending)
       return
     }
 
     setSaving(true)
-    setMessage('Publishing route...')
+    setMessage(c.publishing)
     try {
       const client = getSupabase()
       const scheduledLocal = new Date(`${form.date}T${form.time || '00:00'}`)
-      if (Number.isNaN(scheduledLocal.getTime())) throw Error('Choose a valid date and time.')
+      if (Number.isNaN(scheduledLocal.getTime())) throw Error(c.invalidDate)
       const scheduledAt = scheduledLocal.toISOString()
       const selected = contacts.find(contact => contact.id === form.contact_id)
       const destinationAddress = selected?.address || form.destination.trim()
@@ -288,7 +312,7 @@ export default function Routes() {
         .maybeSingle()
       if (positionError) throw positionError
 
-      const {error} = await client.from('routes').insert({
+      const {data: createdRoute,error} = await client.from('routes').insert({
         company_id: companyId,
         branch_id: branchId,
         driver_id: form.driver_id,
@@ -305,15 +329,23 @@ export default function Routes() {
         notes: form.notes.trim() || null,
         scheduled_at: scheduledAt,
         position: Number(lastRoute?.position || 0) + 1,
-      })
+      }).select('id').single()
       if (error) throw error
+
+      if (createdRoute?.id && currentUserId) await recordActivity({companyId,userId:currentUserId,action:'route_created',recordId:createdRoute.id,after:{driver_id:form.driver_id,priority:form.priority,destination:destinationAddress}}).catch(()=>undefined)
+
+      const requestId = searchParams.get('request')
+      if (requestId) {
+        const {error: requestError} = await client.from('requests').update({status:'assigned'}).eq('id', requestId).eq('company_id', companyId)
+        if (requestError) throw requestError
+      }
 
       setOpen(false)
       setForm(current => ({...initialForm(), driver_id: current.driver_id}))
       await loadWorkspace()
-      setMessage('Route published successfully.')
+      setMessage(c.published)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to save route.')
+      setMessage(error instanceof Error ? error.message : c.saveError)
     } finally {
       setSaving(false)
     }
@@ -322,92 +354,92 @@ export default function Routes() {
   return <main className={styles.page}>
     <header className={styles.header}>
       <div>
-        <p className={styles.eyebrow}>ROUTE OPERATIONS</p>
-        <h1>Routes</h1>
-        <p>See every active assignment and publish the next route.</p>
+        <p className={styles.eyebrow}>{c.operations.toUpperCase()}</p>
+        <h1>{c.title}</h1>
+        <p>{c.subtitle}</p>
       </div>
       <div className={styles.headerActions}>
-        <Link className={styles.secondaryButton} href="/routes/manage"><RouteIcon size={18}/>Manage routes</Link>
-        <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>Add route</button>
+        <Link className={styles.secondaryButton} href="/routes/manage"><RouteIcon size={18}/>{c.manage}</Link>
+        <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
       </div>
     </header>
 
     {message && <div className={message.includes('successfully') ? styles.successMessage : styles.message} role="status">{message}</div>}
 
     <section className={styles.listHeading}>
-      <div><h2>Assigned routes</h2><p>Published, active and paused routes appear here.</p></div>
-      {!loading && <span>{routes.length} active</span>}
+      <div><h2>{c.assigned}</h2><p>{c.assignedHelp}</p></div>
+      {!loading && <span>{routes.length} {c.active}</span>}
     </section>
 
-    {loading ? <section className={styles.routeGrid} aria-label="Loading routes">
+    {loading ? <section className={styles.routeGrid} aria-label={c.loadError}>
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
     </section> : routes.length ? <section className={styles.routeGrid}>
       {routes.map((route, index) => {
-        const details = driverDetails(route.driver_id ? driverIndex.get(route.driver_id) : undefined)
-        const origin = route.origin_name || route.origin_address || 'Branch'
-        const destination = route.destination_name || route.destination_address || 'Destination pending'
+        const details = driverDetails(route.driver_id ? driverIndex.get(route.driver_id) : undefined,c.teamDriver)
+        const origin = route.origin_name || route.origin_address || c.branch
+        const destination = route.destination_name || route.destination_address || c.destinationPending
         const priority = route.priority || 'normal'
         const status = route.status || 'pending'
         return <article className={`${styles.routeCard} ${priority === 'urgent' ? styles.urgentCard : ''}`} key={route.id}>
           <div className={styles.cardTop}>
-            <div className={styles.routeIdentity}><span className={styles.routeNumber}>{String(route.position || index + 1).padStart(2, '0')}</span><div><small>{typeLabel(route.mission_type)}</small><strong>{destination}</strong></div></div>
-            <div className={`${styles.statusBadge} ${styles[`status_${status}`] || ''}`}><CircleDot size={12}/>{statusLabel(status)}</div>
+            <div className={styles.routeIdentity}><span className={styles.routeNumber}>{String(route.position || index + 1).padStart(2, '0')}</span><div><small>{typeLabel(route.mission_type,c)}</small><strong>{destination}</strong></div></div>
+            <div className={`${styles.statusBadge} ${styles[`status_${status}`] || ''}`}><CircleDot size={12}/>{statusLabel(status,c)}</div>
           </div>
           <div className={styles.routePath}><MapPin size={17}/><span>{origin}</span><ArrowRight size={16}/><strong>{destination}</strong></div>
           <div className={styles.routeDetails}>
             <div><UserRound size={16}/><span><strong>{details.name}</strong>{details.email && <small>{details.email}</small>}</span></div>
-            <div><CalendarDays size={16}/><span><strong>{routeDate(route)}</strong><small>{routeTime(route)}</small></span></div>
-            <div><PackageCheck size={16}/><span><strong>{route.order_number || 'No PO'}</strong><small>Order reference</small></span></div>
+            <div><CalendarDays size={16}/><span><strong>{routeDate(route,locale,c)}</strong><small>{routeTime(route,locale,c)}</small></span></div>
+            <div><PackageCheck size={16}/><span><strong>{route.order_number || c.noPo}</strong><small>{c.orderReference}</small></span></div>
           </div>
           <div className={styles.cardFooter}>
-            <span className={`${styles.priorityBadge} ${styles[`priority_${priority}`] || ''}`}>{priority === 'priority' ? 'Priority' : priority.charAt(0).toUpperCase() + priority.slice(1)}</span>
-            <Link href="/routes/manage">View and manage<ChevronRight size={16}/></Link>
+            <span className={`${styles.priorityBadge} ${styles[`priority_${priority}`] || ''}`}>{priority==='urgent'?c.urgent:priority==='priority'?c.priorityName:c.normal}</span>
+            <Link href="/routes/manage">{c.viewManage}<ChevronRight size={16}/></Link>
           </div>
         </article>
       })}
     </section> : <section className={styles.emptyState}>
-      <div><Truck size={28}/></div><h2>No active routes</h2><p>Publish the first route for your team today.</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>Add route</button>
+      <div><Truck size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
     </section>}
 
     {open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">
         <div className={styles.builderHeader}>
-          <div><p className={styles.eyebrow}>NEW ASSIGNMENT</p><h2 id="new-route-title">Create route</h2></div>
-          <button className={styles.closeButton} type="button" aria-label="Close route form" disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
+          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{c.create}</h2></div>
+          <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
         </div>
 
         <div className={styles.builderBody}>
           <div className={styles.mapColumn}>
-            <MapPreview address={previewAddress}/>
-            <div className={styles.previewSummary}><span><i>1</i>{form.origin.trim() || 'Branch'}</span><span><i>2</i>{selectedContact?.company_name || form.destination.trim() || 'Choose destination'}</span></div>
+            <MapPreview address={previewAddress} c={c}/>
+            <div className={styles.previewSummary}><span><i>1</i>{form.origin.trim() || c.branch}</span><span><i>2</i>{selectedContact?.company_name || form.destination.trim() || c.chooseDestination}</span></div>
           </div>
 
           <div className={styles.formColumn}>
             <fieldset className={styles.fieldset}>
-              <legend>Route type</legend>
-              <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{type.label}</button>)}</div>
+              <legend>{c.routeType}</legend>
+              <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
-            <label className={styles.field}><span>Driver</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">Choose driver</option>{drivers.map(driver => { const details = driverDetails(driver); return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : details.name}</option> })}</select></div></label>
+            <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map(driver => { const details = driverDetails(driver,c.teamDriver); return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : details.name}</option> })}</select></div></label>
 
-            <label className={styles.field}><span>Starting point</span><div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} placeholder="Branch or starting address" onChange={event => setForm(current => ({...current, origin: event.target.value}))}/></div></label>
+            <label className={styles.field}><span>{c.startingPoint}</span><div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} placeholder={c.originPlaceholder} onChange={event => setForm(current => ({...current, origin: event.target.value}))}/></div></label>
 
-            <label className={styles.field}><span>Contact or destination</span><div className={styles.inputWrap}><Search size={18}/><input list="routehub-contacts" value={form.destination} placeholder="Search a contact or type an address" autoComplete="off" onChange={event => updateDestination(event.target.value)}/><datalist id="routehub-contacts">{contacts.map(contact => <option key={contact.id} value={`${contact.company_name} - ${contact.address}`}>{contact.contact_name || contact.company_name}</option>)}</datalist></div><small>Search by company or address, or enter a new address manually.</small></label>
+            <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><input list="routehub-contacts" value={form.destination} placeholder={c.searchPlaceholder} autoComplete="off" onChange={event => updateDestination(event.target.value)}/><datalist id="routehub-contacts">{contacts.map(contact => <option key={contact.id} value={`${contact.company_name} - ${contact.address}`}>{contact.contact_name || contact.company_name}</option>)}</datalist></div><small>{c.searchHelp}</small></label>
 
             <fieldset className={styles.fieldset}>
-              <legend>Priority</legend>
-              <div className={`${styles.segmented} ${styles.prioritySegments}`}>{priorities.map(priority => <button className={form.priority === priority.value ? styles.segmentActive : ''} data-priority={priority.value} type="button" key={priority.value} aria-pressed={form.priority === priority.value} onClick={() => setForm(current => ({...current, priority: priority.value}))}>{priority.label}</button>)}</div>
+              <legend>{c.priority}</legend>
+              <div className={`${styles.segmented} ${styles.prioritySegments}`}>{priorities.map(priority => <button className={form.priority === priority.value ? styles.segmentActive : ''} data-priority={priority.value} type="button" key={priority.value} aria-pressed={form.priority === priority.value} onClick={() => setForm(current => ({...current, priority: priority.value}))}>{priority.value==='urgent'?c.urgent:priority.value==='priority'?c.priorityName:c.normal}</button>)}</div>
             </fieldset>
 
             <div className={styles.splitFields}>
-              <label className={styles.field}><span>Date</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
-              <label className={styles.field}><span>Time</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
+              <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
+              <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
             </div>
 
-            <label className={styles.field}><span>PO or order number <em>Optional</em></span><input value={form.order_number} placeholder="Example: PO-45872" onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>
-            <label className={styles.field}><span>Notes <em>Optional</em></span><textarea rows={3} value={form.notes} placeholder="Delivery instructions for the driver" onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
+            <label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>
+            <label className={styles.field}><span>{c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={c.notesPlaceholder} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
 
-            <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? <><span className={styles.spinner}/>Publishing...</> : <><Truck size={19}/>Publish route</>}</button>
+            <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? <><span className={styles.spinner}/>{c.publishing}</> : <><Truck size={19}/>{c.publish}</>}</button>
           </div>
         </div>
       </section>

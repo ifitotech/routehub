@@ -1,0 +1,18 @@
+.compact-form { position: relative; }
+.request-assign { width: max-content; margin-top: 12px; gap: 7px; }
+.report-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; }
+.report-pagination button { width: 48px; padding: 0; }
+.report-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.spin { animation: spin .72s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (min-width: 900px) {
+  .nav { top: 18px; right: 24px; bottom: auto; left: auto; transform: none; border: 1px solid rgb(255 255 255 / 12%); }
+  .nav a { border-radius: 11px; transition: background .18s ease; }
+  .nav a:hover { background: rgb(255 255 255 / 12%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation: none; }
+}
