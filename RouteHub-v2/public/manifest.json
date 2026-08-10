@@ -13,12 +13,10 @@
   "lang": "en",
   "categories": ["business", "productivity", "navigation"],
   "icons": [
-    {"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    {"src": "/routehub-regular-app.jpg", "sizes": "774x774", "type": "image/jpeg", "purpose": "any"}
   ],
   "shortcuts": [
-    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png"}]},
-    {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png"}]}
+    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-app.jpg", "sizes": "774x774", "type": "image/jpeg"}]},
+    {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-regular-app.jpg", "sizes": "774x774", "type": "image/jpeg"}]}
   ]
 }

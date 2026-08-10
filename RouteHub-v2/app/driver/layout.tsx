@@ -1,5 +1,13 @@
-'use client'
-import {useEffect,useState} from 'react'
-import {useRouter} from 'next/navigation'
-import {getSupabase} from '../../lib/supabase'
-export default function DriverLayout({children}:{children:React.ReactNode}){const router=useRouter(),[ready,setReady]=useState(false);useEffect(()=>{getSupabase().auth.getSession().then(({data})=>{if(!data.session)router.replace('/login');else setReady(true)})},[router]);if(!ready)return <main className="app"><div className="card"><p className="muted">Loading secure workspace...</p></div></main>;return <>{children}</>}
+import type {Metadata} from 'next'
+import DriverSessionGate from './driver-session-gate'
+
+export const metadata:Metadata={
+  title:'RouteHub Driver',
+  manifest:'/manifest-driver.json',
+  appleWebApp:{capable:true,title:'RouteHub Driver',statusBarStyle:'default'},
+  icons:{icon:'/routehub-driver-app.jpg',apple:'/routehub-driver-app.jpg'},
+}
+
+export default function DriverLayout({children}:{children:React.ReactNode}){
+  return <DriverSessionGate>{children}</DriverSessionGate>
+}

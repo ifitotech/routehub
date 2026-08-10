@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'routehub-static-v6'
-const STATIC_ASSETS = ['/manifest.json', '/routehub-logo-alpha.png', '/routehub-icon-192.png', '/routehub-icon-512.png']
+const STATIC_CACHE = 'routehub-static-v7'
+const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/routehub-regular-app.jpg', '/routehub-driver-app.jpg']
 
 self.addEventListener('install', event => {
   self.skipWaiting()
