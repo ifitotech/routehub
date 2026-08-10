@@ -40,8 +40,12 @@ export default function Invitations() {
       if (!userData.user) throw new Error(t.signInFirst)
       const {data: membership} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
       if (!membership) throw new Error(t.noMembership)
-      const {error} = await supabase.from('invitations').insert({email: email.trim().toLowerCase(), role, company_id: membership.company_id, branch_id: membership.branch_id, created_by: userData.user.id, status: 'pending'})
-      if (error) throw error
+      const normalizedEmail = email.trim().toLowerCase()
+      const {error} = await supabase.from('invitations').insert({email: normalizedEmail, role, company_id: membership.company_id, branch_id: membership.branch_id, created_by: userData.user.id, status: 'pending'})
+      if (error) {
+        const fallback = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
+        if (fallback.error) throw new Error(fallback.error.message || error.message)
+      }
       setEmail(''); setMessage(t.invitationCreated); await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : t.unableCreateInvitation) } finally { setBusy(false) }
   }

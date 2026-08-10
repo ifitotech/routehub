@@ -12,10 +12,14 @@ import mapStyles from './driver-map.module.css'
 
 type Mission = {id:string;status:string;origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string}
 
-function MapPreview({address, title}: {address?:string;title:string}) {
+function MapPreview({address, origin, title, directions=false}: {address?:string;origin?:string;title:string;directions?:boolean}) {
   if (!address) return <div className={styles.mapEmpty}><MapPin/><span>{title}</span></div>
+  const apiKey=process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   const query=encodeURIComponent(address)
-  return <div className={styles.map}><iframe title={title} src={`https://www.google.com/maps?q=${query}&output=embed`} loading="lazy"/></div>
+  const directionsUrl=apiKey&&origin
+    ? `https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(apiKey)}&origin=${encodeURIComponent(origin)}&destination=${query}&mode=driving`
+    : `https://www.google.com/maps?q=${query}&output=embed`
+  return <div className={styles.map}><iframe title={title} src={directions?directionsUrl:`https://www.google.com/maps?q=${query}&output=embed`} loading="lazy" allowFullScreen/></div>
 }
 
 export default function Driver() {
@@ -62,7 +66,7 @@ export default function Driver() {
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
         <h2>{current.destination_name||current.destination_address||t.destination}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
-        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div><div className={mapStyles.mapCell}><MapPreview address={current.destination_address} title={t.routeMap}/></div></div>
+        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div><div className={`${mapStyles.mapCell} ${current.status==='active'?mapStyles.mapCellActive:''}`}><MapPreview address={current.destination_address} origin={current.origin_address} title={t.routeMap} directions={current.status==='active'}/></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
       <div className={styles.primaryActions}>

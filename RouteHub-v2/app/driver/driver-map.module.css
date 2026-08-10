@@ -36,6 +36,16 @@
   color: #bfdbfe;
 }
 
+.mapCellActive {
+  grid-column: 1 / -1;
+  height: 210px;
+}
+
+.mapCellActive > div,
+.mapCellActive iframe {
+  min-height: 210px;
+}
+
 @media (max-width: 560px) {
   .mapCell {
     grid-column: 1 / -1;
@@ -45,5 +55,12 @@
   .mapCell > div,
   .mapCell iframe {
     min-height: 96px;
+  }
+
+  .mapCellActive,
+  .mapCellActive > div,
+  .mapCellActive iframe {
+    height: 190px;
+    min-height: 190px;
   }
 }

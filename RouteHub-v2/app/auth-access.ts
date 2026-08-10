@@ -9,6 +9,9 @@ export async function resolveAccess(client: SupabaseClient): Promise<ResolvedAcc
   const {data: userData, error: userError} = await client.auth.getUser()
   if (userError || !userData.user) throw new Error('AUTH_REQUIRED')
   const user = userData.user
+  // Existing beta accounts can join a manager's workspace through a pending
+  // invitation. The RPC validates the authenticated email server-side.
+  try { await client.rpc('claim_my_pending_invitation') } catch { /* migration not installed yet */ }
   const [{data: admin}, {data: memberships, error: membershipError}] = await Promise.all([
     client.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
     client.from('company_users').select('role,company_id').eq('user_id', user.id),
