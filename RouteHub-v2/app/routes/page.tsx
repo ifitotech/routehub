@@ -81,6 +81,7 @@ const originCopy = {
 }
 
 const routeStatuses = ['draft', 'pending', 'published', 'active', 'paused', 'issue']
+const lastDriverKey = 'routehub:last-selected-driver'
 const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
   {value: 'delivery', label: 'Delivery'},
@@ -233,7 +234,9 @@ export default function Routes() {
       if (routeResult.error) throw routeResult.error
       if (branchResult.error) throw branchResult.error
 
-      const availableDrivers = (driverResult.data || []) as Driver[]
+      const availableDrivers = ((driverResult.data || []) as Driver[]).sort((a,b) => Number(b.role === 'driver') - Number(a.role === 'driver'))
+      const rememberedDriver = window.localStorage.getItem(lastDriverKey)
+      const preferredDriver = availableDrivers.find(driver => driver.user_id === rememberedDriver) || availableDrivers.find(driver => driver.role === 'driver') || availableDrivers[0]
       setContacts((contactResult.data || []) as Contact[])
       setDrivers(availableDrivers)
       setRoutes((routeResult.data || []) as RouteRecord[])
@@ -242,7 +245,7 @@ export default function Routes() {
       const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
       setForm(current => ({
         ...current,
-        driver_id: current.driver_id || availableDrivers[0]?.user_id || '',
+        driver_id: availableDrivers.some(driver => driver.user_id === current.driver_id) ? current.driver_id : preferredDriver?.user_id || '',
         origin: current.origin || defaultBranch?.address || defaultBranch?.name || '',
       }))
       setMessage('')
@@ -460,7 +463,7 @@ export default function Routes() {
               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
-            <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map(driver => { const details = driverDetails(driver,c.teamDriver); return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : details.name}</option> })}</select></div></label>
+            <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => {window.localStorage.setItem(lastDriverKey,event.target.value);setForm(current => ({...current, driver_id: event.target.value}))}}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const details = driverDetails(driver,c.teamDriver); const fallback=driver.role==='driver'?`${c.driver} ${index+1}`:`${driver.role?.replaceAll('_',' ')||c.teamDriver} ${index+1}`; return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : fallback}</option> })}</select></div></label>
 
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>

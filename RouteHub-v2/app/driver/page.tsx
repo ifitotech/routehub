@@ -8,6 +8,7 @@ import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './driver.module.css'
+import mapStyles from './driver-map.module.css'
 
 type Mission = {id:string;status:string;origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string}
 
@@ -29,7 +30,22 @@ export default function Driver() {
   const {t}=useLocale()
 
   const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
-  useEffect(()=>{void load();const timer=setInterval(load,30000);return()=>clearInterval(timer)},[load])
+  useEffect(()=>{
+    const client=getSupabase()
+    let disposed=false
+    let channel:ReturnType<typeof client.channel>|undefined
+    const refresh=()=>{if(!disposed)void load()}
+    void client.auth.getUser().then(({data})=>{
+      if(disposed||!data.user)return
+      channel=client.channel(`driver-routes-${data.user.id}`).on('postgres_changes',{event:'*',schema:'public',table:'routes',filter:`driver_id=eq.${data.user.id}`},refresh).subscribe()
+    })
+    refresh()
+    const timer=setInterval(refresh,10000)
+    const onVisibility=()=>{if(document.visibilityState==='visible')refresh()}
+    window.addEventListener('focus',refresh)
+    document.addEventListener('visibilitychange',onVisibility)
+    return()=>{disposed=true;clearInterval(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',onVisibility);if(channel)void client.removeChannel(channel)}
+  },[load])
 
   const current=missions.find(item=>item.status==='active')||missions[0]
   const upcoming=missions.filter(item=>item.id!==current?.id)
@@ -46,10 +62,9 @@ export default function Driver() {
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
         <h2>{current.destination_name||current.destination_address||t.destination}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
-        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div><div><small>{t.createdAt}</small><strong>{current.scheduled_at?new Date(current.scheduled_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):t.notRecorded}</strong></div></div>
+        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div><div className={mapStyles.mapCell}><MapPreview address={current.destination_address} title={t.routeMap}/></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
-      <MapPreview address={current.destination_address} title={t.routeMap}/>
       <div className={styles.primaryActions}>
         <a className={styles.navigate} href={navigateUrl} target="_blank" rel="noreferrer"><Navigation size={19}/>{t.navigate}</a>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><Play size={19}/>{t.start}</button>}
