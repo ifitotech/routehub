@@ -23,6 +23,7 @@ import {
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
+import GoogleAddressInput from '../google-address-input'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
 
@@ -35,6 +36,8 @@ type Contact = {
 }
 
 type DriverProfile = {email?: string | null}
+type Branch = {id: string; name: string; address?: string | null}
+type OriginMode = 'branch' | 'previous' | 'contact' | 'custom'
 type Driver = {
   user_id: string
   role?: string
@@ -71,6 +74,12 @@ type FormState = {
   driver_id: string
 }
 
+const originCopy = {
+  en:{branch:'Default branch',previous:'Last route',contact:'Saved place',custom:'Custom',chooseBranch:'Choose branch',chooseContact:'Choose a saved contact or store',noPrevious:'No previous route is available for this driver.'},
+  es:{branch:'Sucursal predeterminada',previous:'Última ruta',contact:'Lugar guardado',custom:'Personalizado',chooseBranch:'Elige una sucursal',chooseContact:'Elige un contacto o tienda guardada',noPrevious:'Este conductor no tiene una ruta anterior disponible.'},
+  fr:{branch:'Succursale par défaut',previous:'Dernier itinéraire',contact:'Lieu enregistré',custom:'Personnalisé',chooseBranch:'Choisir une succursale',chooseContact:'Choisir un contact ou magasin enregistré',noPrevious:'Aucun itinéraire précédent n’est disponible pour ce conducteur.'},
+}
+
 const routeStatuses = ['draft', 'pending', 'published', 'active', 'paused', 'issue']
 const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
@@ -100,7 +109,7 @@ function localSchedule() {
 function initialForm(priority: FormState['priority'] = 'normal'): FormState {
   return {
     type: 'delivery',
-    origin: 'Branch',
+    origin: '',
     destination: '',
     contact_id: '',
     priority,
@@ -180,6 +189,7 @@ export default function Routes() {
   const requestedPriority = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
   const [form, setForm] = useState<FormState>(() => initialForm(requestedPriority))
   const [contacts, setContacts] = useState<Contact[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [routes, setRoutes] = useState<RouteRecord[]>([])
   const [companyId, setCompanyId] = useState('')
@@ -189,6 +199,7 @@ export default function Routes() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [open, setOpen] = useState(false)
+  const [originMode, setOriginMode] = useState<OriginMode>('branch')
 
   const loadWorkspace = useCallback(async () => {
     setLoading(true)
@@ -211,20 +222,29 @@ export default function Routes() {
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id || null)
 
-      const [contactResult, driverResult, routeResult] = await Promise.all([
+      const [contactResult, driverResult, routeResult, branchResult] = await Promise.all([
         client.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name'),
         client.from('company_users').select('user_id,role,users(email)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative']),
         client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,destination_name,destination_address,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
+        client.from('branches').select('id,name,address').eq('company_id', membership.company_id).order('name'),
       ])
       if (contactResult.error) throw contactResult.error
       if (driverResult.error) throw driverResult.error
       if (routeResult.error) throw routeResult.error
+      if (branchResult.error) throw branchResult.error
 
       const availableDrivers = (driverResult.data || []) as Driver[]
       setContacts((contactResult.data || []) as Contact[])
       setDrivers(availableDrivers)
       setRoutes((routeResult.data || []) as RouteRecord[])
-      setForm(current => current.driver_id || !availableDrivers[0] ? current : {...current, driver_id: availableDrivers[0].user_id})
+      const availableBranches = (branchResult.data || []) as Branch[]
+      setBranches(availableBranches)
+      const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
+      setForm(current => ({
+        ...current,
+        driver_id: current.driver_id || availableDrivers[0]?.user_id || '',
+        origin: current.origin || defaultBranch?.address || defaultBranch?.name || '',
+      }))
       setMessage('')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : c.loadError)
@@ -263,6 +283,24 @@ export default function Routes() {
   const driverIndex = useMemo(() => new Map(drivers.map(driver => [driver.user_id, driver])), [drivers])
   const selectedContact = contacts.find(contact => contact.id === form.contact_id)
   const previewAddress = selectedContact?.address || form.destination
+  const oc = originCopy[locale]
+  const defaultBranch = branches.find(branch => branch.id === branchId) || branches[0]
+  const previousRoute = useMemo(() => routes
+    .filter(route => route.driver_id === form.driver_id)
+    .sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0], [routes, form.driver_id])
+
+  useEffect(() => {
+    if (originMode !== 'previous') return
+    setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || ''}))
+  }, [originMode, previousRoute])
+
+  const setOriginSource = (mode: OriginMode) => {
+    setOriginMode(mode)
+    if (mode === 'branch') setForm(current => ({...current, origin: defaultBranch?.address || defaultBranch?.name || ''}))
+    if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || ''}))
+    if (mode === 'contact') setForm(current => ({...current, origin: contacts[0]?.address || ''}))
+    if (mode === 'custom') setForm(current => ({...current, origin: ''}))
+  }
 
   const updateDestination = (value: string) => {
     const normalized = value.trim().toLowerCase()
@@ -275,7 +313,8 @@ export default function Routes() {
 
   const openBuilder = () => {
     const nextPriority: FormState['priority'] = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
-    setForm(current => ({...initialForm(nextPriority), driver_id: current.driver_id || drivers[0]?.user_id || ''}))
+    setOriginMode('branch')
+    setForm(current => ({...initialForm(nextPriority), driver_id: current.driver_id || drivers[0]?.user_id || '', origin: defaultBranch?.address || defaultBranch?.name || ''}))
     setMessage('')
     setOpen(true)
   }
@@ -321,8 +360,8 @@ export default function Routes() {
         mode: 'flexible',
         status: 'published',
         mission_type: form.type,
-        origin_name: form.origin.trim() || 'Branch',
-        origin_address: form.origin.trim() || 'Branch',
+        origin_name: originMode === 'branch' ? defaultBranch?.name || c.branch : originMode === 'previous' ? previousRoute?.destination_name || form.origin.trim() : contacts.find(contact => contact.address === form.origin)?.company_name || form.origin.trim(),
+        origin_address: form.origin.trim() || defaultBranch?.address || defaultBranch?.name || c.branch,
         destination_name: destinationName,
         destination_address: destinationAddress,
         priority: form.priority,
@@ -423,9 +462,16 @@ export default function Routes() {
 
             <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map(driver => { const details = driverDetails(driver,c.teamDriver); return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : details.name}</option> })}</select></div></label>
 
-            <label className={styles.field}><span>{c.startingPoint}</span><div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} placeholder={c.originPlaceholder} onChange={event => setForm(current => ({...current, origin: event.target.value}))}/></div></label>
+            <fieldset className={styles.fieldset}>
+              <legend>{c.startingPoint}</legend>
+              <div className={styles.segmented}>{(['branch','previous','contact','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
+              {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{branches.map(branch => <option key={branch.id} value={branch.address || branch.name}>{branch.name}{branch.address ? ` - ${branch.address}` : ''}</option>)}</select></div>}
+              {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} readOnly placeholder={oc.noPrevious}/></div>}
+              {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{contacts.map(contact => <option key={contact.id} value={contact.address}>{contact.company_name} - {contact.address}</option>)}</select></div>}
+              {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} autoComplete="street-address" onValueChange={value => setForm(current => ({...current, origin:value}))}/></div>}
+            </fieldset>
 
-            <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><input list="routehub-contacts" value={form.destination} placeholder={c.searchPlaceholder} autoComplete="off" onChange={event => updateDestination(event.target.value)}/><datalist id="routehub-contacts">{contacts.map(contact => <option key={contact.id} value={`${contact.company_name} - ${contact.address}`}>{contact.contact_name || contact.company_name}</option>)}</datalist></div><small>{c.searchHelp}</small></label>
+            <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput list="routehub-contacts" value={form.destination} placeholder={c.searchPlaceholder} autoComplete="off" onValueChange={updateDestination}/><datalist id="routehub-contacts">{contacts.map(contact => <option key={contact.id} value={`${contact.company_name} - ${contact.address}`}>{contact.contact_name || contact.company_name}</option>)}</datalist></div><small>{c.searchHelp}</small></label>
 
             <fieldset className={styles.fieldset}>
               <legend>{c.priority}</legend>
