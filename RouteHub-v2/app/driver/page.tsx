@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {Camera, Check, MapPin, Navigation, Pause, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
+import {Camera, Check, History as HistoryIcon, Home, MapPin, Navigation, Pause, Play, RotateCcw, Settings as SettingsIcon, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
@@ -93,7 +93,7 @@ export default function Driver() {
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('');setPhoto(null)}
 
   return <main className={`app ${styles.page}`}>
-    <header className={styles.header}><div><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div><div className="avatar">DR</div></header>
+    <header className={styles.header}><div className={styles.brand}><img src="/routehub-driver-app.jpg" alt="RouteHub Driver"/><strong>RouteHub</strong></div><div className="avatar">DR</div></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
     <div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>
     {locationStatus&&<div className={styles.toast} role="status">{locationStatus}</div>}
     {message&&<div className={styles.toast} role="status">{message}</div>}
@@ -116,6 +116,6 @@ export default function Driver() {
       <section className={styles.next}><div className={styles.sectionTitle}><span>{t.nextRoute}</span><b>{upcoming.length}</b></div>{upcoming.length?upcoming.slice(0,3).map((item,index)=><article key={item.id}><span className={styles.number}>{index+2}</span><div><small>{(item.mission_type||'delivery').toUpperCase()}</small><strong>{item.destination_name||item.destination_address||t.destination}</strong><span>{item.destination_address}</span></div><span className={item.priority==='urgent'?styles.urgentDot:styles.dot}/></article>):<div className={styles.noNext}>{t.noNext}</div>}</section>
     </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRouteHelp}</p></section>}
     {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>setPhoto(event.target.files?.[0]||null)}/><button className={styles.photoButton} disabled={busy} onClick={()=>photo?void update('completed'):fileInput.current?.click()}><Camera/>{photo?t.completeWithPhoto:t.addPhoto}</button>{photo&&<small className={styles.fileName}>{photo.name}</small>}<button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
-    <nav className="nav"><Link href="/driver">{t.home}</Link><Link href="/driver/history">{t.history}</Link><Link href="/driver/settings">{t.settings}</Link></nav>
+    <nav className="nav" aria-label="Driver navigation"><Link href="/driver"><Home size={17}/><span>{t.home}</span></Link><Link href="/driver/history"><HistoryIcon size={17}/><span>{t.history}</span></Link><Link href="/driver/settings"><SettingsIcon size={17}/><span>{t.settings}</span></Link></nav>
   </main>
 }

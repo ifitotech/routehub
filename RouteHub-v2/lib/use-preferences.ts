@@ -3,6 +3,45 @@
 import {useCallback, useEffect, useState} from 'react'
 import {getLocale, isLocale, translations, type Locale} from './i18n'
 
+// Older dictionary entries were saved with a UTF-8/Latin-1 mismatch. Repair
+// them at the presentation boundary so every screen (including cached PWAs)
+// renders real accents without changing the stored language preference.
+function repairMojibake(value: string): string {
+  return value
+    .replaceAll('ÃƒÂ', 'Ã')
+    .replaceAll('Ãƒâ€°', 'É')
+    .replaceAll('ÃƒÂ©', 'é')
+    .replaceAll('ÃƒÂ¡', 'á')
+    .replaceAll('ÃƒÂ­', 'í')
+    .replaceAll('ÃƒÂ³', 'ó')
+    .replaceAll('ÃƒÂº', 'ú')
+    .replaceAll('ÃƒÂ±', 'ñ')
+    .replaceAll('Ã¡', 'á').replaceAll('Ã©', 'é').replaceAll('Ã­', 'í')
+    .replaceAll('Ã³', 'ó').replaceAll('Ãº', 'ú').replaceAll('Ã±', 'ñ')
+    .replaceAll('Ã‰', 'É').replaceAll('Ãš', 'Ú').replaceAll('Ã‘', 'Ñ')
+    .replaceAll('Â¿', '¿').replaceAll('Â¡', '¡').replaceAll('Â·', '·')
+    .replaceAll('â€¦', '…').replaceAll('â€™', '’').replaceAll('â€“', '–')
+    .replaceAll('âš ', '⚠').replaceAll('Â', '')
+}
+
+function decodeUtf8Garble(value: string): string {
+  let repaired = value
+  for (let pass = 0; pass < 3 && /[\u00c3\u00c2]/.test(repaired); pass += 1) {
+    try {
+      const decoded = decodeURIComponent(escape(repaired))
+      if (decoded === repaired) break
+      repaired = decoded
+    } catch {
+      break
+    }
+  }
+  return repaired.replace(/\u00a0/g, ' ').replace(/\u00e2\u009a\u00a0/g, '\u26a0')
+}
+
+function repairedDictionary(locale: Locale) {
+  return Object.fromEntries(Object.entries(translations[locale]).map(([key, value]) => [key, decodeUtf8Garble(repairMojibake(value))])) as typeof translations[Locale]
+}
+
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 export const LANGUAGE_EVENT = 'routehub:language-change'
@@ -52,7 +91,7 @@ export function useLocale() {
     if (isLocale(value)) setLocalePreference(value)
   }, [])
 
-  return {locale, t: translations[locale], setLocale: changeLocale}
+  return {locale, t: repairedDictionary(locale), setLocale: changeLocale}
 }
 
 export function useThemePreference() {
