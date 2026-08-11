@@ -46,3 +46,10 @@ html[data-theme="dark"] .app article[class*="route_"]{background:var(--rh-surfac
 
 /* Prevent page-level sideways scrolling on iOS and narrow screens. */
 html,body{overflow-x:hidden;overflow-x:clip}
+/* Keep the document viewport locked to the device width. Components may
+   scroll internally (for example a modal), but the page itself must never
+   pan left or right on mobile Safari or Android Chrome. */
+html,body{width:100%;max-width:100%;overflow-x:hidden!important;overscroll-behavior-x:none}
+body>*,#__next{width:100%;max-width:100%;overflow-x:hidden}
+.app,.page,.premium-shell,.landing{width:100%;max-width:100%;overflow-x:hidden}
+@media(max-width:640px){.app,.page,.premium-shell,.landing{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}.global-chrome{max-width:calc(100vw - 24px)}.global-chrome img{max-width:100%}}
