@@ -55,16 +55,28 @@ body>*,#__next{width:100%;max-width:100%;overflow-x:hidden}
 @media(max-width:640px){.app,.page,.premium-shell,.landing{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}.global-chrome{max-width:calc(100vw - 24px)}.global-chrome img{max-width:100%}}
 
 /* Premium bottom navigation: one compact, touch-friendly pill that respects iOS safe areas. */
-.nav,.app-bottom-nav{bottom:max(6px,env(safe-area-inset-bottom));left:50%;right:auto;width:min(520px,calc(100vw - 20px));max-width:calc(100vw - 20px);padding:6px;gap:4px;border:1px solid rgb(255 255 255 / 12%);border-radius:22px;background:rgb(20 35 59 / 96%);box-shadow:0 12px 34px rgb(15 23 42 / 25%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:translateX(-50%)}
+.nav,.app-bottom-nav{bottom:max(0px,env(safe-area-inset-bottom));left:50%;right:auto;width:min(520px,calc(100vw - 20px));max-width:calc(100vw - 20px);padding:6px;gap:4px;border:1px solid rgb(255 255 255 / 18%);border-radius:22px;background:rgb(20 35 59 / 82%);box-shadow:0 12px 34px rgb(15 23 42 / 25%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:translateX(-50%)}
 .nav a,.app-bottom-nav a{flex:1;min-width:0;min-height:48px;display:grid;place-items:center;padding:8px 10px;border-radius:16px;color:#dbeafe;font-size:12px;font-weight:800;line-height:1.1;text-align:center;white-space:nowrap;transition:background .18s ease,color .18s ease,transform .18s ease}
 .nav a:hover,.nav a:focus-visible,.app-bottom-nav a:hover,.app-bottom-nav a:focus-visible{background:rgb(37 99 235 / 34%);color:#fff}
 .nav a:active,.app-bottom-nav a:active{transform:scale(.96)}
+.nav:not(.app-bottom-nav) a{display:grid;place-items:center;gap:3px}
+.nav:not(.app-bottom-nav) a::before{font-size:16px;line-height:1;opacity:.92}
+.nav:not(.app-bottom-nav) a:nth-child(1)::before{content:'⌂'}
+.nav:not(.app-bottom-nav) a:nth-child(2)::before{content:'◈'}
+.nav:not(.app-bottom-nav) a:nth-child(3)::before{content:'▣'}
+.nav:not(.app-bottom-nav) a:nth-child(4)::before{content:'⚙'}
 .quick-action.primary{background:var(--rh-primary)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 10px 22px rgb(37 99 235 / 24%)}
 .quick-action.primary:hover{background:var(--rh-primary-hover)!important;color:#fff!important}
 .quick-action:not(.primary){background:var(--rh-surface)!important;color:var(--rh-text)!important}
 html[data-theme="dark"] .quick-action:not(.primary){background:var(--rh-surface)!important;color:var(--rh-text)!important}
 html[data-theme="dark"] .quick-action.primary{background:var(--rh-primary)!important;color:#fff!important}
-@media(max-width:640px){.nav,.app-bottom-nav{bottom:max(4px,env(safe-area-inset-bottom));width:calc(100vw - 16px);max-width:calc(100vw - 16px);border-radius:20px}.nav a,.app-bottom-nav a{min-height:50px;padding-inline:6px;font-size:11px}.app{padding-bottom:calc(88px + env(safe-area-inset-bottom))}}
+@media(max-width:640px){.nav,.app-bottom-nav{bottom:max(0px,env(safe-area-inset-bottom));width:calc(100vw - 16px);max-width:calc(100vw - 16px);border-radius:20px}.nav a,.app-bottom-nav a{min-height:50px;padding-inline:6px;font-size:11px}.app{padding-bottom:calc(88px + env(safe-area-inset-bottom))}}
+
+/* Keep the centered brand below the top safe-area without letting the blurred
+   chrome overlap the page heading. */
+.global-chrome .global-logo{transform:translateY(8px)}
+.global-chrome.is-scrolled .global-logo{transform:translateY(-8px)}
+@media(max-width:640px){.global-chrome .global-logo{transform:translateY(6px)}.global-chrome.is-scrolled .global-logo{transform:translateY(-8px)}}
 
 /* iOS Safari zooms the entire viewport when a focused control is below 16px.
    Keep controls readable at the native scale so focusing an invitation email
