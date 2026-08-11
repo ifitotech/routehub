@@ -4,3 +4,14 @@
 .fieldset .inputWrap input:focus,.fieldset .inputWrap select:focus{border-color:#75a3ee;box-shadow:0 0 0 4px rgba(37,99,235,.11)}
 /* Autoprefixer-safe alignment override. */
 .listHeading{align-items:flex-end}
+/* Compact route cards keep dispatch lists scannable on desktop and mobile. */
+.routeCard{padding:14px 16px;border-radius:16px}
+.routePath{margin:11px 0 10px;padding:9px 10px;font-size:12px}
+.routeDetails{gap:7px}
+.routeDetails>div{gap:5px}
+.cardFooter{margin-top:10px;padding-top:9px}
+.routeNumber{width:32px;height:32px;flex-basis:32px;border-radius:10px}
+.routeIdentity{gap:8px}
+.routeIdentity strong{font-size:15px}
+.statusBadge,.priorityBadge{padding:4px 7px;font-size:9px}
+@media(max-width:640px){.routeCard{padding:12px}.routePath{margin:9px 0 8px}.routeDetails{grid-template-columns:1.2fr .8fr;gap:6px}.routeDetails>div:first-child{grid-column:1/-1}.cardFooter{margin-top:8px;padding-top:8px}}

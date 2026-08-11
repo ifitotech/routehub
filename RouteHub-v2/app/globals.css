@@ -103,3 +103,7 @@ html[data-theme="light"] .settings-page .settings-card{background:rgba(255,255,2
     -webkit-text-size-adjust: 100%;
   }
 }
+/* Request actions stay compact while keeping cancel separate from assignment. */
+.request-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.request-actions .request-assign,.request-actions .request-cancel{display:inline-flex;align-items:center;gap:6px}
+.request-cancel{color:#dc2626!important;border-color:rgba(239,68,68,.35)!important}
