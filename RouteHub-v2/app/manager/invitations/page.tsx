@@ -52,9 +52,20 @@ export default function Invitations() {
       if (lookupError) throw lookupError
 
       const invitation = {role, branch_id: membership.branch_id, status: 'pending', revoked_at: null}
-      const result = existing
-        ? await supabase.from('invitations').update(invitation).eq('id', existing.id)
-        : await supabase.from('invitations').insert({...invitation, email: normalizedEmail, company_id: membership.company_id, created_by: userData.user.id})
+      let result
+      if (existing) {
+        result = await supabase.from('invitations').update(invitation).eq('id', existing.id)
+      } else {
+        const baseInvitation = {...invitation, email: normalizedEmail, company_id: membership.company_id}
+        // Older RouteHub databases use `invited_by`; newer migrations use
+        // `created_by`. Try the production column first and keep the newer
+        // schema as a compatibility fallback.
+        result = await supabase.from('invitations').insert({...baseInvitation, invited_by: userData.user.id})
+        const invitedByMissing = result.error?.code === 'PGRST204' || result.error?.message.toLowerCase().includes("'invited_by'")
+        if (invitedByMissing) {
+          result = await supabase.from('invitations').insert({...baseInvitation, created_by: userData.user.id})
+        }
+      }
 
       if (result.error) {
         const fallback = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
