@@ -13,10 +13,10 @@
   "lang": "en",
   "categories": ["business", "productivity", "navigation"],
   "icons": [
-    {"src": "/routehub-driver-app.jpg", "sizes": "774x774", "type": "image/jpeg", "purpose": "any"}
+    {"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg", "purpose": "any"}
   ],
   "shortcuts": [
-    {"name": "Current routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-app.jpg", "sizes": "774x774", "type": "image/jpeg"}]},
-    {"name": "History", "short_name": "History", "url": "/driver/history", "icons": [{"src": "/routehub-driver-app.jpg", "sizes": "774x774", "type": "image/jpeg"}]}
+    {"name": "Current routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]},
+    {"name": "History", "short_name": "History", "url": "/driver/history", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]}
   ]
 }

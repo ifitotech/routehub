@@ -3,21 +3,18 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {AlertTriangle, Building2, ChevronDown, ChevronRight, ClipboardList, FileText, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {AlertTriangle, Building2, ChevronRight, ClipboardList, FileText, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadDashboardSummary} from '../../lib/dashboard'
 import {useLocale} from '../../lib/use-preferences'
+import NotificationBell from '../notification-bell'
 import styles from './manager-dashboard.module.css'
 
 type Summary = {activeRoutes: number; pendingRequests: number; availableDrivers: number; openIssues: number}
 type TodayRoute = {id: string; mission_type?: string | null; destination_name?: string | null; status?: string | null; driver_id?: string | null}
 
 const emptySummary: Summary = {activeRoutes: 0, pendingRequests: 0, availableDrivers: 0, openIssues: 0}
-
-function initials(value: string) {
-  return value.split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join('') || 'MG'
-}
 
 export default function Manager() {
   const {t} = useLocale()
@@ -70,12 +67,10 @@ export default function Manager() {
   return <main className={`app ${styles.dashboard}`}>
     <header className={styles.header}>
       <Link href="/manager" className={styles.brand} aria-label="RouteHub home">
-        <Image src="/routehub-regular-app.jpg" alt="" width={40} height={40} priority />
+        <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
         <span>Route<em>Hub</em></span>
       </Link>
-      <button className={styles.profile} type="button" aria-label={t.profile}>
-        <span className={styles.avatar}>{initials(displayName)}</span><ChevronDown size={17} aria-hidden="true" />
-      </button>
+      <NotificationBell />
     </header>
 
     <section className={styles.intro}>

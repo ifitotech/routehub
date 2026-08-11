@@ -377,6 +377,7 @@ export default function Routes() {
       if (error) throw error
 
       if (createdRoute?.id && currentUserId) await recordActivity({companyId,userId:currentUserId,action:'route_created',recordId:createdRoute.id,after:{driver_id:form.driver_id,priority:form.priority,destination:destinationAddress}}).catch(()=>undefined)
+      window.dispatchEvent(new Event('routehub:notifications-refresh'))
 
       const requestId = searchParams.get('request')
       if (requestId) {

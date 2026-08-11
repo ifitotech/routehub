@@ -1,6 +1,7 @@
 import {BarChart3, Building2, ChevronRight, FlaskConical, ScrollText, Settings, ShieldCheck, UserCheck} from 'lucide-react'
 import Link from 'next/link'
 import styles from './admin.module.css'
+import NotificationBell from '../notification-bell'
 
 const tools = [
   {href: '/admin/companies', title: 'Companies', description: 'Review organizations and workspace status.', icon: Building2},
@@ -14,7 +15,7 @@ const tools = [
 export default function Admin() {
   return <main className="app">
     <div className={styles.page}>
-      <header className={styles.header}><div><p className={styles.eyebrow}>CEO / Admin</p><h1 className={styles.title}>Platform administration</h1><p className={styles.subtitle}>Monitor RouteHub while keeping each company&apos;s routes, customers and delivery details private.</p></div><div className={styles.avatar}>CEO</div></header>
+      <header className={styles.header}><div><p className={styles.eyebrow}>CEO / Admin</p><h1 className={styles.title}>Platform administration</h1><p className={styles.subtitle}>Monitor RouteHub while keeping each company&apos;s routes, customers and delivery details private.</p></div><NotificationBell /></header>
       <section className={styles.hero}>
         <span className={styles.heroIcon}><ShieldCheck size={23}/></span>
         <h2>Private by design. Ready to scale.</h2>

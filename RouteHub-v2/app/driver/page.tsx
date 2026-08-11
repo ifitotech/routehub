@@ -9,6 +9,7 @@ import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import {endDrivingDay, getActiveDrivingSession, startDrivingDay, updateDrivingLocation, type DrivingSession} from '../../lib/driving-session'
 import {getCurrentLocation} from '../../lib/location'
+import NotificationBell from '../notification-bell'
 import styles from './driver.module.css'
 import mapStyles from './driver-map.module.css'
 
@@ -101,7 +102,7 @@ export default function Driver() {
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('');setPhoto(null)}
 
   return <main className={`app ${styles.page}`}>
-    <header className={styles.header}><div className={styles.brand}><img src="/routehub-driver-app.jpg" alt="RouteHub Driver"/><strong>RouteHub</strong></div><div className="avatar">DR</div></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
+    <header className={styles.header}><div className={styles.brand}><img src="/routehub-driver-new.jpg" alt="RouteHub Driver"/><strong>RouteHub</strong></div><NotificationBell /></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
     {(drivingSession||current?.status==='active')&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
     {locationStatus&&<div className={styles.toast} role="status">{locationStatus}</div>}
     {message&&<div className={styles.toast} role="status">{message}</div>}

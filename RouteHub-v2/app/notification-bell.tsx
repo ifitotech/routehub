@@ -1,0 +1,190 @@
+'use client'
+
+import Link from 'next/link'
+import {Bell, Check, ClipboardList, Mail, Route as RouteIcon, X} from 'lucide-react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
+import {getSupabase} from '../lib/supabase'
+import {useLocale} from '../lib/use-preferences'
+
+type NotificationType = 'invitation' | 'route' | 'request' | 'activity'
+type NotificationItem = {id: string; type: NotificationType; title: string; body: string; createdAt: string; href: string}
+
+const readKey = (userId: string) => `routehub:notifications:read:${userId}`
+
+function relativeTime(value: string, locale: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const seconds = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000))
+  if (seconds < 60) return locale === 'es' ? 'Ahora' : locale === 'fr' ? 'A l\u2019instant' : 'Just now'
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return locale === 'es' ? `Hace ${minutes} min` : locale === 'fr' ? `Il y a ${minutes} min` : `${minutes} min ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return locale === 'es' ? `Hace ${hours} h` : locale === 'fr' ? `Il y a ${hours} h` : `${hours}h ago`
+  const days = Math.round(hours / 24)
+  return locale === 'es' ? `Hace ${days} d` : locale === 'fr' ? `Il y a ${days} j` : `${days}d ago`
+}
+
+function iconFor(type: NotificationType) {
+  if (type === 'invitation') return Mail
+  if (type === 'route') return RouteIcon
+  if (type === 'request') return ClipboardList
+  return Bell
+}
+
+export default function NotificationBell() {
+  const {locale} = useLocale()
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [items, setItems] = useState<NotificationItem[]>([])
+  const [read, setRead] = useState<string[]>([])
+  const [userId, setUserId] = useState('')
+
+  const copy = useMemo(() => {
+    const all = {
+      en: {
+        label: 'Notifications', title: 'Notifications', empty: 'You’re all caught up.',
+        emptyHelp: 'New invitations, routes and requests will appear here.', markRead: 'Mark all as read',
+        invitation: 'New team invitation', invitationBody: 'A team invitation is waiting for your account.',
+        assignedRoute: 'Route assigned', activeRoute: 'Route updated', routeBody: 'A route assigned to you needs attention.',
+        activity: 'New activity', request: 'New request', requestBody: 'A request was added to your company workspace.',
+        unread: 'unread', close: 'Close', loading: 'Loading…'
+      },
+      es: {
+        label: 'Notificaciones', title: 'Notificaciones', empty: 'Todo está al día.',
+        emptyHelp: 'Aquí aparecerán invitaciones, rutas y solicitudes nuevas.', markRead: 'Marcar todo como leído',
+        invitation: 'Nueva invitación del equipo', invitationBody: 'Hay una invitación pendiente para tu cuenta.',
+        assignedRoute: 'Ruta asignada', activeRoute: 'Ruta actualizada', routeBody: 'Una ruta asignada necesita tu atención.',
+        activity: 'Nueva actividad', request: 'Nueva solicitud', requestBody: 'Se añadió una solicitud al espacio de tu empresa.',
+        unread: 'sin leer', close: 'Cerrar', loading: 'Cargando…'
+      },
+      fr: {
+        label: 'Notifications', title: 'Notifications', empty: 'Tout est à jour.',
+        emptyHelp: 'Les invitations, itinéraires et demandes apparaîtront ici.', markRead: 'Tout marquer comme lu',
+        invitation: 'Nouvelle invitation', invitationBody: 'Une invitation est en attente pour votre compte.',
+        assignedRoute: 'Itinéraire attribué', activeRoute: 'Itinéraire mis à jour', routeBody: 'Un itinéraire attribué nécessite votre attention.',
+        activity: 'Nouvelle activité', request: 'Nouvelle demande', requestBody: 'Une demande a été ajoutée à votre entreprise.',
+        unread: 'non lues', close: 'Fermer', loading: 'Chargement…'
+      }
+    } as const
+    return all[locale]
+  }, [locale])
+
+  const load = useCallback(async () => {
+    const client = getSupabase()
+    const {data: auth} = await client.auth.getUser()
+    const user = auth.user
+    if (!user) return
+    setUserId(user.id)
+    const stored = window.localStorage.getItem(readKey(user.id))
+    try { setRead(stored ? JSON.parse(stored) as string[] : []) } catch { setRead([]) }
+    setLoading(true)
+    try {
+      const membershipResult = await client.from('company_users').select('company_id,role').eq('user_id', user.id).limit(1).maybeSingle()
+      const membership = membershipResult.data as {company_id?: string; role?: string} | null
+      const companyId = membership?.company_id
+      const role = membership?.role || ''
+      // Supabase query builders are thenable but are not typed as native
+      // Promise instances, so keep this small query batch structurally typed.
+      const queries: any[] = []
+
+      if (companyId && ['branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'].includes(role)) {
+        queries.push(client.from('invitations').select('id,email,role,status,created_at').eq('company_id', companyId).eq('status', 'pending').order('created_at', {ascending: false}).limit(8))
+      } else {
+        queries.push(Promise.resolve({data: [], error: null}))
+      }
+
+      // A claimed invitation is still useful as the driver's first alert. The
+      // email filter prevents displaying another member's invitations.
+      if (companyId && user.email) {
+        queries.push(client.from('invitations').select('id,email,role,status,created_at').eq('email', user.email.toLowerCase()).in('status', ['pending', 'accepted']).order('created_at', {ascending: false}).limit(4))
+      } else {
+        queries.push(Promise.resolve({data: [], error: null}))
+      }
+
+      queries.push(client.from('routes').select('id,status,mission_type,destination_name,created_at,updated_version').eq('driver_id', user.id).in('status', ['published', 'active', 'paused']).order('created_at', {ascending: false}).limit(8))
+
+      if (companyId) {
+        queries.push(client.from('activity_logs').select('id,action,created_at,record_id').eq('company_id', companyId).order('created_at', {ascending: false}).limit(12))
+      } else {
+        queries.push(Promise.resolve({data: [], error: null}))
+      }
+
+      const [invitesResult, ownInvitesResult, routesResult, activityResult] = await Promise.all(queries) as any[]
+      const next: NotificationItem[] = []
+      for (const invite of (invitesResult?.data || [])) {
+        next.push({id: `invitation:${invite.id}`, type: 'invitation', title: copy.invitation, body: `${copy.invitationBody} (${invite.role})`, createdAt: invite.created_at, href: '/manager/invitations'})
+      }
+      for (const invite of (ownInvitesResult?.data || [])) {
+        next.push({id: `invitation:${invite.id}`, type: 'invitation', title: copy.invitation, body: `${copy.invitationBody} (${invite.role})`, createdAt: invite.created_at, href: role === 'driver' ? '/driver' : '/manager/invitations'})
+      }
+      for (const route of (routesResult?.data || [])) {
+        const isActive = route.status === 'active' || route.status === 'paused'
+        next.push({id: `route:${route.id}:${route.updated_version || route.status}`, type: 'route', title: isActive ? copy.activeRoute : copy.assignedRoute, body: `${String(route.mission_type || 'Delivery').toUpperCase()} · ${route.destination_name || copy.routeBody}`, createdAt: route.created_at, href: '/driver'})
+      }
+      const actionText: Record<string, {title: string; body: string; type: NotificationType; href: string}> = {
+        route_created: {title: copy.assignedRoute, body: copy.routeBody, type: 'route', href: '/routes'},
+        mission_updated: {title: copy.activeRoute, body: copy.routeBody, type: 'route', href: '/routes'},
+        request_created: {title: copy.request, body: copy.requestBody, type: 'request', href: '/requests'},
+        delivery_completed: {title: copy.activity, body: copy.routeBody, type: 'activity', href: '/reports'},
+        issue_reported: {title: copy.activity, body: copy.routeBody, type: 'activity', href: '/reports'}
+      }
+      for (const activity of (activityResult?.data || [])) {
+        const mapped = actionText[activity.action]
+        if (mapped) next.push({id: `activity:${activity.id}`, ...mapped, createdAt: activity.created_at})
+      }
+      const unique = Array.from(new Map(next.map(item => [item.id, item])).values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 12)
+      setItems(unique)
+      setRead(current => current.filter(id => unique.some(item => item.id === id)))
+    } catch {
+      // Notification access is additive. A denied table/query must not affect the workspace.
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
+  }, [copy])
+
+  useEffect(() => {
+    void load()
+    const timer = window.setInterval(() => void load(), 60_000)
+    const refresh = () => {
+      if (document.visibilityState !== 'hidden') void load()
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('routehub:notifications-refresh', refresh)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('routehub:notifications-refresh', refresh)
+    }
+  }, [load])
+
+  useEffect(() => {
+    if (!open) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [open])
+
+  const unread = items.filter(item => !read.includes(item.id)).length
+  const markAllRead = () => {
+    const ids = items.map(item => item.id)
+    setRead(ids)
+    if (userId) window.localStorage.setItem(readKey(userId), JSON.stringify(ids))
+  }
+
+  return <div className="notification-bell">
+    <button className="notification-bell__button" type="button" aria-label={`${copy.label}${unread ? `, ${unread} ${copy.unread}` : ''}`} aria-expanded={open} aria-controls="routehub-notifications" onClick={() => { setOpen(value => !value); if (!open) void load() }}>
+      <Bell size={20} strokeWidth={2.2} aria-hidden="true" />
+      {unread > 0 && <span className="notification-bell__count" aria-label={`${unread} unread`}>{unread > 9 ? '9+' : unread}</span>}
+    </button>
+    {open && <div className="notification-bell__panel" id="routehub-notifications" role="dialog" aria-label={copy.title}>
+      <div className="notification-bell__heading"><div><strong>{copy.title}</strong><span>{unread ? `${unread} ${copy.unread}` : copy.empty}</span></div><button type="button" className="notification-bell__close" onClick={() => setOpen(false)} aria-label={copy.close}><X size={17}/></button></div>
+      {loading ? <div className="notification-bell__empty">{copy.loading}</div> : items.length ? <div className="notification-bell__list">{items.map(item => { const Icon = iconFor(item.type); const isRead = read.includes(item.id); return <Link className={`notification-bell__item${isRead ? ' is-read' : ''}`} href={item.href} key={item.id} onClick={() => { if (!isRead) { const next = [...read, item.id]; setRead(next); if (userId) window.localStorage.setItem(readKey(userId), JSON.stringify(next)) }; setOpen(false) }}><span className={`notification-bell__icon notification-bell__icon--${item.type}`}><Icon size={17}/></span><span className="notification-bell__copy"><strong>{item.title}</strong><span>{item.body}</span><small>{relativeTime(item.createdAt, locale)}</small></span>{!isRead && <i aria-hidden="true" />}</Link> })}</div> : <div className="notification-bell__empty"><Check size={22}/><strong>{copy.empty}</strong><span>{copy.emptyHelp}</span></div>}
+      {items.length > 0 && unread > 0 && <button className="notification-bell__mark" type="button" onClick={markAllRead}>{copy.markRead}</button>}
+    </div>}
+  </div>
+}

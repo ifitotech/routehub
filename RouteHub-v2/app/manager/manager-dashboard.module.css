@@ -40,3 +40,19 @@
 :global(html[data-theme='light']) .dashboard .header{border-color:rgba(100,116,139,.16)}
 :global(html[data-theme='light']) .dashboard .branch,:global(html[data-theme='light']) .dashboard .metric,:global(html[data-theme='light']) .dashboard .todayCard,:global(html[data-theme='light']) .dashboard .action,:global(html[data-theme='light']) .dashboard .tool{background:rgba(255,255,255,.92);color:var(--manager-text)}
 :global(html[data-theme='light']) .dashboard .metric{box-shadow:0 8px 24px rgba(15,23,42,.06)}
+
+/* Keep the Manager workspace centered and readable in both themes. */
+.dashboard{margin:0 auto;padding:22px 24px 116px;max-width:1120px;min-height:100svh}
+.brand img{background:transparent;border-radius:10px}
+:global(html[data-theme='light']) .dashboard{color:#0f172a;background:linear-gradient(180deg,#f8fafc 0%,#eef4fb 100%)}
+:global(html[data-theme='light']) .dashboard .brand,
+:global(html[data-theme='light']) .dashboard .brand span{color:#14233b}
+:global(html[data-theme='light']) .dashboard .brand span em{color:#2563eb}
+:global(html[data-theme='light']) .dashboard .profile{color:#14233b}
+:global(html[data-theme='light']) .dashboard .sectionLabel{color:#64748b}
+:global(html[data-theme='light']) .dashboard .branch,
+:global(html[data-theme='light']) .dashboard .metric,
+:global(html[data-theme='light']) .dashboard .todayCard,
+:global(html[data-theme='light']) .dashboard .action,
+:global(html[data-theme='light']) .dashboard .tool{box-shadow:0 8px 24px rgba(15,23,42,.06)}
+@media(max-width:640px){.dashboard{padding:18px 18px 112px}.header{padding-bottom:12px}.intro{padding-top:22px}}

@@ -12,7 +12,7 @@ export const metadata = {
   applicationName: 'RouteHub',
   manifest: '/manifest.json',
   appleWebApp: {capable: true, title: 'RouteHub', statusBarStyle: 'default' as const},
-  icons: {icon: '/routehub-regular-app.jpg', apple: '/routehub-regular-app.jpg'},
+  icons: {icon: '/routehub-regular-new.jpg', apple: '/routehub-regular-new.jpg'},
 }
 
 export const viewport = {
