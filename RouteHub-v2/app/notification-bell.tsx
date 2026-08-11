@@ -7,7 +7,16 @@ import {getSupabase} from '../lib/supabase'
 import {useLocale} from '../lib/use-preferences'
 
 type NotificationType = 'invitation' | 'route' | 'request' | 'activity'
-type NotificationItem = {id: string; type: NotificationType; title: string; body: string; createdAt: string; href: string}
+type NotificationItem = {
+  id: string
+  type: NotificationType
+  title: string
+  body: string
+  createdAt: string
+  href: string
+  invitationStatus?: string
+  canAccept?: boolean
+}
 
 const readKey = (userId: string) => `routehub:notifications:read:${userId}`
 
@@ -38,6 +47,8 @@ export default function NotificationBell() {
   const [items, setItems] = useState<NotificationItem[]>([])
   const [read, setRead] = useState<string[]>([])
   const [userId, setUserId] = useState('')
+  const [acceptingId, setAcceptingId] = useState('')
+  const [actionMessage, setActionMessage] = useState('')
 
   const copy = useMemo(() => {
     const all = {
@@ -69,6 +80,24 @@ export default function NotificationBell() {
     return all[locale]
   }, [locale])
 
+  const invitationCopy = useMemo(() => {
+    if (locale === 'es') return {
+      accept: 'Aceptar invitaci\u00f3n',
+      accepting: 'Aceptando...',
+      accepted: 'Invitaci\u00f3n aceptada. Abriendo tu espacio...',
+      noPending: 'Esta invitaci\u00f3n ya no est\u00e1 pendiente.',
+      error: 'No se pudo aceptar la invitaci\u00f3n. Pide al manager que la reenv\u00ede o ejecuta la migraci\u00f3n de invitaciones en Supabase.'
+    }
+    if (locale === 'fr') return {
+      accept: 'Accepter', accepting: 'Acceptation...', accepted: 'Invitation accept\u00e9e. Ouverture de votre espace...',
+      noPending: 'Cette invitation n\u2019est plus en attente.', error: 'Impossible d\u2019accepter l\u2019invitation. Demandez \u00e0 votre manager de la renvoyer ou ex\u00e9cutez la migration Supabase.'
+    }
+    return {
+      accept: 'Accept invitation', accepting: 'Accepting...', accepted: 'Invitation accepted. Opening your workspace...',
+      noPending: 'This invitation is no longer pending.', error: 'Could not accept the invitation. Ask a manager to resend it or run the invitation migration in Supabase.'
+    }
+  }, [locale])
+
   const load = useCallback(async () => {
     const client = getSupabase()
     const {data: auth} = await client.auth.getUser()
@@ -95,7 +124,7 @@ export default function NotificationBell() {
 
       // A claimed invitation is still useful as the driver's first alert. The
       // email filter prevents displaying another member's invitations.
-      if (companyId && user.email) {
+      if (user.email) {
         queries.push(client.from('invitations').select('id,email,role,status,created_at').eq('email', user.email.toLowerCase()).in('status', ['pending', 'accepted']).order('created_at', {ascending: false}).limit(4))
       } else {
         queries.push(Promise.resolve({data: [], error: null}))
@@ -112,10 +141,10 @@ export default function NotificationBell() {
       const [invitesResult, ownInvitesResult, routesResult, activityResult] = await Promise.all(queries) as any[]
       const next: NotificationItem[] = []
       for (const invite of (invitesResult?.data || [])) {
-        next.push({id: `invitation:${invite.id}`, type: 'invitation', title: copy.invitation, body: `${copy.invitationBody} (${invite.role})`, createdAt: invite.created_at, href: '/manager/invitations'})
+        next.push({id: `invitation:${invite.id}`, type: 'invitation', title: copy.invitation, body: `${copy.invitationBody} (${invite.role})`, createdAt: invite.created_at, href: '/manager/invitations', invitationStatus: invite.status})
       }
       for (const invite of (ownInvitesResult?.data || [])) {
-        next.push({id: `invitation:${invite.id}`, type: 'invitation', title: copy.invitation, body: `${copy.invitationBody} (${invite.role})`, createdAt: invite.created_at, href: role === 'driver' ? '/driver' : '/manager/invitations'})
+        next.push({id: `invitation:${invite.id}`, type: 'invitation', title: copy.invitation, body: `${copy.invitationBody} (${invite.role})`, createdAt: invite.created_at, href: role === 'driver' ? '/driver' : '/manager/invitations', invitationStatus: invite.status, canAccept: invite.status === 'pending'})
       }
       for (const route of (routesResult?.data || [])) {
         const isActive = route.status === 'active' || route.status === 'paused'
@@ -176,6 +205,38 @@ export default function NotificationBell() {
     if (userId) window.localStorage.setItem(readKey(userId), JSON.stringify(ids))
   }
 
+  const markRead = (id: string) => {
+    if (read.includes(id)) return
+    const next = [...read, id]
+    setRead(next)
+    if (userId) window.localStorage.setItem(readKey(userId), JSON.stringify(next))
+  }
+
+  const acceptInvitation = async (item: NotificationItem) => {
+    if (!item.canAccept || acceptingId) return
+    setAcceptingId(item.id)
+    setActionMessage('')
+    try {
+      const {data, error} = await getSupabase().rpc('claim_my_pending_invitation')
+      if (error) throw error
+      if (!Array.isArray(data) || data.length === 0) {
+        markRead(item.id)
+        setActionMessage(invitationCopy.noPending)
+        await load()
+        return
+      }
+      markRead(item.id)
+      setActionMessage(invitationCopy.accepted)
+      window.dispatchEvent(new Event('routehub:notifications-refresh'))
+      window.setTimeout(() => window.location.assign(item.href), 500)
+    } catch (error) {
+      console.error('Unable to accept RouteHub invitation', error)
+      setActionMessage(invitationCopy.error)
+    } finally {
+      setAcceptingId('')
+    }
+  }
+
   return <div className="notification-bell">
     <button className="notification-bell__button" type="button" aria-label={`${copy.label}${unread ? `, ${unread} ${copy.unread}` : ''}`} aria-expanded={open} aria-controls="routehub-notifications" onClick={() => { setOpen(value => !value); if (!open) void load() }}>
       <Bell size={20} strokeWidth={2.2} aria-hidden="true" />
@@ -183,7 +244,18 @@ export default function NotificationBell() {
     </button>
     {open && <div className="notification-bell__panel" id="routehub-notifications" role="dialog" aria-label={copy.title}>
       <div className="notification-bell__heading"><div><strong>{copy.title}</strong><span>{unread ? `${unread} ${copy.unread}` : copy.empty}</span></div><button type="button" className="notification-bell__close" onClick={() => setOpen(false)} aria-label={copy.close}><X size={17}/></button></div>
-      {loading ? <div className="notification-bell__empty">{copy.loading}</div> : items.length ? <div className="notification-bell__list">{items.map(item => { const Icon = iconFor(item.type); const isRead = read.includes(item.id); return <Link className={`notification-bell__item${isRead ? ' is-read' : ''}`} href={item.href} key={item.id} onClick={() => { if (!isRead) { const next = [...read, item.id]; setRead(next); if (userId) window.localStorage.setItem(readKey(userId), JSON.stringify(next)) }; setOpen(false) }}><span className={`notification-bell__icon notification-bell__icon--${item.type}`}><Icon size={17}/></span><span className="notification-bell__copy"><strong>{item.title}</strong><span>{item.body}</span><small>{relativeTime(item.createdAt, locale)}</small></span>{!isRead && <i aria-hidden="true" />}</Link> })}</div> : <div className="notification-bell__empty"><Check size={22}/><strong>{copy.empty}</strong><span>{copy.emptyHelp}</span></div>}
+      {loading ? <div className="notification-bell__empty">{copy.loading}</div> : items.length ? <div className="notification-bell__list">{items.map(item => {
+        const Icon = iconFor(item.type)
+        const isRead = read.includes(item.id)
+        const content = <>
+          <span className={`notification-bell__icon notification-bell__icon--${item.type}`}><Icon size={17}/></span>
+          <span className="notification-bell__copy"><strong>{item.title}</strong><span>{item.body}</span><small>{relativeTime(item.createdAt, locale)}</small>{item.canAccept && <button className="notification-bell__accept" type="button" disabled={acceptingId === item.id} onClick={() => void acceptInvitation(item)}>{acceptingId === item.id ? invitationCopy.accepting : invitationCopy.accept}</button>}</span>
+          {!isRead && <i aria-hidden="true" />}
+        </>
+        if (item.canAccept) return <div className={`notification-bell__item${isRead ? ' is-read' : ''}`} key={item.id}>{content}</div>
+        return <Link className={`notification-bell__item${isRead ? ' is-read' : ''}`} href={item.href} key={item.id} onClick={() => { markRead(item.id); setOpen(false) }}>{content}</Link>
+      })}</div> : <div className="notification-bell__empty"><Check size={22}/><strong>{copy.empty}</strong><span>{copy.emptyHelp}</span></div>}
+      {actionMessage && <p className="notification-bell__feedback" role="status">{actionMessage}</p>}
       {items.length > 0 && unread > 0 && <button className="notification-bell__mark" type="button" onClick={markAllRead}>{copy.markRead}</button>}
     </div>}
   </div>
