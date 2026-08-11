@@ -37,7 +37,7 @@
 .cancelButton:hover, .iconButton:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
 .iconButton { min-width: 42px; padding: 0 10px; margin-left: 4px; }
 
-.status { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: #edf4ff; color: #1d4ed8; font-size: .88rem; font-weight: 650; }
+.status { max-width: 100%; margin: 16px 0 0; padding: 12px 14px; overflow-wrap: anywhere; word-break: break-word; border-radius: 12px; background: #edf4ff; color: #1d4ed8; font-size: .88rem; font-weight: 650; }
 .sectionLabel { margin: 28px 0 12px; color: var(--ink); font-size: 1.1rem; }
 .list { display: grid; gap: 10px; }
 

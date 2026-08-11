@@ -41,10 +41,25 @@ export default function Invitations() {
       const {data: membership} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
       if (!membership) throw new Error(t.noMembership)
       const normalizedEmail = email.trim().toLowerCase()
-      const {error} = await supabase.from('invitations').insert({email: normalizedEmail, role, company_id: membership.company_id, branch_id: membership.branch_id, created_by: userData.user.id, status: 'pending'})
-      if (error) {
+      const {data: existing, error: lookupError} = await supabase
+        .from('invitations')
+        .select('id')
+        .eq('company_id', membership.company_id)
+        .ilike('email', normalizedEmail)
+        .order('created_at', {ascending: false})
+        .limit(1)
+        .maybeSingle()
+      if (lookupError) throw lookupError
+
+      const invitation = {role, branch_id: membership.branch_id, status: 'pending', revoked_at: null}
+      const result = existing
+        ? await supabase.from('invitations').update(invitation).eq('id', existing.id)
+        : await supabase.from('invitations').insert({...invitation, email: normalizedEmail, company_id: membership.company_id, created_by: userData.user.id})
+
+      if (result.error) {
         const fallback = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
-        if (fallback.error) throw new Error(fallback.error.message || error.message)
+        const rpcIsMissing = fallback.error?.message.toLowerCase().includes('schema cache') || fallback.error?.code === 'PGRST202'
+        if (fallback.error) throw new Error(rpcIsMissing ? result.error.message : fallback.error.message)
       }
       setEmail(''); setMessage(t.invitationCreated); await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : t.unableCreateInvitation) } finally { setBusy(false) }
