@@ -60,11 +60,13 @@ body>*,#__next{width:100%;max-width:100%;overflow-x:hidden}
 .nav a:hover,.nav a:focus-visible,.app-bottom-nav a:hover,.app-bottom-nav a:focus-visible{background:rgb(37 99 235 / 34%);color:#fff}
 .nav a:active,.app-bottom-nav a:active{transform:scale(.96)}
 .nav:not(.app-bottom-nav) a{display:grid;place-items:center;gap:3px}
-.nav:not(.app-bottom-nav) a::before{font-size:16px;line-height:1;opacity:.92}
-.nav:not(.app-bottom-nav) a:nth-child(1)::before{content:'⌂'}
-.nav:not(.app-bottom-nav) a:nth-child(2)::before{content:'◈'}
-.nav:not(.app-bottom-nav) a:nth-child(3)::before{content:'▣'}
-.nav:not(.app-bottom-nav) a:nth-child(4)::before{content:'⚙'}
+/* Text-only workspace navs still receive a compact icon hint. Navigation bars
+   that already render real Lucide icons must not get a second pseudo-icon row. */
+.nav:not(.app-bottom-nav):not(:has(svg)) a::before{font-size:16px;line-height:1;opacity:.92}
+.nav:not(.app-bottom-nav):not(:has(svg)) a:nth-child(1)::before{content:'⌂'}
+.nav:not(.app-bottom-nav):not(:has(svg)) a:nth-child(2)::before{content:'◈'}
+.nav:not(.app-bottom-nav):not(:has(svg)) a:nth-child(3)::before{content:'▣'}
+.nav:not(.app-bottom-nav):not(:has(svg)) a:nth-child(4)::before{content:'⚙'}
 .quick-action.primary{background:var(--rh-primary)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 10px 22px rgb(37 99 235 / 24%)}
 .quick-action.primary:hover{background:var(--rh-primary-hover)!important;color:#fff!important}
 .quick-action:not(.primary){background:var(--rh-surface)!important;color:var(--rh-text)!important}
