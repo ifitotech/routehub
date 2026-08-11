@@ -4,6 +4,7 @@ import PwaRegister from './pwa-register'
 import ThemeBoot from './theme-boot'
 import GlobalChrome from './global-chrome'
 import AuthBoundary from './auth-boundary'
+import AppBottomNav from './app-bottom-nav'
 
 export const metadata = {
   title: {default: 'RouteHub', template: '%s · RouteHub'},
@@ -22,5 +23,5 @@ export const viewport = {
 }
 
 export default function Layout({children}: {children: React.ReactNode}) {
-  return <html lang="en"><body><PwaRegister/><ThemeBoot/><AuthBoundary><GlobalChrome/>{children}</AuthBoundary></body></html>
+  return <html lang="en"><body><PwaRegister/><ThemeBoot/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/></AuthBoundary></body></html>
 }
