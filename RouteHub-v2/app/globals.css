@@ -72,6 +72,20 @@ body>*,#__next{width:100%;max-width:100%;overflow-x:hidden}
 .quick-action:not(.primary){background:var(--rh-surface)!important;color:var(--rh-text)!important}
 html[data-theme="dark"] .quick-action:not(.primary){background:var(--rh-surface)!important;color:var(--rh-text)!important}
 html[data-theme="dark"] .quick-action.primary{background:var(--rh-primary)!important;color:#fff!important}
+
+/* Keep the premium navigation consistent across every workspace and theme. */
+:root{--rh-nav-bg:rgba(20,35,59,.88);--rh-nav-text:#dbeafe;--rh-nav-border:rgba(255,255,255,.18)}
+html[data-theme="light"]{--rh-nav-bg:rgba(255,255,255,.94);--rh-nav-text:#334155;--rh-nav-border:rgba(100,116,139,.22)}
+.nav,.app-bottom-nav{bottom:env(safe-area-inset-bottom);background:var(--rh-nav-bg);border-color:var(--rh-nav-border)}
+.nav a,.app-bottom-nav a{color:var(--rh-nav-text)}
+html[data-theme="light"] .nav a:hover,html[data-theme="light"] .nav a:focus-visible,html[data-theme="light"] .app-bottom-nav a:hover,html[data-theme="light"] .app-bottom-nav a:focus-visible{background:rgba(37,99,235,.12);color:#1d4ed8}
+
+/* Settings uses the same calm premium surfaces as the workspace dashboards. */
+.settings-page{max-width:900px}
+.settings-page>h1{font-size:clamp(32px,5vw,48px);letter-spacing:-.04em;margin:8px 0 24px}
+.settings-page .settings-card{margin-top:14px;padding:20px 22px}
+html[data-theme="dark"] .settings-page .settings-card{background:var(--rh-surface);border-color:var(--rh-border);box-shadow:0 12px 30px rgb(0 0 0 / 18%)}
+html[data-theme="light"] .settings-page .settings-card{background:rgba(255,255,255,.92);border-color:rgba(100,116,139,.18)}
 @media(max-width:640px){.nav,.app-bottom-nav{bottom:max(0px,env(safe-area-inset-bottom));width:calc(100vw - 16px);max-width:calc(100vw - 16px);border-radius:20px}.nav a,.app-bottom-nav a{min-height:50px;padding-inline:6px;font-size:11px}.app{padding-bottom:calc(88px + env(safe-area-inset-bottom))}}
 
 /* Keep the centered brand below the top safe-area without letting the blurred
