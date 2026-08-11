@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises'
 
 const migrationUrl=new URL('../supabase/migrations/008_driver_assigned_route_updates.sql',import.meta.url)
 const workspaceMutationUrl=new URL('../supabase/migrations/009_workspace_mutation_policies.sql',import.meta.url)
+const drivingSessionsUrl=new URL('../supabase/migrations/015_driving_sessions.sql',import.meta.url)
 
 test('driver route migration is company-scoped and assignment-scoped',async()=>{
   const sql=await readFile(migrationUrl,'utf8')
@@ -43,4 +44,14 @@ test('request assignment policy is restricted to dispatch roles',async()=>{
   assert.match(sql,/for update to authenticated/i)
   assert.match(sql,/sales_representative/i)
   assert.doesNotMatch(sql,/counter_sales/i)
+})
+
+test('driving sessions keep latest location private and company-scoped',async()=>{
+  const sql=await readFile(drivingSessionsUrl,'utf8')
+  assert.match(sql,/create table if not exists public\.driving_sessions/i)
+  assert.match(sql,/driver_id\s*=\s*auth\.uid\(\)/i)
+  assert.match(sql,/viewer\.company_id\s*=\s*driving_sessions\.company_id/i)
+  assert.match(sql,/for select to authenticated/i)
+  assert.match(sql,/for update to authenticated/i)
+  assert.doesNotMatch(sql,/location_history|track.*outside/i)
 })

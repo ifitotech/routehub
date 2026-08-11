@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {Camera, Check, MapPin, Navigation, Pause, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
-import {completeMission} from '../../lib/data'
+import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
+import {endDrivingDay, getActiveDrivingSession, startDrivingDay, updateDrivingLocation, type DrivingSession} from '../../lib/driving-session'
+import {getCurrentLocation} from '../../lib/location'
 import styles from './driver.module.css'
 import mapStyles from './driver-map.module.css'
 
@@ -30,10 +32,14 @@ export default function Driver() {
   const [issueMode,setIssueMode]=useState(false)
   const [photo,setPhoto]=useState<File|null>(null)
   const [issueNote,setIssueNote]=useState('')
+  const [driverId,setDriverId]=useState('')
+  const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
+  const [locationStatus,setLocationStatus]=useState('')
   const fileInput=useRef<HTMLInputElement>(null)
+  const lastLocationUpdate=useRef(0)
   const {t}=useLocale()
 
-  const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
+  const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);setDriverId(userData.user.id);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);const sessionResult=await getActiveDrivingSession(userData.user.id);if(!sessionResult.error)setDrivingSession(sessionResult.data);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
   useEffect(()=>{
     const client=getSupabase()
     let disposed=false
@@ -51,6 +57,35 @@ export default function Driver() {
     return()=>{disposed=true;clearInterval(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',onVisibility);if(channel)void client.removeChannel(channel)}
   },[load])
 
+  useEffect(()=>{
+    if(!drivingSession||!driverId||typeof navigator==='undefined'||!navigator.geolocation)return
+    let disposed=false
+    const watch=navigator.geolocation.watchPosition(position=>{
+      const now=Date.now()
+      if(disposed||now-lastLocationUpdate.current<30000)return
+      lastLocationUpdate.current=now
+      void updateDrivingLocation(drivingSession.id,driverId,{lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy}).then(result=>{if(result.error)setLocationStatus(result.error.message)})
+    },()=>setLocationStatus(t.locationPermissionDenied),{enableHighAccuracy:true,maximumAge:30000,timeout:15000})
+    return()=>{disposed=true;navigator.geolocation.clearWatch(watch)}
+  },[driverId,drivingSession,t.locationPermissionDenied])
+
+  const beginDrivingDay=async()=>{
+    if(!driverId||busy)return
+    setBusy(true);setLocationStatus('')
+    try{
+      await getCurrentLocation()
+      const membership=await currentMembership()
+      const result=await startDrivingDay({companyId:membership.company_id,branchId:membership.branch_id,driverId})
+      if(result.error)throw result.error
+      setDrivingSession(result.data);setMessage(t.startDrivingDay)
+    }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied)}finally{setBusy(false)}
+  }
+  const finishDrivingDay=async()=>{
+    if(!drivingSession||busy)return
+    setBusy(true)
+    try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
+  }
+
   const current=missions.find(item=>item.status==='active')||missions[0]
   const upcoming=missions.filter(item=>item.id!==current?.id)
   const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}`
@@ -59,6 +94,8 @@ export default function Driver() {
 
   return <main className={`app ${styles.page}`}>
     <header className={styles.header}><div><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div><div className="avatar">DR</div></header>
+    <div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>
+    {locationStatus&&<div className={styles.toast} role="status">{locationStatus}</div>}
     {message&&<div className={styles.toast} role="status">{message}</div>}
     {current?<>
       <section className={styles.mission}>

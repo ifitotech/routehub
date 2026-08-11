@@ -26,6 +26,7 @@ import {recordActivity} from '../../lib/activity'
 import GoogleAddressInput from '../google-address-input'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
+import LiveRoute from './live-route'
 
 type Contact = {
   id: string
@@ -408,6 +409,8 @@ export default function Routes() {
     </header>
 
     {message && <div className={message.includes('successfully') ? styles.successMessage : styles.message} role="status">{message}</div>}
+
+    <LiveRoute companyId={companyId} branchId={branchId}/>
 
     <section className={styles.listHeading}>
       <div><h2>{c.assigned}</h2><p>{c.assignedHelp}</p></div>
