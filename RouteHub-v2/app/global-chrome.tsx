@@ -14,7 +14,10 @@ export default function GlobalChrome(){
     window.addEventListener('scroll', onScroll, {passive:true})
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-  if(pathname==='/'||pathname==='/login')return null
+  // Workspace home screens render their own compact header. Keeping the
+  // floating chrome off the manager dashboard prevents the logo from
+  // competing with the greeting and KPI grid.
+  if(pathname==='/'||pathname==='/login'||pathname==='/manager')return null
   const workspaceHomes=['/driver','/manager','/operations','/sales','/counter','/admin']
   const showBack=!workspaceHomes.includes(pathname)
   return <div className={`global-chrome${scrolled ? ' is-scrolled' : ''}`}>
