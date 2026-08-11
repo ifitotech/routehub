@@ -5,6 +5,7 @@ import {useCallback, useEffect, useState} from 'react'
 import {roleLabelOptions} from '../../../lib/role-labels'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
+import {createInvitationTokenHash} from '../../../lib/invitation-token'
 import styles from '../manager-tools.module.css'
 
 type Invite = {id: string; email: string; role: string; status: string; created_at?: string}
@@ -76,7 +77,7 @@ export default function Invitations() {
       if (existing) {
         result = await supabase.from('invitations').update(invitation).eq('id', existing.id)
       } else {
-        const baseInvitation = {...invitation, email: normalizedEmail, company_id: membership.company_id}
+        const baseInvitation = {...invitation, email: normalizedEmail, company_id: membership.company_id, token_hash: await createInvitationTokenHash()}
         // Older RouteHub databases use `invited_by`; newer migrations use
         // `created_by`. Try the production column first and keep the newer
         // schema as a compatibility fallback.
