@@ -51,6 +51,26 @@ export default function Invitations() {
         .maybeSingle()
       if (lookupError) throw lookupError
 
+      // Free workspaces support one Driver. Keep the beta Manager account
+      // unrestricted so it can test multiple drivers before paid plans ship.
+      if (role === 'driver' && userData.user.email?.toLowerCase() !== 'manager.test@routehub.local') {
+        const [{data: members}, {data: pendingInvites}, {data: company}] = await Promise.all([
+          supabase.from('company_users').select('user_id').eq('company_id', membership.company_id).eq('role', 'driver'),
+          supabase.from('invitations').select('id').eq('company_id', membership.company_id).eq('role', 'driver').eq('status', 'pending'),
+          supabase.from('companies').select('max_drivers').eq('id', membership.company_id).maybeSingle()
+        ])
+        const maxDrivers = Math.max(1, Number(company?.max_drivers) || 1)
+        const pendingOtherThanCurrent = (pendingInvites || []).filter((invite: {id: string}) => !existing || invite.id !== existing.id).length
+        if ((members || []).length + pendingOtherThanCurrent >= maxDrivers) {
+          const limitMessage = locale === 'es'
+            ? `Este espacio permite hasta ${maxDrivers} conductor.`
+            : locale === 'fr'
+              ? `Cet espace permet jusqu’à ${maxDrivers} conducteur.`
+              : `This workspace allows up to ${maxDrivers} Driver.`
+          throw new Error(limitMessage)
+        }
+      }
+
       const invitation = {role, branch_id: membership.branch_id, status: 'pending', revoked_at: null}
       let result
       if (existing) {
