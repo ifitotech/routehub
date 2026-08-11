@@ -38,11 +38,17 @@ export default function LiveRoute({companyId,branchId,expanded=false}:{companyId
       if(sessionResult.error)throw sessionResult.error
       if(routeResult.error)throw routeResult.error
       if(peopleResult.error)throw peopleResult.error
-      setSessions(sessionResult.data)
-      setRoutes((routeResult.data||[]) as LiveRouteRecord[])
+      const routeRows=(routeResult.data||[]) as LiveRouteRecord[]
+      // A location session is operationally meaningful only while that
+      // person has an active route. This also hides any stale session left by
+      // a tab that was closed before it could send its final stop update.
+      const activeDriverIds=new Set(routeRows.filter(route=>route.status==='active'&&route.driver_id).map(route=>route.driver_id as string))
+      const visibleSessions=sessionResult.data.filter(session=>activeDriverIds.has(session.driver_id))
+      setSessions(visibleSessions)
+      setRoutes(routeRows)
       const users=(peopleResult.data||[]).map((row:{user_id:string;users:{email?:string|null}|{email?:string|null}[]|null})=>({user_id:row.user_id,email:Array.isArray(row.users)?row.users[0]?.email||null:row.users?.email||null}))
       setPeople(users)
-      setSelectedDriver(current=>current&&sessionResult.data.some(item=>item.driver_id===current)?current:sessionResult.data[0]?.driver_id||null)
+      setSelectedDriver(current=>current&&visibleSessions.some(item=>item.driver_id===current)?current:visibleSessions[0]?.driver_id||null)
       setError('')
     } catch(cause) { setError(cause instanceof Error?cause.message:'Unable to load live route.') }
     finally { setLoading(false) }
@@ -59,7 +65,10 @@ export default function LiveRoute({companyId,branchId,expanded=false}:{companyId
   },[companyId,load])
 
   const selected=sessions.find(item=>item.driver_id===selectedDriver)||sessions[0]
-  const selectedRoute=selected?routes.filter(item=>item.driver_id===selected.driver_id).sort((a,b)=>Number(a.position||0)-Number(b.position||0)).find(item=>['active','published','pending','paused'].includes(item.status||'')):undefined
+  const selectedRoute=selected?routes.filter(item=>item.driver_id===selected.driver_id).sort((a,b)=>{
+    const activeRank=(value:string|null)=>value==='active'?0:value==='paused'?1:value==='published'?2:3
+    return activeRank(a.status)-activeRank(b.status)||Number(a.position||0)-Number(b.position||0)
+  }).find(item=>['active','published','pending','paused'].includes(item.status||'')):undefined
   const hasLocation=selected?.last_lat!=null&&selected?.last_lng!=null
   const labels=useMemo(()=>new Map(people.map(person=>[person.user_id,personName(person.email)])),[people])
   const todayRoutes=useMemo(()=>routes.filter(route=>{const date=route.route_date||(route.scheduled_at?route.scheduled_at.slice(0,10):'');return date===todayValue()}).sort((a,b)=>Number(a.position||0)-Number(b.position||0)),[routes])

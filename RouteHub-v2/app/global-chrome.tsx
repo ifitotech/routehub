@@ -17,7 +17,10 @@ export default function GlobalChrome(){
   // Workspace home screens render their own compact header. Keeping the
   // floating chrome off the manager dashboard prevents the logo from
   // competing with the greeting and KPI grid.
-  if(pathname==='/'||pathname==='/login'||pathname==='/manager')return null
+  // Driver pages already render their own compact branded header. Do not add
+  // the shared floating chrome there: it creates a second logo above the
+  // Driver workspace (especially noticeable in the installed PWA).
+  if(isDriverWorkspace||pathname==='/'||pathname==='/login'||pathname==='/manager')return null
   const workspaceHomes=['/driver','/manager','/operations','/sales','/counter','/admin']
   const showBack=!workspaceHomes.includes(pathname)
   return <div className={`global-chrome${scrolled ? ' is-scrolled' : ''}`}>
