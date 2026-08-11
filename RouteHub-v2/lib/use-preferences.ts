@@ -1,6 +1,6 @@
 'use client'
 
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import {getLocale, isLocale, translations, type Locale} from './i18n'
 
 // Older dictionary entries were saved with a UTF-8/Latin-1 mismatch. Repair
@@ -91,7 +91,11 @@ export function useLocale() {
     if (isLocale(value)) setLocalePreference(value)
   }, [])
 
-  return {locale, t: repairedDictionary(locale), setLocale: changeLocale}
+  // Keep translated labels referentially stable. Screens use the dictionary
+  // in data-loading callback dependencies; recreating it on every render can
+  // restart those effects indefinitely and leave a page stuck loading.
+  const dictionary = useMemo(() => repairedDictionary(locale), [locale])
+  return {locale, t: dictionary, setLocale: changeLocale}
 }
 
 export function useThemePreference() {
