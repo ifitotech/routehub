@@ -65,3 +65,13 @@ body>*,#__next{width:100%;max-width:100%;overflow-x:hidden}
 html[data-theme="dark"] .quick-action:not(.primary){background:var(--rh-surface)!important;color:var(--rh-text)!important}
 html[data-theme="dark"] .quick-action.primary{background:var(--rh-primary)!important;color:#fff!important}
 @media(max-width:640px){.nav,.app-bottom-nav{bottom:max(4px,env(safe-area-inset-bottom));width:calc(100vw - 16px);max-width:calc(100vw - 16px);border-radius:20px}.nav a,.app-bottom-nav a{min-height:50px;padding-inline:6px;font-size:11px}.app{padding-bottom:calc(88px + env(safe-area-inset-bottom))}}
+
+/* iOS Safari zooms the entire viewport when a focused control is below 16px.
+   Keep controls readable at the native scale so focusing an invitation email
+   never leaves the app in a sideways, zoomed viewport. */
+@media (max-width: 640px) {
+  input:not([type="file"]), select, textarea {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
+  }
+}
