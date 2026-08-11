@@ -72,27 +72,22 @@ export default function Invitations() {
         }
       }
 
-      const invitation = {role, branch_id: membership.branch_id, status: 'pending', revoked_at: null}
-      let result
-      if (existing) {
-        result = await supabase.from('invitations').update(invitation).eq('id', existing.id)
-      } else {
-        const baseInvitation = {...invitation, email: normalizedEmail, company_id: membership.company_id, token_hash: await createInvitationTokenHash()}
-        // Older RouteHub databases use `invited_by`; newer migrations use
-        // `created_by`. Try the production column first and keep the newer
-        // schema as a compatibility fallback.
-        result = await supabase.from('invitations').insert({...baseInvitation, invited_by: userData.user.id})
-        const invitedByMissing = result.error?.code === 'PGRST204' || result.error?.message.toLowerCase().includes("'invited_by'")
-        if (invitedByMissing) {
-          result = await supabase.from('invitations').insert({...baseInvitation, created_by: userData.user.id})
+      // Prefer the server-side RPC. It writes the ownership/token columns in
+      // one transaction and is compatible with both legacy invitation schemas.
+      // Direct insert remains a fallback for projects that have not applied the
+      // invitation migration yet.
+      let result = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
+      if (result.error) {
+        const invitation = {role, branch_id: membership.branch_id, status: 'pending', revoked_at: null}
+        if (existing) {
+          result = await supabase.from('invitations').update(invitation).eq('id', existing.id)
+        } else {
+          const baseInvitation = {...invitation, email: normalizedEmail, company_id: membership.company_id, token_hash: await createInvitationTokenHash(), invited_by: userData.user.id, created_by: userData.user.id}
+          result = await supabase.from('invitations').insert(baseInvitation)
         }
       }
-
-      if (result.error) {
-        const fallback = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
-        const rpcIsMissing = fallback.error?.message.toLowerCase().includes('schema cache') || fallback.error?.code === 'PGRST202'
-        if (fallback.error) throw new Error(rpcIsMissing ? result.error.message : fallback.error.message)
-      }
+      if (result.error) throw result.error
+      window.dispatchEvent(new Event('routehub:notifications-refresh'))
       setEmail(''); setMessage(t.invitationCreated); await load()
     } catch (error) { setMessage(error instanceof Error ? error.message : t.unableCreateInvitation) } finally { setBusy(false) }
   }

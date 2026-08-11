@@ -11,7 +11,10 @@ export async function resolveAccess(client: SupabaseClient): Promise<ResolvedAcc
   const user = userData.user
   // Existing beta accounts can join a manager's workspace through a pending
   // invitation. The RPC validates the authenticated email server-side.
-  try { await client.rpc('claim_my_pending_invitation') } catch { /* migration not installed yet */ }
+  // The function is security-definer and matches the session email on the
+  // server. Existing members continue normally when the migration is not yet
+  // installed; invited users will be linked as soon as it is applied.
+  await client.rpc('claim_my_pending_invitation')
   const [{data: admin}, {data: memberships, error: membershipError}] = await Promise.all([
     client.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
     client.from('company_users').select('role,company_id').eq('user_id', user.id),
