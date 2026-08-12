@@ -17,6 +17,7 @@ import {
   Route as RouteIcon,
   Search,
   Truck,
+  Users,
   UserRound,
   X,
 } from 'lucide-react'
@@ -185,7 +186,7 @@ function MapPreview({address,c}: {address?: string;c:RouteCopy}) {
 }
 
 export default function Routes() {
-  const {locale}=useLocale()
+  const {locale,t}=useLocale()
   const c=routeCopy[locale]
   const searchParams = useSearchParams()
   const requestedPriority = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
@@ -404,6 +405,7 @@ export default function Routes() {
         <p>{c.subtitle}</p>
       </div>
       <div className={styles.headerActions}>
+        <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
         <Link className={styles.secondaryButton} href="/routes/manage"><RouteIcon size={18}/>{c.manage}</Link>
         <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
       </div>
