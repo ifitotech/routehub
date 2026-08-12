@@ -10,13 +10,38 @@ export function reorder(missions:Mission[],from:number,to:number):Mission[]{
   next.splice(to,0,item)
   return relinkOrigins(next)
 }
-export function canMove(status:MissionStatus){return !['completed','cancelled'].includes(status)}
+/**
+ * Only work that has not started may change its place in the queue.  Keeping
+ * active, completed, issue and cancelled work locked prevents a dispatch edit
+ * from changing the driver\'s current assignment or historical evidence.
+ */
+export function canMove(status:MissionStatus){return ['draft','pending','published','paused'].includes(status)}
 export function insertUrgent(missions:Mission[],mission:Mission):Mission[]{
   const movableIndex=missions.findIndex(m=>canMove(m.status))
   const first=movableIndex===-1?missions.length:movableIndex
   return relinkOrigins([...missions.slice(0,first),{...mission,priority:'urgent' as const,position:first+1},...missions.slice(first)])
 }
-export function relinkOrigins(missions:Mission[]){return missions.map((m,i)=>!canMove(m.status)?{...m,position:i+1}:{...m,position:i+1,origin:i?missions[i-1].destination:m.origin})}
+export function relinkOrigins(missions:Mission[]){
+  // Keep every locked mission exactly as it was.  Its position and origin are
+  // historical facts.  Reorder only reuses the open queue positions, so no
+  // completed route is silently renumbered.
+  const openPositions=missions.filter(m=>canMove(m.status)).map(m=>m.position).sort((a,b)=>a-b)
+  let openIndex=0
+  let previousDestination=''
+  return missions.map((mission,index)=>{
+    if(!canMove(mission.status)){
+      previousDestination=mission.destination||previousDestination
+      return mission
+    }
+    const position=openPositions[openIndex++] ?? mission.position
+    // Preserve the first open mission\'s configured origin.  Later open
+    // missions follow the immediately preceding route when it has a known
+    // destination, which is the safe automatic relink for the current schema.
+    const origin=index>0 && previousDestination ? previousDestination : mission.origin
+    previousDestination=mission.destination||previousDestination
+    return {...mission,position,origin}
+  })
+}
 export function findCurrent(missions:Mission[]){return missions.find(m=>m.status==='active')||missions.find(m=>['published','pending','paused'].includes(m.status))}
 export function upcomingMissions(missions:Mission[]){const current=findCurrent(missions);return missions.filter(m=>m.id!==current?.id&&['published','pending','paused'].includes(m.status)).sort((a,b)=>a.position-b.position)}
 export function interruptActive(missions:Mission[],urgentMission:Mission):Mission[]{

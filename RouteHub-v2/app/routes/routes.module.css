@@ -15,3 +15,11 @@
 .routeIdentity strong{font-size:15px}
 .statusBadge,.priorityBadge{padding:4px 7px;font-size:9px}
 @media(max-width:640px){.routeCard{padding:12px}.routePath{margin:9px 0 8px}.routeDetails{grid-template-columns:1.2fr .8fr;gap:6px}.routeDetails>div:first-child{grid-column:1/-1}.cardFooter{margin-top:8px;padding-top:8px}}
+
+/* The planner opens with the three decisions dispatchers make most often.
+   Scheduling and instructions remain available without making the first view
+   feel like a long form. */
+.primaryRouteTypes .segmented{grid-template-columns:repeat(2,minmax(0,1fr))}
+.primaryRouteTypes .segmented button{min-height:52px;font-size:13px}
+.detailsToggle{width:100%;min-height:46px;padding:0 13px;display:flex;align-items:center;gap:9px;border:1px dashed #b9c9df;border-radius:12px;background:#f8fbff;color:#315a92;font-size:13px;font-weight:800;text-align:left;transition:background .18s ease,border-color .18s ease}
+.detailsToggle:hover{border-color:#7ca3df;background:#eef5ff}.detailsToggle svg:last-child{margin-left:auto;transition:transform .18s ease}.detailsChevronOpen{transform:rotate(90deg)}.optionalDetails{display:grid;gap:17px;padding:16px;border:1px solid #e1eaf5;border-radius:16px;background:#f8fafc;animation:detailsIn .18s ease}.successPanel{min-height:360px;padding:56px 24px;display:grid;place-content:center;justify-items:center;text-align:center;gap:13px}.successIcon{width:72px;height:72px;display:grid;place-items:center;border-radius:24px;background:#ecfdf5;color:#059669;box-shadow:0 14px 30px rgba(5,150,105,.16)}.successPanel h3{max-width:440px;margin:4px 0 0;color:#0f172a;font-size:25px;letter-spacing:-.03em}.successPanel p{max-width:410px;margin:0;color:#64748b}.successActions{display:flex;gap:10px;margin-top:12px}.successActions .primaryButton,.successActions .secondaryButton{min-width:140px}@keyframes detailsIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}

@@ -8,6 +8,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react'
 import {
   ArrowRight,
   CalendarDays,
+  CheckCircle2,
   ChevronRight,
   CircleDot,
   Clock3,
@@ -16,6 +17,7 @@ import {
   Plus,
   Route as RouteIcon,
   Search,
+  SlidersHorizontal,
   Truck,
   Users,
   UserRound,
@@ -202,6 +204,8 @@ export default function Routes() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [open, setOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [justCreated, setJustCreated] = useState(false)
   const [originMode, setOriginMode] = useState<OriginMode>('branch')
 
   const loadWorkspace = useCallback(async () => {
@@ -321,6 +325,8 @@ export default function Routes() {
     setOriginMode('branch')
     setForm(current => ({...initialForm(nextPriority), driver_id: current.driver_id || drivers[0]?.user_id || '', origin: defaultBranch?.address || defaultBranch?.name || ''}))
     setMessage('')
+    setDetailsOpen(false)
+    setJustCreated(false)
     setOpen(true)
   }
 
@@ -386,10 +392,10 @@ export default function Routes() {
         if (requestError) throw requestError
       }
 
-      setOpen(false)
       setForm(current => ({...initialForm(), driver_id: current.driver_id}))
       await loadWorkspace()
       setMessage(c.published)
+      setJustCreated(true)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : c.saveError)
     } finally {
@@ -457,16 +463,24 @@ export default function Routes() {
           <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
         </div>
 
-        <div className={styles.builderBody}>
+        {justCreated ? <div className={styles.successPanel}>
+          <div className={styles.successIcon}><CheckCircle2 size={34}/></div>
+          <h3>{c.published}</h3>
+          <p>{locale==='es' ? 'La ruta ya aparece para el conductor asignado.' : locale==='fr' ? 'L’itinéraire est maintenant disponible pour le conducteur assigné.' : 'The route is now available to the assigned driver.'}</p>
+          <div className={styles.successActions}>
+            <button className={styles.secondaryButton} type="button" onClick={() => setOpen(false)}>{locale==='es' ? 'Listo' : locale==='fr' ? 'Terminé' : 'Done'}</button>
+            <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{locale==='es' ? 'Añadir otra' : locale==='fr' ? 'Ajouter une autre' : 'Add another'}</button>
+          </div>
+        </div> : <div className={styles.builderBody}>
           <div className={styles.mapColumn}>
             <MapPreview address={previewAddress} c={c}/>
             <div className={styles.previewSummary}><span><i>1</i>{form.origin.trim() || c.branch}</span><span><i>2</i>{selectedContact?.company_name || form.destination.trim() || c.chooseDestination}</span></div>
           </div>
 
           <div className={`${styles.formColumn} ${contrast.form}`}>
-            <fieldset className={styles.fieldset}>
+            <fieldset className={`${styles.fieldset} ${styles.primaryRouteTypes}`}>
               <legend>{c.routeType}</legend>
-              <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{typeLabel(type.value,c)}</button>)}</div>
+              <div className={styles.segmented}>{routeTypes.slice(0,2).map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
             <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => {window.localStorage.setItem(lastDriverKey,event.target.value);setForm(current => ({...current, driver_id: event.target.value}))}}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const details = driverDetails(driver,c.teamDriver); const fallback=driver.role==='driver'?`${c.driver} ${index+1}`:`${driver.role?.replaceAll('_',' ')||c.teamDriver} ${index+1}`; return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : fallback}</option> })}</select></div></label>
@@ -482,22 +496,24 @@ export default function Routes() {
 
             <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput list="routehub-contacts" value={form.destination} placeholder={c.searchPlaceholder} autoComplete="off" onValueChange={updateDestination}/><datalist id="routehub-contacts">{contacts.map(contact => <option key={contact.id} value={`${contact.company_name} - ${contact.address}`}>{contact.contact_name || contact.company_name}</option>)}</datalist></div><small>{c.searchHelp}</small></label>
 
-            <fieldset className={styles.fieldset}>
-              <legend>{c.priority}</legend>
-              <div className={`${styles.segmented} ${styles.prioritySegments}`}>{priorities.map(priority => <button className={form.priority === priority.value ? styles.segmentActive : ''} data-priority={priority.value} type="button" key={priority.value} aria-pressed={form.priority === priority.value} onClick={() => setForm(current => ({...current, priority: priority.value}))}>{priority.value==='urgent'?c.urgent:priority.value==='priority'?c.priorityName:c.normal}</button>)}</div>
-            </fieldset>
+            <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>
 
-            <div className={styles.splitFields}>
-              <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
-              <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
-            </div>
-
-            <label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>
-            <label className={styles.field}><span>{c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={c.notesPlaceholder} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
+            {detailsOpen && <div className={styles.optionalDetails}>
+              <fieldset className={styles.fieldset}>
+                <legend>{c.priority}</legend>
+                <div className={`${styles.segmented} ${styles.prioritySegments}`}>{priorities.map(priority => <button className={form.priority === priority.value ? styles.segmentActive : ''} data-priority={priority.value} type="button" key={priority.value} aria-pressed={form.priority === priority.value} onClick={() => setForm(current => ({...current, priority: priority.value}))}>{priority.value==='urgent'?c.urgent:priority.value==='priority'?c.priorityName:c.normal}</button>)}</div>
+              </fieldset>
+              <div className={styles.splitFields}>
+                <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
+                <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
+              </div>
+              <label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>
+              <label className={styles.field}><span>{c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={c.notesPlaceholder} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
+            </div>}
 
             <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? <><span className={styles.spinner}/>{c.publishing}</> : <><Truck size={19}/>{c.publish}</>}</button>
           </div>
-        </div>
+        </div>}
       </section>
     </div>}
   </main>

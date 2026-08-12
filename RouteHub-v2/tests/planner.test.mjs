@@ -16,8 +16,10 @@ test('reorders real planner missions and relinks origins',()=>{
   assert.deepEqual(result.map(item=>item.position),[1,2,3])
 })
 
-test('completed and cancelled positions are locked',()=>{
+test('active, completed and cancelled positions are locked',()=>{
+  assert.equal(canMove('active'),false)
   assert.equal(canMove('completed'),false)
+  assert.equal(canMove('issue'),false)
   assert.equal(canMove('cancelled'),false)
   assert.strictEqual(reorder(seed,2,0),seed)
   const separated=[mission('a','pending','A','B',1),mission('locked','completed','B','C',2),mission('b','pending','C','D',3)]
