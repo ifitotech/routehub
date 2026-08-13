@@ -4,6 +4,7 @@ import {useEffect, useId, useRef, useState} from 'react'
 import type {InputHTMLAttributes} from 'react'
 
 type PlaceResult = {formatted_address?: string; name?: string}
+type FreeSuggestion = {label: string; primary: string; secondary: string}
 type MapsListener = {remove: () => void}
 type AutocompleteInstance = {
   addListener: (event: 'place_changed', callback: () => void) => MapsListener
@@ -77,7 +78,8 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
   const onValueChangeRef = useRef(onValueChange)
   const listId = useId().replace(/:/g, '')
   const [googleReady, setGoogleReady] = useState(false)
-  const [freeSuggestions, setFreeSuggestions] = useState<string[]>([])
+  const [freeSuggestions, setFreeSuggestions] = useState<FreeSuggestion[]>([])
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
 
   useEffect(() => { onValueChangeRef.current = onValueChange }, [onValueChange])
 
@@ -105,6 +107,7 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
   useEffect(() => {
     if (googleReady || value.trim().length < 3) {
       setFreeSuggestions([])
+      setSuggestionsOpen(false)
       return
     }
     const controller = new AbortController()
@@ -115,11 +118,27 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
       // new input so we do not use it as a type-ahead service at scale.
       void fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=us&q=${query}`, {signal: controller.signal})
         .then(response => response.ok ? response.json() : [])
-        .then((rows: Array<{display_name?: string}>) => setFreeSuggestions(rows.map(row => row.display_name).filter((item): item is string => Boolean(item))))
-        .catch(error => { if (error.name !== 'AbortError') setFreeSuggestions([]) })
+        .then((rows: Array<{display_name?: string}>) => {
+          const suggestions = rows.flatMap(row => {
+            const label = row.display_name?.trim()
+            if (!label) return []
+            const [primary, ...rest] = label.split(',')
+            return [{label, primary: primary.trim(), secondary: rest.join(',').trim()}]
+          })
+          setFreeSuggestions(suggestions)
+          setSuggestionsOpen(suggestions.length > 0)
+        })
+        .catch(error => { if (error.name !== 'AbortError') { setFreeSuggestions([]); setSuggestionsOpen(false) } })
     }, 450)
     return () => { controller.abort(); window.clearTimeout(timer) }
   }, [googleReady, value])
 
-  return <><input ref={inputRef} {...props} value={value} list={!googleReady ? listId : undefined} onChange={event => onValueChange(event.target.value)} aria-autocomplete="both"/>{!googleReady && <datalist id={listId}>{freeSuggestions.map(suggestion => <option key={suggestion} value={suggestion}/>)}</datalist>}</>
+  const selectSuggestion = (suggestion: FreeSuggestion) => {
+    onValueChange(suggestion.label)
+    setFreeSuggestions([])
+    setSuggestionsOpen(false)
+    inputRef.current?.focus()
+  }
+
+  return <div className="routehub-address-input"><input ref={inputRef} {...props} value={value} onFocus={() => { if (freeSuggestions.length) setSuggestionsOpen(true) }} onChange={event => onValueChange(event.target.value)} role="combobox" aria-autocomplete="list" aria-expanded={!googleReady && suggestionsOpen} aria-controls={listId}/>{!googleReady && suggestionsOpen && freeSuggestions.length > 0 && <div className="routehub-address-suggestions" id={listId} role="listbox" aria-label="Address suggestions">{freeSuggestions.map(suggestion => <button key={suggestion.label} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onMouseDown={event => event.preventDefault()} onClick={() => selectSuggestion(suggestion)}><span className="routehub-address-pin" aria-hidden="true">⌖</span><span><strong>{suggestion.primary}</strong>{suggestion.secondary && <small>{suggestion.secondary}</small>}</span></button>)}</div>}</div>
 }
