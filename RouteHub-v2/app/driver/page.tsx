@@ -105,16 +105,14 @@ export default function Driver() {
 
   const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){if(!photo){fileInput.current?.click();return false}await uploadMissionEvidence(photo,current.id);await completeMission(current.id)}else{const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error}if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setPhoto(null);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
   const startRoute=()=>{
-    // Open from the user gesture so Safari/Chrome do not block it. The page
-    // only navigates after RouteHub has activated the route and location day.
-    const mapsWindow=window.open('about:blank','_blank')
     void (async()=>{
       const saved=current?.status==='active'
         ? (drivingSession ? true : await startTrackingForActiveRoute())
         : await update('active')
-      if(!mapsWindow)return
-      if(saved)mapsWindow.location.replace(navigateUrl)
-      else mapsWindow.close()
+      // Do not create an about:blank popup while RouteHub saves the route.
+      // On iPhone this often remains as an empty browser tab.  Navigate only
+      // once the route and its location session are ready.
+      if(saved)window.location.assign(navigateUrl)
     })()
   }
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('');setPhoto(null)}
