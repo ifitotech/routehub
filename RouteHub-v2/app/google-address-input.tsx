@@ -5,6 +5,7 @@ import type {InputHTMLAttributes} from 'react'
 
 type PlaceResult = {formatted_address?: string; name?: string}
 type FreeSuggestion = {label: string; primary: string; secondary: string}
+type CensusAddressMatch = {matchedAddress?: string}
 type MapsListener = {remove: () => void}
 type AutocompleteInstance = {
   addListener: (event: 'place_changed', callback: () => void) => MapsListener
@@ -112,19 +113,23 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
     }
     const controller = new AbortController()
     const timer = window.setTimeout(() => {
-      const query = encodeURIComponent(value.trim())
-      // Nominatim is sufficient for a small, manually tested beta. Requests
-      // are debounced, only start after three characters and are aborted on
-      // new input so we do not use it as a type-ahead service at scale.
-      void fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=us&q=${query}`, {signal: controller.signal})
-        .then(response => response.ok ? response.json() : [])
-        .then((rows: Array<{display_name?: string}>) => {
-          const suggestions = rows.flatMap(row => {
-            const label = row.display_name?.trim()
-            if (!label) return []
-            const [primary, ...rest] = label.split(',')
-            return [{label, primary: primary.trim(), secondary: rest.join(',').trim()}]
-          })
+      const input = value.trim()
+      const toSuggestions = (labels: string[]) => labels.flatMap(label => {
+        const [primary, ...rest] = label.split(',')
+        return primary ? [{label, primary: primary.trim(), secondary: rest.join(',').trim()}] : []
+      })
+      // Census understands a street + ZIP as one US address; broad map search
+      // otherwise treats a short house number as a global place lookup.
+      void fetch(`https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(input)}&benchmark=Public_AR_Current&format=json`, {signal: controller.signal})
+        .then(async response => {
+          const payload = response.ok ? await response.json() as {result?: {addressMatches?: CensusAddressMatch[]}} : undefined
+          const censusSuggestions = toSuggestions((payload?.result?.addressMatches || []).map(row => row.matchedAddress || '').filter(Boolean))
+          if (censusSuggestions.length) return censusSuggestions
+          const fallback = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=us&addressdetails=1&q=${encodeURIComponent(`${input}, United States`)}`, {signal: controller.signal})
+          const rows: Array<{display_name?: string}> = fallback.ok ? await fallback.json() : []
+          return toSuggestions(rows.map(row => row.display_name || '').filter(Boolean))
+        })
+        .then((suggestions: FreeSuggestion[]) => {
           setFreeSuggestions(suggestions)
           setSuggestionsOpen(suggestions.length > 0)
         })
