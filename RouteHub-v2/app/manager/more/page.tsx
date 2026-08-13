@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {Building2, ChevronRight, FileText, Send, Settings, Users} from 'lucide-react'
+import {ChevronRight, FileText, Send, Settings, Users} from 'lucide-react'
 import {useLocale} from '../../../lib/use-preferences'
 import styles from './more.module.css'
 
@@ -16,7 +16,6 @@ export default function ManagerMorePage() {
   const c = copy[locale]
   const links = [
     {href: '/manager/team', label: c.team, help: c.teamHelp, Icon: Users},
-    {href: '/manager/branches', label: c.branches, help: c.branchesHelp, Icon: Building2},
     {href: '/manager/invitations', label: c.invitations, help: c.invitationsHelp, Icon: Send},
     {href: '/reports', label: c.reports, help: c.reportsHelp, Icon: FileText},
     {href: '/settings', label: c.settings, help: c.settingsHelp, Icon: Settings},

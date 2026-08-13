@@ -34,6 +34,7 @@ declare
   manager_membership public.company_users%rowtype;
   invitation_id uuid;
   normalized_email text := lower(trim(invited_email));
+  existing_auth_user_id uuid;
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
   if normalized_email = '' then raise exception 'Email is required'; end if;
@@ -48,6 +49,14 @@ begin
   order by case when membership.role = 'branch_manager' then 0 else 1 end
   limit 1;
   if manager_membership.company_id is null then raise exception 'Manager access required'; end if;
+
+  -- A manager should not need the employee to accept an invitation when the
+  -- email already belongs to an authenticated RouteHub account.  Link that
+  -- account immediately; invitations remain pending only for new accounts.
+  select id into existing_auth_user_id
+  from auth.users
+  where lower(email) = normalized_email
+  limit 1;
 
   select invitation.id into invitation_id
   from public.invitations invitation
@@ -79,6 +88,28 @@ begin
         status = 'pending'
     where id = invitation_id;
   end if;
+
+  if existing_auth_user_id is not null then
+    insert into public.users(id, email, name)
+    values (
+      existing_auth_user_id,
+      normalized_email,
+      coalesce((select raw_user_meta_data ->> 'full_name' from auth.users where id = existing_auth_user_id), normalized_email)
+    )
+    on conflict (id) do update set email = excluded.email;
+
+    insert into public.company_users(company_id, user_id, branch_id, role)
+    values (manager_membership.company_id, existing_auth_user_id, manager_membership.branch_id, invited_role)
+    on conflict (company_id, user_id)
+    do update set branch_id = excluded.branch_id, role = excluded.role;
+
+    update public.invitations
+    set status = 'accepted',
+        accepted_at = now(),
+        revoked_at = null
+    where id = invitation_id;
+  end if;
+
   return invitation_id;
 end;
 $$;
@@ -91,9 +122,10 @@ set search_path = public
 as $$
 declare
   invite_row public.invitations%rowtype;
-  authenticated_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
+  authenticated_email text;
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
+  select lower(email) into authenticated_email from auth.users where id = auth.uid();
   if authenticated_email = '' then return; end if;
 
   select invitation.* into invite_row
@@ -107,6 +139,17 @@ begin
   for update skip locked;
 
   if invite_row.id is null then return; end if;
+
+  -- company_users references public.users on existing RouteHub projects.
+  -- Create the public profile for an Auth account when it has not been synced
+  -- yet, which is common for invited test accounts.
+  insert into public.users(id, email, name)
+  values (
+    auth.uid(),
+    authenticated_email,
+    coalesce((select raw_user_meta_data ->> 'full_name' from auth.users where id = auth.uid()), authenticated_email)
+  )
+  on conflict (id) do update set email = excluded.email;
 
   insert into public.company_users(company_id, user_id, branch_id, role)
   values (invite_row.company_id, auth.uid(), invite_row.branch_id, invite_row.role)

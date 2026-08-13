@@ -217,7 +217,8 @@ export default function NotificationBell() {
     setAcceptingId(item.id)
     setActionMessage('')
     try {
-      const {data, error} = await getSupabase().rpc('claim_my_pending_invitation')
+      const invitationId = item.id.replace('invitation:', '')
+      const {data, error} = await getSupabase().rpc('claim_team_invitation', {target_invitation_id: invitationId})
       if (error) throw error
       if (!Array.isArray(data) || data.length === 0) {
         markRead(item.id)
@@ -230,8 +231,9 @@ export default function NotificationBell() {
       window.dispatchEvent(new Event('routehub:notifications-refresh'))
       window.setTimeout(() => window.location.assign(item.href), 500)
     } catch (error) {
-      console.error('Unable to accept RouteHub invitation', error)
-      setActionMessage(invitationCopy.error)
+      const detail = error instanceof Error ? error.message : String(error)
+      console.error('Unable to accept RouteHub invitation', {invitationId: item.id, error})
+      setActionMessage(process.env.NODE_ENV === 'development' ? `${invitationCopy.error} (${detail})` : invitationCopy.error)
     } finally {
       setAcceptingId('')
     }
