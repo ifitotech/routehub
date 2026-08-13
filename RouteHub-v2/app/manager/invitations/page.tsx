@@ -5,7 +5,6 @@ import {useCallback, useEffect, useState} from 'react'
 import {roleLabelOptions} from '../../../lib/role-labels'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
-import {createInvitationTokenHash} from '../../../lib/invitation-token'
 import styles from '../manager-tools.module.css'
 
 type Invite = {id: string; email: string; role: string; status: string; created_at?: string}
@@ -42,16 +41,6 @@ export default function Invitations() {
       const {data: membership} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
       if (!membership) throw new Error(t.noMembership)
       const normalizedEmail = email.trim().toLowerCase()
-      const {data: existing, error: lookupError} = await supabase
-        .from('invitations')
-        .select('id')
-        .eq('company_id', membership.company_id)
-        .ilike('email', normalizedEmail)
-        .order('created_at', {ascending: false})
-        .limit(1)
-        .maybeSingle()
-      if (lookupError) throw lookupError
-
       // Free workspaces support one Driver. Keep the beta Manager account
       // unrestricted so it can test multiple drivers before paid plans ship.
       if (role === 'driver' && userData.user.email?.toLowerCase() !== 'manager.test@routehub.local') {
@@ -61,7 +50,7 @@ export default function Invitations() {
           supabase.from('companies').select('max_drivers').eq('id', membership.company_id).maybeSingle()
         ])
         const maxDrivers = Math.max(1, Number(company?.max_drivers) || 1)
-        const pendingOtherThanCurrent = (pendingInvites || []).filter((invite: {id: string}) => !existing || invite.id !== existing.id).length
+        const pendingOtherThanCurrent = (pendingInvites || []).length
         if ((members || []).length + pendingOtherThanCurrent >= maxDrivers) {
           const limitMessage = locale === 'es'
             ? `Este espacio permite hasta ${maxDrivers} conductor.`
@@ -72,20 +61,10 @@ export default function Invitations() {
         }
       }
 
-      // Prefer the server-side RPC. It writes the ownership/token columns in
-      // one transaction and is compatible with both legacy invitation schemas.
-      // Direct insert remains a fallback for projects that have not applied the
-      // invitation migration yet.
-      let result = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
-      if (result.error) {
-        const invitation = {role, branch_id: membership.branch_id, status: 'pending', revoked_at: null}
-        if (existing) {
-          result = await supabase.from('invitations').update(invitation).eq('id', existing.id)
-        } else {
-          const baseInvitation = {...invitation, email: normalizedEmail, company_id: membership.company_id, token_hash: await createInvitationTokenHash(), invited_by: userData.user.id, created_by: userData.user.id}
-          result = await supabase.from('invitations').insert(baseInvitation)
-        }
-      }
+      // This RPC performs the invitation and (for existing Auth accounts) the
+      // company membership in one transaction. Do not fall back to a direct
+      // insert: that produced dangling invitations that could not be assigned.
+      const result = await supabase.rpc('create_team_invitation', {invited_email: normalizedEmail, invited_role: role})
       if (result.error) throw result.error
       window.dispatchEvent(new Event('routehub:notifications-refresh'))
       setEmail(''); setMessage(t.invitationCreated); await load()
