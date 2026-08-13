@@ -2,28 +2,17 @@
 
 import Link from 'next/link'
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {Camera, Check, History as HistoryIcon, Home, MapPin, Navigation, Pause, Play, RotateCcw, Settings as SettingsIcon, TriangleAlert, X} from 'lucide-react'
+import {Camera, Check, History as HistoryIcon, Home, MapPin, Pause, Play, RotateCcw, Settings as SettingsIcon, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import {endDrivingDay, getActiveDrivingSession, startDrivingDay, updateDrivingLocation, type DrivingSession} from '../../lib/driving-session'
-import {getCurrentLocation} from '../../lib/location'
+import {getCurrentLocation, getLocationPermission} from '../../lib/location'
 import NotificationBell from '../notification-bell'
 import styles from './driver.module.css'
-import mapStyles from './driver-map.module.css'
 
 type Mission = {id:string;status:string;origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string}
-
-function MapPreview({address, origin, title, directions=false}: {address?:string;origin?:string;title:string;directions?:boolean}) {
-  if (!address) return <div className={styles.mapEmpty}><MapPin/><span>{title}</span></div>
-  const apiKey=process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  const query=encodeURIComponent(address)
-  const directionsUrl=apiKey&&origin
-    ? `https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(apiKey)}&origin=${encodeURIComponent(origin)}&destination=${query}&mode=driving`
-    : `https://www.google.com/maps?q=${query}&output=embed`
-  return <div className={styles.map}><iframe title={title} src={directions?directionsUrl:`https://www.google.com/maps?q=${query}&output=embed`} loading="lazy" allowFullScreen/></div>
-}
 
 export default function Driver() {
   const [missions,setMissions]=useState<Mission[]>([])
@@ -37,10 +26,12 @@ export default function Driver() {
   const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
   const [locationStatus,setLocationStatus]=useState('')
   const fileInput=useRef<HTMLInputElement>(null)
-  const lastLocationUpdate=useRef(0)
   const {t}=useLocale()
 
-  const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);setDriverId(userData.user.id);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;const nextMissions=data||[];setMissions(nextMissions);const sessionResult=await getActiveDrivingSession(userData.user.id);if(!sessionResult.error){const hasActiveRoute=nextMissions.some(item=>item.status==='active');if(sessionResult.data&&!hasActiveRoute){await endDrivingDay(sessionResult.data.id,userData.user.id);setDrivingSession(null)}else setDrivingSession(sessionResult.data)}setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
+  const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);setDriverId(userData.user.id);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);const sessionResult=await getActiveDrivingSession(userData.user.id);if(!sessionResult.error)setDrivingSession(sessionResult.data);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
+  const current=missions.find(item=>item.status==='active')||missions[0]
+  const upcoming=missions.filter(item=>item.id!==current?.id)
+
   useEffect(()=>{
     const client=getSupabase()
     let disposed=false
@@ -59,19 +50,33 @@ export default function Driver() {
   },[load])
 
   useEffect(()=>{
-    if(!drivingSession||!driverId||typeof navigator==='undefined'||!navigator.geolocation)return
+    if(!drivingSession||current?.status!=='active'||!driverId||typeof navigator==='undefined'||!navigator.geolocation)return
     let disposed=false
-    const watch=navigator.geolocation.watchPosition(position=>{
-      const now=Date.now()
-      if(disposed||now-lastLocationUpdate.current<60000)return
-      lastLocationUpdate.current=now
-      void updateDrivingLocation(drivingSession.id,driverId,{lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy}).then(result=>{if(result.error)setLocationStatus(result.error.message)})
-    },()=>setLocationStatus(t.locationPermissionDenied),{enableHighAccuracy:false,maximumAge:60000,timeout:15000})
-    return()=>{disposed=true;navigator.geolocation.clearWatch(watch)}
-  },[driverId,drivingSession,t.locationPermissionDenied])
+    const sendLocation=async()=>{
+      try{
+        // Only the driver's explicit Start route action can request location.
+        // The five-minute sample never reopens a permission prompt.
+        const permission=await getLocationPermission()
+        if(permission!=='granted'){
+          if(permission==='denied'&&!disposed)setLocationStatus(t.locationPermissionDenied)
+          return
+        }
+        const location=await getCurrentLocation({maximumAge:4*60*1000})
+        if(disposed)return
+        const result=await updateDrivingLocation(drivingSession.id,driverId,location)
+        if(result.error)throw result.error
+        setLocationStatus('')
+      }catch(error){if(!disposed)setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied)}
+    }
+    // Location is intentionally sampled, rather than continuously watched:
+    // one update now and one every five minutes during an active driving day.
+    // Safari may suspend a PWA in the background; the manager then sees the
+    // genuine last-updated time instead of a fabricated moving location.
+    void sendLocation()
+    const interval=window.setInterval(()=>void sendLocation(),5*60*1000)
+    return()=>{disposed=true;window.clearInterval(interval)}
+  },[current?.status,driverId,drivingSession,t.locationPermissionDenied])
 
-  const current=missions.find(item=>item.status==='active')||missions[0]
-  const upcoming=missions.filter(item=>item.id!==current?.id)
   const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}`
   const startTrackingForActiveRoute=async()=>{
     if(!driverId||!current)return false
@@ -98,7 +103,20 @@ export default function Driver() {
     try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
   }
 
-  const update=async(status:string)=>{if(!current||busy)return;setBusy(true);try{if(status==='completed'){if(!photo){fileInput.current?.click();return}await uploadMissionEvidence(photo,current.id);await completeMission(current.id)}else{const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error}if(status==='active')await startTrackingForActiveRoute();else if(drivingSession&&['completed','paused','issue','cancelled'].includes(status)){const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('')}setModal(false);setIssueMode(false);setPhoto(null);setIssueNote('');await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
+  const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){if(!photo){fileInput.current?.click();return false}await uploadMissionEvidence(photo,current.id);await completeMission(current.id)}else{const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error}if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setPhoto(null);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
+  const startRoute=()=>{
+    // Open from the user gesture so Safari/Chrome do not block it. The page
+    // only navigates after RouteHub has activated the route and location day.
+    const mapsWindow=window.open('about:blank','_blank')
+    void (async()=>{
+      const saved=current?.status==='active'
+        ? (drivingSession ? true : await startTrackingForActiveRoute())
+        : await update('active')
+      if(!mapsWindow)return
+      if(saved)mapsWindow.location.replace(navigateUrl)
+      else mapsWindow.close()
+    })()
+  }
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('');setPhoto(null)}
 
   return <main className={`app ${styles.page}`}>
@@ -112,12 +130,11 @@ export default function Driver() {
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
         <h2>{current.destination_name||current.destination_address||t.destination}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
-        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div><div className={`${mapStyles.mapCell} ${current.status==='active'?mapStyles.mapCellActive:''}`}><MapPreview address={current.destination_address} origin={current.origin_address} title={t.routeMap} directions={current.status==='active'}/></div></div>
+        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
       <div className={styles.primaryActions}>
-        <a className={styles.navigate} href={navigateUrl} target="_blank" rel="noreferrer"><Navigation size={19}/>{t.navigate}</a>
-        {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><Play size={19}/>{t.start}</button>}
+        {['published','pending','active'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={startRoute}><Play size={19}/>{t.start}</button>}
         {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>setModal(true)}><Check size={19}/>{t.complete}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>

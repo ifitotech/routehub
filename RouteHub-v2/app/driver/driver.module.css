@@ -3,3 +3,5 @@
 .locationLive{display:inline-flex;align-items:center;gap:8px;color:var(--rh-success);font-size:12px;font-weight:800}.locationLive i{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgb(16 185 129 / 16%)}
 .startDay,.endDay{min-height:40px;padding:8px 12px;border-radius:10px;border:1px solid var(--rh-border);font-weight:800}.startDay{display:inline-flex;align-items:center;gap:6px;background:var(--rh-primary);color:#fff;border-color:var(--rh-primary)}.endDay{background:transparent;color:var(--rh-danger);border-color:rgb(239 68 68 / 35%)}
 .brand{display:flex;align-items:center;gap:10px;color:var(--rh-text);text-decoration:none}.brand img{width:42px;height:42px;object-fit:contain;border-radius:12px}.brand strong{font-size:20px;letter-spacing:-.02em}.workspaceHeading{margin-top:18px}
+/* The route start action is the only navigation entry point. */
+.primaryActions{grid-template-columns:1fr}.primaryActions a{display:none}
