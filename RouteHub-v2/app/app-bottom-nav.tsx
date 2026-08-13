@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {Building2, ClipboardList, Home, MoreHorizontal, Route as RouteIcon, Settings} from 'lucide-react'
+import {Building2, History, Home, MoreHorizontal, Route as RouteIcon, Settings} from 'lucide-react'
 import {useLocale} from '../lib/use-preferences'
 
 /** Shared bottom navigation for pages that do not render their workspace nav. */
@@ -18,7 +18,7 @@ export default function AppBottomNav() {
       ? [
           {href: '/manager', label: t.home, Icon: Home},
           {href: '/routes', label: t.routes, Icon: RouteIcon},
-          {href: '/requests', label: t.requests, Icon: ClipboardList},
+          {href: '/manager/history', label: t.history, Icon: History},
           {href: '/manager/more', label: t.more, Icon: MoreHorizontal},
         ]
     : [{href: '/', label: t.home, Icon: Home}, {href: '/routes', label: t.routes, Icon: RouteIcon}, {href: '/settings', label: t.settings, Icon: Settings}]

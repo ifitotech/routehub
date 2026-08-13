@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {AlertTriangle, ChevronRight, ClipboardList, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {AlertTriangle, ChevronRight, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadDashboardSummary} from '../../lib/dashboard'
@@ -103,6 +103,6 @@ export default function Manager() {
       <Link className={styles.action} href="/routes/manage"><span className={styles.actionIcon}><RouteIcon size={21} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>{t.manageRoutes}</strong><span>{t.viewEditRoutes}</span></span><ChevronRight size={20} aria-hidden="true" /></Link>
     </section>
 
-    <nav className={`nav ${styles.nav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/requests"><ClipboardList size={17} />{t.requests}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
+    <nav className={`nav ${styles.nav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </main>
 }
