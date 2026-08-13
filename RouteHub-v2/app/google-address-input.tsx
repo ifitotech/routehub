@@ -10,7 +10,7 @@ type AutocompleteInstance = {
   getPlace: () => PlaceResult
 }
 type GoogleMapsApi = {
-  maps?: {places?: {Autocomplete: new (input: HTMLInputElement, options?: {fields?: string[]}) => AutocompleteInstance}}
+  maps?: {places?: {Autocomplete: new (input: HTMLInputElement, options?: {fields?: string[]; types?: string[]; componentRestrictions?: {country: string | string[]}}) => AutocompleteInstance}}
 }
 
 declare global {
@@ -28,20 +28,36 @@ function loadGooglePlaces() {
   if (!apiKey) return Promise.resolve(false)
 
   window.__routeHubGooglePlaces = new Promise<boolean>(resolve => {
-    const ready = () => resolve(Boolean(window.google?.maps?.places?.Autocomplete))
+    let settled = false
+    const finish = (ready: boolean) => {
+      if (settled) return
+      settled = true
+      resolve(ready)
+    }
+    const ready = () => {
+      // `loading=async` makes the script's load event fire before the Places
+      // library has completed initialization. Wait for the documented callback
+      // so Autocomplete is available before this component creates it.
+      finish(Boolean(window.google?.maps?.places?.Autocomplete))
+    }
     const existing = document.querySelector<HTMLScriptElement>('script[data-routehub-google-places]')
     if (existing) {
       existing.addEventListener('load', ready, {once: true})
-      existing.addEventListener('error', () => resolve(false), {once: true})
+      existing.addEventListener('error', () => finish(false), {once: true})
       return
     }
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&v=weekly&loading=async`
+    const callback = `__routeHubGooglePlacesReady_${Math.random().toString(36).slice(2)}`
+    const callbackWindow = window as unknown as Record<string, unknown>
+    callbackWindow[callback] = () => {
+      ready()
+      delete callbackWindow[callback]
+    }
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&v=weekly&loading=async&callback=${callback}`
     script.async = true
     script.defer = true
     script.dataset.routehubGooglePlaces = 'true'
-    script.addEventListener('load', ready, {once: true})
-    script.addEventListener('error', () => resolve(false), {once: true})
+    script.addEventListener('error', () => finish(false), {once: true})
     document.head.appendChild(script)
   })
   return window.__routeHubGooglePlaces
@@ -65,6 +81,8 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
       if (!ready || disposed || !inputRef.current || !window.google?.maps?.places?.Autocomplete) return
       const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
         fields: ['formatted_address', 'name'],
+        types: ['address'],
+        componentRestrictions: {country: 'us'},
       })
       listener = autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace()
@@ -75,5 +93,5 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
     return () => { disposed = true; listener?.remove() }
   }, [])
 
-  return <input ref={inputRef} {...props} value={value} onChange={event => onValueChange(event.target.value)}/>
+  return <input ref={inputRef} {...props} value={value} onChange={event => onValueChange(event.target.value)} aria-autocomplete="both"/>
 }
