@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect, useRef} from 'react'
+import {useEffect, useId, useRef, useState} from 'react'
 import type {InputHTMLAttributes} from 'react'
 
 type PlaceResult = {formatted_address?: string; name?: string}
@@ -24,6 +24,9 @@ function loadGooglePlaces() {
   if (typeof window === 'undefined') return Promise.resolve(false)
   if (window.google?.maps?.places?.Autocomplete) return Promise.resolve(true)
   if (window.__routeHubGooglePlaces) return window.__routeHubGooglePlaces
+  // The beta intentionally defaults to the free address provider. Google
+  // Places is opt-in later by setting NEXT_PUBLIC_ADDRESS_SEARCH_PROVIDER=google.
+  if (process.env.NEXT_PUBLIC_ADDRESS_SEARCH_PROVIDER !== 'google') return Promise.resolve(false)
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   if (!apiKey) return Promise.resolve(false)
 
@@ -59,6 +62,7 @@ function loadGooglePlaces() {
     script.dataset.routehubGooglePlaces = 'true'
     script.addEventListener('error', () => finish(false), {once: true})
     document.head.appendChild(script)
+    window.setTimeout(() => finish(false), 8_000)
   })
   return window.__routeHubGooglePlaces
 }
@@ -71,6 +75,9 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> &
 export default function GoogleAddressInput({value, onValueChange, ...props}: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const onValueChangeRef = useRef(onValueChange)
+  const listId = useId().replace(/:/g, '')
+  const [googleReady, setGoogleReady] = useState(false)
+  const [freeSuggestions, setFreeSuggestions] = useState<string[]>([])
 
   useEffect(() => { onValueChangeRef.current = onValueChange }, [onValueChange])
 
@@ -78,7 +85,9 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
     let listener: MapsListener | undefined
     let disposed = false
     void loadGooglePlaces().then(ready => {
-      if (!ready || disposed || !inputRef.current || !window.google?.maps?.places?.Autocomplete) return
+      if (disposed) return
+      setGoogleReady(ready)
+      if (!ready || !inputRef.current || !window.google?.maps?.places?.Autocomplete) return
       const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
         fields: ['formatted_address', 'name'],
         types: ['address'],
@@ -93,5 +102,24 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
     return () => { disposed = true; listener?.remove() }
   }, [])
 
-  return <input ref={inputRef} {...props} value={value} onChange={event => onValueChange(event.target.value)} aria-autocomplete="both"/>
+  useEffect(() => {
+    if (googleReady || value.trim().length < 3) {
+      setFreeSuggestions([])
+      return
+    }
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => {
+      const query = encodeURIComponent(value.trim())
+      // Nominatim is sufficient for a small, manually tested beta. Requests
+      // are debounced, only start after three characters and are aborted on
+      // new input so we do not use it as a type-ahead service at scale.
+      void fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=us&q=${query}`, {signal: controller.signal})
+        .then(response => response.ok ? response.json() : [])
+        .then((rows: Array<{display_name?: string}>) => setFreeSuggestions(rows.map(row => row.display_name).filter((item): item is string => Boolean(item))))
+        .catch(error => { if (error.name !== 'AbortError') setFreeSuggestions([]) })
+    }, 450)
+    return () => { controller.abort(); window.clearTimeout(timer) }
+  }, [googleReady, value])
+
+  return <><input ref={inputRef} {...props} value={value} list={!googleReady ? listId : undefined} onChange={event => onValueChange(event.target.value)} aria-autocomplete="both"/>{!googleReady && <datalist id={listId}>{freeSuggestions.map(suggestion => <option key={suggestion} value={suggestion}/>)}</datalist>}</>
 }

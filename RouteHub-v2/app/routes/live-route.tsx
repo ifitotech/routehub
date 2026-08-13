@@ -15,6 +15,14 @@ function todayValue(){const now=new Date();return new Date(now.getTime()-now.get
 function routeType(value:string|null|undefined,t:Record<string,string>){return value==='pickup'?t.pickup:value==='delivery'?t.delivery:value==='transfer'?t.transfer:value==='return'?t.return:t.routes}
 function timeLabel(value:string|null|undefined){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(date)}
 function personName(email:string|null|undefined){if(!email)return 'Driver';const name=email.split('@')[0].replace(/[._-]+/g,' ').trim();return name?name.replace(/\b\w/g,char=>char.toUpperCase()):email}
+function openStreetMapEmbed(lat:number,lng:number){
+  // A small bounding box keeps the beta map focused on the driver's genuine
+  // last-known location.  It is only created when a driving session exists.
+  const delta=.008
+  const bbox=[lng-delta,lat-delta,lng+delta,lat+delta].map(value=>value.toFixed(6)).join(',')
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(`${lat.toFixed(6)},${lng.toFixed(6)}`)}`
+}
+function openStreetMapLink(lat:number,lng:number){return `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lng.toFixed(6)}#map=15/${lat.toFixed(6)}/${lng.toFixed(6)}`}
 
 export default function LiveRoute({companyId,branchId,expanded=false}:{companyId:string;branchId?:string|null;expanded?:boolean}){
   const {t}=useLocale()
@@ -65,7 +73,8 @@ export default function LiveRoute({companyId,branchId,expanded=false}:{companyId
   const hasLocation=selected?.last_lat!=null&&selected?.last_lng!=null
   const destination=selectedRoute?.destination_address||selectedRoute?.destination_name||''
   // Maps opens only on explicit action. Location data remains RouteHub-owned.
-  const locationUrl=hasLocation?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selected?.last_lat},${selected?.last_lng}`)}`:destination?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`:''
+  const locationUrl=hasLocation?openStreetMapLink(Number(selected?.last_lat),Number(selected?.last_lng)):destination?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`:''
+  const mapEmbed=hasLocation?openStreetMapEmbed(Number(selected?.last_lat),Number(selected?.last_lng)):''
   const coordinateLabel=hasLocation?`${Number(selected?.last_lat).toFixed(5)}, ${Number(selected?.last_lng).toFixed(5)}`:''
   const labels=useMemo(()=>new Map(people.map(person=>[person.user_id,personName(person.email)])),[people])
   const todayRoutes=useMemo(()=>routes.filter(route=>{const date=route.route_date||(route.scheduled_at?route.scheduled_at.slice(0,10):'');return date===todayValue()}).sort((a,b)=>Number(a.position||0)-Number(b.position||0)),[routes])
@@ -79,6 +88,7 @@ export default function LiveRoute({companyId,branchId,expanded=false}:{companyId
       {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:sessions.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:<>
         {sessions.length>1&&<div className={styles.people} aria-label={t.driver}>{sessions.map(session=><button className={`${styles.person} ${session.driver_id===selected?.driver_id?styles.personActive:''}`} key={session.id} onClick={()=>setSelectedDriver(session.driver_id)}>{labels.get(session.driver_id)||t.driver}</button>)}</div>}
         <div className={styles.mapCard}>
+          {mapEmbed&&<iframe className={styles.openStreetMap} title={`${labels.get(selected?.driver_id||'')||t.driver} ${t.liveRoute}`} src={mapEmbed} loading="lazy" referrerPolicy="no-referrer"/>}
           <div className={styles.locationPanel}>
             <span className={styles.mapLabel}><Navigation size={14}/>{t.live}</span>
             <div className={styles.locationHero}><span className={styles.locationMarker}><Navigation size={22}/></span><div className={styles.liveSummary}><strong>{labels.get(selected?.driver_id||'')||t.driver}</strong><span>{routeType(selectedRoute?.mission_type,t)} <ArrowRight size={12}/> {selectedRoute?.destination_name||selectedRoute?.destination_address||t.currentDestination}</span></div></div>

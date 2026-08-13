@@ -20,7 +20,6 @@ export default function Driver() {
   const [busy,setBusy]=useState(false)
   const [modal,setModal]=useState(false)
   const [issueMode,setIssueMode]=useState(false)
-  const [photo,setPhoto]=useState<File|null>(null)
   const [issueNote,setIssueNote]=useState('')
   const [driverId,setDriverId]=useState('')
   const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
@@ -103,7 +102,8 @@ export default function Driver() {
     try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
   }
 
-  const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){if(!photo){fileInput.current?.click();return false}await uploadMissionEvidence(photo,current.id);await completeMission(current.id)}else{const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error}if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setPhoto(null);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
+  const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){fileInput.current?.click();return false}const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error;if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
+  const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);await completeMission(current.id);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
   const startRoute=()=>{
     void (async()=>{
       const saved=current?.status==='active'
@@ -115,7 +115,7 @@ export default function Driver() {
       if(saved)window.location.assign(navigateUrl)
     })()
   }
-  const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('');setPhoto(null)}
+  const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('')}
 
   return <main className={`app ${styles.page}`}>
     <header className={styles.header}><div className={styles.brand}><img src="/routehub-driver-new.jpg" alt="RouteHub Driver"/><strong>RouteHub</strong></div><NotificationBell /></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
@@ -132,14 +132,15 @@ export default function Driver() {
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
       <div className={styles.primaryActions}>
-        {['published','pending','active'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={startRoute}><Play size={19}/>{t.start}</button>}
+        {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={startRoute}><Play size={19}/>{t.start}</button>}
+        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>window.location.assign(navigateUrl)}><MapPin size={18}/>{t.openGoogleMaps}</button>}
         {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>setModal(true)}><Check size={19}/>{t.complete}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
       {current.status==='active'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>void update('paused')}><Pause size={18}/>{t.pause}</button><button onClick={()=>{setIssueMode(true);setModal(true)}}><TriangleAlert size={18}/>{t.reportProblem}</button></div>}
-      <section className={styles.next}><div className={styles.sectionTitle}><span>{t.nextRoute}</span><b>{upcoming.length}</b></div>{upcoming.length?upcoming.slice(0,3).map((item,index)=><article key={item.id}><span className={styles.number}>{index+2}</span><div><small>{(item.mission_type||'delivery').toUpperCase()}</small><strong>{item.destination_name||item.destination_address||t.destination}</strong><span>{item.destination_address}</span></div><span className={item.priority==='urgent'?styles.urgentDot:styles.dot}/></article>):<div className={styles.noNext}>{t.noNext}</div>}</section>
+      <section className={styles.next}><div className={styles.sectionTitle}><span>{t.nextRoute}</span><b>{upcoming.length}</b></div>{upcoming.length?<div className={styles.nextList}>{upcoming.map((item,index)=><article key={item.id}><span className={styles.number}>{index+2}</span><div><small>{(item.mission_type||'delivery').toUpperCase()}</small><strong>{item.destination_name||item.destination_address||t.destination}</strong><span>{item.destination_address}</span></div><span className={item.priority==='urgent'?styles.urgentDot:styles.dot}/></article>)}</div>:<div className={styles.noNext}>{t.noNext}</div>}</section>
     </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRouteHelp}</p></section>}
-    {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>setPhoto(event.target.files?.[0]||null)}/><button className={styles.photoButton} disabled={busy} onClick={()=>photo?void update('completed'):fileInput.current?.click()}><Camera/>{photo?t.completeWithPhoto:t.addPhoto}</button>{photo&&<small className={styles.fileName}>{photo.name}</small>}<button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
+    {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void completeWithPhoto(file)}}/><button className={styles.photoButton} disabled={busy} onClick={()=>fileInput.current?.click()}><Camera/>{t.completeWithPhoto}</button><button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
     <nav className="nav" aria-label="Driver navigation"><Link href="/driver"><Home size={17}/><span>{t.home}</span></Link><Link href="/driver/history"><HistoryIcon size={17}/><span>{t.history}</span></Link><Link href="/driver/settings"><SettingsIcon size={17}/><span>{t.settings}</span></Link></nav>
   </main>
 }
