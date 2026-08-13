@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import {Bell, Check, ClipboardList, Mail, Route as RouteIcon, X} from 'lucide-react'
-import {useCallback, useEffect, useMemo, useState} from 'react'
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {getSupabase} from '../lib/supabase'
 import {useLocale} from '../lib/use-preferences'
+import styles from './notification-bell.module.css'
 
 type NotificationType = 'invitation' | 'route' | 'request' | 'activity'
 type NotificationItem = {
@@ -19,6 +20,36 @@ type NotificationItem = {
 }
 
 const readKey = (userId: string) => `routehub:notifications:read:${userId}`
+
+function loadLocalReadState(userId: string) {
+  try {
+    const stored = window.localStorage.getItem(readKey(userId))
+    return stored ? JSON.parse(stored) as string[] : []
+  } catch {
+    return []
+  }
+}
+
+function playNotificationTone(contextRef: {current: AudioContext | null}) {
+  try {
+    const Context = window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext
+    if (!Context) return
+    const context = contextRef.current || new Context()
+    contextRef.current = context
+    const oscillator = context.createOscillator()
+    const gain = context.createGain()
+    oscillator.frequency.setValueAtTime(760, context.currentTime)
+    oscillator.frequency.exponentialRampToValueAtTime(520, context.currentTime + .13)
+    gain.gain.setValueAtTime(.0001, context.currentTime)
+    gain.gain.exponentialRampToValueAtTime(.08, context.currentTime + .01)
+    gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + .16)
+    oscillator.connect(gain).connect(context.destination)
+    oscillator.start()
+    oscillator.stop(context.currentTime + .17)
+  } catch {
+    // Sound is optional: device/browser policy may block it until user interaction.
+  }
+}
 
 function relativeTime(value: string, locale: string) {
   const date = new Date(value)
@@ -49,6 +80,9 @@ export default function NotificationBell() {
   const [userId, setUserId] = useState('')
   const [acceptingId, setAcceptingId] = useState('')
   const [actionMessage, setActionMessage] = useState('')
+  const [alertPermission, setAlertPermission] = useState<NotificationPermission | 'unsupported'>('unsupported')
+  const previousIds = useRef<Set<string> | null>(null)
+  const audioContext = useRef<AudioContext | null>(null)
 
   const copy = useMemo(() => {
     const all = {
@@ -104,8 +138,7 @@ export default function NotificationBell() {
     const user = auth.user
     if (!user) return
     setUserId(user.id)
-    const stored = window.localStorage.getItem(readKey(user.id))
-    try { setRead(stored ? JSON.parse(stored) as string[] : []) } catch { setRead([]) }
+    const storedRead = loadLocalReadState(user.id)
     setLoading(true)
     try {
       const membershipResult = await client.from('company_users').select('company_id,role').eq('user_id', user.id).limit(1).maybeSingle()
@@ -132,11 +165,10 @@ export default function NotificationBell() {
 
       queries.push(client.from('routes').select('id,status,mission_type,destination_name,created_at,updated_version').eq('driver_id', user.id).in('status', ['published', 'active', 'paused']).order('created_at', {ascending: false}).limit(8))
 
-      if (companyId) {
-        queries.push(client.from('activity_logs').select('id,action,created_at,record_id').eq('company_id', companyId).order('created_at', {ascending: false}).limit(12))
-      } else {
-        queries.push(Promise.resolve({data: [], error: null}))
-      }
+      // Company activity is not a personal notification stream. Route alerts
+      // stay scoped to the assigned driver; team invitations are scoped by
+      // recipient email above.
+      queries.push(Promise.resolve({data: [], error: null}))
 
       const [invitesResult, ownInvitesResult, routesResult, activityResult] = await Promise.all(queries) as any[]
       const next: NotificationItem[] = []
@@ -163,7 +195,18 @@ export default function NotificationBell() {
       }
       const unique = Array.from(new Map(next.map(item => [item.id, item])).values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 12)
       setItems(unique)
-      setRead(current => current.filter(id => unique.some(item => item.id === id)))
+      const retainedRead = storedRead.filter(id => unique.some(item => item.id === id))
+      setRead(retainedRead)
+      window.localStorage.setItem(readKey(user.id), JSON.stringify(retainedRead))
+
+      const newest = previousIds.current && unique.find(item => !previousIds.current?.has(item.id))
+      previousIds.current = new Set(unique.map(item => item.id))
+      if (newest && document.visibilityState !== 'hidden') {
+        playNotificationTone(audioContext)
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          new Notification(newest.title, {body: newest.body, tag: newest.id})
+        }
+      }
     } catch {
       // Notification access is additive. A denied table/query must not affect the workspace.
       setItems([])
@@ -190,6 +233,10 @@ export default function NotificationBell() {
   }, [load])
 
   useEffect(() => {
+    if (typeof Notification !== 'undefined') setAlertPermission(Notification.permission)
+  }, [])
+
+  useEffect(() => {
     if (!open) return
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
@@ -210,6 +257,21 @@ export default function NotificationBell() {
     const next = [...read, id]
     setRead(next)
     if (userId) window.localStorage.setItem(readKey(userId), JSON.stringify(next))
+  }
+
+  const enableAlerts = async () => {
+    if (typeof Notification === 'undefined') {
+      setActionMessage(locale === 'es' ? 'Este navegador no admite alertas del sistema.' : locale === 'fr' ? 'Ce navigateur ne prend pas en charge les alertes système.' : 'This browser does not support system alerts.')
+      return
+    }
+    const permission = await Notification.requestPermission()
+    setAlertPermission(permission)
+    if (permission === 'granted') {
+      playNotificationTone(audioContext)
+      setActionMessage(locale === 'es' ? 'Alertas activadas.' : locale === 'fr' ? 'Alertes activées.' : 'Alerts enabled.')
+    } else {
+      setActionMessage(locale === 'es' ? 'Permite las notificaciones en los ajustes del navegador para activarlas.' : locale === 'fr' ? 'Autorisez les notifications dans les réglages du navigateur pour les activer.' : 'Allow notifications in browser settings to enable them.')
+    }
   }
 
   const acceptInvitation = async (item: NotificationItem) => {
@@ -239,7 +301,7 @@ export default function NotificationBell() {
     }
   }
 
-  return <div className="notification-bell">
+  return <div className={`notification-bell ${styles.root}`}>
     <button className="notification-bell__button" type="button" aria-label={`${copy.label}${unread ? `, ${unread} ${copy.unread}` : ''}`} aria-expanded={open} aria-controls="routehub-notifications" onClick={() => { setOpen(value => !value); if (!open) void load() }}>
       <Bell size={20} strokeWidth={2.2} aria-hidden="true" />
       {unread > 0 && <span className="notification-bell__count" aria-label={`${unread} unread`}>{unread > 9 ? '9+' : unread}</span>}
@@ -257,6 +319,7 @@ export default function NotificationBell() {
         if (item.canAccept) return <div className={`notification-bell__item${isRead ? ' is-read' : ''}`} key={item.id}>{content}</div>
         return <Link className={`notification-bell__item${isRead ? ' is-read' : ''}`} href={item.href} key={item.id} onClick={() => { markRead(item.id); setOpen(false) }}>{content}</Link>
       })}</div> : <div className="notification-bell__empty"><Check size={22}/><strong>{copy.empty}</strong><span>{copy.emptyHelp}</span></div>}
+      {alertPermission !== 'granted' && <button className="notification-bell__alerts" type="button" onClick={() => void enableAlerts()}>{locale === 'es' ? 'Activar alertas con sonido' : locale === 'fr' ? 'Activer les alertes sonores' : 'Enable sound alerts'}</button>}
       {actionMessage && <p className="notification-bell__feedback" role="status">{actionMessage}</p>}
       {items.length > 0 && unread > 0 && <button className="notification-bell__mark" type="button" onClick={markAllRead}>{copy.markRead}</button>}
     </div>}

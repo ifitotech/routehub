@@ -1,0 +1,17 @@
+.root :global(.notification-bell__alerts) {
+  width: calc(100% - 24px);
+  min-height: 38px;
+  margin: 10px 12px 0;
+  border: 1px solid color-mix(in srgb, var(--rh-primary) 45%, var(--rh-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--rh-primary) 10%, var(--rh-surface));
+  color: var(--rh-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.root :global(.notification-bell__alerts:active) {
+  transform: scale(.985);
+}
