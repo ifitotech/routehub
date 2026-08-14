@@ -111,10 +111,10 @@ export default function Driver() {
       const saved=current?.status==='active'
         ? (drivingSession ? true : await startTrackingForActiveRoute())
         : await update('active')
-      // Do not create an about:blank popup while RouteHub saves the route.
-      // On iPhone this often remains as an empty browser tab.  Navigate only
-      // once the route and its location session are ready.
-      if(saved)window.location.assign(navigateUrl)
+      // Starting a route must never navigate the driver away from RouteHub.
+      // The optional Google Maps action remains available after the route is
+      // active, so a browser/PWA does not end up on a blank external page.
+      if(saved)setMessage(t.inProgress)
     })()
   }
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('')}
