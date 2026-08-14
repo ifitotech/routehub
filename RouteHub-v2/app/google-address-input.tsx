@@ -5,7 +5,7 @@ import type {InputHTMLAttributes} from 'react'
 
 type PlaceResult = {formatted_address?: string; name?: string}
 type FreeSuggestion = {label: string; primary: string; secondary: string}
-type CensusAddressMatch = {matchedAddress?: string}
+export type LocalAddressSuggestion = {id: string; primary: string; secondary?: string; value: string}
 type MapsListener = {remove: () => void}
 type AutocompleteInstance = {
   addListener: (event: 'place_changed', callback: () => void) => MapsListener
@@ -26,8 +26,8 @@ function loadGooglePlaces() {
   if (typeof window === 'undefined') return Promise.resolve(false)
   if (window.google?.maps?.places?.Autocomplete) return Promise.resolve(true)
   if (window.__routeHubGooglePlaces) return window.__routeHubGooglePlaces
-  // The beta intentionally defaults to the free address provider. Google
-  // Places is opt-in later by setting NEXT_PUBLIC_ADDRESS_SEARCH_PROVIDER=google.
+  // Google Places remains an opt-in production provider. The beta uses the
+  // RouteHub server endpoint so mobile browsers do not have CORS failures.
   if (process.env.NEXT_PUBLIC_ADDRESS_SEARCH_PROVIDER !== 'google') return Promise.resolve(false)
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   if (!apiKey) return Promise.resolve(false)
@@ -35,16 +35,9 @@ function loadGooglePlaces() {
   window.__routeHubGooglePlaces = new Promise<boolean>(resolve => {
     let settled = false
     const finish = (ready: boolean) => {
-      if (settled) return
-      settled = true
-      resolve(ready)
+      if (!settled) { settled = true; resolve(ready) }
     }
-    const ready = () => {
-      // `loading=async` makes the script's load event fire before the Places
-      // library has completed initialization. Wait for the documented callback
-      // so Autocomplete is available before this component creates it.
-      finish(Boolean(window.google?.maps?.places?.Autocomplete))
-    }
+    const ready = () => finish(Boolean(window.google?.maps?.places?.Autocomplete))
     const existing = document.querySelector<HTMLScriptElement>('script[data-routehub-google-places]')
     if (existing) {
       existing.addEventListener('load', ready, {once: true})
@@ -54,10 +47,7 @@ function loadGooglePlaces() {
     const script = document.createElement('script')
     const callback = `__routeHubGooglePlacesReady_${Math.random().toString(36).slice(2)}`
     const callbackWindow = window as unknown as Record<string, unknown>
-    callbackWindow[callback] = () => {
-      ready()
-      delete callbackWindow[callback]
-    }
+    callbackWindow[callback] = () => { ready(); delete callbackWindow[callback] }
     script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&v=weekly&loading=async&callback=${callback}`
     script.async = true
     script.defer = true
@@ -72,15 +62,20 @@ function loadGooglePlaces() {
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
   value: string
   onValueChange: (value: string) => void
+  localSuggestions?: LocalAddressSuggestion[]
+  onSelectLocalSuggestion?: (suggestion: LocalAddressSuggestion) => void
 }
 
-export default function GoogleAddressInput({value, onValueChange, ...props}: Props) {
+export default function GoogleAddressInput({value, onValueChange, localSuggestions = [], onSelectLocalSuggestion, ...props}: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const onValueChangeRef = useRef(onValueChange)
   const listId = useId().replace(/:/g, '')
   const [googleReady, setGoogleReady] = useState(false)
   const [freeSuggestions, setFreeSuggestions] = useState<FreeSuggestion[]>([])
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+  const [lookupState, setLookupState] = useState<'idle' | 'loading' | 'empty' | 'error'>('idle')
+  const normalizedQuery = value.trim().toLocaleLowerCase()
+  const matchingLocalSuggestions = normalizedQuery.length < 2 ? [] : localSuggestions.filter(item => `${item.primary} ${item.secondary || ''} ${item.value}`.toLocaleLowerCase().includes(normalizedQuery)).slice(0, 4)
 
   useEffect(() => { onValueChangeRef.current = onValueChange }, [onValueChange])
 
@@ -92,14 +87,11 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
       setGoogleReady(ready)
       if (!ready || !inputRef.current || !window.google?.maps?.places?.Autocomplete) return
       const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-        fields: ['formatted_address', 'name'],
-        types: ['address'],
-        componentRestrictions: {country: 'us'},
+        fields: ['formatted_address', 'name'], types: ['address'], componentRestrictions: {country: 'us'},
       })
       listener = autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace()
-        const next = place.formatted_address || place.name || inputRef.current?.value || ''
-        onValueChangeRef.current(next)
+        onValueChangeRef.current(place.formatted_address || place.name || inputRef.current?.value || '')
       })
     })
     return () => { disposed = true; listener?.remove() }
@@ -109,31 +101,30 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
     if (googleReady || value.trim().length < 3) {
       setFreeSuggestions([])
       setSuggestionsOpen(false)
+      setLookupState('idle')
       return
     }
     const controller = new AbortController()
     const timer = window.setTimeout(() => {
-      const input = value.trim()
-      const toSuggestions = (labels: string[]) => labels.flatMap(label => {
-        const [primary, ...rest] = label.split(',')
-        return primary ? [{label, primary: primary.trim(), secondary: rest.join(',').trim()}] : []
-      })
-      // Census understands a street + ZIP as one US address; broad map search
-      // otherwise treats a short house number as a global place lookup.
-      void fetch(`https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(input)}&benchmark=Public_AR_Current&format=json`, {signal: controller.signal})
+      setLookupState('loading')
+      setSuggestionsOpen(true)
+      void fetch(`/api/address-suggestions?q=${encodeURIComponent(value.trim())}`, {signal: controller.signal, cache: 'no-store'})
         .then(async response => {
-          const payload = response.ok ? await response.json() as {result?: {addressMatches?: CensusAddressMatch[]}} : undefined
-          const censusSuggestions = toSuggestions((payload?.result?.addressMatches || []).map(row => row.matchedAddress || '').filter(Boolean))
-          if (censusSuggestions.length) return censusSuggestions
-          const fallback = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=us&addressdetails=1&q=${encodeURIComponent(`${input}, United States`)}`, {signal: controller.signal})
-          const rows: Array<{display_name?: string}> = fallback.ok ? await fallback.json() : []
-          return toSuggestions(rows.map(row => row.display_name || '').filter(Boolean))
+          if (!response.ok) throw new Error('Address lookup unavailable')
+          return await response.json() as {suggestions?: FreeSuggestion[]}
         })
-        .then((suggestions: FreeSuggestion[]) => {
+        .then(payload => {
+          const suggestions = payload.suggestions || []
           setFreeSuggestions(suggestions)
-          setSuggestionsOpen(suggestions.length > 0)
+          setLookupState(suggestions.length ? 'idle' : 'empty')
         })
-        .catch(error => { if (error.name !== 'AbortError') { setFreeSuggestions([]); setSuggestionsOpen(false) } })
+        .catch(error => {
+          if (error.name !== 'AbortError') {
+            setFreeSuggestions([])
+            setLookupState('error')
+            setSuggestionsOpen(true)
+          }
+        })
     }, 450)
     return () => { controller.abort(); window.clearTimeout(timer) }
   }, [googleReady, value])
@@ -142,11 +133,30 @@ export default function GoogleAddressInput({value, onValueChange, ...props}: Pro
     onValueChange(suggestion.label)
     setFreeSuggestions([])
     setSuggestionsOpen(false)
+    setLookupState('idle')
     inputRef.current?.focus()
   }
 
-  // iOS treats `street-address` as a request to inject old contact data above
-  // its keyboard. RouteHub owns address suggestions instead, so disable native
-  // autofill and predictive corrections for this operational search field.
-  return <div className="routehub-address-input"><input ref={inputRef} {...props} value={value} name="routehub-address-search" type="search" autoComplete="off" autoCorrect="off" autoCapitalize="words" spellCheck={false} onFocus={() => { if (freeSuggestions.length) setSuggestionsOpen(true) }} onChange={event => onValueChange(event.target.value)} role="combobox" aria-autocomplete="list" aria-expanded={!googleReady && suggestionsOpen} aria-controls={listId}/>{!googleReady && suggestionsOpen && freeSuggestions.length > 0 && <div className="routehub-address-suggestions" id={listId} role="listbox" aria-label="Address suggestions">{freeSuggestions.map(suggestion => <button key={suggestion.label} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onMouseDown={event => event.preventDefault()} onClick={() => selectSuggestion(suggestion)}><span className="routehub-address-pin" aria-hidden="true">⌖</span><span><strong>{suggestion.primary}</strong>{suggestion.secondary && <small>{suggestion.secondary}</small>}</span></button>)}</div>}</div>
+  const selectLocalSuggestion = (suggestion: LocalAddressSuggestion) => {
+    onValueChange(suggestion.value)
+    onSelectLocalSuggestion?.(suggestion)
+    setFreeSuggestions([])
+    setSuggestionsOpen(false)
+    setLookupState('idle')
+    inputRef.current?.focus()
+  }
+
+  // `street-address` asks iOS to inject old contact data above its keyboard.
+  // This search owns suggestions, so native address autofill stays disabled.
+  const shouldShowSuggestions = suggestionsOpen && (matchingLocalSuggestions.length > 0 || !googleReady)
+  return <div className="routehub-address-input">
+    <input ref={inputRef} {...props} value={value} name="routehub-address-search" type="search" autoComplete="off" autoCorrect="off" autoCapitalize="words" spellCheck={false} onFocus={() => { if (matchingLocalSuggestions.length || freeSuggestions.length || lookupState === 'empty' || lookupState === 'error') setSuggestionsOpen(true) }} onChange={event => { onValueChange(event.target.value); setSuggestionsOpen(true) }} role="combobox" aria-autocomplete="list" aria-expanded={shouldShowSuggestions} aria-controls={listId}/>
+    {shouldShowSuggestions && <div className="routehub-address-suggestions" id={listId} role="listbox" aria-label="Address and contact suggestions">
+      {matchingLocalSuggestions.map(suggestion => <button key={`contact-${suggestion.id}`} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onMouseDown={event => event.preventDefault()} onClick={() => selectLocalSuggestion(suggestion)}><span className="routehub-address-pin" aria-hidden="true">●</span><span><strong>{suggestion.primary}</strong><small>{suggestion.secondary || suggestion.value}</small></span></button>)}
+      {lookupState === 'loading' && <p className="routehub-address-status">Searching US addresses...</p>}
+      {lookupState === 'empty' && <p className="routehub-address-status">No exact address found. Add a city or ZIP code to narrow the search.</p>}
+      {lookupState === 'error' && <p className="routehub-address-status">Address search is temporarily unavailable. You can still enter the address manually.</p>}
+      {freeSuggestions.map(suggestion => <button key={suggestion.label} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onMouseDown={event => event.preventDefault()} onClick={() => selectSuggestion(suggestion)}><span className="routehub-address-pin" aria-hidden="true">o</span><span><strong>{suggestion.primary}</strong>{suggestion.secondary && <small>{suggestion.secondary}</small>}</span></button>)}
+    </div>}
+  </div>
 }

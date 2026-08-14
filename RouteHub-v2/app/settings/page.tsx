@@ -30,9 +30,11 @@ export default function Settings() {
       : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Primary branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.'}
 
   useEffect(() => {
-    ;(async () => {
+    let active = true
+    const loadSettings = async () => {
       const client = getSupabase(); const {data: userData} = await client.auth.getUser()
       const user = userData.user
+      if (!active) return
       setEmail(user?.email || '')
       setFullName(user?.user_metadata?.full_name || user?.user_metadata?.name || '')
       setPhone(user?.user_metadata?.phone || '')
@@ -47,7 +49,13 @@ export default function Settings() {
         : client.from('branches').select('id,name,address,phone').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
       const {data: branchData} = await branchQuery
       if (branchData) setBranch({id: branchData.id, name: branchData.name || '', address: branchData.address || '', phone: branchData.phone || ''})
-    })()
+    }
+    void loadSettings()
+    // iOS/Safari can restore a cached route after returning from Team. Reload
+    // the current user and branch instead of leaving Settings partially empty.
+    const onPageShow = () => { if (active) void loadSettings() }
+    window.addEventListener('pageshow', onPageShow)
+    return () => { active = false; window.removeEventListener('pageshow', onPageShow) }
   }, [])
 
   const signOut = async () => { await getSupabase().auth.signOut(); window.location.assign('/') }

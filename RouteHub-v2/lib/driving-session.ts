@@ -13,6 +13,8 @@ export type DrivingSession = {
   last_lng: number | null
   last_accuracy: number | null
   last_updated_at: string
+  session_kind: 'driving_day' | 'temporary_route'
+  route_id: string | null
 }
 
 export type SessionCoordinates = {lat: number; lng: number; accuracy?: number}
@@ -20,7 +22,7 @@ export type SessionCoordinates = {lat: number; lng: number; accuracy?: number}
 export async function getActiveDrivingSession(driverId: string) {
   const {data, error} = await getSupabase()
     .from('driving_sessions')
-    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at')
+    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at,session_kind,route_id')
     .eq('driver_id', driverId)
     .eq('status', 'active')
     .maybeSingle()
@@ -33,8 +35,21 @@ export async function startDrivingDay(input: {companyId: string; branchId?: stri
   if (existing.data) return existing
   const {data, error} = await getSupabase()
     .from('driving_sessions')
-    .insert({company_id: input.companyId, branch_id: input.branchId || null, driver_id: input.driverId, status: 'active'})
-    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at')
+    .insert({company_id: input.companyId, branch_id: input.branchId || null, driver_id: input.driverId, status: 'active', session_kind: 'driving_day', route_id: null})
+    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at,session_kind,route_id')
+    .single()
+  return {data: data as DrivingSession | null, error}
+}
+
+export async function startTemporaryRouteSession(input: {companyId: string; branchId?: string | null; driverId: string; routeId: string}) {
+  const existing = await getActiveDrivingSession(input.driverId)
+  if (existing.error) return existing
+  if (existing.data?.session_kind === 'temporary_route' && existing.data.route_id === input.routeId) return existing
+  if (existing.data) return {data: null, error: new Error('Another operational session is already active.')}
+  const {data, error} = await getSupabase()
+    .from('driving_sessions')
+    .insert({company_id: input.companyId, branch_id: input.branchId || null, driver_id: input.driverId, status: 'active', session_kind: 'temporary_route', route_id: input.routeId})
+    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at,session_kind,route_id')
     .single()
   return {data: data as DrivingSession | null, error}
 }
@@ -46,7 +61,7 @@ export async function updateDrivingLocation(sessionId: string, driverId: string,
     .eq('id', sessionId)
     .eq('driver_id', driverId)
     .eq('status', 'active')
-    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at')
+    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at,session_kind,route_id')
     .maybeSingle()
   return {data: data as DrivingSession | null, error}
 }
@@ -58,7 +73,7 @@ export async function endDrivingDay(sessionId: string, driverId: string) {
     .eq('id', sessionId)
     .eq('driver_id', driverId)
     .eq('status', 'active')
-    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at')
+    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at,session_kind,route_id')
     .maybeSingle()
   return {data: data as DrivingSession | null, error}
 }
@@ -66,7 +81,7 @@ export async function endDrivingDay(sessionId: string, driverId: string) {
 export async function loadActiveDrivingSessions(companyId: string, branchId?: string | null) {
   let query = getSupabase()
     .from('driving_sessions')
-    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at')
+    .select('id,company_id,branch_id,driver_id,status,started_at,ended_at,last_lat,last_lng,last_accuracy,last_updated_at,session_kind,route_id')
     .eq('company_id', companyId)
     .eq('status', 'active')
     .order('last_updated_at', {ascending: false})

@@ -3,7 +3,7 @@
 .locationLive{display:inline-flex;align-items:center;gap:8px;color:var(--rh-success);font-size:12px;font-weight:800}.locationLive i{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgb(16 185 129 / 16%)}
 .startDay,.endDay{min-height:40px;padding:8px 12px;border-radius:10px;border:1px solid var(--rh-border);font-weight:800}.startDay{display:inline-flex;align-items:center;gap:6px;background:var(--rh-primary);color:#fff;border-color:var(--rh-primary)}.endDay{background:transparent;color:var(--rh-danger);border-color:rgb(239 68 68 / 35%)}
 .brand{display:flex;align-items:center;gap:10px;color:var(--rh-text);text-decoration:none}.brand img{width:42px;height:42px;object-fit:contain;border-radius:12px}.brand strong{font-size:20px;letter-spacing:-.02em}.workspaceHeading{margin-top:18px}
-.type{display:none}
+.type{display:block}
 /* The route start action is the only navigation entry point. */
 .primaryActions{grid-template-columns:1fr}.primaryActions a{display:none}
 
@@ -48,3 +48,4 @@
  .nextList{max-height:110px}
  .secondaryActions{display:none}
 }
+.loadError{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--rh-danger-soft);border:1px solid color-mix(in srgb,var(--rh-danger) 30%,transparent);color:var(--rh-text);font-size:13px;font-weight:700}.loadError button{min-height:36px;border:1px solid var(--rh-danger);border-radius:9px;background:transparent;color:var(--rh-danger);font-weight:800;padding:6px 10px}.loading{display:grid;gap:12px;padding:22px}.loading span{height:18px;border-radius:8px;background:linear-gradient(90deg,var(--rh-border),var(--rh-primary-soft),var(--rh-border));background-size:200% 100%;animation:driver-skeleton 1.2s infinite}.loading span:nth-child(2){width:72%}.loading span:nth-child(3){width:48%}.completed{margin-top:12px;padding:12px 14px;border:1px solid var(--rh-border);border-radius:16px;background:var(--rh-surface)}.completed article{display:flex;align-items:center;gap:8px;padding-top:9px;color:var(--rh-text-secondary);font-size:13px}.completed article svg{color:var(--rh-success)}@keyframes driver-skeleton{to{background-position:-200% 0}}

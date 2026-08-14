@@ -55,6 +55,11 @@ export function canOpenPath(role: Role, pathname: string) {
   if (pathname === '/') return true
   if (role === 'ceo') return pathname.startsWith('/admin') || pathname.startsWith('/settings')
   if (role === 'driver') return pathname.startsWith('/driver')
+  // Authorized team roles may open the existing Driver execution surface for
+  // a route explicitly assigned to their own user id. The Driver queries and
+  // RLS still expose only routes where routes.driver_id = auth.uid(). Their
+  // normal workspace redirect remains unchanged.
+  if (pathname === '/driver' && ['branch_manager','operations_manager','sales_representative','counter_sales'].includes(role)) return true
   if (role === 'branch_manager' && pathname.startsWith('/manager')) return true
   if (role === 'operations_manager' && pathname.startsWith('/operations')) return true
   if (role === 'sales_representative' && pathname.startsWith('/sales')) return true

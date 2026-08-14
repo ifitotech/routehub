@@ -325,3 +325,10 @@ html[data-theme='light'] .notification-bell__panel { box-shadow: 0 18px 46px rgb
 @media (prefers-reduced-motion: reduce) {
   .notification-bell__button, .notification-bell__item { transition: none; }
 }
+
+/* Google Places renders its suggestions outside the route dialog. Keep it
+   above the modal/backdrop so an address is selected in the same field. */
+.pac-container { z-index: 10060 !important; border: 1px solid var(--rh-border) !important; border-radius: 14px !important; box-shadow: 0 14px 32px rgb(15 23 42 / 18%) !important; font-family: inherit !important; overflow: hidden; }
+.pac-item { min-height: 44px; padding: 9px 12px !important; font-size: 13px; line-height: 1.35; cursor: pointer; }
+.pac-item:hover { background: var(--rh-primary-soft); }
+.pac-item-query { font-size: 13px; color: var(--rh-text); }

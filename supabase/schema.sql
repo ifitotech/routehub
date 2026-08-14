@@ -1,3 +1,9 @@
+-- LEGACY BASELINE REFERENCE ONLY.
+-- This snapshot predates RouteHub-v2 migrations and is not the authoritative
+-- current database schema. Do not use it to reset or patch an existing or
+-- production Supabase project. See RouteHub-v2/MIGRATIONS.md for the immutable
+-- additive migration history and fresh-environment limitations.
+
 create table companies (id uuid primary key default gen_random_uuid(), name text not null, created_at timestamptz default now());
 create table branches (id uuid primary key default gen_random_uuid(), company_id uuid not null references companies(id), name text not null, default_driver_id uuid, created_at timestamptz default now());
 create table users (id uuid primary key, email text not null unique, name text, created_at timestamptz default now());
@@ -16,6 +22,7 @@ create table activity_logs (id uuid primary key default gen_random_uuid(), compa
 create table if not exists company_settings (company_id uuid primary key references companies(id), default_route_mode text not null default 'locked', completion_radius_feet int not null default 300, evidence_retention_days int not null default 30, require_photo boolean not null default false, require_signature boolean not null default false, language text not null default 'es', theme text not null default 'light');
 create table if not exists branch_settings (branch_id uuid primary key references branches(id), route_mode text, completion_radius_feet int, evidence_retention_days int, require_photo boolean, require_signature boolean, show_upcoming_stops boolean not null default true);
 
--- En producción: activar RLS y permitir crear/revocar invitations solo a Branch Manager.
+-- Historical note: production requires RLS; current policies are defined by
+-- the additive RouteHub-v2 migrations, not by this legacy snapshot.
 alter table invitations enable row level security;
 create policy "managers_manage_invitations" on invitations for all using (exists (select 1 from company_users cu where cu.company_id = invitations.company_id and cu.user_id = auth.uid() and cu.role = 'branch_manager'));

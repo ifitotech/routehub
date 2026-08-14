@@ -26,7 +26,8 @@ import {
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
-import GoogleAddressInput from '../google-address-input'
+import {chooseDefaultAssignee} from '../../lib/route-assignment'
+import GoogleAddressInput, {type LocalAddressSuggestion} from '../google-address-input'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
 import LiveRoute from './live-route'
@@ -40,7 +41,7 @@ type Contact = {
 }
 
 type DriverProfile = {email?: string | null}
-type Branch = {id: string; name: string; address?: string | null}
+type Branch = {id: string; name: string; address?: string | null; primary_driver_id?: string | null}
 type OriginMode = 'branch' | 'previous' | 'contact' | 'custom'
 type Driver = {
   user_id: string
@@ -88,12 +89,13 @@ const originCopy = {
 // them out of the operational list prevents an exception from being mistaken
 // for a route that is still ready to dispatch.
 const routeStatuses = ['draft', 'pending', 'published', 'active', 'paused']
-const lastDriverKey = 'routehub:last-selected-driver'
 const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
   {value: 'delivery', label: 'Delivery'},
-  {value: 'transfer', label: 'Transfer'},
-  {value: 'return', label: 'Return'},
+  {value: 'return', label: 'Return to branch'},
+  // `transfer` stays as the compatible database value, but is deliberately
+  // presented as a flexible custom route in the product UI.
+  {value: 'transfer', label: 'Custom route'},
 ]
 const priorities: Array<{value: FormState['priority']; label: string}> = [
   {value: 'normal', label: 'Normal'},
@@ -102,9 +104,9 @@ const priorities: Array<{value: FormState['priority']; label: string}> = [
 ]
 
 const routeCopy = {
-  en:{operations:'Route operations',title:'Routes',subtitle:'See every active assignment and publish the next route.',manage:'Manage routes',add:'Add route',assigned:'Assigned routes',assignedHelp:'Published, active and paused routes appear here.',active:'active',branch:'Branch',destinationPending:'Destination pending',noPo:'No PO',orderReference:'Order reference',viewManage:'View and manage',empty:'No active routes',emptyHelp:'Publish the first route for your team today.',newAssignment:'New assignment',create:'Create route',close:'Close route form',chooseDestination:'Choose destination',routeType:'Route type',returnToBranch:'Return to branch',returnHelp:'Sets your branch as the destination. You can still choose the starting point.',driver:'Driver',chooseDriver:'Choose driver',startingPoint:'Starting point',originPlaceholder:'Branch or starting address',contactDestination:'Contact or destination',searchPlaceholder:'Search a contact or type an address',searchHelp:'Start typing to see Google address suggestions, or select a saved contact.',priority:'Priority',date:'Date',time:'Time',po:'PO or order number',optional:'Optional',poExample:'Example: PO-45872',notes:'Notes',notesPlaceholder:'Delivery instructions for the driver',publish:'Publish route',publishing:'Publishing...',published:'Route published successfully.',chooseRequired:'Choose a driver and enter a destination.',workspacePending:'The company workspace is not ready. Refresh and try again.',invalidDate:'Choose a valid date and time.',loadError:'Unable to load route information.',saveError:'Unable to save route.',preview:'Route preview',previewHelp:'Choose a contact or enter an address.',openMaps:'Open in Google Maps',teamDriver:'Team driver',route:'Route',inProgress:'In progress',statusPublished:'Published',paused:'Paused',issue:'Issue',draft:'Draft',pending:'Pending',noTime:'No time set',today:'Today',normal:'Normal',priorityName:'Priority',urgent:'Urgent',pickup:'Pickup',delivery:'Delivery',transfer:'Transfer',return:'Return'},
-  es:{operations:'Operaciones de rutas',title:'Rutas',subtitle:'Consulta las asignaciones activas y publica la próxima ruta.',manage:'Gestionar rutas',add:'Añadir ruta',assigned:'Rutas asignadas',assignedHelp:'Aquí aparecen las rutas publicadas, activas y pausadas.',active:'activas',branch:'Sucursal',destinationPending:'Destino pendiente',noPo:'Sin PO',orderReference:'Referencia de orden',viewManage:'Ver y gestionar',empty:'No hay rutas activas',emptyHelp:'Publica la primera ruta del equipo para hoy.',newAssignment:'Nueva asignación',create:'Crear ruta',close:'Cerrar formulario',chooseDestination:'Elige un destino',routeType:'Tipo de ruta',returnToBranch:'Regresar a sucursal',returnHelp:'Usa la sucursal como destino. Aún puedes elegir el punto de salida.',driver:'Conductor',chooseDriver:'Elige un conductor',startingPoint:'Punto de salida',originPlaceholder:'Sucursal o dirección de salida',contactDestination:'Contacto o destino',searchPlaceholder:'Busca un contacto o escribe una dirección',searchHelp:'Escribe para ver sugerencias de direcciones de Google o selecciona un contacto guardado.',priority:'Prioridad',date:'Fecha',time:'Hora',po:'PO o número de orden',optional:'Opcional',poExample:'Ejemplo: PO-45872',notes:'Notas',notesPlaceholder:'Instrucciones de entrega para el conductor',publish:'Publicar ruta',publishing:'Publicando...',published:'Ruta publicada correctamente.',chooseRequired:'Elige un conductor e introduce un destino.',workspacePending:'La empresa aún no está lista. Actualiza e inténtalo nuevamente.',invalidDate:'Elige una fecha y hora válidas.',loadError:'No se pudo cargar la información de las rutas.',saveError:'No se pudo guardar la ruta.',preview:'Vista previa de la ruta',previewHelp:'Elige un contacto o escribe una dirección.',openMaps:'Abrir en Google Maps',teamDriver:'Conductor del equipo',route:'Ruta',inProgress:'En progreso',statusPublished:'Publicada',paused:'Pausada',issue:'Incidencia',draft:'Borrador',pending:'Pendiente',noTime:'Sin hora',today:'Hoy',normal:'Normal',priorityName:'Prioridad',urgent:'Urgente',pickup:'Recogida',delivery:'Entrega',transfer:'Transferencia',return:'Regresar'},
-  fr:{operations:'Opérations des itinéraires',title:'Itinéraires',subtitle:'Consultez les affectations actives et publiez le prochain itinéraire.',manage:'Gérer les itinéraires',add:'Ajouter un itinéraire',assigned:'Itinéraires attribués',assignedHelp:'Les itinéraires publiés, actifs et en pause apparaissent ici.',active:'actifs',branch:'Succursale',destinationPending:'Destination en attente',noPo:'Sans PO',orderReference:'Référence de commande',viewManage:'Voir et gérer',empty:'Aucun itinéraire actif',emptyHelp:'Publiez le premier itinéraire de l’équipe pour aujourd’hui.',newAssignment:'Nouvelle affectation',create:'Créer un itinéraire',close:'Fermer le formulaire',chooseDestination:'Choisir une destination',routeType:'Type d’itinéraire',returnToBranch:'Retour à la succursale',returnHelp:'Utilise la succursale comme destination. Vous pouvez toujours choisir le point de départ.',driver:'Conducteur',chooseDriver:'Choisir un conducteur',startingPoint:'Point de départ',originPlaceholder:'Succursale ou adresse de départ',contactDestination:'Contact ou destination',searchPlaceholder:'Rechercher un contact ou saisir une adresse',searchHelp:'Saisissez une adresse pour afficher les suggestions Google ou choisissez un contact enregistré.',priority:'Priorité',date:'Date',time:'Heure',po:'PO ou numéro de commande',optional:'Facultatif',poExample:'Exemple : PO-45872',notes:'Notes',notesPlaceholder:'Instructions de livraison pour le conducteur',publish:'Publier l’itinéraire',publishing:'Publication...',published:'Itinéraire publié.',chooseRequired:'Choisissez un conducteur et saisissez une destination.',workspacePending:'L’espace entreprise n’est pas prêt. Actualisez et réessayez.',invalidDate:'Choisissez une date et une heure valides.',loadError:'Impossible de charger les itinéraires.',saveError:'Impossible d’enregistrer l’itinéraire.',preview:'Aperçu de l’itinéraire',previewHelp:'Choisissez un contact ou saisissez une adresse.',openMaps:'Ouvrir dans Google Maps',teamDriver:'Conducteur de l’équipe',route:'Itinéraire',inProgress:'En cours',statusPublished:'Publié',paused:'En pause',issue:'Incident',draft:'Brouillon',pending:'En attente',noTime:'Aucune heure',today:'Aujourd’hui',normal:'Normal',priorityName:'Priorité',urgent:'Urgent',pickup:'Collecte',delivery:'Livraison',transfer:'Transfert',return:'Retour'},
+  en:{operations:'Route operations',title:'Routes',subtitle:'See every active assignment and publish the next route.',manage:'Manage routes',add:'Add route',assigned:'Assigned routes',assignedHelp:'Published, active and paused routes appear here.',active:'active',branch:'Branch',destinationPending:'Destination pending',noPo:'No PO',orderReference:'Order reference',viewManage:'View and manage',empty:'No active routes',emptyHelp:'Publish the first route for your team today.',newAssignment:'New assignment',create:'Create route',close:'Close route form',chooseDestination:'Choose destination',routeType:'Route type',returnToBranch:'Return to branch',returnHelp:'Sets your branch as the destination. You can still choose the starting point.',driver:'Driver',chooseDriver:'Choose driver',startingPoint:'Starting point',originPlaceholder:'Branch or starting address',contactDestination:'Contact or destination',searchPlaceholder:'Search a contact or type an address',searchHelp:'Start typing to see address suggestions, or select a saved contact.',priority:'Priority',date:'Date',time:'Time',po:'PO or order number',optional:'Optional',poExample:'Example: PO-45872',notes:'Notes',notesPlaceholder:'Delivery instructions for the driver',publish:'Publish route',publishing:'Publishing...',published:'Route published successfully.',chooseRequired:'Choose a driver and enter a destination.',workspacePending:'The company workspace is not ready. Refresh and try again.',invalidDate:'Choose a valid date and time.',loadError:'Unable to load route information.',saveError:'Unable to save route.',preview:'Route preview',previewHelp:'Choose a contact or enter an address.',openMaps:'Open in Google Maps',teamDriver:'Team driver',route:'Route',inProgress:'In progress',statusPublished:'Published',paused:'Paused',issue:'Issue',draft:'Draft',pending:'Pending',noTime:'No time set',today:'Today',normal:'Normal',priorityName:'Priority',urgent:'Urgent',pickup:'Pickup',delivery:'Delivery',transfer:'Custom route',return:'Return to branch'},
+  es:{operations:'Operaciones de rutas',title:'Rutas',subtitle:'Consulta las asignaciones activas y publica la próxima ruta.',manage:'Gestionar rutas',add:'Añadir ruta',assigned:'Rutas asignadas',assignedHelp:'Aquí aparecen las rutas publicadas, activas y pausadas.',active:'activas',branch:'Sucursal',destinationPending:'Destino pendiente',noPo:'Sin PO',orderReference:'Referencia de orden',viewManage:'Ver y gestionar',empty:'No hay rutas activas',emptyHelp:'Publica la primera ruta del equipo para hoy.',newAssignment:'Nueva asignación',create:'Crear ruta',close:'Cerrar formulario',chooseDestination:'Elige un destino',routeType:'Tipo de ruta',returnToBranch:'Regresar a sucursal',returnHelp:'Usa la sucursal como destino. Aún puedes elegir el punto de salida.',driver:'Conductor',chooseDriver:'Elige un conductor',startingPoint:'Punto de salida',originPlaceholder:'Sucursal o dirección de salida',contactDestination:'Contacto o destino',searchPlaceholder:'Busca un contacto o escribe una dirección',searchHelp:'Escribe para ver sugerencias de direcciones o selecciona un contacto guardado.',priority:'Prioridad',date:'Fecha',time:'Hora',po:'PO o número de orden',optional:'Opcional',poExample:'Ejemplo: PO-45872',notes:'Notas',notesPlaceholder:'Instrucciones de entrega para el conductor',publish:'Publicar ruta',publishing:'Publicando...',published:'Ruta publicada correctamente.',chooseRequired:'Elige un conductor e introduce un destino.',workspacePending:'La empresa aún no está lista. Actualiza e inténtalo nuevamente.',invalidDate:'Elige una fecha y hora válidas.',loadError:'No se pudo cargar la información de las rutas.',saveError:'No se pudo guardar la ruta.',preview:'Vista previa de la ruta',previewHelp:'Elige un contacto o escribe una dirección.',openMaps:'Abrir en Google Maps',teamDriver:'Conductor del equipo',route:'Ruta',inProgress:'En progreso',statusPublished:'Publicada',paused:'Pausada',issue:'Incidencia',draft:'Borrador',pending:'Pendiente',noTime:'Sin hora',today:'Hoy',normal:'Normal',priorityName:'Prioridad',urgent:'Urgente',pickup:'Recogida',delivery:'Entrega',transfer:'Ruta personalizada',return:'Regresar a sucursal'},
+  fr:{operations:'Opérations des itinéraires',title:'Itinéraires',subtitle:'Consultez les affectations actives et publiez le prochain itinéraire.',manage:'Gérer les itinéraires',add:'Ajouter un itinéraire',assigned:'Itinéraires attribués',assignedHelp:'Les itinéraires publiés, actifs et en pause apparaissent ici.',active:'actifs',branch:'Succursale',destinationPending:'Destination en attente',noPo:'Sans PO',orderReference:'Référence de commande',viewManage:'Voir et gérer',empty:'Aucun itinéraire actif',emptyHelp:'Publiez le premier itinéraire de l’équipe pour aujourd’hui.',newAssignment:'Nouvelle affectation',create:'Créer un itinéraire',close:'Fermer le formulaire',chooseDestination:'Choisir une destination',routeType:'Type d’itinéraire',returnToBranch:'Retour à la succursale',returnHelp:'Utilise la succursale comme destination. Vous pouvez toujours choisir le point de départ.',driver:'Conducteur',chooseDriver:'Choisir un conducteur',startingPoint:'Point de départ',originPlaceholder:'Succursale ou adresse de départ',contactDestination:'Contact ou destination',searchPlaceholder:'Rechercher un contact ou saisir une adresse',searchHelp:'Saisissez une adresse pour afficher des suggestions ou choisissez un contact enregistré.',priority:'Priorité',date:'Date',time:'Heure',po:'PO ou numéro de commande',optional:'Facultatif',poExample:'Exemple : PO-45872',notes:'Notes',notesPlaceholder:'Instructions de livraison pour le conducteur',publish:'Publier l’itinéraire',publishing:'Publication...',published:'Itinéraire publié.',chooseRequired:'Choisissez un conducteur et saisissez une destination.',workspacePending:'L’espace entreprise n’est pas prêt. Actualisez et réessayez.',invalidDate:'Choisissez une date et une heure valides.',loadError:'Impossible de charger les itinéraires.',saveError:'Impossible d’enregistrer l’itinéraire.',preview:'Aperçu de l’itinéraire',previewHelp:'Choisissez un contact ou saisissez une adresse.',openMaps:'Ouvrir dans Google Maps',teamDriver:'Conducteur de l’équipe',route:'Itinéraire',inProgress:'En cours',statusPublished:'Publié',paused:'En pause',issue:'Incident',draft:'Brouillon',pending:'En attente',noTime:'Aucune heure',today:'Aujourd’hui',normal:'Normal',priorityName:'Priorité',urgent:'Urgent',pickup:'Collecte',delivery:'Livraison',transfer:'Itinéraire personnalisé',return:'Retour à la succursale'},
 }
 type RouteCopy = typeof routeCopy.en
 
@@ -149,7 +151,7 @@ function driverDetails(driver?: Driver, fallback='Team driver') {
 }
 
 function typeLabel(type: string | null | undefined, c: RouteCopy) {
-  return type === 'pickup' ? c.pickup : type === 'delivery' ? c.delivery : type === 'transfer' ? c.transfer : type === 'return' ? c.return : c.route
+  return type === 'pickup' ? c.pickup : type === 'delivery' ? c.delivery : type === 'return' ? c.return : type === 'transfer' ? c.transfer : c.route
 }
 
 function statusLabel(status: string | null | undefined, c: RouteCopy) {
@@ -232,26 +234,27 @@ export default function Routes() {
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id || null)
 
+      let assigneeQuery = client.from('company_users').select('user_id,role,branch_id,users(email)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'])
+      if (membership.branch_id) assigneeQuery = assigneeQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
       const [contactResult, driverResult, routeResult, branchResult] = await Promise.all([
         client.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name'),
-        client.from('company_users').select('user_id,role,users(email)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative']),
+        assigneeQuery,
         client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,destination_name,destination_address,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
-        client.from('branches').select('id,name,address').eq('company_id', membership.company_id).order('name'),
+        client.from('branches').select('id,name,address,primary_driver_id').eq('company_id', membership.company_id).order('name'),
       ])
       if (contactResult.error) throw contactResult.error
       if (driverResult.error) throw driverResult.error
       if (routeResult.error) throw routeResult.error
       if (branchResult.error) throw branchResult.error
 
-      const availableDrivers = ((driverResult.data || []) as Driver[]).sort((a,b) => Number(b.role === 'driver') - Number(a.role === 'driver'))
-      const rememberedDriver = window.localStorage.getItem(lastDriverKey)
-      const preferredDriver = availableDrivers.find(driver => driver.user_id === rememberedDriver) || availableDrivers.find(driver => driver.role === 'driver') || availableDrivers[0]
+      const availableBranches = (branchResult.data || []) as Branch[]
+      const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
+      const availableDrivers = ((driverResult.data || []) as Driver[]).sort((a,b) => Number(b.user_id === defaultBranch?.primary_driver_id) - Number(a.user_id === defaultBranch?.primary_driver_id) || Number(b.role === 'driver') - Number(a.role === 'driver'))
+      const preferredDriver = chooseDefaultAssignee(availableDrivers, defaultBranch?.primary_driver_id)
       setContacts((contactResult.data || []) as Contact[])
       setDrivers(availableDrivers)
       setRoutes((routeResult.data || []) as RouteRecord[])
-      const availableBranches = (branchResult.data || []) as Branch[]
       setBranches(availableBranches)
-      const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
       setForm(current => ({
         ...current,
         driver_id: availableDrivers.some(driver => driver.user_id === current.driver_id) ? current.driver_id : preferredDriver?.user_id || '',
@@ -294,6 +297,12 @@ export default function Routes() {
 
   const driverIndex = useMemo(() => new Map(drivers.map(driver => [driver.user_id, driver])), [drivers])
   const selectedContact = contacts.find(contact => contact.id === form.contact_id)
+  const destinationSuggestions = useMemo<LocalAddressSuggestion[]>(() => contacts.map(contact => ({
+    id: contact.id,
+    primary: contact.company_name,
+    secondary: [contact.contact_name, contact.address].filter(Boolean).join(' · '),
+    value: `${contact.company_name} - ${contact.address}`,
+  })), [contacts])
   const previewAddress = selectedContact?.address || form.destination
   const oc = originCopy[locale]
   const defaultBranch = branches.find(branch => branch.id === branchId) || branches[0]
@@ -323,10 +332,14 @@ export default function Routes() {
     setForm(current => ({...current, destination: value, contact_id: contact?.id || ''}))
   }
 
+  const selectDestinationContact = (suggestion: LocalAddressSuggestion) => {
+    setForm(current => ({...current, destination: suggestion.value, contact_id: suggestion.id}))
+  }
+
   const openBuilder = () => {
     const nextPriority: FormState['priority'] = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
     const next = initialForm(nextPriority)
-    const driverId = form.driver_id || drivers[0]?.user_id || ''
+    const driverId = chooseDefaultAssignee(drivers, defaultBranch?.primary_driver_id)?.user_id || form.driver_id || ''
     const lastForDriver = routes.filter(route => route.driver_id === driverId && route.route_date === next.date).sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0]
     setOriginMode(lastForDriver ? 'previous' : 'branch')
     setForm({...next, driver_id: driverId, origin: lastForDriver?.destination_address || lastForDriver?.destination_name || defaultBranch?.address || defaultBranch?.name || ''})
@@ -358,7 +371,7 @@ export default function Routes() {
       const destinationAddress = selected?.address || form.destination.trim()
       const destinationName = selected?.company_name || form.destination.trim()
 
-      const {data: lastRoute, error: positionError} = await client
+      let positionQuery = client
         .from('routes')
         .select('position')
         .eq('company_id', companyId)
@@ -367,7 +380,10 @@ export default function Routes() {
         .in('status', routeStatuses)
         .order('position', {ascending:false})
         .limit(1)
-        .maybeSingle()
+      positionQuery = branchId
+        ? positionQuery.eq('branch_id', branchId)
+        : positionQuery.is('branch_id', null)
+      const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
       if (positionError) throw positionError
 
       const {data: createdRoute,error} = await client.from('routes').insert({
@@ -487,14 +503,10 @@ export default function Routes() {
           <div className={`${styles.formColumn} ${contrast.form}`}>
             <fieldset className={`${styles.fieldset} ${styles.primaryRouteTypes}`}>
               <legend>{c.routeType}</legend>
-              <div className={styles.segmented}>{routeTypes.slice(0,3).map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => ({...current, type: type.value}))}>{typeLabel(type.value,c)}</button>)}</div>
+              <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => type.value === 'return' ? {...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', contact_id:''} : {...current, type:type.value})}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
-            <button className={styles.returnToBranch} type="button" onClick={() => setForm(current => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', contact_id:''}))}>
-              <MapPin size={17}/><span><strong>{c.returnToBranch}</strong><small>{c.returnHelp}</small></span>
-            </button>
-
-            <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => {window.localStorage.setItem(lastDriverKey,event.target.value);setForm(current => ({...current, driver_id: event.target.value}))}}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const details = driverDetails(driver,c.teamDriver); const fallback=driver.role==='driver'?`${c.driver} ${index+1}`:`${driver.role?.replaceAll('_',' ')||c.teamDriver} ${index+1}`; return <option key={driver.user_id} value={driver.user_id}>{details.email ? `${details.name} - ${details.email}` : fallback}</option> })}</select></div></label>
+            <label className={styles.field}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const details = driverDetails(driver,c.teamDriver); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); const fallback=driver.role==='driver'?`${c.driver} ${index+1}`:`${roleName} ${index+1}`; return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}${details.email?` · ${details.email}`:''}`}</option> })}</select></div></label>
 
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
@@ -505,7 +517,7 @@ export default function Routes() {
               {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} onValueChange={value => setForm(current => ({...current, origin:value}))}/></div>}
             </fieldset>
 
-            <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination}/></div><small>{c.searchHelp}</small>{contacts.length>0&&<select aria-label="Saved contact" value={form.contact_id} onChange={event=>{const contact=contacts.find(item=>item.id===event.target.value);setForm(current=>({...current,contact_id:event.target.value,destination:contact?`${contact.company_name} - ${contact.address}`:current.destination}))}}><option value="">Saved contact (optional)</option>{contacts.map(contact=><option key={contact.id} value={contact.id}>{contact.company_name} — {contact.address}</option>)}</select>}</label>
+            <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact}/></div><small>{c.searchHelp}</small></label>
 
             <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>
 

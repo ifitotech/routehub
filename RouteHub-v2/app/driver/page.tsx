@@ -1,18 +1,22 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {Camera, Check, History as HistoryIcon, Home, MapPin, Pause, Play, RotateCcw, Settings as SettingsIcon, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
-import {endDrivingDay, getActiveDrivingSession, startDrivingDay, updateDrivingLocation, type DrivingSession} from '../../lib/driving-session'
+import {endDrivingDay, getActiveDrivingSession, startDrivingDay, startTemporaryRouteSession, updateDrivingLocation, type DrivingSession} from '../../lib/driving-session'
 import {getCurrentLocation, getLocationPermission} from '../../lib/location'
+import {canDriverStartRoute, operationalDate, selectDriverTodayQueue} from '../../lib/driver-queue'
+import {workspaceForStrictRole} from '../auth-access'
+import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
 import styles from './driver.module.css'
 
-type Mission = {id:string;status:string;origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string}
+type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string}
 
 export default function Driver() {
   const [missions,setMissions]=useState<Mission[]>([])
@@ -22,16 +26,52 @@ export default function Driver() {
   const [issueMode,setIssueMode]=useState(false)
   const [issueNote,setIssueNote]=useState('')
   const [driverId,setDriverId]=useState('')
+  const [membershipRole,setMembershipRole]=useState<Role|null>(null)
   const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
   const [locationStatus,setLocationStatus]=useState('')
+  const [loading,setLoading]=useState(true)
+  const [loadError,setLoadError]=useState('')
   const fileInput=useRef<HTMLInputElement>(null)
-  const {t}=useLocale()
+  const {t,locale}=useLocale()
 
-  const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);setDriverId(userData.user.id);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);const sessionResult=await getActiveDrivingSession(userData.user.id);if(!sessionResult.error)setDrivingSession(sessionResult.data);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
-  const current=missions.find(item=>item.status==='active')||missions[0]
-  const upcoming=missions.filter(item=>item.id!==current?.id)
+  const load=useCallback(async()=>{
+    setLoading(true)
+    try{
+      const client=getSupabase()
+      const {data:userData}=await client.auth.getUser()
+      if(!userData.user)throw Error(t.signIn)
+      const today=operationalDate()
+      setDriverId(userData.user.id)
+      const membership=await currentMembership()
+      setMembershipRole(membership.role as Role)
+      // route_date is the operational date. Never use created_at or a UTC
+      // conversion here: tomorrow's position 1 must not become today's route.
+      const {data,error}=await client.from('routes')
+        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at,completed_at')
+        .eq('driver_id',userData.user.id)
+        .eq('route_date',today)
+        .in('status',['published','pending','active','paused','completed','issue'])
+        .order('position')
+      if(error)throw error
+      setMissions((data||[]) as Mission[])
+      const sessionResult=await getActiveDrivingSession(userData.user.id)
+      if(!sessionResult.error)setDrivingSession(sessionResult.data)
+      setLoadError('')
+      setMessage('')
+    }catch(error){
+      // Keep the last authoritative queue on screen during a temporary
+      // connection failure. Detailed errors stay in development tools only.
+      if(process.env.NODE_ENV !== 'production')console.error('Driver route queue failed to load',error)
+      setLoadError(t.unableLoadRoutes)
+    }finally{setLoading(false)}
+  },[t.signIn,t.unableLoadRoutes])
+  const today=operationalDate()
+  const {current,upcoming,completed}=selectDriverTodayQueue(missions,driverId,today)
   const taskLabels:Record<string,string>={pickup:t.pickup,delivery:t.delivery,return:'Return to branch',transfer:'Custom route'}
   const currentTask=taskLabels[current?.mission_type||'delivery']||t.delivery
+  const temporaryExecution=membershipRole!=null&&membershipRole!=='driver'
+  const homeHref=membershipRole?workspaceForStrictRole(membershipRole):'/driver'
+  const temporaryLabel=locale==='es'?'Ruta temporal':locale==='fr'?'Itinéraire temporaire':'Temporary route'
 
   useEffect(()=>{
     const client=getSupabase()
@@ -51,7 +91,7 @@ export default function Driver() {
   },[load])
 
   useEffect(()=>{
-    if(!drivingSession||current?.status!=='active'||!driverId||typeof navigator==='undefined'||!navigator.geolocation)return
+    if(!drivingSession||!driverId||typeof navigator==='undefined'||!navigator.geolocation)return
     let disposed=false
     const sendLocation=async()=>{
       try{
@@ -76,7 +116,7 @@ export default function Driver() {
     void sendLocation()
     const interval=window.setInterval(()=>void sendLocation(),5*60*1000)
     return()=>{disposed=true;window.clearInterval(interval)}
-  },[current?.status,driverId,drivingSession,t.locationPermissionDenied])
+  },[driverId,drivingSession,t.locationPermissionDenied])
 
   const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}`
   const startTrackingForActiveRoute=async()=>{
@@ -84,7 +124,9 @@ export default function Driver() {
     try{
       const coordinates=await getCurrentLocation()
       const membership=await currentMembership()
-      const result=await startDrivingDay({companyId:membership.company_id,branchId:membership.branch_id,driverId})
+      const result=membership.role==='driver'
+        ? await startDrivingDay({companyId:current.company_id||membership.company_id,branchId:current.branch_id??membership.branch_id,driverId})
+        : await startTemporaryRouteSession({companyId:current.company_id||membership.company_id,branchId:current.branch_id??membership.branch_id,driverId,routeId:current.id})
       if(result.error)throw result.error
       setDrivingSession(result.data)
       if(result.data)await updateDrivingLocation(result.data.id,driverId,coordinates)
@@ -94,9 +136,17 @@ export default function Driver() {
   }
   const beginDrivingDay=async()=>{
     if(!driverId||busy)return
-    if(!current||current.status!=='active'){setMessage(t.start);return}
     setBusy(true);setLocationStatus('')
-    try{if(await startTrackingForActiveRoute())setMessage(t.startDrivingDay)}finally{setBusy(false)}
+    try{
+      const membership=await currentMembership()
+      const coordinates=await getCurrentLocation()
+      const result=await startDrivingDay({companyId:membership.company_id,branchId:current?.branch_id??membership.branch_id,driverId})
+      if(result.error)throw result.error
+      setDrivingSession(result.data)
+      if(result.data)await updateDrivingLocation(result.data.id,driverId,coordinates)
+      setMessage(t.startDrivingDay)
+    }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied)}
+    finally{setBusy(false)}
   }
   const finishDrivingDay=async()=>{
     if(!drivingSession||busy)return
@@ -104,8 +154,8 @@ export default function Driver() {
     try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
   }
 
-  const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){fileInput.current?.click();return false}const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id);if(error)throw error;if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
-  const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);await completeMission(current.id);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
+  const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){fileInput.current?.click();return false}if(status==='active'&&!canDriverStartRoute(current,today)){setMessage(t.unableUpdateRoute);return false}const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id).eq('driver_id',driverId).eq('company_id',current.company_id);if(error)throw error;if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
+  const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);let completionLocation:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{completionLocation=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,completionLocation)}catch{}await completeMission(current.id,completionLocation);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
   const startRoute=()=>{
     void (async()=>{
       const saved=current?.status==='active'
@@ -120,11 +170,13 @@ export default function Driver() {
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('')}
 
   return <main className={`app ${styles.page}`}>
-    <header className={styles.header}><div className={styles.brand}><img src="/routehub-driver-new.jpg" alt="RouteHub Driver"/><strong>RouteHub</strong></div><NotificationBell /></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
-    {(drivingSession||current?.status==='active')&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
+    <header className={styles.header}><div className={styles.brand}><Image src="/routehub-driver-new.jpg" alt="RouteHub Driver" width={48} height={48} priority/><strong>RouteHub</strong></div><NotificationBell /></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
+    {membershipRole==='driver'&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
+    {temporaryExecution&&drivingSession&&<div className={styles.drivingBar}><span className={styles.locationLive}><i/>{temporaryLabel}</span></div>}
     {locationStatus&&<div className={styles.toast} role="status">{locationStatus}</div>}
     {message&&<div className={styles.toast} role="status">{message}</div>}
-    {current?<>
+    {loadError&&<div className={styles.loadError} role="status"><span>{loadError}</span><button disabled={loading} onClick={()=>void load()}>{t.retry || 'Retry'}</button></div>}
+    {loading&&!missions.length?<section className={`${styles.loading} card`} aria-busy="true"><span/><span/><span/></section>:current?<>
       <section className={styles.mission}>
         <div className={styles.missionTop}><span>{t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
@@ -141,8 +193,9 @@ export default function Driver() {
       </div>
       {current.status==='active'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>void update('paused')}><Pause size={18}/>{t.pause}</button><button onClick={()=>{setIssueMode(true);setModal(true)}}><TriangleAlert size={18}/>{t.reportProblem}</button></div>}
       <section className={styles.next}><div className={styles.sectionTitle}><span>{t.nextRoute}</span><b>{upcoming.length}</b></div>{upcoming.length?<div className={styles.nextList}>{upcoming.map((item,index)=><article key={item.id}><span className={styles.number}>{index+2}</span><div><small>{(item.mission_type||'delivery').toUpperCase()}</small><strong>{item.destination_name||item.destination_address||t.destination}</strong><span>{item.destination_address}</span></div><span className={item.priority==='urgent'?styles.urgentDot:styles.dot}/></article>)}</div>:<div className={styles.noNext}>{t.noNext}</div>}</section>
-    </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRouteHelp}</p></section>}
+      {completed.length>0&&<section className={styles.completed}><div className={styles.sectionTitle}><span>{t.completed}</span><b>{completed.length}</b></div>{completed.slice(0,2).map(item=><article key={item.id}><Check size={15}/><span>{item.destination_name||item.destination_address||t.destination}</span></article>)}</section>}
+    </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
     {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void completeWithPhoto(file)}}/><button className={styles.photoButton} disabled={busy} onClick={()=>fileInput.current?.click()}><Camera/>{t.completeWithPhoto}</button><button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
-    <nav className="nav" aria-label="Driver navigation"><Link href="/driver"><Home size={17}/><span>{t.home}</span></Link><Link href="/driver/history"><HistoryIcon size={17}/><span>{t.history}</span></Link><Link href="/driver/settings"><SettingsIcon size={17}/><span>{t.settings}</span></Link></nav>
+    <nav className="nav" aria-label="Driver navigation"><Link href={temporaryExecution?homeHref:'/driver'}><Home size={17}/><span>{t.home}</span></Link>{temporaryExecution?<Link href="/driver" aria-current="page"><Play size={17}/><span>{temporaryLabel}</span></Link>:<><Link href="/driver/history"><HistoryIcon size={17}/><span>{t.history}</span></Link><Link href="/driver/settings"><SettingsIcon size={17}/><span>{t.settings}</span></Link></>}</nav>
   </main>
 }

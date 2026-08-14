@@ -44,6 +44,21 @@ export function relinkOrigins(missions:Mission[]){
 }
 export function findCurrent(missions:Mission[]){return missions.find(m=>m.status==='active')||missions.find(m=>['published','pending','paused'].includes(m.status))}
 export function upcomingMissions(missions:Mission[]){const current=findCurrent(missions);return missions.filter(m=>m.id!==current?.id&&['published','pending','paused'].includes(m.status)).sort((a,b)=>a.position-b.position)}
+/**
+ * Moves only work that has not started between two driver queues.  This is a
+ * pure mirror of the database operation so UI tests can prove that changing
+ * one driver's queue never leaves gaps in the other driver's queue.
+ */
+export function reassignUpcoming(source:Mission[],target:Mission[],missionId:string){
+  const mission=source.find(item=>item.id===missionId)
+  if(!mission||!canMove(mission.status))return {source,target}
+  // The two arguments are movable queues, so each one can be normalized from
+  // one without touching any active or historical route outside the queue.
+  const normalize=(queue:Mission[])=>relinkOrigins(queue.map((item,index)=>({...item,position:index+1})))
+  const nextSource=source.filter(item=>item.id!==missionId)
+  const nextTarget=[...target,{...mission,position:target.length+1}]
+  return {source:normalize(nextSource),target:normalize(nextTarget)}
+}
 export function interruptActive(missions:Mission[],urgentMission:Mission):Mission[]{
   const paused=missions.map(m=>m.status==='active'?{...m,status:'paused' as const}:m)
   return insertUrgent(paused,{...urgentMission,status:'active',priority:'urgent'})

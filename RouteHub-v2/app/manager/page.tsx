@@ -6,20 +6,18 @@ import {useEffect, useState} from 'react'
 import {AlertTriangle, ChevronRight, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
-import {loadDashboardSummary} from '../../lib/dashboard'
+import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
 import {useLocale} from '../../lib/use-preferences'
 import NotificationBell from '../notification-bell'
+import TemporaryRouteAssignments from '../temporary-route-assignments'
 import styles from './manager-dashboard.module.css'
 
-type Summary = {activeRoutes: number; pendingRequests: number; availableDrivers: number; openIssues: number}
-type TodayRoute = {id: string; mission_type?: string | null; destination_name?: string | null; status?: string | null; driver_id?: string | null}
-
-const emptySummary: Summary = {activeRoutes: 0, pendingRequests: 0, availableDrivers: 0, openIssues: 0}
+const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRequests: 0, availableDrivers: 0, openIssues: 0}
 
 export default function Manager() {
   const {t} = useLocale()
-  const [summary, setSummary] = useState<Summary>(emptySummary)
-  const [todayRoutes, setTodayRoutes] = useState<TodayRoute[]>([])
+  const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
+  const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
   const [branchName, setBranchName] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -31,19 +29,30 @@ export default function Manager() {
       try {
         const membership = await currentMembership()
         const client = getSupabase()
-        const [{data: userData}, {data: branch}, {data: routes}, dashboard] = await Promise.all([
+        const branchQuery = membership.branch_id
+          ? client.from('branches').select('id,name').eq('id', membership.branch_id).maybeSingle()
+          : client.from('branches').select('id,name').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
+        const [{data: userData, error: userError}, {data: branch, error: branchError}] = await Promise.all([
           client.auth.getUser(),
-          client.from('branches').select('name').eq('id', membership.branch_id).maybeSingle(),
-          client.from('routes').select('id,mission_type,destination_name,status,driver_id').eq('company_id', membership.company_id).in('status', ['published', 'active', 'paused']).order('position', {ascending: true}).limit(5),
-          loadDashboardSummary(),
+          branchQuery,
         ])
+        if (userError || branchError) throw userError || branchError
+        // /manager is a branch workspace. A branch-bound membership uses its
+        // exact branch; a legacy unbound Manager is anchored to the first
+        // authorized branch returned by RLS rather than mixing all branches.
+        const branchId = String(branch?.id || membership.branch_id || '') || null
+        const dashboard = await loadManagerDashboard({
+          companyId: membership.company_id,
+          branchId,
+          routeDate: managerOperationalDate(),
+        })
         if (cancelled) return
         const metadata = userData.user?.user_metadata as Record<string, unknown> | undefined
         const name = String(metadata?.full_name || metadata?.name || userData.user?.email || '')
         setDisplayName(name)
         setBranchName(String(branch?.name || ''))
-        setTodayRoutes((routes || []) as TodayRoute[])
-        setSummary(dashboard)
+        setTodayRoutes(dashboard.todayRoutes.slice(0, 5))
+        setSummary(dashboard.summary)
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : t.unableLoadReports)
       } finally {
@@ -94,7 +103,7 @@ export default function Manager() {
 
     <p className={styles.sectionLabel}>{t.today}</p>
     <section className={`${styles.todayCard} ${hasIssue ? styles.attention : ''}`} aria-live="polite">
-      {loading ? <div className={styles.skeleton} aria-label={t.loading} /> : todayRoutes.length ? <div className={styles.todayList}>{todayRoutes.map(route => <div className={styles.todayRow} key={route.id}><span className={styles.todayBadge} /><span className={styles.todayBody}><strong>{route.destination_name || t.destination}</strong><span>{String(route.mission_type || t.delivery).toUpperCase()} · {route.driver_id ? t.assigned : t.pending}</span></span><span className={styles.todayState}>{route.status || t.published}</span></div>)}</div> : <div className={styles.empty}><span className={styles.emptyIcon}><ClipboardList size={27} aria-hidden="true" /></span><div><h2>{hasIssue ? t.attentionRequired : t.noActiveRoutes}</h2><p>{hasIssue ? t.viewIssue : `${t.branchCaughtUp} ${t.greatJob}`}</p></div></div>}
+      {loading ? <div className={styles.skeleton} aria-label={t.loading} /> : todayRoutes.length ? <div className={styles.todayList}>{todayRoutes.map(route => <div className={styles.todayRow} key={route.id}><span className={styles.todayBadge} /><span className={styles.todayBody}><strong>{route.destination_name || t.destination}</strong><span>{String(route.mission_type || t.delivery).toUpperCase()} · {route.driver_id ? t.assigned : t.pending}</span></span><span className={styles.todayState}>{route.status || t.published}</span></div>)}</div> : <div className={styles.empty}><span className={styles.emptyIcon}><ClipboardList size={27} aria-hidden="true" /></span><div><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p><Link className={styles.emptyCta} href="/routes">{t.createRoute}</Link></div></div>}
     </section>
 
     <p className={styles.sectionLabel}>{t.quickActions}</p>
@@ -103,6 +112,7 @@ export default function Manager() {
       <Link className={styles.action} href="/routes/manage"><span className={styles.actionIcon}><RouteIcon size={21} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>{t.manageRoutes}</strong><span>{t.viewEditRoutes}</span></span><ChevronRight size={20} aria-hidden="true" /></Link>
     </section>
 
+    <TemporaryRouteAssignments />
     <nav className={`nav ${styles.nav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </main>
 }
