@@ -30,6 +30,8 @@ export default function Driver() {
   const load=useCallback(async()=>{try{const client=getSupabase();const {data:userData}=await client.auth.getUser();if(!userData.user)throw Error(t.signIn);setDriverId(userData.user.id);const {data,error}=await client.from('routes').select('id,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at').eq('driver_id',userData.user.id).in('status',['published','pending','active','paused']).order('position');if(error)throw error;setMissions(data||[]);const sessionResult=await getActiveDrivingSession(userData.user.id);if(!sessionResult.error)setDrivingSession(sessionResult.data);setMessage('')}catch(error){setMessage(error instanceof Error?error.message:t.unableLoadRoutes)}},[t.signIn,t.unableLoadRoutes])
   const current=missions.find(item=>item.status==='active')||missions[0]
   const upcoming=missions.filter(item=>item.id!==current?.id)
+  const taskLabels:Record<string,string>={pickup:t.pickup,delivery:t.delivery,return:'Return to branch',transfer:'Custom route'}
+  const currentTask=taskLabels[current?.mission_type||'delivery']||t.delivery
 
   useEffect(()=>{
     const client=getSupabase()
@@ -128,7 +130,7 @@ export default function Driver() {
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
         <h2>{current.destination_name||current.destination_address||t.destination}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
-        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.priorityLabel}</small><strong>{current.priority||t.normal}</strong></div></div>
+        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.type}</small><strong>{currentTask}</strong></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
       <div className={styles.primaryActions}>
