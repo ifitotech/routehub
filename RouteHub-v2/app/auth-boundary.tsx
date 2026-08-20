@@ -14,7 +14,7 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
 
   useEffect(() => {
     const client = getSupabase()
-    const isPublic = publicPaths.some(path => pathname.startsWith(path))
+    const isPublic = pathname === '/' || publicPaths.some(path => pathname.startsWith(path))
     let active = true
     const verify = async () => {
       if (isPublic) return
@@ -35,7 +35,7 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
     return () => { active = false; listener.subscription.unsubscribe() }
   }, [pathname, router])
 
-  const isPublic = publicPaths.some(path => pathname.startsWith(path))
+  const isPublic = pathname === '/' || publicPaths.some(path => pathname.startsWith(path))
   if (!isPublic && verifiedPath !== pathname) return <main className="app"><section className="card" style={{marginTop: 72, textAlign: 'center'}}><h1>RouteHub</h1><p className="muted" role="status">Opening your secure workspace…</p></section></main>
   return <>{children}</>
 }

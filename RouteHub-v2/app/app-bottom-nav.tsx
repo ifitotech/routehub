@@ -11,7 +11,7 @@ export default function AppBottomNav() {
   const pathname = usePathname()
   const {t} = useLocale()
   const hasLocalNav = pathname === '/manager' || pathname === '/operations' || pathname === '/sales' || pathname === '/counter' || pathname.startsWith('/driver')
-  if (pathname === '/login' || pathname === '/auth/callback' || hasLocalNav) return null
+  if (pathname === '/' || pathname === '/login' || pathname === '/auth/callback' || hasLocalNav) return null
 
   const links = pathname.startsWith('/admin')
     ? [{href: '/admin', label: t.home, Icon: Home}, {href: '/admin/companies', label: t.company, Icon: Building2}, {href: '/settings', label: t.settings, Icon: Settings}]

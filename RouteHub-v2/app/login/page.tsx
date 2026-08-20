@@ -1,16 +1,22 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
+import {ArrowRight, Bell, CheckCircle2, ChevronRight, ClipboardList, MapPin, Menu, Navigation, Play, Plus, ShieldCheck, Users, X, Zap} from 'lucide-react'
+import type {LucideIcon} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
 import {resolveAccess, workspaceForStrictRole} from '../auth-access'
-
-const slides = [
-  {name: 'Driver', text: 'Live routes, navigation and proof of delivery.'},
-  {name: 'Manager', text: 'Dispatch teams, organize routes and respond quickly.'},
-]
+import styles from './landing.module.css'
 
 type DialogMode = 'sign-in' | 'request' | null
+type Step = {Icon: LucideIcon; title: string; copy: string}
+const steps: Step[] = [
+  {Icon: Plus, title: 'Create Route', copy: 'Add stops, choose the details and prepare the route.'},
+  {Icon: Users, title: 'Assign Driver', copy: 'Assign the route to your driver.'},
+  {Icon: Navigation, title: 'Driver Delivers', copy: 'Driver receives the route and follows each stop.'},
+  {Icon: CheckCircle2, title: 'Complete & Track', copy: 'Capture proof when required and keep route progress updated.'},
+]
 
 function accessMessage(code: string) {
   if (code === 'ROLE_NOT_ASSIGNED') return 'This account has no company role assigned.'
@@ -19,101 +25,33 @@ function accessMessage(code: string) {
   return 'Unable to verify your account access.'
 }
 
+function ManagerPreview() {
+  const drivers = [['Carlos Alvarez', '7 stops', 'En route'], ['Mike Johnson', '4 stops', 'En route'], ['Alex Rodriguez', '5 stops', 'En route'], ['David Lopez', '3 stops', 'Scheduled']]
+  return <div className={styles.managerPreview} aria-label="RouteHub manager dashboard preview">
+    <aside className={styles.previewSidebar}><div className={styles.previewBrand}><MapPin/><b>RouteHub</b></div><span className={styles.previewActive}>⌂ Today</span><span>⌘ Routes</span><span>♙ Drivers</span><span>◷ History</span><span className={styles.previewNewRoute}><Plus size={15}/> New Route</span></aside>
+    <div className={styles.previewContent}><div className={styles.previewTop}><b>Today Overview</b><small>Last updated: 9:15 AM</small></div><div className={styles.kpis}>{[['Active Routes', '8'], ['Drivers On Route', '6'], ['Stops Today', '32'], ['Alerts', '2']].map(([label, value], index) => <div key={label} className={index === 3 ? styles.alertKpi : ''}><small>{label}</small><strong>{value}</strong><em>View all</em></div>)}</div><div className={styles.previewColumns}><section><header>Active Routes <em>View all</em></header>{drivers.map((driver, index) => <div className={styles.previewDriver} key={driver[0]}><i style={{background: index === 0 ? '#8b5cf6' : index === 1 ? '#1f6fff' : index === 2 ? '#22c55e' : '#fb923c'}}/><div><b>{driver[0]}</b><small>● {driver[2]}</small></div><div><b>{driver[1]}</b><small>Next stop in {18 + index * 7} min</small></div><ChevronRight size={16}/></div>)}</section><section className={styles.previewMap}><header>Live Map <em>View all</em></header><div className={styles.mapGrid}><span className={styles.mapRouteA}/><span className={styles.mapRouteB}/><i className={styles.mapPinOne}>1</i><i className={styles.mapPinTwo}>2</i><i className={styles.mapCar}>▰</i></div></section></div></div>
+  </div>
+}
+
+function DriverPreview() {
+  return <div className={styles.driverPreview} aria-label="RouteHub driver app preview"><div className={styles.phoneTop}><span>9:15</span><b>Today</b><Bell size={12}/></div><small>NEXT STOP</small><section><i>1</i><div><b>ABC Electric</b><span>123 Main St<br/>Miami, FL 33166</span></div></section><div className={styles.phoneMeta}><span>◈ Delivery</span><span>◷ 18 min away</span></div><span className={styles.phoneButton}>Navigate</span><span className={`${styles.phoneButton} ${styles.phoneSecondary}`}>View Details</span><small>UPCOMING STOPS</small>{['CES Supply', 'Sunset Construction'].map((stop, index) => <div className={styles.phoneStop} key={stop}><i>{index + 2}</i><span><b>{stop}</b><small>{index ? '789 SW 8th St' : '456 NW 72nd Ave'}</small></span></div>)}<nav><span>⌂<small>Today</small></span><span>⌘<small>Route</small></span><span>◷<small>History</small></span><span>♙<small>Profile</small></span></nav></div>
+}
+
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [companyName, setCompanyName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [message, setMessage] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [slide, setSlide] = useState(0)
-  const [dialog, setDialog] = useState<DialogMode>(null)
-
-  useEffect(() => {
-    if (dialog) return
-    const timer = window.setInterval(() => setSlide(value => (value + 1) % slides.length), 3200)
-    return () => window.clearInterval(timer)
-  }, [dialog])
-
-  useEffect(() => {
-    const storedError = sessionStorage.getItem('routehub_auth_error')
-    if (storedError) {
-      sessionStorage.removeItem('routehub_auth_error')
-      setMessage(accessMessage(storedError))
-      setDialog('sign-in')
-    }
-    resolveAccess(getSupabase())
-      .then(access => window.location.replace(workspaceForStrictRole(access.role)))
-      .catch(() => {})
-  }, [])
-
-  const closeDialog = () => {
-    if (busy) return
-    setDialog(null)
-    setMessage('')
-  }
-
-  const signIn = async () => {
-    if (!email || !password || busy) return
-    setBusy(true)
-    setMessage('Signing in…')
-    try {
-      const client = getSupabase()
-      await client.auth.signOut()
-      const {error} = await client.auth.signInWithPassword({email: email.trim().toLowerCase(), password})
-      if (error) throw error
-      const access = await resolveAccess(client)
-      window.location.replace(workspaceForStrictRole(access.role))
-    } catch (error) {
-      const raw = error instanceof Error ? error.message : 'Unable to sign in.'
-      setMessage(raw.startsWith('ROLE_') || raw === 'MULTIPLE_ROLES' || raw === 'TRIAL_EXPIRED' ? accessMessage(raw) : raw)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const requestAccess = async () => {
-    if (!fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8 || busy) return
-    setBusy(true)
-    setMessage('Creating your 7-day trial…')
-    try {
-      const client = getSupabase()
-      await client.auth.signOut()
-      const {data, error} = await client.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {data: {full_name: fullName.trim(), company_name: companyName.trim(), phone: phone.trim()}},
-      })
-      if (error) throw error
-      if (!data.session) {
-        setMessage('Your account was created. Check your email to confirm it, then sign in to start your trial.')
-        return
-      }
-      const {error: workspaceError} = await client.rpc('create_trial_workspace', {
-        requester_name: fullName.trim(),
-        requester_company: companyName.trim(),
-        requester_phone: phone.trim() || null,
-      })
-      if (workspaceError) throw workspaceError
-      const access = await resolveAccess(client)
-      window.location.replace(workspaceForStrictRole(access.role))
-    } catch (error) {
-      const raw = error instanceof Error ? error.message : 'Unable to create your trial.'
-      setMessage(raw.includes('already registered') ? 'This email already has an account. Sign in instead.' : raw)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const current = slides[slide]
-  return <main className="landing">
-    <header className="landing-nav"><Image src="/routehub-regular-new.jpg" alt="RouteHub" width={774} height={774} priority/><button className="secondary" onClick={() => { setMessage(''); setDialog('sign-in') }}>Sign in</button></header>
-    <section className="hero"><div className="hero-copy"><span className="eyebrow">ROUTE OPERATIONS, SIMPLIFIED</span><h1>Deliver more.<br/><em>Stress less.</em></h1><p>One clear workspace for every route, every driver and every delivery.</p><button className="primary hero-cta" onClick={() => { setMessage(''); setDialog('request') }}>Request access <span>→</span></button><div className="trust"><span>Start a 7-day premium trial</span><span>No waiting for approval</span></div></div><div className="hero-visual"><Image src="/login-hero.png" alt="RouteHub driver and manager workspaces" width={1200} height={800} priority/><div className="floating-card"><strong>{current.name}</strong><span>{current.text}</span></div></div></section>
-    <section className="feature-row"><article><b>01</b><h3>Plan clearly</h3><p>Turn every pickup and delivery into a simple route.</p></article><article><b>02</b><h3>Move together</h3><p>Keep dispatchers and drivers aligned in real time.</p></article><article><b>03</b><h3>Stay accountable</h3><p>Capture completion, photos and problems in one place.</p></article></section>
-    {dialog && <div className="modal-backdrop"><section className="card modal login-card" aria-labelledby="access-dialog-title"><button className="close" aria-label="Close" onClick={closeDialog}>×</button><Image src="/routehub-regular-new.jpg" alt="RouteHub" className="login-logo" width={774} height={774}/>
-      {dialog === 'sign-in' ? <><h2 id="access-dialog-title">Sign in to RouteHub</h2><p className="muted">Enter your account details. If you are new, you can start a seven-day trial below.</p><label>Email<input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} onKeyDown={event => {if (event.key === 'Enter') void signIn()}}/></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => {if (event.key === 'Enter') void signIn()}}/></label><button className="primary" disabled={busy || !email || !password} onClick={signIn}>{busy ? 'Signing in…' : 'Sign in'}</button><button className="text-button" disabled={busy} onClick={() => { setMessage(''); setDialog('request') }}>New to RouteHub? Start a 7-day trial</button></> : <><span className="trial-kicker">7-DAY PREMIUM TRIAL</span><h2 id="access-dialog-title">Start your workspace</h2><p className="muted">Your request will appear in RouteHub Admin. You can begin using the app right away.</p><label>Your name<input autoComplete="name" placeholder="Your full name" value={fullName} onChange={event => setFullName(event.target.value)}/></label><label>Company name<input autoComplete="organization" placeholder="Your company" value={companyName} onChange={event => setCompanyName(event.target.value)}/></label><label>Email<input type="email" autoComplete="email" placeholder="you@company.com" value={email} onChange={event => setEmail(event.target.value)}/></label><label>Phone number <span className="optional">Optional</span><input type="tel" autoComplete="tel" placeholder="(555) 555-5555" value={phone} onChange={event => setPhone(event.target.value)}/></label><label>Create password<input type="password" autoComplete="new-password" placeholder="At least 8 characters" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => {if (event.key === 'Enter') void requestAccess()}}/></label><button className="primary" disabled={busy || !fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8} onClick={requestAccess}>{busy ? 'Creating trial…' : 'Start 7-day trial'}</button><button className="text-button" disabled={busy} onClick={() => { setMessage(''); setDialog('sign-in') }}>I already have an account</button></>}
-      {message && <p className="login-message" role="status" aria-live="polite">{message}</p>}
-    </section></div>}
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null)
+  useEffect(() => { const storedError = sessionStorage.getItem('routehub_auth_error'); if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setMessage(accessMessage(storedError)); setDialog('sign-in') }; resolveAccess(getSupabase()).then(access => setWorkspaceHref(workspaceForStrictRole(access.role))).catch(() => {}) }, [])
+  const open = (mode: DialogMode) => { setMessage(''); setDialog(mode); setMenu(false) }
+  const closeDialog = () => { if (!busy) { setDialog(null); setMessage('') } }
+  const signIn = async () => { if (!email || !password || busy) return; setBusy(true); setMessage('Signing in…'); try { const client = getSupabase(); await client.auth.signOut(); const {error} = await client.auth.signInWithPassword({email: email.trim().toLowerCase(), password}); if (error) throw error; const access = await resolveAccess(client); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to sign in.'; setMessage(raw.startsWith('ROLE_') || raw === 'MULTIPLE_ROLES' || raw === 'TRIAL_EXPIRED' ? accessMessage(raw) : raw) } finally { setBusy(false) } }
+  const requestAccess = async () => { if (!fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8 || busy) return; setBusy(true); setMessage('Creating your workspace…'); try { const client = getSupabase(); await client.auth.signOut(); const {data, error} = await client.auth.signUp({email: email.trim().toLowerCase(), password, options: {data: {full_name: fullName.trim(), company_name: companyName.trim(), phone: phone.trim()}}}); if (error) throw error; if (!data.session) { setMessage('Your account was created. Check your email to confirm it, then sign in.'); return }; const {error: workspaceError} = await client.rpc('create_trial_workspace', {requester_name: fullName.trim(), requester_company: companyName.trim(), requester_phone: phone.trim() || null}); if (workspaceError) throw workspaceError; const access = await resolveAccess(client); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to create your workspace.'; setMessage(raw.includes('already registered') ? 'This email already has an account. Sign in instead.' : raw) } finally { setBusy(false) } }
+  const primaryAction = workspaceHref ? <Link className={styles.primaryButton} href={workspaceHref}>Open RouteHub <ArrowRight size={18}/></Link> : <button className={styles.primaryButton} onClick={() => open('request')}>Get Started <ArrowRight size={18}/></button>
+  return <main className={styles.landing}>
+    <header className={styles.header}><Link href="/" className={styles.wordmark}><Image src="/routehub-regular-new.jpg" alt="RouteHub" width={64} height={64} priority/><span>Route<em>Hub</em></span></Link><button className={styles.menuButton} onClick={() => setMenu(!menu)} aria-label="Open navigation" aria-expanded={menu}>{menu ? <X/> : <Menu/>}</button><nav className={menu ? `${styles.nav} ${styles.navOpen}` : styles.nav}><a href="#product" onClick={() => setMenu(false)}>Product</a><a href="#how-it-works" onClick={() => setMenu(false)}>How it works</a><a href="#for-drivers" onClick={() => setMenu(false)}>For Drivers</a><div className={styles.mobileActions}>{workspaceHref ? <Link href={workspaceHref}>Open RouteHub</Link> : <><button onClick={() => open('sign-in')}>Sign in</button><button className={styles.mobilePrimary} onClick={() => open('request')}>Get Started</button></>}</div></nav><div className={styles.headerActions}>{workspaceHref ? <Link className={styles.signIn} href={workspaceHref}>Open RouteHub</Link> : <button className={styles.signIn} onClick={() => open('sign-in')}>Sign in</button>}{primaryAction}</div></header>
+    <section className={styles.hero} id="product"><div className={styles.heroCopy}><p className={styles.badge}><i/> Route management for your team</p><h1>Routes made simple.<br/><em>Drivers always updated.</em></h1><p className={styles.subtitle}>Create, assign and update routes in seconds. Your drivers always know where to go next.</p><div className={styles.heroActions}>{primaryAction}<a href="#how-it-works" className={styles.secondaryButton}>See how it works <Play size={17}/></a></div><div className={styles.benefits}><article><Zap/><div><b>Assign in seconds</b><span>Create and assign routes in just a few clicks.</span></div></article><article><MapPin/><div><b>Live route updates</b><span>Changes sync with your drivers.</span></div></article><article><ShieldCheck/><div><b>Proof of delivery</b><span>Signature, photo and notes at every applicable stop.</span></div></article></div></div><div className={styles.previewWrap}><ManagerPreview/><DriverPreview/></div></section>
+    <section className={styles.how} id="how-it-works"><h2>How RouteHub Works</h2><p>Simple flow. Powerful results.</p><div className={styles.steps}>{steps.map(({Icon, title, copy}, index) => <article key={title}><i><Icon size={27}/></i><b>{index + 1}. {title}</b><span>{copy}</span></article>)}</div></section>
+    <section className={styles.productSection}><div><span>MANAGER WORKSPACE</span><h2>Create routes. Assign drivers. See what is happening today.</h2><p>RouteHub keeps daily work organized without turning your branch into a complicated dispatch center.</p></div><div className={styles.productCard}><ClipboardList/><strong>Today at a glance</strong><p>Active routes, assigned people and delivery progress in one clear view.</p></div></section>
+    <section className={styles.driverSection} id="for-drivers"><DriverPreview/><div><span>DRIVER WORKSPACE</span><h2>Everything your driver needs. Nothing they don&apos;t.</h2><p>See the next stop, navigate externally, read instructions, capture proof and continue to the next route.</p><ul><li>Clear next-stop details</li><li>External navigation when ready</li><li>Photo and note evidence</li></ul></div></section>
+    <footer className={styles.footer}><span>© {new Date().getFullYear()} RouteHub</span><button onClick={() => open('sign-in')}>Sign in</button></footer>
+    {dialog && <div className={styles.modalBackdrop} role="presentation"><section className={styles.modal} aria-modal="true" role="dialog" aria-labelledby="access-dialog-title"><button className={styles.close} aria-label="Close" onClick={closeDialog}>×</button><Image src="/routehub-regular-new.jpg" alt="RouteHub" width={58} height={58}/>{dialog === 'sign-in' ? <><h2 id="access-dialog-title">Sign in to RouteHub</h2><p>Use your invited RouteHub account.</p><label>Email<input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void signIn() }}/></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void signIn() }}/></label><button className={styles.modalPrimary} disabled={busy || !email || !password} onClick={signIn}>{busy ? 'Signing in…' : 'Sign in'}</button><button className={styles.textButton} onClick={() => open('request')} disabled={busy}>New to RouteHub? Get started</button></> : <><h2 id="access-dialog-title">Start your workspace</h2><p>Tell us a little about your team to start using RouteHub.</p><label>Your name<input autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)}/></label><label>Company name<input autoComplete="organization" value={companyName} onChange={event => setCompanyName(event.target.value)}/></label><label>Email<input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)}/></label><label>Phone number <small>Optional</small><input type="tel" autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)}/></label><label>Create password<input type="password" autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void requestAccess() }}/></label><button className={styles.modalPrimary} disabled={busy || !fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8} onClick={requestAccess}>{busy ? 'Creating workspace…' : 'Start 7-day trial'}</button><button className={styles.textButton} onClick={() => open('sign-in')} disabled={busy}>I already have an account</button></>}{message && <p className={styles.message} role="status">{message}</p>}</section></div>}
   </main>
 }

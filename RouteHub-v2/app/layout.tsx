@@ -7,8 +7,8 @@ import AuthBoundary from './auth-boundary'
 import AppBottomNav from './app-bottom-nav'
 
 export const metadata = {
-  title: {default: 'RouteHub', template: '%s · RouteHub'},
-  description: 'Smarter routes. Better deliveries.',
+  title: {default: 'RouteHub — Simple Route Management for Your Team', template: '%s · RouteHub'},
+  description: 'Create routes, assign drivers, track progress and keep every stop updated with RouteHub.',
   applicationName: 'RouteHub',
   manifest: '/manifest.json',
   appleWebApp: {capable: true, title: 'RouteHub', statusBarStyle: 'default' as const},
