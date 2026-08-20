@@ -3,13 +3,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {AlertTriangle, ChevronRight, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {AlertTriangle, ChevronDown, ChevronRight, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
 import {useLocale} from '../../lib/use-preferences'
 import NotificationBell from '../notification-bell'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
+import LiveRoute from '../routes/live-route'
 import styles from './manager-dashboard.module.css'
 
 const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRequests: 0, availableDrivers: 0, openIssues: 0}
@@ -18,6 +19,8 @@ export default function Manager() {
   const {t} = useLocale()
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
+  const [companyId, setCompanyId] = useState('')
+  const [dashboardBranchId, setDashboardBranchId] = useState<string | null>(null)
   const [branchName, setBranchName] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -41,6 +44,8 @@ export default function Manager() {
         // exact branch; a legacy unbound Manager is anchored to the first
         // authorized branch returned by RLS rather than mixing all branches.
         const branchId = String(branch?.id || membership.branch_id || '') || null
+        setCompanyId(membership.company_id)
+        setDashboardBranchId(branchId)
         const dashboard = await loadManagerDashboard({
           companyId: membership.company_id,
           branchId,
@@ -73,7 +78,29 @@ export default function Manager() {
   const branchHealthy = !hasIssue
   const greetingName = displayName ? displayName.split('@')[0] : t.managerRole
 
+  const updatedAt = new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())
+
   return <main className={`app ${styles.dashboard}`}>
+    <aside className={styles.desktopSidebar} aria-label="Manager navigation">
+      <Link href="/manager" className={styles.sidebarBrand} aria-label="RouteHub manager dashboard">
+        <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
+        <span>Route<em>Hub</em></span>
+      </Link>
+      <nav className={styles.sidebarNav} aria-label="Primary">
+        <Link href="/manager" aria-current="page"><Home size={20}/><span>Today</span></Link>
+        <Link href="/routes"><RouteIcon size={20}/><span>Routes</span></Link>
+        <Link href="/manager/team"><Users size={20}/><span>Drivers</span></Link>
+        <Link href="/manager/history"><History size={20}/><span>History</span></Link>
+      </nav>
+      <Link href="/routes?new=1" className={styles.newRoute}><Plus size={20}/>New Route</Link>
+      <Link href="/manager/more" className={styles.sidebarProfile}><span className={styles.sidebarAvatar}>{greetingName.slice(0, 2).toUpperCase()}</span><span><strong>{greetingName || 'Manager'}</strong><small>Branch Manager</small></span><ChevronDown size={16}/></Link>
+    </aside>
+
+    <section className={styles.workspace}>
+    <header className={styles.desktopTop}>
+      <h1>Today Overview</h1>
+      <span>Last updated: {updatedAt}</span>
+    </header>
     <header className={styles.header}>
       <Link href="/manager" className={styles.brand} aria-label="RouteHub home">
         <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
@@ -101,9 +128,17 @@ export default function Manager() {
       </Link>)}
     </section>
 
-    <p className={styles.sectionLabel}>{t.today}</p>
+    <section className={styles.desktopLower}>
+    <div className={styles.desktopRoutesPanel}>
+    <div className={styles.desktopPanelHeader}><h2>Active Routes</h2><Link href="/routes">View all</Link></div>
     <section className={`${styles.todayCard} ${hasIssue ? styles.attention : ''}`} aria-live="polite">
       {loading ? <div className={styles.skeleton} aria-label={t.loading} /> : todayRoutes.length ? <div className={styles.todayList}>{todayRoutes.map(route => <div className={styles.todayRow} key={route.id}><span className={styles.todayBadge} /><span className={styles.todayBody}><strong>{route.destination_name || t.destination}</strong><span>{String(route.mission_type || t.delivery).toUpperCase()} · {route.driver_id ? t.assigned : t.pending}</span></span><span className={styles.todayState}>{route.status || t.published}</span></div>)}</div> : <div className={styles.empty}><span className={styles.emptyIcon}><ClipboardList size={27} aria-hidden="true" /></span><div><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p><Link className={styles.emptyCta} href="/routes">{t.createRoute}</Link></div></div>}
+    </section>
+    </div>
+    <div className={styles.desktopMapPanel}>
+      <div className={styles.desktopPanelHeader}><h2>Live Map</h2><Link href="/routes/live">View all</Link></div>
+      <LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>
+    </div>
     </section>
 
     <p className={styles.sectionLabel}>{t.quickActions}</p>
@@ -114,5 +149,6 @@ export default function Manager() {
 
     <TemporaryRouteAssignments />
     <nav className={`nav ${styles.nav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
+    </section>
   </main>
 }

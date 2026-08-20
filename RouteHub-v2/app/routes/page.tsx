@@ -275,7 +275,7 @@ export default function Routes() {
     const requestedDestination = searchParams.get('destination')
     const requestedType = searchParams.get('type')
     const requestedPriority = searchParams.get('priority')
-    if (requestedContact || requestedDestination || requestedPriority === 'urgent') {
+    if (searchParams.get('new') === '1' || requestedContact || requestedDestination || requestedPriority === 'urgent') {
       const contact = contacts.find(item => item.id === requestedContact)
       setForm(current => ({
         ...current,

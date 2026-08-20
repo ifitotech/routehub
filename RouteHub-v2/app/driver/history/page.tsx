@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import {Camera, CheckCircle2, CircleAlert, Clock3, FileText, History as HistoryIcon, Home, MapPin, Pencil, Settings as SettingsIcon} from 'lucide-react'
+import {Camera, CheckCircle2, CircleAlert, Clock3, FileText, History as HistoryIcon, MapPin, Pencil} from 'lucide-react'
 import {useCallback, useEffect, useState} from 'react'
 import {resolveDriverIssue} from '../../../lib/issue-resolution'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
 import NotificationBell from '../../notification-bell'
+import DriverBottomNav from '../driver-bottom-nav'
 import styles from './history.module.css'
 
 type RouteRecord = {
@@ -107,6 +108,6 @@ export default function DriverHistory() {
       })}
       {!rows.length && !message && <section className={`card ${styles.empty}`}><HistoryIcon size={38}/><h2>{t.noHistory}</h2><p className="muted">{t.historyHelp}</p></section>}
     </section>
-    <nav className="nav" aria-label="Driver navigation"><Link href="/driver"><Home size={17}/><span>{t.home}</span></Link><Link href="/driver/history"><HistoryIcon size={17}/><span>{t.history}</span></Link><Link href="/driver/settings"><SettingsIcon size={17}/><span>{t.settings}</span></Link></nav>
+    <DriverBottomNav />
   </main>
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {Camera, Check, History as HistoryIcon, Home, MapPin, Pause, Play, RotateCcw, Settings as SettingsIcon, TriangleAlert, X} from 'lucide-react'
+import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, History as HistoryIcon, Home, List, MapPin, Pause, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
@@ -31,6 +31,8 @@ export default function Driver() {
   const [locationStatus,setLocationStatus]=useState('')
   const [loading,setLoading]=useState(true)
   const [loadError,setLoadError]=useState('')
+  const [routeView,setRouteView]=useState<'queue'|'details'|null>(null)
+  const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const fileInput=useRef<HTMLInputElement>(null)
   const {t,locale}=useLocale()
 
@@ -67,6 +69,7 @@ export default function Driver() {
   },[t.signIn,t.unableLoadRoutes])
   const today=operationalDate()
   const {current,upcoming,completed}=selectDriverTodayQueue(missions,driverId,today)
+  const selectedRoute=[current,...upcoming,...completed].find(item=>item?.id===selectedRouteId) || current
   const taskLabels:Record<string,string>={pickup:t.pickup,delivery:t.delivery,return:'Return to branch',transfer:'Custom route'}
   const currentTask=taskLabels[current?.mission_type||'delivery']||t.delivery
   const temporaryExecution=membershipRole!=null&&membershipRole!=='driver'
@@ -195,7 +198,10 @@ export default function Driver() {
       <section className={styles.next}><div className={styles.sectionTitle}><span>{t.nextRoute}</span><b>{upcoming.length}</b></div>{upcoming.length?<div className={styles.nextList}>{upcoming.map((item,index)=><article key={item.id}><span className={styles.number}>{index+2}</span><div><small>{(item.mission_type||'delivery').toUpperCase()}</small><strong>{item.destination_name||item.destination_address||t.destination}</strong><span>{item.destination_address}</span></div><span className={item.priority==='urgent'?styles.urgentDot:styles.dot}/></article>)}</div>:<div className={styles.noNext}>{t.noNext}</div>}</section>
       {completed.length>0&&<section className={styles.completed}><div className={styles.sectionTitle}><span>{t.completed}</span><b>{completed.length}</b></div>{completed.slice(0,2).map(item=><article key={item.id}><Check size={15}/><span>{item.destination_name||item.destination_address||t.destination}</span></article>)}</section>}
     </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
+    {routeView&&current&&<section className={styles.routeOverlay} aria-label="Route details">
+      <header className={styles.routeOverlayHeader}><button type="button" onClick={()=>routeView==='details'?setRouteView('queue'):setRouteView(null)} aria-label="Back"><ArrowLeft size={20}/></button><strong>{routeView==='details'?'Stop details':'Route'}</strong><span /></header>
+      {routeView==='queue'?<><div className={styles.routeTabs}><button className={styles.routeTabActive} type="button">Stops</button><button type="button" onClick={()=>current.status==='active'&&window.location.assign(navigateUrl)}>Map</button></div><div className={styles.stopList}>{[current,...upcoming].filter(Boolean).map((route,index)=><button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{index+1}</span><span><strong>{route.destination_name||route.destination_address||t.destination}</strong><small>{(route.mission_type||'delivery').toUpperCase()} · {route.status==='active'?'In progress':route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):'Upcoming'}</small></span><ChevronRight size={18}/></button>)}</div></>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{selectedRoute.destination_name||selectedRoute.destination_address||t.destination}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{(selectedRoute.mission_type||'delivery').toUpperCase()}</small><strong>{selectedRoute.status==='active'?'Current stop':selectedRoute.status==='completed'?t.completed:'Upcoming stop'}</strong>{selectedRoute.notes&&<p className={styles.detailNotes}>{selectedRoute.notes}</p>}{selectedRoute.id===current.id&&current.status==='active'&&<button className={styles.complete} type="button" onClick={()=>{setRouteView(null);setModal(true)}}><Check size={18}/>{t.complete}</button>}</div>}</section>}
     {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void completeWithPhoto(file)}}/><button className={styles.photoButton} disabled={busy} onClick={()=>fileInput.current?.click()}><Camera/>{t.completeWithPhoto}</button><button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
-    <nav className="nav" aria-label="Driver navigation"><Link href={temporaryExecution?homeHref:'/driver'}><Home size={17}/><span>{t.home}</span></Link>{temporaryExecution?<Link href="/driver" aria-current="page"><Play size={17}/><span>{temporaryLabel}</span></Link>:<><Link href="/driver/history"><HistoryIcon size={17}/><span>{t.history}</span></Link><Link href="/driver/settings"><SettingsIcon size={17}/><span>{t.settings}</span></Link></>}</nav>
+    <nav className={styles.driverNav} aria-label="Driver navigation"><button type="button" aria-current={!routeView?'page':undefined} onClick={()=>setRouteView(null)}><Home size={18}/><span>Today</span></button><button type="button" aria-current={routeView?'page':undefined} onClick={()=>current&&setRouteView('queue')}><List size={18}/><span>Route</span></button><Link href="/driver/history"><HistoryIcon size={18}/><span>{t.history}</span></Link><Link href="/driver/settings"><CircleUserRound size={18}/><span>Profile</span></Link></nav>
   </main>
 }

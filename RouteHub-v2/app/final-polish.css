@@ -238,6 +238,28 @@ html[data-theme="light"] .app .muted{color:#64748b}
   .global-chrome, .global-logo, .global-chrome .global-logo { backdrop-filter: none; transition: none; }
 }
 
+/* A screen with GlobalChrome must never render a second brand or bell below
+   it. Action buttons (New request, export, etc.) remain visible in their
+   existing page toolbar. This makes the header identical across workspaces
+   without changing any routes or handlers. */
+.global-chrome ~ main.app > .topbar > .brand,
+.global-chrome ~ main.app > .topbar > .notification-bell,
+.global-chrome ~ main.app > .topbar > .actions > .notification-bell {
+  display: none !important;
+}
+.global-chrome ~ main.app > .topbar {
+  min-height: 0;
+  justify-content: flex-end;
+}
+.global-chrome ~ main.app > .topbar:has(> .actions) {
+  min-height: 44px;
+}
+
+/* Defensive boundary for Safari visual viewport changes while typing. The
+   document must never become horizontally draggable behind the keyboard. */
+html, body, #__next { overflow-x: clip; }
+main.app, .premium-shell, .page { max-width: 100%; }
+
 /* Notification bell ----------------------------------------------------
    The bell replaces the role-avatar action in workspace headers while
    keeping profile/settings available from the existing navigation. */
