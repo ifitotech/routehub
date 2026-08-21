@@ -39,7 +39,17 @@ function DriverPreview() {
 
 export default function Login() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null)
-  useEffect(() => { const storedError = sessionStorage.getItem('routehub_auth_error'); if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setMessage(accessMessage(storedError)); setDialog('sign-in') }; resolveAccess(getSupabase()).then(access => setWorkspaceHref(workspaceForStrictRole(access.role))).catch(() => {}) }, [])
+  useEffect(() => {
+    const storedError = sessionStorage.getItem('routehub_auth_error')
+    if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setMessage(accessMessage(storedError)); setDialog('sign-in') }
+    resolveAccess(getSupabase()).then(access => {
+      if (access.user) {
+        window.location.replace(workspaceForStrictRole(access.role))
+        return
+      }
+      setWorkspaceHref(null)
+    }).catch(() => setWorkspaceHref(null))
+  }, [])
   const open = (mode: DialogMode) => { setMessage(''); setDialog(mode); setMenu(false) }
   const closeDialog = () => { if (!busy) { setDialog(null); setMessage('') } }
   const signIn = async () => { if (!email || !password || busy) return; setBusy(true); setMessage('Signing in…'); try { const client = getSupabase(); await client.auth.signOut(); const {error} = await client.auth.signInWithPassword({email: email.trim().toLowerCase(), password}); if (error) throw error; const access = await resolveAccess(client); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to sign in.'; setMessage(raw.startsWith('ROLE_') || raw === 'MULTIPLE_ROLES' || raw === 'TRIAL_EXPIRED' ? accessMessage(raw) : raw) } finally { setBusy(false) } }
