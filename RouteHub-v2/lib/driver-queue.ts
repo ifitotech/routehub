@@ -59,5 +59,6 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
 }
 
 export function canDriverStartRoute(route: DriverQueueRoute | undefined, today: string) {
-  return Boolean(route && route.route_date === today && [...upcomingStatuses, 'paused'].includes(route.status))
+  const routeDate = route?.route_date?.slice(0, 10)
+  return Boolean(route && routeDate === today && [...upcomingStatuses, 'paused'].includes(route.status))
 }
