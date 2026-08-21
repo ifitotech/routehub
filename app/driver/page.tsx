@@ -1,12 +1,15 @@
 'use client'
 
-import {useEffect,useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
+import dynamic from 'next/dynamic'
 import {AlertTriangle,Camera,CheckCircle2,ChevronRight,Clock3,Flag,MapPin,Navigation,Pause,Play,Route,ShieldCheck,Upload,X} from 'lucide-react'
 import {completeStop,getDriverMissions,getMembership} from '../../lib/data'
+import {DrivingSession,endDrivingSession,getActiveDrivingSession,startDrivingSession,updateDrivingLocation} from '../../lib/driving-session'
 import {getCurrentLocation} from '../../lib/location'
 import {uploadEvidence} from '../../lib/storage'
 
 type ProofMethod='gps'|'photo_override'|'signature'
+const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 
 const issueReasons=[
  {value:'customer_unavailable',label:'Cliente no disponible'},
@@ -24,20 +27,29 @@ export default function DriverPage(){
  const[issueOpen,setIssueOpen]=useState(false)
  const[issueReason,setIssueReason]=useState(issueReasons[0].value)
  const[issuePhoto,setIssuePhoto]=useState<File|null>(null)
+ const[drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
+ const[driverLocation,setDriverLocation]=useState<{lat:number;lng:number}|null>(null)
  const[message,setMessage]=useState('')
  const[busy,setBusy]=useState(false)
+ const locationWatchRef=useRef<number|null>(null)
+ const lastLocationWriteRef=useRef(0)
 
  const load=async()=>{
   try{
-   const result=await getDriverMissions()
+   const [result,identity]=await Promise.all([getDriverMissions(),getMembership()])
    if(result.error)throw result.error
    setMissions(result.data||[])
+   const session=await getActiveDrivingSession(identity.user.id)
+   if(!session.error){
+    setDrivingSession(session.data)
+    if(session.data?.last_lat!=null&&session.data?.last_lng!=null)setDriverLocation({lat:session.data.last_lat,lng:session.data.last_lng})
+   }
   }catch{
    setMessage('No pudimos cargar tus rutas. Inténtalo de nuevo en unos segundos.')
   }
  }
 
- useEffect(()=>{load();const id=setInterval(load,30000);return()=>clearInterval(id)},[])
+ useEffect(()=>{load();const id=setInterval(load,30000);return()=>{clearInterval(id);if(locationWatchRef.current!=null)navigator.geolocation?.clearWatch(locationWatchRef.current)}},[])
 
  const current=missions.find(route=>route.status==='active')||missions.find(route=>route.status==='paused')||missions.find(route=>route.status==='published')
  const stops=[...(current?.route_stops||[])].sort((a:any,b:any)=>(a.position||0)-(b.position||0))
@@ -54,8 +66,44 @@ export default function DriverPage(){
  const isPaused=current?.status==='paused'
  const schedule=current?.scheduled_at?new Date(current.scheduled_at).toLocaleTimeString('es',{hour:'numeric',minute:'2-digit'}):null
 
+ const stopLocationTracking=async()=>{
+  if(locationWatchRef.current!=null){navigator.geolocation?.clearWatch(locationWatchRef.current);locationWatchRef.current=null}
+  if(!drivingSession)return
+  const{error}=await endDrivingSession(drivingSession.id,drivingSession.driver_id)
+  if(error)throw error
+  setDrivingSession(null)
+ }
+
+ const startLocationTracking=async()=>{
+  if(!current||!navigator.geolocation)return false
+  try{
+   const location=await getCurrentLocation()
+   const{membership,user}=await getMembership()
+   const sessionResult=drivingSession?{data:drivingSession,error:null}:await startDrivingSession({companyId:membership.company_id,branchId:membership.branch_id,driverId:user.id})
+   if(sessionResult.error||!sessionResult.data)throw sessionResult.error||new Error('No se pudo iniciar la ubicación en vivo.')
+   const session=sessionResult.data
+   setDrivingSession(session)
+   setDriverLocation({lat:location.lat,lng:location.lng})
+   await updateDrivingLocation(session.id,user.id,location)
+   lastLocationWriteRef.current=Date.now()
+   if(locationWatchRef.current==null){
+    locationWatchRef.current=navigator.geolocation.watchPosition(position=>{
+     const next={lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy}
+     setDriverLocation({lat:next.lat,lng:next.lng})
+     if(Date.now()-lastLocationWriteRef.current<20000)return
+     lastLocationWriteRef.current=Date.now()
+     void updateDrivingLocation(session.id,user.id,next).then(result=>{if(result.data)setDrivingSession(result.data)}).catch(()=>{})
+    },()=>setMessage('No pudimos actualizar tu ubicación. Puedes continuar con la ruta.'),{enableHighAccuracy:true,maximumAge:10000,timeout:15000})
+   }
+   return true
+  }catch(error){
+   setMessage(error instanceof Error?error.message:'No se pudo activar la ubicación en vivo.')
+   return false
+  }
+ }
+
  const changeRouteStatus=async(status:string)=>{
-  if(!current||busy)return
+  if(!current||busy)return false
   setBusy(true)
   try{
    const{client}=await getMembership()
@@ -63,11 +111,25 @@ export default function DriverPage(){
    if(error)throw error
    setMessage(status==='paused'?'Ruta pausada. El despacho verá que necesitas apoyo.':status==='active'?'Ruta en curso.':'Estado de la ruta actualizado.')
    await load()
+   return true
   }catch(error){
    setMessage(error instanceof Error?error.message:'No se pudo actualizar la ruta.')
+   return false
   }finally{
    setBusy(false)
   }
+ }
+
+ const setRouteExecutionStatus=async(status:'active'|'paused')=>{
+  const changed=await changeRouteStatus(status)
+  if(!changed)return false
+  try{
+   if(status==='active')await startLocationTracking()
+   else await stopLocationTracking()
+  }catch(error){
+   setMessage(error instanceof Error?error.message:'La ruta cambió, pero no pudimos actualizar la ubicación en vivo.')
+  }
+  return true
  }
 
  const finish=async(status:'completed'|'issue')=>{
@@ -94,14 +156,16 @@ export default function DriverPage(){
    if(current?.id){
     const{client}=await getMembership()
     if(isIssue){
-     const{error}=await client.from('routes').update({status:'paused',updated_version:Date.now()}).eq('id',current.id)
-     if(error)throw error
-    }else{
-     const remaining=stops.filter((item:any)=>item.id!==stop.id&&!['completed','issue'].includes(item.status))
-     if(!remaining.length){
-      const{error}=await client.from('routes').update({status:'completed',updated_version:Date.now()}).eq('id',current.id)
+      const{error}=await client.from('routes').update({status:'paused',updated_version:Date.now()}).eq('id',current.id)
       if(error)throw error
-     }
+      await stopLocationTracking()
+    }else{
+      const remaining=stops.filter((item:any)=>item.id!==stop.id&&!['completed','issue'].includes(item.status))
+      if(!remaining.length){
+       const{error}=await client.from('routes').update({status:'completed',updated_version:Date.now()}).eq('id',current.id)
+       if(error)throw error
+       await stopLocationTracking()
+      }
     }
    }
    setMessage(isIssue?'Incidencia enviada al despacho. La ruta quedó visible para revisión.':'Entrega registrada correctamente.')
@@ -119,7 +183,8 @@ export default function DriverPage(){
 
  const startRoute=async()=>{
   window.open(mapsUrl,'_blank','noopener,noreferrer')
-  await changeRouteStatus('active')
+  const changed=await changeRouteStatus('active')
+  if(changed)await startLocationTracking()
  }
 
  return <main className="shell driver-simple driver-mobile">
@@ -147,6 +212,8 @@ export default function DriverPage(){
     {!isStarted?<button className="primary driver-main-action" disabled={busy} onClick={startRoute}><Play size={19}/>Iniciar ruta</button>:<a className="primary driver-main-action" href={mapsUrl} target="_blank" rel="noreferrer"><Navigation size={19}/>Navegar a la parada</a>}
    </section>:<section className="driver-stop-card driver-empty-route"><span className="driver-stop-icon">{hasReportedIssue?<AlertTriangle size={22}/>:<CheckCircle2 size={22}/>}</span><h2>{hasReportedIssue?'Incidencia enviada':'Ruta completada'}</h2><p>{hasReportedIssue?'Despacho revisará el problema antes de continuar esta ruta.':'Ya no tienes paradas pendientes en esta ruta.'}</p></section>}
 
+   {stop&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={address||current.destination_address} driverLocation={driverLocation} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo"/>}
+
    <section className="driver-route-summary">
     <div><span>Entregas hoy</span><strong>{totalStops}</strong></div>
     <div><span>Completadas</span><strong>{completedStops}</strong></div>
@@ -156,7 +223,7 @@ export default function DriverPage(){
    {isStarted&&stop&&<section className="driver-delivery-flow">
     {!arrived?<>
      <button className="driver-arrival-action" disabled={busy} onClick={()=>{setArrived(true);setIssueOpen(false)}}><CheckCircle2 size={20}/><span><strong>Ya llegué</strong><small>Activa la prueba de entrega.</small></span><ChevronRight size={18}/></button>
-     <button className="driver-pause-action" disabled={busy} onClick={()=>changeRouteStatus(isPaused?'active':'paused')}><Pause size={17}/>{isPaused?'Reanudar ruta':'Pausar ruta'}</button>
+     <button className="driver-pause-action" disabled={busy} onClick={()=>void setRouteExecutionStatus(isPaused?'active':'paused')}><Pause size={17}/>{isPaused?'Reanudar ruta':'Pausar ruta'}</button>
     </>:<section className="driver-proof-card">
      <div className="driver-proof-head"><div><span className="driver-card-kicker">Prueba de entrega</span><h2>Completa la entrega</h2></div><button aria-label="Cerrar prueba de entrega" onClick={()=>setArrived(false)}><X size={18}/></button></div>
      <p>Elige cómo confirmar esta parada.</p>

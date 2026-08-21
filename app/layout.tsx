@@ -1,4 +1,5 @@
 import './globals.css'
+import 'leaflet/dist/leaflet.css'
 import PwaRegister from './pwa-register'
 import QuickNav from './quick-nav'
 import ThemeToggle from './theme-toggle'
