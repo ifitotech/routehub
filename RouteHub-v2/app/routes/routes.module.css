@@ -39,3 +39,39 @@
   .primaryRouteTypes .segmented button{min-height:40px;padding:7px 4px;font-size:11px}
   .optionalDetails{padding:13px}
 }
+
+/* A dark workspace is one coherent operational surface.  Route cards used to
+   retain their light-only backgrounds, which made the route list feel like two
+   unrelated themes stitched together. */
+:global(html[data-theme="dark"]) .page{color:var(--rh-text);background:var(--rh-bg)}
+:global(html[data-theme="dark"]) .header p:not(.eyebrow),
+:global(html[data-theme="dark"]) .listHeading p{color:var(--rh-text-secondary)}
+:global(html[data-theme="dark"]) .secondaryButton{border-color:var(--rh-border);background:#18263b;color:var(--rh-text)}
+:global(html[data-theme="dark"]) .secondaryButton:hover{border-color:#4c72a4;background:#1d3150;color:#bfdbfe}
+:global(html[data-theme="dark"]) .routeCard{border-color:var(--rh-border);background:var(--rh-surface);box-shadow:0 10px 26px rgb(0 0 0 / 18%)}
+:global(html[data-theme="dark"]) .routeCard:hover{border-color:#4770a4;background:#1b2b42;box-shadow:0 16px 34px rgb(0 0 0 / 26%)}
+:global(html[data-theme="dark"]) .routeIdentity strong,
+:global(html[data-theme="dark"]) .routePath strong,
+:global(html[data-theme="dark"]) .routeDetails strong{color:var(--rh-text)}
+:global(html[data-theme="dark"]) .routeIdentity small,
+:global(html[data-theme="dark"]) .routePath,
+:global(html[data-theme="dark"]) .routeDetails small{color:var(--rh-text-secondary)}
+:global(html[data-theme="dark"]) .routeNumber{background:#17345c;color:#93c5fd}
+:global(html[data-theme="dark"]) .routePath{background:#122238;color:var(--rh-text-secondary)}
+:global(html[data-theme="dark"]) .cardFooter{border-color:var(--rh-border)}
+:global(html[data-theme="dark"]) .priorityBadge{background:#23354d;color:#d6e0ef}
+:global(html[data-theme="dark"]) .statusBadge{background:#17345c;color:#93c5fd}
+:global(html[data-theme="dark"]) .status_active{background:#123b34;color:#6ee7b7}
+:global(html[data-theme="dark"]) .status_paused{background:#463319;color:#fcd34d}
+:global(html[data-theme="dark"]) .status_issue{background:#4a2029;color:#fda4af}
+:global(html[data-theme="dark"]) .emptyState{border-color:var(--rh-border);background:#142238}
+:global(html[data-theme="dark"]) .formColumn,
+:global(html[data-theme="dark"]) .previewSummary,
+:global(html[data-theme="dark"]) .builder{border-color:var(--rh-border);background:#142238;color:var(--rh-text)}
+:global(html[data-theme="dark"]) .builderHeader{border-color:var(--rh-border);background:rgb(20 34 56 / 94%)}
+:global(html[data-theme="dark"]) .closeButton{border-color:var(--rh-border);background:#18263b;color:var(--rh-text)}
+:global(html[data-theme="dark"]) .fieldset legend,
+:global(html[data-theme="dark"]) .field>span{color:var(--rh-text)}
+:global(html[data-theme="dark"]) .segmented button,
+:global(html[data-theme="dark"]) .detailsToggle{border-color:var(--rh-border);background:#18263b;color:var(--rh-text)}
+:global(html[data-theme="dark"]) .optionalDetails{border-color:var(--rh-border);background:#102036}
