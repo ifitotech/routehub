@@ -106,8 +106,8 @@ export default function DriverPage(){
   if(!current||busy)return false
   setBusy(true)
   try{
-   const{client}=await getMembership()
-   const{error}=await client.from('routes').update({status,updated_version:Date.now()}).eq('id',current.id)
+   const{client,membership,user}=await getMembership()
+   const{error}=await client.from('routes').update({status,updated_version:Date.now()}).eq('id',current.id).eq('driver_id',user.id).eq('company_id',membership.company_id)
    if(error)throw error
    setMessage(status==='paused'?'Ruta pausada. El despacho verá que necesitas apoyo.':status==='active'?'Ruta en curso.':'Estado de la ruta actualizado.')
    await load()
@@ -154,15 +154,15 @@ export default function DriverPage(){
    })
    if(result.error)throw result.error
    if(current?.id){
-    const{client}=await getMembership()
+    const{client,membership,user}=await getMembership()
     if(isIssue){
-      const{error}=await client.from('routes').update({status:'paused',updated_version:Date.now()}).eq('id',current.id)
+      const{error}=await client.from('routes').update({status:'paused',updated_version:Date.now()}).eq('id',current.id).eq('driver_id',user.id).eq('company_id',membership.company_id)
       if(error)throw error
       await stopLocationTracking()
     }else{
       const remaining=stops.filter((item:any)=>item.id!==stop.id&&!['completed','issue'].includes(item.status))
       if(!remaining.length){
-       const{error}=await client.from('routes').update({status:'completed',updated_version:Date.now()}).eq('id',current.id)
+       const{error}=await client.from('routes').update({status:'completed',updated_version:Date.now()}).eq('id',current.id).eq('driver_id',user.id).eq('company_id',membership.company_id)
        if(error)throw error
        await stopLocationTracking()
       }
