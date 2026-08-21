@@ -39,6 +39,8 @@ export default function Driver() {
   const [loadError,setLoadError]=useState('')
   const [routeView,setRouteView]=useState<'queue'|'details'|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
+  const [dayPromptOpen,setDayPromptOpen]=useState(false)
+  const dayPromptSeenRef=useRef(false)
   const fileInput=useRef<HTMLInputElement>(null)
   const {t,locale}=useLocale()
 
@@ -63,7 +65,10 @@ export default function Driver() {
       if(error)throw error
       setMissions((data||[]) as Mission[])
       const sessionResult=await getActiveDrivingSession(userData.user.id)
-      if(!sessionResult.error)setDrivingSession(sessionResult.data)
+      if(!sessionResult.error){
+        setDrivingSession(sessionResult.data)
+        if(membership.role==='driver'&&!sessionResult.data&&!dayPromptSeenRef.current){dayPromptSeenRef.current=true;setDayPromptOpen(true)}
+      }
       setLoadError('')
       setMessage('')
     }catch(error){
@@ -154,6 +159,7 @@ export default function Driver() {
       setDrivingSession(result.data)
       if(result.data)await updateDrivingLocation(result.data.id,driverId,coordinates)
       setMessage(t.startDrivingDay)
+      setDayPromptOpen(false)
     }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied);setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}
     finally{setBusy(false)}
   }
@@ -231,6 +237,7 @@ export default function Driver() {
       <header className={styles.routeOverlayHeader}><button type="button" onClick={()=>routeView==='details'?setRouteView('queue'):setRouteView(null)} aria-label="Back"><ArrowLeft size={20}/></button><strong>{routeView==='details'?'Stop details':'Route'}</strong><span /></header>
       {routeView==='queue'?<><div className={styles.routeTabs}><button className={styles.routeTabActive} type="button">Stops</button><button type="button" onClick={()=>current.status==='active'&&window.location.assign(navigateUrl)}>Map</button></div><div className={styles.stopList}>{[current,...upcoming].filter(Boolean).map((route,index)=><button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{index+1}</span><span><strong>{route.destination_name||route.destination_address||t.destination}</strong><small>{(route.mission_type||'delivery').toUpperCase()} · {route.status==='active'?'In progress':route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):'Upcoming'}</small></span><ChevronRight size={18}/></button>)}</div></>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{selectedRoute.destination_name||selectedRoute.destination_address||t.destination}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{(selectedRoute.mission_type||'delivery').toUpperCase()}</small><strong>{selectedRoute.status==='active'?'Current stop':selectedRoute.status==='completed'?t.completed:'Upcoming stop'}</strong>{selectedRoute.notes&&<p className={styles.detailNotes}>{selectedRoute.notes}</p>}{selectedRoute.id===current.id&&current.status==='active'&&<button className={styles.complete} type="button" onClick={()=>{setRouteView(null);setModal(true)}}><Check size={18}/>{t.complete}</button>}</div>}</section>}
     {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void completeWithPhoto(file)}}/><button className={styles.photoButton} disabled={busy} onClick={()=>fileInput.current?.click()}><Camera/>{t.completeWithPhoto}</button><button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
+    {dayPromptOpen&&membershipRole==='driver'&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="day-start-title"><div className={styles.modalIcon}><Play/></div><h2 id="day-start-title">Start your driving day</h2><p>You have <strong>{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length}</strong> route{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length===1?'':'s'} assigned for today.</p><button className={styles.photoButton} disabled={busy} onClick={()=>void beginDrivingDay()}><Play/>{busy?'Starting…':'Start day and share location'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>{dayPromptSeenRef.current=true;setDayPromptOpen(false)}}>Not now</button></section></div>}
     <nav className={styles.driverNav} aria-label="Driver navigation"><button type="button" aria-current={!routeView?'page':undefined} onClick={()=>setRouteView(null)}><Home size={18}/><span>Today</span></button><button type="button" aria-current={routeView?'page':undefined} onClick={()=>current&&setRouteView('queue')}><List size={18}/><span>Route</span></button><Link href="/driver/history"><HistoryIcon size={18}/><span>{t.history}</span></Link><Link href="/driver/settings"><CircleUserRound size={18}/><span>Profile</span></Link></nav>
   </main>
 }
