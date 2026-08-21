@@ -148,7 +148,7 @@ export default function Driver() {
       setDrivingSession(result.data)
       if(result.data)await updateDrivingLocation(result.data.id,driverId,coordinates)
       setMessage(t.startDrivingDay)
-    }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied)}
+    }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied);setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}
     finally{setBusy(false)}
   }
   const finishDrivingDay=async()=>{
