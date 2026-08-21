@@ -159,16 +159,16 @@ export default function Driver() {
 
   const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){fileInput.current?.click();return false}if(status==='active'&&!canDriverStartRoute(current,today)){setMessage(t.unableUpdateRoute);return false}const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id).eq('driver_id',driverId).eq('company_id',current.company_id);if(error)throw error;if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
   const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);let completionLocation:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{completionLocation=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,completionLocation)}catch{}await completeMission(current.id,completionLocation);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
-  const startRoute=()=>{
-    // Open while handling the tap so mobile browsers can hand it off to the
-    // Google Maps app instead of blocking it as an asynchronous pop-up.
-    window.open(navigateUrl,'_blank','noopener,noreferrer')
-    void (async()=>{
-      const saved=current?.status==='active'
-        ? (drivingSession ? true : await startTrackingForActiveRoute())
-        : await update('active')
-      if(saved)setMessage(t.inProgress)
-    })()
+  const startRoute=async()=>{
+    // Do not use window.open here: Safari and installed PWAs can treat it as
+    // a pop-up and ignore the driver's tap. A same-tab navigation is reliable
+    // and lets the device hand the URL to Google Maps when it is installed.
+    const saved=current?.status==='active'
+      ? (drivingSession ? true : await startTrackingForActiveRoute())
+      : await update('active')
+    if(!saved)return
+    setMessage(t.inProgress)
+    window.location.assign(navigateUrl)
   }
   const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('')}
 
@@ -189,7 +189,7 @@ export default function Driver() {
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
       <div className={styles.primaryActions}>
-        {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={startRoute}><Play size={19}/>{t.start}</button>}
+        {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
         {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>window.location.assign(navigateUrl)}><MapPin size={18}/>{t.openGoogleMaps}</button>}
         {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>setModal(true)}><Check size={19}/>{t.complete}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
