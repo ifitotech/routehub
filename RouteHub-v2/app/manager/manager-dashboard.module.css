@@ -61,8 +61,11 @@
    workspace while mobile keeps the focused, touch-first dashboard below. */
 .desktopSidebar,.desktopTop,.desktopLower,.desktopPanelHeader{display:none}
 @media (min-width: 1024px){
-  .dashboard{width:100%;max-width:none!important;margin:0;padding:0;display:grid;grid-template-columns:208px minmax(0,1fr);background:#f7f9fc;color:#0f172a}
-  .workspace{min-width:0;padding:26px clamp(28px,4vw,64px) 52px;max-width:1540px;width:100%;margin:0 auto}
+  /* final-polish has a shared 1120px app width for content pages. The
+     Manager workspace is an application shell, so it must override that
+     limit instead of looking like a narrow mobile page on a desktop. */
+  .dashboard{width:100%!important;max-width:none!important;margin:0!important;padding:0;display:grid;grid-template-columns:clamp(208px,14vw,248px) minmax(0,1fr);background:#f7f9fc;color:#0f172a}
+  .workspace{min-width:0;padding:28px clamp(30px,4vw,80px) 52px;max-width:none;width:100%;margin:0}
   .desktopSidebar{position:sticky;top:0;height:100svh;display:flex;flex-direction:column;padding:22px 16px 18px;background:linear-gradient(180deg,#061426,#071d35);color:#fff;box-shadow:10px 0 28px rgb(15 23 42 / 10%)}
   .sidebarBrand{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-size:21px;font-weight:800;letter-spacing:-.04em;padding:0 8px 22px}.sidebarBrand img{width:31px;height:31px;object-fit:contain;border-radius:8px}.sidebarBrand em{font-style:normal;color:#60a5fa}
   .sidebarNav{display:grid;gap:5px}.sidebarNav a{display:flex;align-items:center;gap:13px;min-height:48px;padding:0 10px;border-radius:10px;color:#d7e2f2;text-decoration:none;font-size:14px;font-weight:720}.sidebarNav a:first-child,.sidebarNav a:hover{background:linear-gradient(90deg,#1f5da9,#183451);color:#fff;box-shadow:inset 3px 0 #2f83ff}.newRoute{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;margin-top:26px;border-radius:8px;background:#1267f3;color:#fff;text-decoration:none;font-size:14px;font-weight:800;box-shadow:0 10px 22px rgb(18 103 243 / 30%)}.newRoute:hover{background:#0d59d4}
@@ -77,7 +80,7 @@
 }
 
 @media (min-width: 1440px){
-  .workspace{max-width:1720px;padding-inline:clamp(42px,5vw,88px)}
+  .workspace{max-width:none;padding-inline:clamp(48px,5vw,104px)}
   .metricGrid{gap:18px;margin-bottom:20px}
   .metric{min-height:108px;padding:18px}
   .desktopLower{grid-template-columns:minmax(430px,.8fr) minmax(680px,1.2fr);gap:24px}
