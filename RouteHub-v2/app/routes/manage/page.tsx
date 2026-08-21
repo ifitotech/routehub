@@ -51,7 +51,7 @@ export default function ManageRoutes(){
    if(error)throw error
    const labels=new Map<string,string>()
    const available=(members||[]).map((member:any,index:number)=>{
-    const label=member.users?.email||`${member.role==='driver'?t.driverAccount:t.teamDriver} ${index+1}`
+    const label=member.users?.email||`${member.role==='driver'?(t.driverAccount||'Driver account'):(t.teamDriver||'Team member')} ${index+1}`
     labels.set(member.user_id,label)
     return {id:member.user_id,label}
    })
@@ -73,7 +73,7 @@ export default function ManageRoutes(){
  const queues=useMemo(()=>{
   return groupRouteQueues(routes).map(queue=>({
    ...queue,
-   label:queue.routes[0]?.driverLabel||t.teamDriver,
+   label:queue.routes[0]?.driverLabel||t.teamDriver||'Team member',
    routeDate:queue.routes[0]?.route_date||'',
    items:[...queue.routes].sort((a,b)=>a.position-b.position||a.id.localeCompare(b.id))
   }))
@@ -158,6 +158,7 @@ export default function ManageRoutes(){
    {queues.map(group=>{
     const active=group.items.filter(route=>route.status==='active')
     const queue=group.items.filter(route=>canMove(route.status))
+    if(!active.length&&!queue.length)return null
     return <section className={styles.driverQueue} key={group.key}><header><strong>{group.label}</strong><span>{group.routeDate} · {queue.length} upcoming</span></header>
      {active.map(route=><article key={route.id} className={`${styles.route} ${styles.lockedRoute} ${fixes.card}`}><span className={styles.position}>{String(route.position).padStart(2,'0')}</span><div className={`${styles.routeMain} ${fixes.content}`}><div className={styles.meta}><b>{route.type.toUpperCase()}</b><span className={styles.active}>In progress</span></div><h2>{routeLabel(route)}</h2><p>{route.origin} → {route.destination}</p></div><div className={`${styles.actions} ${fixes.cardActions}`}><button aria-label={t.pause} disabled={savingId===route.id} onClick={()=>void changeStatus(route,'paused')}><Pause/></button></div></article>)}
      {queue.map((route,index)=>{
