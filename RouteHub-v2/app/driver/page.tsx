@@ -18,6 +18,12 @@ import styles from './driver.module.css'
 
 type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string}
 
+const errorMessage=(error:unknown,fallback:string)=>{
+  if(error instanceof Error&&error.message)return error.message
+  if(error&&typeof error==='object'&&'message' in error&&typeof error.message==='string'&&error.message)return error.message
+  return fallback
+}
+
 export default function Driver() {
   const [missions,setMissions]=useState<Mission[]>([])
   const [message,setMessage]=useState('')
@@ -157,7 +163,30 @@ export default function Driver() {
     try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
   }
 
-  const update=async(status:string)=>{if(!current||busy)return false;setBusy(true);try{if(status==='completed'){fileInput.current?.click();return false}if(status==='active'&&!canDriverStartRoute(current,today)){setMessage(t.unableUpdateRoute);return false}const payload:Record<string,unknown>={status,updated_version:Date.now()};if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n');const {error}=await getSupabase().from('routes').update(payload).eq('id',current.id).eq('driver_id',driverId).eq('company_id',current.company_id);if(error)throw error;if(status==='active')await startTrackingForActiveRoute();setModal(false);setIssueMode(false);setIssueNote('');await load();return true}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute);return false}finally{setBusy(false)}}
+  const update=async(status:string)=>{
+    if(!current||busy)return false
+    setBusy(true)
+    try{
+      if(status==='completed'){fileInput.current?.click();return false}
+      if(status==='active'&&!canDriverStartRoute(current,today)){setMessage(t.unableUpdateRoute);return false}
+      const client=getSupabase()
+      if(status==='active'){
+        const {data:otherActive,error:activeError}=await client.from('routes').select('id').eq('driver_id',driverId).eq('company_id',current.company_id).eq('status','active').neq('id',current.id)
+        if(activeError)throw activeError
+        if(otherActive?.length){
+          const {error:pauseError}=await client.from('routes').update({status:'paused',updated_version:Date.now()}).in('id',otherActive.map(route=>route.id)).eq('driver_id',driverId).eq('company_id',current.company_id)
+          if(pauseError)throw pauseError
+        }
+      }
+      const payload:Record<string,unknown>={status,updated_version:Date.now()}
+      if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n')
+      const {error}=await client.from('routes').update(payload).eq('id',current.id).eq('driver_id',driverId).eq('company_id',current.company_id)
+      if(error)throw error
+      if(status==='active')await startTrackingForActiveRoute()
+      setModal(false);setIssueMode(false);setIssueNote('');await load();return true
+    }catch(error){setMessage(errorMessage(error,t.unableUpdateRoute));return false}
+    finally{setBusy(false)}
+  }
   const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);let completionLocation:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{completionLocation=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,completionLocation)}catch{}await completeMission(current.id,completionLocation);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
   const startRoute=async()=>{
     // Do not use window.open here: Safari and installed PWAs can treat it as
