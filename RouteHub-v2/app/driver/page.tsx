@@ -218,6 +218,7 @@ export default function Driver() {
     {message&&<div className={styles.toast} role="status">{message}</div>}
     {loadError&&<div className={styles.loadError} role="status"><span>{loadError}</span><button disabled={loading} onClick={()=>void load()}>{t.retry || 'Retry'}</button></div>}
     {loading&&!missions.length?<section className={`${styles.loading} card`} aria-busy="true"><span/><span/><span/></section>:current?<>
+      <section className={styles.routeHero}>
       <section className={styles.mission}>
         <div className={styles.missionTop}><span>{isPastRoute?'PAST DUE':t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{isPastRoute?'PENDING':current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
@@ -227,6 +228,7 @@ export default function Driver() {
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
       {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo"/>}
+      </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
         {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>setRouteView('map')}><MapPin size={18}/>{t.openGoogleMaps}</button>}
