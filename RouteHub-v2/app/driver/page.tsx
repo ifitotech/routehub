@@ -59,8 +59,7 @@ export default function Driver() {
       const {data,error}=await client.from('routes')
         .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at,completed_at')
         .eq('driver_id',userData.user.id)
-        .eq('route_date',today)
-        .in('status',['published','pending','active','paused','completed','issue'])
+        .in('status',['published','pending','active','paused','issue'])
         .order('position')
       if(error)throw error
       setMissions((data||[]) as Mission[])
@@ -86,6 +85,7 @@ export default function Driver() {
   const temporaryExecution=membershipRole!=null&&membershipRole!=='driver'
   const homeHref=membershipRole?workspaceForStrictRole(membershipRole):'/driver'
   const temporaryLabel=locale==='es'?'Ruta temporal':locale==='fr'?'Itinéraire temporaire':'Temporary route'
+  const isPastRoute=Boolean(current?.route_date&&current.route_date.slice(0,10)<today)
 
   useEffect(()=>{
     const client=getSupabase()
@@ -216,7 +216,7 @@ export default function Driver() {
     {loadError&&<div className={styles.loadError} role="status"><span>{loadError}</span><button disabled={loading} onClick={()=>void load()}>{t.retry || 'Retry'}</button></div>}
     {loading&&!missions.length?<section className={`${styles.loading} card`} aria-busy="true"><span/><span/><span/></section>:current?<>
       <section className={styles.mission}>
-        <div className={styles.missionTop}><span>{t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
+        <div className={styles.missionTop}><span>{isPastRoute?'PAST DUE':t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{isPastRoute?'PENDING':current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
         <h2>{current.destination_name||current.destination_address||t.destination}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>

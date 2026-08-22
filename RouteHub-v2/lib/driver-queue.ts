@@ -43,22 +43,22 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
   driverId: string,
   today: string,
 ): DriverTodayQueue<T> {
-  const todayRoutes = routes.filter(route => route.driver_id === driverId && route.route_date === today)
-  const active = ordered(todayRoutes.filter(route => route.status === 'active'))
-  const paused = ordered(todayRoutes.filter(route => route.status === 'paused'))
-  const eligibleUpcoming = ordered(todayRoutes.filter(route => upcomingStatuses.includes(route.status)))
+  const driverRoutes = routes.filter(route => route.driver_id === driverId)
+  const active = ordered(driverRoutes.filter(route => route.status === 'active' && (route.route_date || '') <= today))
+  const paused = ordered(driverRoutes.filter(route => route.status === 'paused' && (route.route_date || '') <= today))
+  const eligibleUpcoming = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') <= today))
   const current = active[0] ?? paused[0] ?? eligibleUpcoming[0]
 
   return {
     current,
     upcoming: eligibleUpcoming.filter(route => route.id !== current?.id),
-    completed: [...todayRoutes]
+    completed: [...driverRoutes]
       .filter(route => route.status === 'completed')
       .sort((left, right) => (right.completed_at || '').localeCompare(left.completed_at || '') || left.position - right.position),
   }
 }
 
 export function canDriverStartRoute(route: DriverQueueRoute | undefined, today: string) {
-  const routeDate = route?.route_date?.slice(0, 10)
-  return Boolean(route && routeDate === today && [...upcomingStatuses, 'paused'].includes(route.status))
+  const routeDate = route?.route_date?.slice(0, 10) || ''
+  return Boolean(route && routeDate <= today && [...upcomingStatuses, 'paused'].includes(route.status))
 }
