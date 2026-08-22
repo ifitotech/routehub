@@ -279,7 +279,7 @@ export default function Driver() {
         {currentKind==='delivery'&&currentPhone&&<div className={`${styles.details} ${styles.singleDetail}`}><a className={styles.contactCall} href={`tel:${currentPhone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact?.contact_name||currentContact?.company_name||routeLabel(current)}</strong></span></a></div>}
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span><b>{currentKind==='delivery'?routeMetaCopy.instructions:'NOTES'}</b>{current.notes}</span></div>}
       </section>
-      {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>} 
+      <LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>
       </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
