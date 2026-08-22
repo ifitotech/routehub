@@ -10,3 +10,4 @@
 .people{display:flex;gap:6px;overflow:auto;padding:0 0 10px}.person{border:1px solid var(--rh-border);border-radius:999px;background:var(--rh-surface);color:var(--rh-text);padding:7px 11px;font-size:11px;font-weight:750;white-space:nowrap}.personActive{background:var(--rh-primary-soft);border-color:var(--rh-primary);color:var(--rh-primary)}
 html[data-theme="dark"] .locationPanel{background:linear-gradient(135deg,#102447,#0c1a30 68%)}
 @media(max-width:640px){.mapFooter{align-items:flex-start;flex-wrap:wrap}.liveSummary{width:100%}.lastUpdate{order:3}.openMap{order:2}}@media(prefers-reduced-motion:reduce){.mapCard{scroll-behavior:auto}}
+.mapCard > .openStreetMap,.mapCard > .locationPanel,.mapCard > .mapFooter{display:none}

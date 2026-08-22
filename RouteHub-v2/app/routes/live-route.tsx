@@ -72,8 +72,9 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   },[companyId,load])
 
   const selected=sessions.find(item=>item.driver_id===selectedDriver)||sessions[0]
-  const selectedRoutes=selected?routes.filter(item=>item.driver_id===selected.driver_id&&((item.route_date||(item.scheduled_at?item.scheduled_at.slice(0,10):''))===todayValue())).sort((a,b)=>{const rank=(value:string|null)=>value==='active'?0:value==='paused'?1:value==='published'?2:3;return rank(a.status)-rank(b.status)||Number(a.position||0)-Number(b.position||0)}):[]
-  const selectedRoute=selected?(selected.route_id?selectedRoutes.find(item=>item.id===selected.route_id):selectedRoutes.find(item=>['active','paused'].includes(item.status||''))):undefined
+  const driverRoutes=selected?routes.filter(item=>item.driver_id===selected.driver_id):[]
+  const selectedRoutes=driverRoutes.filter(item=>((item.route_date||(item.scheduled_at?item.scheduled_at.slice(0,10):''))===todayValue())).sort((a,b)=>{const rank=(value:string|null)=>value==='active'?0:value==='paused'?1:value==='published'?2:3;return rank(a.status)-rank(b.status)||Number(a.position||0)-Number(b.position||0)})
+  const selectedRoute=selected?(selected.route_id?driverRoutes.find(item=>item.id===selected.route_id):selectedRoutes.find(item=>['active','paused'].includes(item.status||''))||driverRoutes.find(item=>['active','paused'].includes(item.status||''))):undefined
   const selectedNext=selectedRoutes.find(item=>['published','pending'].includes(item.status||''))
   const hasLocation=selected?.last_lat!=null&&selected?.last_lng!=null
   const destination=selectedRoute?.destination_address||selectedRoute?.destination_name||selectedNext?.destination_address||selectedNext?.destination_name||''
