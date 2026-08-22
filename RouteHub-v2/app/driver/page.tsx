@@ -60,6 +60,7 @@ export default function Driver() {
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
   const dayPromptSeenRef=useRef(false)
+  const autoClosingDayRef=useRef(false)
   const fileInput=useRef<HTMLInputElement>(null)
   const finalPhotoInput=useRef<HTMLInputElement>(null)
   const signatureCanvas=useRef<HTMLCanvasElement>(null)
@@ -196,6 +197,30 @@ export default function Driver() {
     const interval=window.setInterval(()=>void sendLocation(),5*60*1000)
     return()=>{disposed=true;window.clearInterval(interval)}
   },[driverId,drivingSession,t.locationPermissionDenied])
+
+  // A driver day is automatically closed after 6 PM only when no operational
+  // work remains. Active, paused, published, and pending routes always keep
+  // the session open so the driver is never disconnected mid-route.
+  useEffect(()=>{
+    if(!drivingSession||drivingSession.session_kind!=='driving_day'||!driverId)return
+    const checkAutoClose=async()=>{
+      const now=new Date()
+      if(now.getHours()<18||autoClosingDayRef.current)return
+      const hasPendingWork=missions.some(item=>['published','pending','active','paused'].includes(item.status))
+      if(current||hasPendingWork)return
+      autoClosingDayRef.current=true
+      try{
+        const result=await endDrivingDay(drivingSession.id,driverId)
+        if(result.error)throw result.error
+        setDrivingSession(null)
+        setLocationStatus('')
+        setMessage(locale==='es'?'Jornada cerrada automáticamente a las 6:00 PM.':locale==='fr'?'Journée fermée automatiquement à 18 h.':'Driving day closed automatically at 6:00 PM.')
+      }catch(error){autoClosingDayRef.current=false;setLocationStatus(errorMessage(error,t.unableUpdateRoute))}
+    }
+    void checkAutoClose()
+    const timer=window.setInterval(()=>void checkAutoClose(),60_000)
+    return()=>window.clearInterval(timer)
+  },[current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
 
   const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}&travelmode=driving`
   const openGoogleMaps=()=>{
