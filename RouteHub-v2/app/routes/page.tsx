@@ -70,6 +70,7 @@ type FormState = {
   type: 'pickup' | 'delivery' | 'transfer' | 'return'
   origin: string
   destination: string
+  destination_label: string
   contact_id: string
   priority: 'normal' | 'priority' | 'urgent'
   order_number: string
@@ -121,6 +122,7 @@ function initialForm(priority: FormState['priority'] = 'normal'): FormState {
     type: 'delivery',
     origin: '',
     destination: '',
+    destination_label: '',
     contact_id: '',
     priority,
     order_number: '',
@@ -329,11 +331,11 @@ export default function Routes() {
       const option = `${item.company_name} - ${item.address}`.toLowerCase()
       return option === normalized || item.company_name.toLowerCase() === normalized || item.address.toLowerCase() === normalized
     })
-    setForm(current => ({...current, destination: value, contact_id: contact?.id || ''}))
+    setForm(current => ({...current, destination: value, contact_id: contact?.id || '', destination_label: contact ? '' : current.destination_label}))
   }
 
   const selectDestinationContact = (suggestion: LocalAddressSuggestion) => {
-    setForm(current => ({...current, destination: suggestion.value, contact_id: suggestion.id}))
+    setForm(current => ({...current, destination: suggestion.value, contact_id: suggestion.id, destination_label: ''}))
   }
 
   const openBuilder = () => {
@@ -369,7 +371,7 @@ export default function Routes() {
       const scheduledAt = scheduledLocal.toISOString()
       const selected = contacts.find(contact => contact.id === form.contact_id)
       const destinationAddress = selected?.address || form.destination.trim()
-      const destinationName = selected?.company_name || form.destination.trim()
+      const destinationName = selected?.company_name || form.destination_label.trim() || form.destination.trim()
 
       let positionQuery = client
         .from('routes')
@@ -518,6 +520,7 @@ export default function Routes() {
             </fieldset>
 
             <label className={styles.field}><span>{c.contactDestination}</span><div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact}/></div><small>{c.searchHelp}</small></label>
+            {!selectedContact&&<label className={styles.field}><span>{locale==='es'?'Nombre del cliente o sitio':locale==='fr'?'Nom du client ou du site':'Customer or site name'} <em>{c.optional}</em></span><input value={form.destination_label} placeholder={locale==='es'?'Ejemplo: Fox Electric':locale==='fr'?'Exemple : Fox Electric':'Example: Fox Electric'} onChange={event=>setForm(current=>({...current,destination_label:event.target.value}))}/></label>}
 
             <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>
 

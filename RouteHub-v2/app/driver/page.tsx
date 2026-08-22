@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, History as HistoryIcon, Home, List, MapPin, Pause, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
+import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, History as HistoryIcon, Home, List, MapPin, Pause, Phone, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
@@ -20,7 +20,7 @@ const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 
 type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string}
-type SavedContact = {company_name?:string|null;address?:string|null}
+type SavedContact = {company_name?:string|null;contact_name?:string|null;address?:string|null;phone?:string|null}
 
 const addressKey=(value?:string|null)=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')
 
@@ -70,7 +70,7 @@ export default function Driver() {
         .order('position')
       if(error)throw error
       setMissions((data||[]) as Mission[])
-      const {data:contactData}=await client.from('contacts').select('company_name,address').eq('company_id',membership.company_id)
+      const {data:contactData}=await client.from('contacts').select('company_name,contact_name,address,phone').eq('company_id',membership.company_id)
       setContacts((contactData||[]) as SavedContact[])
       const sessionResult=await getActiveDrivingSession(userData.user.id)
       if(!sessionResult.error){
@@ -105,6 +105,8 @@ export default function Driver() {
     if(route.destination_name&&addressKey(route.destination_name)!==addressKey(destination))return route.destination_name
     return savedContact?.company_name||route.destination_name||destination||t.destination
   }
+  const currentContact=contacts.find(contact=>addressKey(contact.address)===addressKey(current?.destination_address))
+  const routeMetaCopy=locale==='es'?{po:'PO / ORDER',instructions:'INSTRUCCIONES',call:'Llamar'}:locale==='fr'?{po:'PO / COMMANDE',instructions:'INSTRUCTIONS',call:'Appeler'}:{po:'PO / ORDER',instructions:'INSTRUCTIONS',call:'Call'}
 
   useEffect(()=>{
     const client=getSupabase()
@@ -241,8 +243,8 @@ export default function Driver() {
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
         <h2>{routeLabel(current)}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
-        <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.type}</small><strong>{currentTask}</strong></div></div>
-        {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
+        <div className={styles.details}><div><small>{routeMetaCopy.po}</small><strong>{current.order_number||'—'}</strong></div>{currentContact?.phone?<a className={styles.contactCall} href={`tel:${currentContact.phone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact.company_name||routeLabel(current)}</strong></span></a>:<div><small>{t.type}</small><strong>{currentTask}</strong></div>}</div>
+        {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span><b>{routeMetaCopy.instructions}</b>{current.notes}</span></div>}
       </section>
       {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>} 
       </section>
