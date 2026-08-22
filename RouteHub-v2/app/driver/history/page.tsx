@@ -36,12 +36,15 @@ export default function DriverHistory() {
     try {
       setMessage('')
       const client = getSupabase()
+      const weekAgo = new Date()
+      weekAgo.setDate(weekAgo.getDate() - 6)
+      const fromDate = [weekAgo.getFullYear(), String(weekAgo.getMonth() + 1).padStart(2, '0'), String(weekAgo.getDate()).padStart(2, '0')].join('-')
       const {data: userData} = await client.auth.getUser()
       if (!userData.user) throw Error(t.signIn)
       const {data, error} = await client.from('routes')
         .select('id,status,destination_name,destination_address,completed_at,created_at,completion_method,notes,mission_type,order_number,arrived_at,driver_note,route_date')
         .eq('driver_id', userData.user.id)
-        .eq('route_date', new Date().toISOString().slice(0,10))
+        .gte('route_date', fromDate)
         .in('status', ['completed','issue','cancelled'])
         .order('completed_at', {ascending:false, nullsFirst:false})
       if (error) throw error
