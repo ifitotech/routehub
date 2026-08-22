@@ -20,6 +20,9 @@ const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 
 type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string}
+type SavedContact = {company_name?:string|null;address?:string|null}
+
+const addressKey=(value?:string|null)=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')
 
 const errorMessage=(error:unknown,fallback:string)=>{
   if(error instanceof Error&&error.message)return error.message
@@ -29,6 +32,7 @@ const errorMessage=(error:unknown,fallback:string)=>{
 
 export default function Driver() {
   const [missions,setMissions]=useState<Mission[]>([])
+  const [contacts,setContacts]=useState<SavedContact[]>([])
   const [message,setMessage]=useState('')
   const [busy,setBusy]=useState(false)
   const [modal,setModal]=useState(false)
@@ -66,6 +70,8 @@ export default function Driver() {
         .order('position')
       if(error)throw error
       setMissions((data||[]) as Mission[])
+      const {data:contactData}=await client.from('contacts').select('company_name,address').eq('company_id',membership.company_id)
+      setContacts((contactData||[]) as SavedContact[])
       const sessionResult=await getActiveDrivingSession(userData.user.id)
       if(!sessionResult.error){
         setDrivingSession(sessionResult.data)
@@ -89,6 +95,16 @@ export default function Driver() {
   const homeHref=membershipRole?workspaceForStrictRole(membershipRole):'/driver'
   const temporaryLabel=locale==='es'?'Ruta temporal':locale==='fr'?'Itinéraire temporaire':'Temporary route'
   const isPastRoute=Boolean(current?.route_date&&current.route_date.slice(0,10)<today)
+  const routeLabel=(route?:Mission|null)=>{
+    if(!route)return t.destination
+    const destination=route.destination_address||''
+    const savedContact=contacts.find(contact=>addressKey(contact.address)===addressKey(destination))
+    // Older routes may have been saved with the address as destination_name.
+    // Prefer the saved company name in that case, while preserving an explicit
+    // custom route title when one was provided.
+    if(route.destination_name&&addressKey(route.destination_name)!==addressKey(destination))return route.destination_name
+    return savedContact?.company_name||route.destination_name||destination||t.destination
+  }
 
   useEffect(()=>{
     const client=getSupabase()
@@ -223,7 +239,7 @@ export default function Driver() {
       <section className={styles.mission}>
         <div className={styles.missionTop}><span>{isPastRoute?'PAST DUE':t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{isPastRoute?'PENDING':current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
         <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
-        <h2>{current.destination_name||current.destination_address||t.destination}</h2>
+        <h2>{routeLabel(current)}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
         <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.type}</small><strong>{currentTask}</strong></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
@@ -240,7 +256,7 @@ export default function Driver() {
     </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
       {routeView&&current&&<section className={styles.routeOverlay} aria-label="Route details">
       <header className={styles.routeOverlayHeader}><button type="button" onClick={()=>routeView==='details'?setRouteView('queue'):setRouteView(null)} aria-label="Back"><ArrowLeft size={20}/></button><strong>{routeView==='details'?'Stop details':'Route'}</strong><span /></header>
-      {routeView==='queue'||routeView==='map'?<><div className={styles.routeTabs}><button className={routeView==='queue'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('queue')}>Stops</button><button className={routeView==='map'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('map')}>Map</button></div>{routeView==='queue'?<div className={styles.stopList}>{[current,...upcoming].filter(Boolean).map((route,index)=><button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{index+1}</span><span><strong>{route.destination_name||route.destination_address||t.destination}</strong><small>{(route.mission_type||'delivery').toUpperCase()} · {route.status==='active'?'In progress':route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):'Upcoming'}</small></span><ChevronRight size={18}/></button>)}</div>:<RoutePlanMap locale={locale} originAddress={current.origin_address} stops={[current,...upcoming].filter(Boolean).map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||route.destination_address}))}/>}</>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{selectedRoute.destination_name||selectedRoute.destination_address||t.destination}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{(selectedRoute.mission_type||'delivery').toUpperCase()}</small><strong>{selectedRoute.status==='active'?'Current stop':selectedRoute.status==='completed'?t.completed:'Upcoming stop'}</strong>{selectedRoute.notes&&<p className={styles.detailNotes}>{selectedRoute.notes}</p>}{selectedRoute.id===current.id&&current.status==='active'&&<button className={styles.complete} type="button" onClick={()=>{setRouteView(null);setModal(true)}}><Check size={18}/>{t.complete}</button>}</div>}</section>}
+      {routeView==='queue'||routeView==='map'?<><div className={styles.routeTabs}><button className={routeView==='queue'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('queue')}>Stops</button><button className={routeView==='map'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('map')}>Map</button></div>{routeView==='queue'?<div className={styles.stopList}>{[current,...upcoming].filter(Boolean).map((route,index)=><button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{index+1}</span><span><strong>{routeLabel(route)}</strong><small>{(route.mission_type||'delivery').toUpperCase()} · {route.status==='active'?'In progress':route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):'Upcoming'}</small></span><ChevronRight size={18}/></button>)}</div>:<RoutePlanMap locale={locale} originAddress={current.origin_address} stops={[current,...upcoming].filter(Boolean).map(route=>({id:route.id,address:route.destination_address,label:routeLabel(route)}))}/>}</>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{routeLabel(selectedRoute)}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{(selectedRoute.mission_type||'delivery').toUpperCase()}</small><strong>{selectedRoute.status==='active'?'Current stop':selectedRoute.status==='completed'?t.completed:'Upcoming stop'}</strong>{selectedRoute.notes&&<p className={styles.detailNotes}>{selectedRoute.notes}</p>}{selectedRoute.id===current.id&&current.status==='active'&&<button className={styles.complete} type="button" onClick={()=>{setRouteView(null);setModal(true)}}><Check size={18}/>{t.complete}</button>}</div>}</section>}
     {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void completeWithPhoto(file)}}/><button className={styles.photoButton} disabled={busy} onClick={()=>fileInput.current?.click()}><Camera/>{t.completeWithPhoto}</button><button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
     {dayPromptOpen&&membershipRole==='driver'&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="day-start-title"><div className={styles.modalIcon}><Play/></div><h2 id="day-start-title">Start your driving day</h2><p>You have <strong>{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length}</strong> route{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length===1?'':'s'} assigned for today.</p><button className={styles.photoButton} disabled={busy} onClick={()=>void beginDrivingDay()}><Play/>{busy?'Starting…':'Start day and share location'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>{dayPromptSeenRef.current=true;setDayPromptOpen(false)}}>Not now</button></section></div>}
     <nav className={styles.driverNav} aria-label="Driver navigation"><button type="button" aria-current={!routeView?'page':undefined} onClick={()=>setRouteView(null)}><Home size={18}/><span>Today</span></button><button type="button" aria-current={routeView?'page':undefined} onClick={()=>current&&setRouteView('queue')}><List size={18}/><span>Route</span></button><Link href="/driver/history"><HistoryIcon size={18}/><span>{t.history}</span></Link><Link href="/driver/settings"><CircleUserRound size={18}/><span>Profile</span></Link></nav>
