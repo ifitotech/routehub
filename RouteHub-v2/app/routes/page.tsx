@@ -333,7 +333,19 @@ export default function Routes() {
       const option = `${item.company_name} - ${item.address}`.toLowerCase()
       return option === normalized || item.company_name.toLowerCase() === normalized || item.address.toLowerCase() === normalized
     })
-    setForm(current => ({...current, destination: value, contact_id: contact?.id || '', destination_label: contact ? '' : current.destination_label, destination_phone:contact?.phone||current.destination_phone}))
+    setForm(current => {
+      // A saved contact supplies the complete destination snapshot. If the
+      // dispatcher replaces it with a new address, do not accidentally carry
+      // the previous customer's name or phone into that custom stop.
+      const replacingSavedContact = Boolean(current.contact_id)
+      return {
+        ...current,
+        destination: value,
+        contact_id: contact?.id || '',
+        destination_label: contact ? '' : replacingSavedContact ? '' : current.destination_label,
+        destination_phone: contact?.phone || (replacingSavedContact ? '' : current.destination_phone),
+      }
+    })
   }
 
   const selectDestinationContact = (suggestion: LocalAddressSuggestion) => {
