@@ -15,6 +15,7 @@ type Props={
   title?:string
   showHeader?:boolean
   showLocationUpdated?:boolean
+  interactive?:boolean
 }
 
 type GeocodeResponse={coordinate:RouteCoordinate|null;label?:string}
@@ -45,7 +46,7 @@ async function geocode(address?:string|null){
  return payload.coordinate||null
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo',showHeader=true,showLocationUpdated=true}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo',showHeader=true,showLocationUpdated=true,interactive=true}:Props){
  const[origin,setOrigin]=useState<RouteCoordinate|null>(null)
  const[destination,setDestination]=useState<RouteCoordinate|null>(null)
   const[line,setLine]=useState<RouteCoordinate[]>([])
@@ -86,7 +87,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
  return <section className="live-route-map">
   {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?'Conductor conectado':'Ruta programada'}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?'EN VIVO':'EN ESPERA'}</span></header>}
   <div className="live-route-canvas">
-   {loading?<div className="live-route-loading">Preparando el mapa…</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>No pudimos ubicar esta ruta todavía.</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} aria-label="Mapa de ruta en vivo">
+   {loading?<div className="live-route-loading">Preparando el mapa…</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>No pudimos ubicar esta ruta todavía.</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label="Mapa de ruta en vivo">
     <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
     <FitBounds points={visiblePoints}/>
     {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
