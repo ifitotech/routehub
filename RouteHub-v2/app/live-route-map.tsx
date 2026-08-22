@@ -3,7 +3,7 @@
 import {useEffect,useMemo,useState} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
-import {MapPin,Navigation,Route,Truck} from 'lucide-react'
+import {MapPin,Route,Truck} from 'lucide-react'
 
 export type RouteCoordinate={lat:number;lng:number}
 
@@ -47,7 +47,6 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
  const[origin,setOrigin]=useState<RouteCoordinate|null>(null)
  const[destination,setDestination]=useState<RouteCoordinate|null>(null)
   const[line,setLine]=useState<RouteCoordinate[]>([])
- const[steps,setSteps]=useState<Array<{instruction:string;distance:number}>>([])
  const[loading,setLoading]=useState(true)
  const[unavailable,setUnavailable]=useState(false)
 
@@ -69,14 +68,12 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
  useEffect(()=>{
   let cancelled=false
   if(!origin||!destination)return
-  const url=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&steps=true&geometries=geojson`
+  const url=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`
   fetch(url).then(async result=>{
    if(!result.ok)throw new Error('Route unavailable')
-   const payload=await result.json() as {routes?:Array<{geometry?:{coordinates?:[number,number][]};legs?:Array<{steps?:Array<{distance:number;name?:string;mode?:string;maneuver?:{type?:string;modifier?:string}}>}>}>}
+   const payload=await result.json() as {routes?:Array<{geometry?:{coordinates?:[number,number][]}}>} 
    const coordinates=payload.routes?.[0]?.geometry?.coordinates?.map(([lng,lat])=>({lat,lng}))||[]
    if(!cancelled&&coordinates.length)setLine(coordinates)
-   const routeSteps=payload.routes?.[0]?.legs?.flatMap(leg=>leg.steps||[]).map(step=>({instruction:`${step.maneuver?.type==='depart'?'Sal de':step.maneuver?.type==='arrive'?'Llegaste':step.maneuver?.modifier==='left'?'Gira a la izquierda':step.maneuver?.modifier==='right'?'Gira a la derecha':'Continúa'}${step.name?` por ${step.name}`:''}`,distance:step.distance})).filter(step=>step.distance>20)||[]
-   if(!cancelled)setSteps(routeSteps.slice(0,6))
   }).catch(()=>{})
   return()=>{cancelled=true}
   },[origin,destination])
@@ -96,7 +93,6 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
     {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')}><Tooltip direction="top" offset={[0,-20]} permanent>Conductor</Tooltip></Marker>}
    </MapContainer>}
   </div>
-  {steps.length>0&&<div className="live-route-navigation"><div><Navigation size={15}/><strong>Navegación</strong><span>{steps[0].instruction}</span></div><ol>{steps.slice(1,4).map((step,index)=><li key={`${step.instruction}-${index}`}><span>{index+2}</span><div>{step.instruction}<small>{step.distance>=1000?`${(step.distance/1000).toFixed(1)} km`:`${Math.round(step.distance)} m`}</small></div></li>)}</ol></div>}
   <footer><span><b>A</b>{originAddress||'Origen de ruta'}</span><span><b>B</b>{destinationAddress||'Destino de ruta'}</span>{driverUpdatedAt&&<small><Truck size={13}/>Ubicación actualizada</small>}</footer>
  </section>
 }
