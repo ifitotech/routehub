@@ -87,3 +87,5 @@
  .backdrop .modal{width:100%;max-height:calc(var(--rh-driver-viewport-height,100dvh) - 24px);padding:22px}
  .backdrop .modal textarea{min-height:94px}
 }
+
+.primaryActions .complete{min-height:70px;font-size:19px}
