@@ -62,7 +62,7 @@ export default function Driver() {
   const [routeView,setRouteView]=useState<'queue'|'details'|'map'|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
-  const [pickupConfirmOpen,setPickupConfirmOpen]=useState(false)
+  const [pickupConfirmOpen,setPickupConfirmOpen]=useState(false) // centered, address-only arrival confirmation
   const dayPromptSeenRef=useRef(false)
   const autoClosingDayRef=useRef(false)
   const fileInput=useRef<HTMLInputElement>(null)
