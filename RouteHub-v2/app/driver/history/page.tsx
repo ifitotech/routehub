@@ -13,7 +13,7 @@ import styles from './history.module.css'
 
 type RouteRecord = {
   id:string; status:string; destination_name?:string; destination_address?:string
-  completed_at?:string; created_at?:string; completion_method?:string; notes?:string
+  completed_at?:string; created_at?:string; completion_method?:string; notes?:string; mission_type?:string; order_number?:string; arrived_at?:string; driver_note?:string
 }
 
 export default function DriverHistory() {
@@ -23,6 +23,7 @@ export default function DriverHistory() {
   const [note, setNote] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [saving, setSaving] = useState<'note' | 'complete' | null>(null)
+  const [selectedRoute, setSelectedRoute] = useState<RouteRecord|null>(null)
   const {locale, t} = useLocale()
 
   const copy = locale === 'es'
@@ -38,8 +39,9 @@ export default function DriverHistory() {
       const {data: userData} = await client.auth.getUser()
       if (!userData.user) throw Error(t.signIn)
       const {data, error} = await client.from('routes')
-        .select('id,status,destination_name,destination_address,completed_at,created_at,completion_method,notes')
+        .select('id,status,destination_name,destination_address,completed_at,created_at,completion_method,notes,mission_type,order_number,arrived_at,driver_note,route_date')
         .eq('driver_id', userData.user.id)
+        .eq('route_date', new Date().toISOString().slice(0,10))
         .in('status', ['completed','issue','cancelled'])
         .order('completed_at', {ascending:false, nullsFirst:false})
       if (error) throw error
@@ -85,7 +87,7 @@ export default function DriverHistory() {
         const isIssue = route.status === 'issue'
         const isOpen = editingId === route.id
         const statusText = route.status === 'completed' ? t.completed : isIssue ? t.issueReported : t.notCompleted
-        return <article className={`card ${styles.card} ${route.status === 'completed' ? styles.completed : isIssue ? styles.issue : styles.cancelled}`} key={route.id}>
+        return <article role="button" tabIndex={0} onClick={()=>setSelectedRoute(route)} className={`card ${styles.card} ${route.status === 'completed' ? styles.completed : isIssue ? styles.issue : styles.cancelled}`} key={route.id}>
           <div className={styles.cardTop}>
             <strong className={styles.status}>{route.status === 'completed' ? <CheckCircle2 size={18}/> : <CircleAlert size={18}/>} {statusText}</strong>
             <span className={styles.badge}>{route.status === 'completed' ? t.completed : isIssue ? t.issues : t.cancelled}</span>
@@ -108,6 +110,7 @@ export default function DriverHistory() {
       })}
       {!rows.length && !message && <section className={`card ${styles.empty}`}><HistoryIcon size={38}/><h2>{t.noHistory}</h2><p className="muted">{t.historyHelp}</p></section>}
     </section>
+    {selectedRoute&&<div className={styles.detailBackdrop}><section className={styles.detailModal}><button type="button" className={styles.close} onClick={()=>setSelectedRoute(null)}>×</button><h2>{selectedRoute.destination_name||selectedRoute.destination_address||t.routes}</h2><p><MapPin size={16}/> {selectedRoute.destination_address||t.destination}</p><p><Clock3 size={16}/> {selectedRoute.completed_at?new Date(selectedRoute.completed_at).toLocaleString(locale):t.completionTime}</p><strong>{(selectedRoute.mission_type||'delivery').toUpperCase()}</strong>{selectedRoute.order_number&&<p>PO / Order: <b>{selectedRoute.order_number}</b></p>}{selectedRoute.arrived_at&&selectedRoute.completed_at&&<p>Time on route: {Math.max(0,Math.round((new Date(selectedRoute.completed_at).getTime()-new Date(selectedRoute.arrived_at).getTime())/60000))} min</p>}<p>{selectedRoute.driver_note||selectedRoute.notes||''}</p></section></div>}
     <DriverBottomNav />
   </main>
 }
