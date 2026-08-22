@@ -91,3 +91,5 @@
 .primaryActions .complete{min-height:70px;font-size:19px}
 
 .primaryActions .start{min-height:70px;font-size:19px}
+
+.driverNav{z-index:2000}
