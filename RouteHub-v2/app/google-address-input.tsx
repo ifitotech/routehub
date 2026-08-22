@@ -69,13 +69,18 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> &
 export default function GoogleAddressInput({value, onValueChange, localSuggestions = [], onSelectLocalSuggestion, ...props}: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const onValueChangeRef = useRef(onValueChange)
+  const selectedValueRef = useRef('')
   const listId = useId().replace(/:/g, '')
   const [googleReady, setGoogleReady] = useState(false)
   const [freeSuggestions, setFreeSuggestions] = useState<FreeSuggestion[]>([])
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [lookupState, setLookupState] = useState<'idle' | 'loading' | 'empty' | 'error'>('idle')
   const normalizedQuery = value.trim().toLocaleLowerCase()
-  const matchingLocalSuggestions = normalizedQuery.length < 2 ? [] : localSuggestions.filter(item => `${item.primary} ${item.secondary || ''} ${item.value}`.toLocaleLowerCase().includes(normalizedQuery)).slice(0, 4)
+  const localQueryTerms = normalizedQuery.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(term => term.length > 1)
+  const matchingLocalSuggestions = localQueryTerms.length === 0 ? [] : localSuggestions.filter(item => {
+    const searchable = `${item.primary} ${item.secondary || ''} ${item.value}`.toLocaleLowerCase()
+    return localQueryTerms.every(term => searchable.includes(term))
+  }).slice(0, 4)
 
   useEffect(() => { onValueChangeRef.current = onValueChange }, [onValueChange])
 
@@ -98,6 +103,12 @@ export default function GoogleAddressInput({value, onValueChange, localSuggestio
   }, [])
 
   useEffect(() => {
+    if (value === selectedValueRef.current) {
+      setFreeSuggestions([])
+      setSuggestionsOpen(false)
+      setLookupState('idle')
+      return
+    }
     if (googleReady || value.trim().length < 3) {
       setFreeSuggestions([])
       setSuggestionsOpen(false)
@@ -130,6 +141,7 @@ export default function GoogleAddressInput({value, onValueChange, localSuggestio
   }, [googleReady, value])
 
   const selectSuggestion = (suggestion: FreeSuggestion) => {
+    selectedValueRef.current = suggestion.label
     onValueChange(suggestion.label)
     setFreeSuggestions([])
     setSuggestionsOpen(false)
@@ -138,6 +150,7 @@ export default function GoogleAddressInput({value, onValueChange, localSuggestio
   }
 
   const selectLocalSuggestion = (suggestion: LocalAddressSuggestion) => {
+    selectedValueRef.current = suggestion.value
     onValueChange(suggestion.value)
     onSelectLocalSuggestion?.(suggestion)
     setFreeSuggestions([])
@@ -146,17 +159,25 @@ export default function GoogleAddressInput({value, onValueChange, localSuggestio
     inputRef.current?.focus()
   }
 
+  // Touch browsers can blur the search input before a click is delivered,
+  // making a suggestion feel as if it needs a second tap. Select on pointer
+  // down and keep click only for keyboard activation.
+  const selectOnPointerDown = (event: React.PointerEvent<HTMLButtonElement>, select: () => void) => {
+    event.preventDefault()
+    select()
+  }
+  const selectOnClick = (event: React.MouseEvent<HTMLButtonElement>, select: () => void) => {
+    if (event.detail === 0) select()
+  }
+
   // `street-address` asks iOS to inject old contact data above its keyboard.
   // This search owns suggestions, so native address autofill stays disabled.
   const shouldShowSuggestions = suggestionsOpen && (matchingLocalSuggestions.length > 0 || !googleReady)
   return <div className="routehub-address-input">
-    <input ref={inputRef} {...props} value={value} name="routehub-address-search" type="search" autoComplete="off" autoCorrect="off" autoCapitalize="words" spellCheck={false} onFocus={() => { if (matchingLocalSuggestions.length || freeSuggestions.length || lookupState === 'empty' || lookupState === 'error') setSuggestionsOpen(true) }} onChange={event => { onValueChange(event.target.value); setSuggestionsOpen(true) }} role="combobox" aria-autocomplete="list" aria-expanded={shouldShowSuggestions} aria-controls={listId}/>
+    <input ref={inputRef} {...props} value={value} name="routehub-address-search" type="search" autoComplete="off" autoCorrect="off" autoCapitalize="words" spellCheck={false} onFocus={() => { if (value !== selectedValueRef.current && (matchingLocalSuggestions.length || freeSuggestions.length || lookupState === 'empty' || lookupState === 'error')) setSuggestionsOpen(true) }} onChange={event => { selectedValueRef.current=''; onValueChange(event.target.value); setSuggestionsOpen(true) }} role="combobox" aria-autocomplete="list" aria-expanded={shouldShowSuggestions} aria-controls={listId}/>
     {shouldShowSuggestions && <div className="routehub-address-suggestions" id={listId} role="listbox" aria-label="Address and contact suggestions">
-      {matchingLocalSuggestions.map(suggestion => <button key={`contact-${suggestion.id}`} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onMouseDown={event => event.preventDefault()} onClick={() => selectLocalSuggestion(suggestion)}><span className="routehub-address-pin" aria-hidden="true">●</span><span><strong>{suggestion.primary}</strong><small>{suggestion.secondary || suggestion.value}</small></span></button>)}
-      {lookupState === 'loading' && <p className="routehub-address-status">Searching US addresses...</p>}
-      {lookupState === 'empty' && <p className="routehub-address-status">No exact address found. Add a city or ZIP code to narrow the search.</p>}
-      {lookupState === 'error' && <p className="routehub-address-status">Address search is temporarily unavailable. You can still enter the address manually.</p>}
-      {freeSuggestions.map(suggestion => <button key={suggestion.label} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onMouseDown={event => event.preventDefault()} onClick={() => selectSuggestion(suggestion)}><span className="routehub-address-pin" aria-hidden="true">o</span><span><strong>{suggestion.primary}</strong>{suggestion.secondary && <small>{suggestion.secondary}</small>}</span></button>)}
+      {matchingLocalSuggestions.map(suggestion => <button key={`contact-${suggestion.id}`} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onPointerDown={event => selectOnPointerDown(event, () => selectLocalSuggestion(suggestion))} onClick={event => selectOnClick(event, () => selectLocalSuggestion(suggestion))}><span className="routehub-address-pin" aria-hidden="true">●</span><span><strong>{suggestion.primary}</strong><small>{suggestion.secondary || suggestion.value}</small></span></button>)}
+      {!matchingLocalSuggestions.length&&<>{lookupState === 'loading' && <p className="routehub-address-status">Searching US addresses...</p>}{lookupState === 'empty' && <p className="routehub-address-status">No exact address found. Add a city or ZIP code to narrow the search.</p>}{lookupState === 'error' && <p className="routehub-address-status">Address search is temporarily unavailable. You can still enter the address manually.</p>}{freeSuggestions.map(suggestion => <button key={suggestion.label} type="button" role="option" aria-selected="false" className="routehub-address-suggestion" onPointerDown={event => selectOnPointerDown(event, () => selectSuggestion(suggestion))} onClick={event => selectOnClick(event, () => selectSuggestion(suggestion))}><span className="routehub-address-pin" aria-hidden="true">o</span><span><strong>{suggestion.primary}</strong>{suggestion.secondary && <small>{suggestion.secondary}</small>}</span></button>)}</>}
     </div>}
   </div>
 }
