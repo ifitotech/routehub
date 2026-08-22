@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, History as HistoryIcon, Home, List, MapPin, Pause, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
@@ -15,6 +16,7 @@ import {workspaceForStrictRole} from '../auth-access'
 import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
 import styles from './driver.module.css'
+const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 
 type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string}
 
@@ -37,7 +39,7 @@ export default function Driver() {
   const [locationStatus,setLocationStatus]=useState('')
   const [loading,setLoading]=useState(true)
   const [loadError,setLoadError]=useState('')
-  const [routeView,setRouteView]=useState<'queue'|'details'|null>(null)
+  const [routeView,setRouteView]=useState<'queue'|'details'|'map'|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
   const dayPromptSeenRef=useRef(false)
@@ -194,6 +196,7 @@ export default function Driver() {
     finally{setBusy(false)}
   }
   const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);let completionLocation:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{completionLocation=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,completionLocation)}catch{}await completeMission(current.id,completionLocation);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
+  const completeWithGPS=async()=>{if(!current||busy)return;setBusy(true);try{const location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location);await completeMission(current.id,location);setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
   const startRoute=async()=>{
     // Do not use window.open here: Safari and installed PWAs can treat it as
     // a pop-up and ignore the driver's tap. A same-tab navigation is reliable
@@ -223,10 +226,11 @@ export default function Driver() {
         <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.type}</small><strong>{currentTask}</strong></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
+      {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo"/>}
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
-        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>window.location.assign(navigateUrl)}><MapPin size={18}/>{t.openGoogleMaps}</button>}
-        {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>setModal(true)}><Check size={19}/>{t.complete}</button>}
+        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>setRouteView('map')}><MapPin size={18}/>{t.openGoogleMaps}</button>}
+        {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>void completeWithGPS()}><Check size={19}/>{t.complete}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
       {current.status==='active'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>void update('paused')}><Pause size={18}/>{t.pause}</button><button onClick={()=>{setIssueMode(true);setModal(true)}}><TriangleAlert size={18}/>{t.reportProblem}</button></div>}
