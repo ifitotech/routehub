@@ -227,7 +227,7 @@ export default function Driver() {
         <div className={styles.details}><div><small>{t.origin}</small><strong>{current.origin_address||t.notRecorded}</strong></div><div><small>{t.type}</small><strong>{currentTask}</strong></div></div>
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span>{current.notes}</span></div>}
       </section>
-      {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false}/>} 
+      {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false}/>} 
       </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}

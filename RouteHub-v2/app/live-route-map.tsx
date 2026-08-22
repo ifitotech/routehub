@@ -14,6 +14,7 @@ type Props={
   driverUpdatedAt?:string|null
   title?:string
   showHeader?:boolean
+  showLocationUpdated?:boolean
 }
 
 type GeocodeResponse={coordinate:RouteCoordinate|null;label?:string}
@@ -44,7 +45,7 @@ async function geocode(address?:string|null){
  return payload.coordinate||null
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo',showHeader=true}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo',showHeader=true,showLocationUpdated=true}:Props){
  const[origin,setOrigin]=useState<RouteCoordinate|null>(null)
  const[destination,setDestination]=useState<RouteCoordinate|null>(null)
   const[line,setLine]=useState<RouteCoordinate[]>([])
@@ -94,6 +95,6 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
     {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')}><Tooltip direction="top" offset={[0,-20]} permanent>Conductor</Tooltip></Marker>}
    </MapContainer>}
   </div>
-  <footer><span><b>A</b>{originAddress||'Origen de ruta'}</span><span><b>B</b>{destinationAddress||'Destino de ruta'}</span>{driverUpdatedAt&&<small><Truck size={13}/>Ubicación actualizada</small>}</footer>
+  <footer><span><b>A</b>{originAddress||'Origen de ruta'}</span><span><b>B</b>{destinationAddress||'Destino de ruta'}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>Ubicación actualizada</small>}</footer>
  </section>
 }
