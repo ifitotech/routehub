@@ -75,3 +75,15 @@
 :global(html[data-theme="dark"]) .segmented button,
 :global(html[data-theme="dark"]) .detailsToggle{border-color:var(--rh-border);background:#18263b;color:var(--rh-text)}
 :global(html[data-theme="dark"]) .optionalDetails{border-color:var(--rh-border);background:#102036}
+
+/* Saved contacts are the source of truth for the driver's customer, phone and site reference. */
+.savedContact{display:flex;align-items:flex-start;gap:11px;padding:12px 13px;border:1px solid #b7cdf1;border-radius:12px;background:#eff6ff;color:#2563eb}
+.savedContact>svg{flex:0 0 auto;margin-top:2px}
+.savedContact>div{min-width:0;display:grid;gap:2px}
+.savedContact small{color:#64748b;font-size:10px;font-weight:750}
+.savedContact strong,.savedContact span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.savedContact strong{color:#1e3a5f;font-size:13px}
+.savedContact span{color:#475569;font-size:12px}
+:global(html[data-theme="dark"]) .savedContact{border-color:#315579;background:#102b4a;color:#60a5fa}
+:global(html[data-theme="dark"]) .savedContact small,:global(html[data-theme="dark"]) .savedContact span{color:var(--rh-text-secondary)}
+:global(html[data-theme="dark"]) .savedContact strong{color:var(--rh-text)}
