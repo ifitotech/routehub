@@ -41,3 +41,9 @@
   .lockedRoute .routeMain{grid-column:2 / 4}
   .lockedRoute .actions{grid-column:4}
 }
+
+/* Editing a route now exposes the operational stop fields without changing
+   the queue card layout. Keep full addresses and instructions readable. */
+.editor label:nth-child(3),.editor label:nth-child(4),.editor label:last-of-type{grid-column:1/-1}
+.editor em{font-size:10px;color:var(--rh-text-secondary);font-style:normal;font-weight:700}
+@media(max-width:720px){.editor label:nth-child(3),.editor label:nth-child(4),.editor label:last-of-type{grid-column:auto}}

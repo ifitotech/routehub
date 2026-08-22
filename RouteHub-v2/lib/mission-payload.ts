@@ -13,6 +13,7 @@ export type MissionInput={
   contact_id?:string
   origin_name?:string
   destination_name?:string
+  destination_phone?:string
 }
 
 export function buildMissionInsert(input:MissionInput,membership:{company_id:string;branch_id:string|null},position:number,now=new Date()){

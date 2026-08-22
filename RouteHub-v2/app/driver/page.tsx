@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useRef, useState} from 'react'
-import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, History as HistoryIcon, Home, List, MapPin, Pause, Phone, Play, RotateCcw, TriangleAlert, X} from 'lucide-react'
+import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, ClipboardCheck, History as HistoryIcon, Home, List, MapPin, MessageSquare, Pause, Phone, Play, RotateCcw, Signature, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
 import {getSupabase} from '../../lib/supabase'
@@ -12,6 +12,8 @@ import {useLocale} from '../../lib/use-preferences'
 import {endDrivingDay, getActiveDrivingSession, startDrivingDay, startTemporaryRouteSession, updateDrivingLocation, type DrivingSession} from '../../lib/driving-session'
 import {getCurrentLocation, getLocationPermission} from '../../lib/location'
 import {canDriverStartRoute, operationalDate, selectDriverTodayQueue} from '../../lib/driver-queue'
+import {routeProgress, stopAction, stopKind} from '../../lib/stop-workflow'
+import {saveCustomerSignature} from '../../lib/signature'
 import {workspaceForStrictRole} from '../auth-access'
 import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
@@ -19,7 +21,7 @@ import styles from './driver.module.css'
 const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 
-type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;priority?:string;notes?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string}
+type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;arrived_at?:string;customer_signature_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
 type SavedContact = {company_name?:string|null;contact_name?:string|null;address?:string|null;phone?:string|null}
 
 const addressKey=(value?:string|null)=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')
@@ -36,8 +38,16 @@ export default function Driver() {
   const [message,setMessage]=useState('')
   const [busy,setBusy]=useState(false)
   const [modal,setModal]=useState(false)
-  const [issueMode,setIssueMode]=useState(false)
   const [issueNote,setIssueNote]=useState('')
+  const [issuePhoto,setIssuePhoto]=useState<File|null>(null)
+  const [stopNoteOpen,setStopNoteOpen]=useState(false)
+  const [stopNote,setStopNote]=useState('')
+  const [signatureOpen,setSignatureOpen]=useState(false)
+  const [finalizeOpen,setFinalizeOpen]=useState(false)
+  const [finalizeIssueOpen,setFinalizeIssueOpen]=useState(false)
+  const [finalizeIssue,setFinalizeIssue]=useState('')
+  const [finalizeNote,setFinalizeNote]=useState('')
+  const [finalizeIssuePhoto,setFinalizeIssuePhoto]=useState<File|null>(null)
   const [driverId,setDriverId]=useState('')
   const [membershipRole,setMembershipRole]=useState<Role|null>(null)
   const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
@@ -49,6 +59,8 @@ export default function Driver() {
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
   const dayPromptSeenRef=useRef(false)
   const fileInput=useRef<HTMLInputElement>(null)
+  const finalPhotoInput=useRef<HTMLInputElement>(null)
+  const signatureCanvas=useRef<HTMLCanvasElement>(null)
   const {t,locale}=useLocale()
 
   const load=useCallback(async()=>{
@@ -64,9 +76,9 @@ export default function Driver() {
       // route_date is the operational date. Never use created_at or a UTC
       // conversion here: tomorrow's position 1 must not become today's route.
       const {data,error}=await client.from('routes')
-        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,priority,notes,position,mission_type,order_number,scheduled_at,completed_at')
+        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
         .eq('driver_id',userData.user.id)
-        .in('status',['published','pending','active','paused','issue'])
+        .in('status',['published','pending','active','paused','completed','issue','cancelled'])
         .order('position')
       if(error)throw error
       setMissions((data||[]) as Mission[])
@@ -88,9 +100,19 @@ export default function Driver() {
   },[t.signIn,t.unableLoadRoutes])
   const today=operationalDate()
   const {current,upcoming,completed}=selectDriverTodayQueue(missions,driverId,today)
+  const completionQueue=missions.filter(route=>route.driver_id===driverId&&route.route_date===today).reduce<Mission[][]>((groups,route)=>{
+    const key=[route.company_id,route.branch_id||'',route.route_date].join('|')
+    const group=groups.find(items=>[items[0]?.company_id,items[0]?.branch_id||'',items[0]?.route_date].join('|')===key)
+    if(group)group.push(route);else groups.push([route])
+    return groups
+  },[]).map(items=>({items,progress:routeProgress(items)})).filter(group=>group.progress.readyToFinalize&&group.items.some(item=>Boolean(item.arrived_at)))
+    .sort((left,right)=>(right.items[0]?.route_date||'').localeCompare(left.items[0]?.route_date||''))
+  const completionCandidate=completionQueue[0]
+  const finalStop=completionCandidate?.items.filter(item=>item.status!=='cancelled').slice().sort((left,right)=>right.position-left.position||right.id.localeCompare(left.id))[0]
   const selectedRoute=[current,...upcoming,...completed].find(item=>item?.id===selectedRouteId) || current
-  const taskLabels:Record<string,string>={pickup:t.pickup,delivery:t.delivery,return:'Return to branch',transfer:'Custom route'}
-  const currentTask=taskLabels[current?.mission_type||'delivery']||t.delivery
+  const currentKind=stopKind(current?.mission_type)
+  const hasArrived=Boolean(current?.arrived_at)
+  const currentAction=stopAction(currentKind,hasArrived)
   const temporaryExecution=membershipRole!=null&&membershipRole!=='driver'
   const homeHref=membershipRole?workspaceForStrictRole(membershipRole):'/driver'
   const temporaryLabel=locale==='es'?'Ruta temporal':locale==='fr'?'Itinéraire temporaire':'Temporary route'
@@ -106,7 +128,10 @@ export default function Driver() {
     return savedContact?.company_name||route.destination_name||destination||t.destination
   }
   const currentContact=contacts.find(contact=>addressKey(contact.address)===addressKey(current?.destination_address))
+  const currentPhone=current?.destination_phone||currentContact?.phone||null
   const routeMetaCopy=locale==='es'?{po:'PO / ORDER',instructions:'INSTRUCCIONES',call:'Llamar'}:locale==='fr'?{po:'PO / COMMANDE',instructions:'INSTRUCTIONS',call:'Appeler'}:{po:'PO / ORDER',instructions:'INSTRUCTIONS',call:'Call'}
+  const stopCopy=locale==='es'?{pickup:'PICKUP',delivery:'DELIVERY',branch:'RETURN TO BRANCH',arrived:'Llegué',confirmPickup:'Confirmar recogida',completeDelivery:'Completar entrega',completeBranch:'Llegué',takePhoto:'Tomar foto',signature:'Firma del cliente',addNote:'Añadir nota',report:'Reportar problema',openMaps:'Abrir en Google Maps',completeRoute:'Completar ruta'}:locale==='fr'?{pickup:'COLLECTE',delivery:'LIVRAISON',branch:'RETOUR À LA SUCCURSALE',arrived:'Arrivé',confirmPickup:'Confirmer la collecte',completeDelivery:'Terminer la livraison',completeBranch:'Arrivé',takePhoto:'Prendre une photo',signature:'Signature du client',addNote:'Ajouter une note',report:'Signaler un problème',openMaps:'Ouvrir dans Google Maps',completeRoute:'Terminer l’itinéraire'}:{pickup:'PICKUP',delivery:'DELIVERY',branch:'RETURN TO BRANCH',arrived:'Arrived',confirmPickup:'Confirm Pickup',completeDelivery:'Complete Delivery',completeBranch:'Arrived',takePhoto:'Take Photo',signature:'Customer Signature',addNote:'Add Note',report:'Report Issue',openMaps:'Open in Google Maps',completeRoute:'Complete Route'}
+  const currentStopLabel=stopCopy[currentKind]
 
   useEffect(()=>{
     const client=getSupabase()
@@ -190,11 +215,10 @@ export default function Driver() {
     try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
   }
 
-  const update=async(status:string)=>{
+  const update=async(status:string,evidenceFile?:File)=>{
     if(!current||busy)return false
     setBusy(true)
     try{
-      if(status==='completed'){fileInput.current?.click();return false}
       if(status==='active'&&!canDriverStartRoute(current,today)){setMessage(t.unableUpdateRoute);return false}
       const client=getSupabase()
       if(status==='active'){
@@ -206,16 +230,23 @@ export default function Driver() {
         }
       }
       const payload:Record<string,unknown>={status,updated_version:Date.now()}
-      if(status==='issue')payload.notes=[current.notes,issueNote].filter(Boolean).join('\n')
+      if(status==='issue'){
+        if(evidenceFile)await uploadMissionEvidence(evidenceFile,current.id,{kind:'issue',attachAsCompletionPhoto:false})
+        payload.driver_note=issueNote.trim()||current.driver_note||null
+      }
       const {error}=await client.from('routes').update(payload).eq('id',current.id).eq('driver_id',driverId).eq('company_id',current.company_id)
       if(error)throw error
       if(status==='active')await startTrackingForActiveRoute()
-      setModal(false);setIssueMode(false);setIssueNote('');await load();return true
+      setModal(false);setIssueNote('');setIssuePhoto(null);await load();return true
     }catch(error){setMessage(errorMessage(error,t.unableUpdateRoute));return false}
     finally{setBusy(false)}
   }
-  const completeWithPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);let completionLocation:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{completionLocation=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,completionLocation)}catch{}await completeMission(current.id,completionLocation);setModal(false);setIssueMode(false);setIssueNote('');setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
-  const completeWithGPS=async()=>{if(!current||busy)return;setBusy(true);try{const location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location);await completeMission(current.id,location);setMessage(t.complete);await load()}catch(error){setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}}
+  const markArrived=async()=>{if(!current||busy)return;setBusy(true);try{const {data,error}=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('Arrival was already recorded.');setMessage(locale==='es'?'Llegada registrada.':locale==='fr'?'Arrivée enregistrée.':'Arrival recorded.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const attachStopPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);setMessage(locale==='es'?'Foto guardada.':locale==='fr'?'Photo enregistrée.':'Photo saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const completeCurrentStop=async()=>{if(!current||busy)return;setBusy(true);try{if(currentKind!=='branch'&&!current.arrived_at)throw Error('Record arrival before completing this stop.');if(currentKind==='branch'){const{error:arrivalError}=await getSupabase().from('routes').update({arrived_at:current.arrived_at||new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId);if(arrivalError)throw arrivalError}let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}await completeMission(current.id,location);setModal(false);setIssueNote('');setIssuePhoto(null);setMessage(locale==='es'?'Parada completada.':locale==='fr'?'Arrêt terminé.':'Stop completed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const saveStopNote=async()=>{if(!current||busy||!stopNote.trim())return;setBusy(true);try{const {error}=await getSupabase().from('routes').update({driver_note:stopNote.trim(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId);if(error)throw error;setStopNote('');setStopNoteOpen(false);setMessage(locale==='es'?'Nota guardada.':locale==='fr'?'Note enregistrée.':'Note saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const saveSignatureAndComplete=async()=>{if(!current||busy||!signatureCanvas.current)return;setBusy(true);try{await saveCustomerSignature(signatureCanvas.current,{companyId:current.company_id,userId:driverId,missionId:current.id});setSignatureOpen(false);setMessage(locale==='es'?'Firma guardada.':locale==='fr'?'Signature enregistrée.':'Signature saved.');let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}await completeMission(current.id,location);await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const finalizeRoute=async(method:'normal'|'photo'|'issue',file?:File)=>{if(!finalStop||busy)return;setBusy(true);try{let photoPath:string|undefined;if(file){const evidence=await uploadMissionEvidence(file,finalStop.id,{kind:method==='issue'?'issue':'finalization',attachAsCompletionPhoto:false});photoPath=evidence.path}const {data,error}=await getSupabase().from('routes').update({finalized_at:new Date().toISOString(),finalization_method:method,finalization_note:finalizeNote.trim()||null,finalization_issue:method==='issue'?finalizeIssue||'Other':null,finalization_photo_path:photoPath||null,updated_version:Date.now()}).eq('id',finalStop.id).eq('driver_id',driverId).is('finalized_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('This route was already completed.');setFinalizeOpen(false);setFinalizeIssueOpen(false);setFinalizeIssue('');setFinalizeNote('');setFinalizeIssuePhoto(null);setMessage(locale==='es'?'Ruta completada.':locale==='fr'?'Itinéraire terminé.':'Route completed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
   const startRoute=async()=>{
     // Do not use window.open here: Safari and installed PWAs can treat it as
     // a pop-up and ignore the driver's tap. A same-tab navigation is reliable
@@ -227,7 +258,8 @@ export default function Driver() {
     setMessage(t.inProgress)
     window.location.assign(navigateUrl)
   }
-  const closeModal=()=>{if(busy)return;setModal(false);setIssueMode(false);setIssueNote('')}
+  const closeModal=()=>{if(busy)return;setModal(false);setIssueNote('');setIssuePhoto(null)}
+  const beginSignature=(event:React.PointerEvent<HTMLCanvasElement>)=>{const canvas=signatureCanvas.current;if(!canvas)return;canvas.setPointerCapture(event.pointerId);const rect=canvas.getBoundingClientRect();const context=canvas.getContext('2d');if(!context)return;context.lineWidth=3;context.lineCap='round';context.strokeStyle='#14233b';context.beginPath();context.moveTo((event.clientX-rect.left)*(canvas.width/rect.width),(event.clientY-rect.top)*(canvas.height/rect.height));const move=(moveEvent:PointerEvent)=>{context.lineTo((moveEvent.clientX-rect.left)*(canvas.width/rect.width),(moveEvent.clientY-rect.top)*(canvas.height/rect.height));context.stroke()};const stop=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',stop);canvas.removeEventListener('pointercancel',stop)};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop)}
 
   return <main className={`app ${styles.page}`}>
     <header className={styles.header}><div className={styles.brand}><Image src="/routehub-driver-new.jpg" alt="RouteHub Driver" width={48} height={48} priority/><strong>RouteHub</strong></div><NotificationBell /></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
@@ -240,26 +272,33 @@ export default function Driver() {
       <section className={styles.routeHero}>
       <section className={styles.mission}>
         <div className={styles.missionTop}><span>{isPastRoute?'PAST DUE':t.currentRoute}</span><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{isPastRoute?'PENDING':current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
-        <div className={styles.type}>{(current.mission_type||'delivery').toUpperCase()} {current.order_number&&<b>#{current.order_number}</b>}</div>
+        <div className={styles.type}>{currentStopLabel}</div>
         <h2>{routeLabel(current)}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
-        <div className={styles.details}><div><small>{routeMetaCopy.po}</small><strong>{current.order_number||'—'}</strong></div>{currentContact?.phone?<a className={styles.contactCall} href={`tel:${currentContact.phone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact.company_name||routeLabel(current)}</strong></span></a>:<div><small>{t.type}</small><strong>{currentTask}</strong></div>}</div>
-        {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span><b>{routeMetaCopy.instructions}</b>{current.notes}</span></div>}
+        {currentKind==='pickup'&&<div className={`${styles.details} ${styles.singleDetail}`}><div><small>{routeMetaCopy.po}</small><strong>{current.order_number||'—'}</strong></div></div>}
+        {currentKind==='delivery'&&currentPhone&&<div className={`${styles.details} ${styles.singleDetail}`}><a className={styles.contactCall} href={`tel:${currentPhone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact?.contact_name||currentContact?.company_name||routeLabel(current)}</strong></span></a></div>}
+        {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span><b>{currentKind==='delivery'?routeMetaCopy.instructions:'NOTES'}</b>{current.notes}</span></div>}
       </section>
       {current.status==='active'&&<LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>} 
       </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
-        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>setRouteView('map')}><MapPin size={18}/>{t.openGoogleMaps}</button>}
-        {current.status==='active'&&<button disabled={busy} className={styles.complete} onClick={()=>void completeWithGPS()}><Check size={19}/>{t.complete}</button>}
+        {current.status==='active'&&currentAction==='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>void markArrived()}><MapPin size={19}/>{stopCopy.arrived}</button>}
+        {current.status==='active'&&currentAction!=='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>void completeCurrentStop()}><Check size={19}/>{currentAction==='confirm_pickup'?stopCopy.confirmPickup:currentAction==='complete_branch'?stopCopy.completeBranch:stopCopy.completeDelivery}</button>}
+        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>setRouteView('map')}><MapPin size={18}/>{stopCopy.openMaps}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
-      {current.status==='active'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>void update('paused')}><Pause size={18}/>{t.pause}</button><button onClick={()=>{setIssueMode(true);setModal(true)}}><TriangleAlert size={18}/>{t.reportProblem}</button></div>}
-    </>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
+      {current.status==='active'&&currentAction!=='arrived'&&currentKind!=='branch'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>fileInput.current?.click()}><Camera size={18}/>{stopCopy.takePhoto}</button>{currentKind==='delivery'&&<button disabled={busy} onClick={()=>setSignatureOpen(true)}><Signature size={18}/>{stopCopy.signature}</button>}<button disabled={busy} onClick={()=>setStopNoteOpen(true)}><MessageSquare size={18}/>{stopCopy.addNote}</button><button disabled={busy} onClick={()=>setModal(true)}><TriangleAlert size={18}/>{stopCopy.report}</button></div>}
+      <input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void attachStopPhoto(file)}}/>
+    </>:completionCandidate&&finalStop?<section className={`card ${styles.finishRoute}`}><ClipboardCheck/><h2>{stopCopy.completeRoute}</h2><p>{locale==='es'?'Todos los stops requeridos están completados. Revisa y confirma cómo deseas cerrar la ruta.':locale==='fr'?'Tous les arrêts requis sont terminés. Vérifiez et confirmez la fin de l’itinéraire.':'All required stops are complete. Review and confirm how you want to finish the route.'}</p><button className={styles.complete} disabled={busy} onClick={()=>setFinalizeOpen(true)}><Check size={19}/>{stopCopy.completeRoute}</button></section>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
       {routeView&&current&&<section className={styles.routeOverlay} aria-label="Route details">
       <header className={styles.routeOverlayHeader}><button type="button" onClick={()=>routeView==='details'?setRouteView('queue'):setRouteView(null)} aria-label="Back"><ArrowLeft size={20}/></button><strong>{routeView==='details'?'Stop details':'Route'}</strong><span /></header>
-      {routeView==='queue'||routeView==='map'?<><div className={styles.routeTabs}><button className={routeView==='queue'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('queue')}>Stops</button><button className={routeView==='map'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('map')}>Map</button></div>{routeView==='queue'?<div className={styles.stopList}>{[current,...upcoming].filter(Boolean).map((route,index)=><button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{index+1}</span><span><strong>{routeLabel(route)}</strong><small>{(route.mission_type||'delivery').toUpperCase()} · {route.status==='active'?'In progress':route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):'Upcoming'}</small></span><ChevronRight size={18}/></button>)}</div>:<RoutePlanMap locale={locale} originAddress={current.origin_address} stops={[current,...upcoming].filter(Boolean).map(route=>({id:route.id,address:route.destination_address,label:routeLabel(route)}))}/>}</>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{routeLabel(selectedRoute)}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{(selectedRoute.mission_type||'delivery').toUpperCase()}</small><strong>{selectedRoute.status==='active'?'Current stop':selectedRoute.status==='completed'?t.completed:'Upcoming stop'}</strong>{selectedRoute.notes&&<p className={styles.detailNotes}>{selectedRoute.notes}</p>}{selectedRoute.id===current.id&&current.status==='active'&&<button className={styles.complete} type="button" onClick={()=>{setRouteView(null);setModal(true)}}><Check size={18}/>{t.complete}</button>}</div>}</section>}
-    {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="complete-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={issueMode?styles.modalDanger:styles.modalIcon}>{issueMode?<TriangleAlert/>:<Camera/>}</div><h2 id="complete-title">{issueMode?t.couldNotDeliver:t.complete}</h2><p>{issueMode?t.reason:t.photo}</p>{issueMode?<><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue')}>{t.saveIssue}</button></>:<><input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void completeWithPhoto(file)}}/><button className={styles.photoButton} disabled={busy} onClick={()=>fileInput.current?.click()}><Camera/>{t.completeWithPhoto}</button><button className={styles.issueLink} onClick={()=>setIssueMode(true)}>{t.couldNotDeliver}</button></>}</section></div>}
+      {routeView==='queue'||routeView==='map'?<><div className={styles.routeTabs}><button className={routeView==='queue'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('queue')}>Stops</button><button className={routeView==='map'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('map')}>Map</button></div>{routeView==='queue'?<div className={styles.stopList}>{[current,...upcoming].filter(Boolean).map((route,index)=><button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{index+1}</span><span><strong>{routeLabel(route)}</strong><small>{(route.mission_type||'delivery').toUpperCase()} · {route.status==='active'?'In progress':route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):'Upcoming'}</small></span><ChevronRight size={18}/></button>)}</div>:<RoutePlanMap locale={locale} originAddress={current.origin_address} stops={[current,...upcoming].filter(Boolean).map(route=>({id:route.id,address:route.destination_address,label:routeLabel(route)}))}/>}</>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{routeLabel(selectedRoute)}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{(selectedRoute.mission_type||'delivery').toUpperCase()}</small><strong>{selectedRoute.status==='active'?'Current stop':selectedRoute.status==='completed'?t.completed:'Upcoming stop'}</strong>{selectedRoute.notes&&<p className={styles.detailNotes}>{selectedRoute.notes}</p>}</div>}</section>}
+    {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="issue-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={styles.modalDanger}><TriangleAlert/></div><h2 id="issue-title">{stopCopy.report}</h2><p>{locale==='es'?'Describe el problema de esta parada.':locale==='fr'?'Décrivez le problème pour cet arrêt.':'Describe the issue for this stop.'}</p><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><label className={styles.evidencePicker}><Camera size={17}/><span>{locale==='es'?'Foto opcional':locale==='fr'?'Photo facultative':'Optional photo'}</span><input type="file" accept="image/*" capture="environment" onChange={event=>setIssuePhoto(event.target.files?.[0]||null)}/></label>{issuePhoto&&<small className={styles.fileName}>{issuePhoto.name}</small>}<button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue',issuePhoto||undefined)}>{t.saveIssue}</button></section></div>}
+    {stopNoteOpen&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="driver-note-title"><button className={styles.close} aria-label={t.close} onClick={()=>!busy&&setStopNoteOpen(false)}><X/></button><div className={styles.modalIcon}><MessageSquare/></div><h2 id="driver-note-title">{stopCopy.addNote}</h2><p>{locale==='es'?'Esta nota queda registrada en la parada.':locale==='fr'?'Cette note est enregistrée sur l’arrêt.':'This note is saved on the stop.'}</p><textarea autoFocus value={stopNote} onChange={event=>setStopNote(event.target.value)} placeholder={t.notes}/><button className={styles.photoButton} disabled={!stopNote.trim()||busy} onClick={()=>void saveStopNote()}>{locale==='es'?'Guardar nota':locale==='fr'?'Enregistrer la note':'Save note'}</button></section></div>}
+    {signatureOpen&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="signature-title"><button className={styles.close} aria-label={t.close} onClick={()=>!busy&&setSignatureOpen(false)}><X/></button><div className={styles.modalIcon}><Signature/></div><h2 id="signature-title">{stopCopy.signature}</h2><p>{locale==='es'?'Pide al cliente que firme dentro del recuadro.':locale==='fr'?'Demandez au client de signer dans le cadre.':'Ask the customer to sign in the box.'}</p><canvas ref={signatureCanvas} className={styles.signaturePad} width={700} height={260} onPointerDown={beginSignature}/><div className={styles.signatureActions}><button type="button" className={styles.secondaryButton} disabled={busy} onClick={()=>signatureCanvas.current?.getContext('2d')?.clearRect(0,0,700,260)}>{locale==='es'?'Borrar':locale==='fr'?'Effacer':'Clear'}</button><button type="button" className={styles.photoButton} disabled={busy} onClick={()=>void saveSignatureAndComplete()}>{locale==='es'?'Guardar y completar':locale==='fr'?'Enregistrer et terminer':'Save and complete'}</button></div></section></div>}
+    {finalizeOpen&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="finalize-title"><button className={styles.close} aria-label={t.close} onClick={()=>!busy&&setFinalizeOpen(false)}><X/></button><div className={styles.modalIcon}><ClipboardCheck/></div><h2 id="finalize-title">{stopCopy.completeRoute}?</h2><p>{locale==='es'?'Elige cómo deseas finalizar esta ruta.':locale==='fr'?'Choisissez comment terminer cet itinéraire.':'Choose how you want to finish this route.'}</p><button className={styles.photoButton} disabled={busy} onClick={()=>void finalizeRoute('normal')}><Check/>{stopCopy.completeRoute}</button><input ref={finalPhotoInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void finalizeRoute('photo',file)}}/><button className={styles.secondaryButton} disabled={busy} onClick={()=>finalPhotoInput.current?.click()}><Camera/>{locale==='es'?'Completar con foto':locale==='fr'?'Terminer avec photo':'Complete with Photo'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>setFinalizeIssueOpen(true)}><TriangleAlert/>{stopCopy.report}</button><button className={styles.secondaryButton} disabled={busy} onClick={()=>setFinalizeOpen(false)}>{t.cancel}</button></section></div>}
+    {finalizeIssueOpen&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="final-issue-title"><button className={styles.close} aria-label={t.close} onClick={()=>!busy&&setFinalizeIssueOpen(false)}><X/></button><div className={styles.modalDanger}><TriangleAlert/></div><h2 id="final-issue-title">{stopCopy.report}</h2><select value={finalizeIssue} onChange={event=>setFinalizeIssue(event.target.value)}><option value="">{locale==='es'?'Selecciona un problema':locale==='fr'?'Sélectionnez un problème':'Select an issue'}</option><option>Customer unavailable</option><option>Wrong address</option><option>Material issue</option><option>Could not complete</option><option>Other</option></select><textarea value={finalizeNote} onChange={event=>setFinalizeNote(event.target.value)} placeholder={t.notes}/><label className={styles.evidencePicker}><Camera size={17}/><span>{locale==='es'?'Foto opcional':locale==='fr'?'Photo facultative':'Optional photo'}</span><input type="file" accept="image/*" capture="environment" onChange={event=>setFinalizeIssuePhoto(event.target.files?.[0]||null)}/></label>{finalizeIssuePhoto&&<small className={styles.fileName}>{finalizeIssuePhoto.name}</small>}<button className={styles.issueButton} disabled={!finalizeIssue||busy} onClick={()=>void finalizeRoute('issue',finalizeIssuePhoto||undefined)}>{locale==='es'?'Guardar y finalizar':locale==='fr'?'Enregistrer et terminer':'Save and complete route'}</button></section></div>}
     {dayPromptOpen&&membershipRole==='driver'&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="day-start-title"><div className={styles.modalIcon}><Play/></div><h2 id="day-start-title">Start your driving day</h2><p>You have <strong>{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length}</strong> route{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length===1?'':'s'} assigned for today.</p><button className={styles.photoButton} disabled={busy} onClick={()=>void beginDrivingDay()}><Play/>{busy?'Starting…':'Start day and share location'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>{dayPromptSeenRef.current=true;setDayPromptOpen(false)}}>Not now</button></section></div>}
     <nav className={styles.driverNav} aria-label="Driver navigation"><button type="button" aria-current={!routeView?'page':undefined} onClick={()=>setRouteView(null)}><Home size={18}/><span>Today</span></button><button type="button" aria-current={routeView?'page':undefined} onClick={()=>current&&setRouteView('queue')}><List size={18}/><span>Route</span></button><Link href="/driver/history"><HistoryIcon size={18}/><span>{t.history}</span></Link><Link href="/driver/settings"><CircleUserRound size={18}/><span>Profile</span></Link></nav>
   </main>

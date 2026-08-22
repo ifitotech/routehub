@@ -5,7 +5,7 @@
 - `supabase/migrations` is the authoritative, immutable change history for RouteHub v2 after the original RouteHub base schema.
 - Never rename, reorder, or edit a migration that may already have been applied. Correct behavior with a new additive migration.
 - The repository contains two historical files with prefix `015`. Preserve both names. Apply `015_driving_sessions.sql` before `015_invitation_token_hash_compat.sql` when reconstructing the recorded order.
-- The highest current prefix is `025`; the next safe unused prefix is **`026`**.
+- The highest current prefix is `026`; the next safe unused prefix is **`027`**.
 - The v2 migrations are additive and do not create all core tables. They assume an existing baseline containing at least `companies`, `branches`, `users`, `company_users`, `routes`, `contacts`, `requests`, and platform administration tables.
 
 There is no canonical `RouteHub-v2/supabase/schema.sql`. The repository-level [`../supabase/schema.sql`](../supabase/schema.sql) is a legacy baseline snapshot from before the v2 migration history. It is missing later columns, functions, triggers, and RLS policies and is **not authoritative for the current database**. Do not apply it to an existing or production project. A fresh empty database still requires a reviewed baseline export before these additive migrations; do not infer that baseline from application code.
@@ -40,11 +40,13 @@ There is no canonical `RouteHub-v2/supabase/schema.sql`. The repository-level [`
 | `023_atomic_route_queue_reordering.sql` | Makes route ordering atomic within company + branch + route date + assignee and safely reassigns upcoming work. | Supersedes `021` for reorder calls. |
 | `024_one_active_route_per_driver.sql` | Enforces at most one active route per assigned person. | After route status and execution policies. |
 | `025_primary_driver_and_temporary_route_execution.sql` | Adds a branch Primary Driver, temporary team execution, scoped sessions, protected route writes, and privacy-oriented session cleanup. | After `015_driving_sessions`, `020`, `023`, and `024`. |
+| `026_stop_workflow_and_finalization.sql` | Adds arrival, contact, signature, final-route evidence fields, queue-finalization protection, and the allowed driver progress fields. | After `025`; additive and safe for legacy `return`/`transfer` rows. |
 
 ## Database feature map
 
 - **Base auth and membership:** legacy repository schema; `003`, `007`, `010`, `020`, `025`.
-- **Routes and completion:** `001`, `002`, `008`, `021`, `022`, `023`, `024`, `025`.
+- **Routes and completion:** `001`, `002`, `008`, `021`, `022`, `023`, `024`, `025`, `026`.
+- **Pickup, delivery, and branch workflow:** `026` presents legacy `return` rows as Return to Branch and keeps final route closure explicit.
 - **Route queue isolation and atomic reorder:** `023` (current); `021` is retained history.
 - **Invitations:** `003`, `014`, `015_invitation_token_hash_compat`, `016`-`020`.
 - **Driving sessions and operational location:** `015_driving_sessions`, `025`.
