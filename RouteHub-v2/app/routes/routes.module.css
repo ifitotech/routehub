@@ -87,3 +87,4 @@
 :global(html[data-theme="dark"]) .savedContact{border-color:#315579;background:#102b4a;color:#60a5fa}
 :global(html[data-theme="dark"]) .savedContact small,:global(html[data-theme="dark"]) .savedContact span{color:var(--rh-text-secondary)}
 :global(html[data-theme="dark"]) .savedContact strong{color:var(--rh-text)}
+@media(max-width:640px){.page{padding-bottom:190px}}

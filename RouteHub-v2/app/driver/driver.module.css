@@ -93,3 +93,5 @@
 .primaryActions .start{min-height:70px;font-size:19px}
 
 .driverNav{z-index:2000}
+.deliveryTools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.toolButton{min-height:64px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--rh-border);border-radius:14px;background:var(--rh-bg);color:var(--rh-text);font:inherit;font-weight:800}.toolButton svg{width:20px;color:var(--rh-primary)}
+@media(max-width:719px){.driverNav{left:50%;right:auto;bottom:10px;transform:translateX(-50%);width:min(530px,calc(100% - 28px));min-height:64px;padding:7px 10px;border-radius:22px}}
