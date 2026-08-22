@@ -36,6 +36,18 @@
 @media(prefers-reduced-motion:reduce){.metric,.action,.skeleton{animation:none;transition:none}}
 @media (max-width:640px){.dashboard{padding-left:18px;padding-right:18px}.brand{font-size:18px}.metric{min-height:140px;padding:14px}.metricValue{font-size:29px}.empty{padding:18px 15px}}
 
+.mobileLiveCard,.desktopOnly{display:none}
+@media (max-width:1023px){
+ .dashboard{height:100dvh;min-height:100dvh;overflow:hidden;padding-bottom:94px}.workspace{height:100%;min-height:0;overflow:hidden}
+ .intro{padding:12px 0 8px}.intro h1{font-size:24px}.intro p{display:none}.branch{min-height:52px;margin:2px 0 12px;padding:10px 12px;border-radius:14px}
+ .metricGrid{gap:8px}.metric{min-height:92px;padding:11px;border-radius:15px}.metricValue{font-size:26px}.metricIcon{width:30px;height:30px;border-radius:9px}.metricLabel{font-size:12px}.metricNote{font-size:10px}
+ .mobileLiveCard{display:block;margin-top:12px;padding:14px;border-radius:17px;background:linear-gradient(145deg,#102f63,#071a3a);color:#fff;box-shadow:0 10px 24px rgba(15,35,75,.16)}
+ .mobileLiveTop{display:flex;align-items:center;gap:10px}.mobileLiveIcon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:rgba(59,130,246,.22);color:#8fc1ff;flex:0 0 auto}.mobileLiveTop h2{margin:2px 0 0;font-size:15px;line-height:1.15}.mobileLiveEyebrow{display:block;color:#8fb9f5;font-size:10px;font-weight:800;letter-spacing:.14em}.liveStatus{margin-left:auto;display:flex;align-items:center;gap:5px;color:#4ade80;font-size:11px;font-weight:800;text-transform:uppercase}.liveStatus i{width:7px;height:7px;border-radius:50%;background:#34d399}
+ .mobileLiveStats{display:flex;gap:8px;margin:13px 0 11px}.mobileLiveStats span{flex:1;padding:9px 10px;border:1px solid rgba(148,183,235,.2);border-radius:11px;background:rgba(255,255,255,.06);color:#b9cbed;font-size:11px}.mobileLiveStats strong{display:block;color:#fff;font-size:21px;line-height:1.05}.mobileLiveCta{display:flex;align-items:center;gap:8px;min-height:42px;padding:0 12px;border-radius:11px;background:#2563eb;color:#fff;font-size:13px;font-weight:800;text-decoration:none}.mobileLiveCta svg:last-child{margin-left:auto}
+ .desktopLower,.actions,.sectionLabel,.desktopOnly{display:none}.nav{position:fixed;z-index:50;left:18px;right:18px;bottom:12px;margin:0}
+}
+@media (min-width:1024px){.mobileLiveCard{display:none}.desktopOnly{display:block}}
+
 :global(html[data-theme='light']) .dashboard{--manager-bg:#f4f7fb;--manager-surface:#fff;--manager-surface-2:#f8fafc;--manager-border:rgba(100,116,139,.18);--manager-text:#0f172a;--manager-muted:#64748b;background:linear-gradient(180deg,#f8fafc,#eef4fb)}
 :global(html[data-theme='light']) .dashboard .header{border-color:rgba(100,116,139,.16)}
 :global(html[data-theme='light']) .dashboard .branch,:global(html[data-theme='light']) .dashboard .metric,:global(html[data-theme='light']) .dashboard .todayCard,:global(html[data-theme='light']) .dashboard .action,:global(html[data-theme='light']) .dashboard .tool{background:rgba(255,255,255,.92);color:var(--manager-text)}

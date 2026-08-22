@@ -128,6 +128,12 @@ export default function Manager() {
       </Link>)}
     </section>
 
+    <section className={styles.mobileLiveCard} aria-label="Live operations">
+      <div className={styles.mobileLiveTop}><span className={styles.mobileLiveIcon}><Truck size={20} /></span><div><span className={styles.mobileLiveEyebrow}>LIVE OPERATIONS</span><h2>Operations at a glance</h2></div><span className={styles.liveStatus}><i />Live</span></div>
+      <div className={styles.mobileLiveStats}><span><strong>{loading ? '—' : summary.activeRoutes}</strong> active routes</span><span><strong>{loading ? '—' : summary.availableDrivers}</strong> drivers online</span></div>
+      <Link className={styles.mobileLiveCta} href="/routes/live"><MapPin size={18} />Open live map<ChevronRight size={18} /></Link>
+    </section>
+
     <section className={styles.desktopLower}>
     <div className={styles.desktopRoutesPanel}>
     <div className={styles.desktopPanelHeader}><h2>Active Routes</h2><Link href="/routes">View all</Link></div>
@@ -147,7 +153,7 @@ export default function Manager() {
       <Link className={styles.action} href="/routes/manage"><span className={styles.actionIcon}><RouteIcon size={21} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>{t.manageRoutes}</strong><span>{t.viewEditRoutes}</span></span><ChevronRight size={20} aria-hidden="true" /></Link>
     </section>
 
-    <TemporaryRouteAssignments />
+    <div className={styles.desktopOnly}><TemporaryRouteAssignments /></div>
     <nav className={`nav ${styles.nav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
     </section>
   </main>
