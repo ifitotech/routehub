@@ -10,7 +10,7 @@ import type {Role} from '../../../lib/types'
 import styles from '../manager-tools.module.css'
 
 type Member = {user_id: string; email?: string; role: string; branch_id?: string}
-type Branch = {id: string; name: string; primary_driver_id: string | null}
+type Branch = {id: string; name: string; primary_driver_id: string | null; auto_close_time?: string | null}
 
 export default function Team() {
   const {locale, t} = useLocale()
@@ -36,7 +36,12 @@ export default function Team() {
         : supabase.from('branches').select('id,name,primary_driver_id').eq('company_id',membership.company_id).order('name').limit(1).maybeSingle()
       const {data:branchData,error:branchError}=await branchQuery
       if(branchError)throw branchError
-      setBranch(branchData as Branch|null)
+      let branchWithSettings=branchData as Branch|null
+      if(branchWithSettings){
+        const settings=await supabase.from('branches').select('auto_close_time').eq('id',branchWithSettings.id).maybeSingle()
+        if(!settings.error&&settings.data)branchWithSettings={...branchWithSettings,auto_close_time:settings.data.auto_close_time}
+      }
+      setBranch(branchWithSettings)
       setMembers((data || []).map((row: any) => ({user_id: row.user_id, role: row.role, branch_id: row.branch_id, email: row.users?.email || undefined}))); setMessage('')
     } catch (error) { setMessage(error instanceof Error ? error.message : t.unableLoadTeam) }
   }, [t.loadingTeam, t.signInTeam, t.noMembership, t.unableLoadTeam])
@@ -59,9 +64,15 @@ export default function Team() {
     setMessage(error?error.message:primaryCopy.saved)
     if(!error)setBranch({...branch,primary_driver_id:userId||null})
   }
+  const setAutoCloseTime=async(value:string)=>{
+    if(!branch)return
+    const {error}=await getSupabase().from('branches').update({auto_close_time:value}).eq('id',branch.id)
+    setMessage(error?error.message:(locale==='es'?'Hora de cierre actualizada.':locale==='fr'?'Heure de fermeture mise à jour.':'Automatic close time updated.'))
+    if(!error)setBranch({...branch,auto_close_time:value})
+  }
   return <main className="app"><div className={styles.page}>
     <header className={styles.header}><div><p className={styles.eyebrow}>{t.managerTeam}</p><h1 className={styles.title}>{t.teamMembers}</h1><p className={styles.subtitle}>{t.teamHelp}</p></div><Link className={styles.headerAction} href="/manager/invitations"><UserPlus size={19}/>{t.inviteMember}</Link></header>
-    {branch&&<section className={styles.panel}><div className={styles.panelHeader}><div><h2>{primaryCopy.title}</h2><p>{branch.name} · {primaryCopy.help}</p></div><span className={styles.panelIcon}><Star size={20}/></span></div><label className={styles.field}>{primaryCopy.choose}<select value={branch.primary_driver_id||''} onChange={event=>void setPrimaryDriver(event.target.value)}><option value="">{primaryCopy.choose}</option>{members.filter(member=>member.role==='driver'&&(member.branch_id==null||member.branch_id===branch.id)).map(member=><option key={member.user_id} value={member.user_id}>★ {member.email||t.driver}</option>)}</select></label></section>}
+    {branch&&<section className={styles.panel}><div className={styles.panelHeader}><div><h2>{primaryCopy.title}</h2><p>{branch.name} · {primaryCopy.help}</p></div><span className={styles.panelIcon}><Star size={20}/></span></div><label className={styles.field}>{primaryCopy.choose}<select value={branch.primary_driver_id||''} onChange={event=>void setPrimaryDriver(event.target.value)}><option value="">{primaryCopy.choose}</option>{members.filter(member=>member.role==='driver'&&(member.branch_id==null||member.branch_id===branch.id)).map(member=><option key={member.user_id} value={member.user_id}>★ {member.email||t.driver}</option>)}</select></label><label className={styles.field}>{locale==='es'?'Cierre automático de jornada':locale==='fr'?'Fermeture automatique de la journée':'Automatic driving-day close'}<input type="time" value={(branch.auto_close_time||'18:00').slice(0,5)} onChange={event=>void setAutoCloseTime(event.target.value)}/><small>{locale==='es'?'Solo cierra si no quedan rutas pendientes.':locale==='fr'?'Ferme uniquement si aucun itinéraire ne reste.':'Closes only when no routes remain pending.'}</small></label></section>}
     <section className={styles.stats} aria-label={t.teamOverview}><article className={styles.stat}><span>{t.teamMembers}</span><strong>{members.length}</strong></article><article className={styles.stat}><span>{t.drivers}</span><strong>{members.filter(member => member.role === 'driver').length}</strong></article><article className={styles.stat}><span>{t.managers}</span><strong>{members.filter(member => ['branch_manager', 'operations_manager'].includes(member.role)).length}</strong></article></section>
     {message && <p className={styles.status} role="status" aria-live="polite">{message}</p>}<h2 className={styles.sectionLabel}>{t.currentTeam}</h2><section className={styles.list} aria-label={t.currentTeamLabel}>{members.map(member => <article className={styles.memberCard} key={member.user_id}><div className={styles.avatar} aria-hidden="true">{(member.email || 'TM').slice(0, 2)}</div><div className={styles.identity}><h2>{member.email || t.teamMember}</h2><p>{labelFor(member)}</p></div><select className={styles.roleSelect} aria-label={`${t.role}: ${member.email || t.teamMember}`} value={member.role} onChange={event => updateRole(member.user_id, event.target.value)}>{roles.map(({role, label}) => <option value={role} key={role}>{label}</option>)}</select><button className={styles.dangerButton} aria-label={`${t.removeMember} ${member.email || t.teamMember}`} onClick={() => setPendingRemoval(member)}><Trash2 size={18}/></button></article>)}{!members.length && !message && <section className={styles.empty}><span><UsersRound size={24}/></span><h2>{t.noTeam}</h2><p>{t.noTeamHelp}</p></section>}</section>
   </div>{pendingRemoval && <div className={styles.confirmBackdrop} role="presentation"><section className={styles.confirmDialog} role="dialog" aria-modal="true" aria-labelledby="remove-member-title"><h2 id="remove-member-title">{t.removeMember}</h2><p>{pendingRemoval.email || t.teamMember} {t.removeMemberHelp}</p><div className={styles.confirmActions}><button className={styles.confirmCancel} onClick={() => setPendingRemoval(null)}>{t.keepMember}</button><button className={styles.confirmRemove} onClick={remove}>{t.removeMember}</button></div></section></div>}</main>

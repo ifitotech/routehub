@@ -53,6 +53,7 @@ export default function Driver() {
   const [driverId,setDriverId]=useState('')
   const [membershipRole,setMembershipRole]=useState<Role|null>(null)
   const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
+  const [autoCloseTime,setAutoCloseTime]=useState('18:00')
   const [locationStatus,setLocationStatus]=useState('')
   const [loading,setLoading]=useState(true)
   const [loadError,setLoadError]=useState('')
@@ -76,6 +77,11 @@ export default function Driver() {
       setDriverId(userData.user.id)
       const membership=await currentMembership()
       setMembershipRole(membership.role as Role)
+      if(membership.branch_id){
+        const {data:branchSettings,error:branchSettingsError}=await client.from('branches').select('auto_close_time').eq('id',membership.branch_id).maybeSingle()
+        // Keep older deployments working until the additive branch migration is applied.
+        if(!branchSettingsError&&branchSettings?.auto_close_time)setAutoCloseTime(String(branchSettings.auto_close_time).slice(0,5))
+      }
       // route_date is the operational date. Never use created_at or a UTC
       // conversion here: tomorrow's position 1 must not become today's route.
       const {data,error}=await client.from('routes')
@@ -205,7 +211,9 @@ export default function Driver() {
     if(!drivingSession||drivingSession.session_kind!=='driving_day'||!driverId)return
     const checkAutoClose=async()=>{
       const now=new Date()
-      if(now.getHours()<18||autoClosingDayRef.current)return
+      const [closeHour,closeMinute]=autoCloseTime.split(':').map(Number)
+      const closeMinutes=(Number.isFinite(closeHour)?closeHour:18)*60+(Number.isFinite(closeMinute)?closeMinute:0)
+      if((now.getHours()*60+now.getMinutes())<closeMinutes||autoClosingDayRef.current)return
       const hasPendingWork=missions.some(item=>['published','pending','active','paused'].includes(item.status))
       if(current||hasPendingWork)return
       autoClosingDayRef.current=true
@@ -220,7 +228,7 @@ export default function Driver() {
     void checkAutoClose()
     const timer=window.setInterval(()=>void checkAutoClose(),60_000)
     return()=>window.clearInterval(timer)
-  },[current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
+  },[autoCloseTime,current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
 
   const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}&travelmode=driving`
   const openGoogleMaps=()=>{
