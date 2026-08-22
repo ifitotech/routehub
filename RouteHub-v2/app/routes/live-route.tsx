@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {ArrowRight, ExternalLink, MapPin, Navigation, Radio, Route as RouteIcon} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
@@ -8,6 +9,8 @@ import {formatLocationAge, loadActiveDrivingSessions, type DrivingSession} from 
 import {locationFreshness} from '../../lib/route-assignment'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './live-route.module.css'
+
+const InteractiveLiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 
 type LiveRouteRecord={id:string;driver_id:string|null;mission_type:string|null;status:string|null;destination_name:string|null;destination_address:string|null;origin_address:string|null;scheduled_at:string|null;route_date:string|null;position:number|null;priority:string|null}
 type Person={user_id:string;email:string|null;role:string|null}
@@ -92,6 +95,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
       {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:sessions.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:<>
         {sessions.length>1&&<div className={styles.people} aria-label={t.driver}>{sessions.map(session=><button className={`${styles.person} ${session.driver_id===selected?.driver_id?styles.personActive:''}`} key={session.id} onClick={()=>setSelectedDriver(session.driver_id)}>{labels.get(session.driver_id)||t.driver}</button>)}</div>}
         <div className={styles.mapCard}>
+          <InteractiveLiveRouteMap originAddress={selectedRoute?.origin_address} destinationAddress={destination} driverLocation={hasLocation?{lat:Number(selected?.last_lat),lng:Number(selected?.last_lng)}:null} driverUpdatedAt={selected?.last_updated_at} title="Ruta en vivo"/>
           {mapEmbed&&<iframe className={styles.openStreetMap} title={`${labels.get(selected?.driver_id||'')||t.driver} ${t.liveRoute}`} src={mapEmbed} loading="lazy" referrerPolicy="no-referrer"/>}
           <div className={styles.locationPanel}>
             <span className={styles.mapLabel}><Navigation size={14}/>{t.live}</span>
