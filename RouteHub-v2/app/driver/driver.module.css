@@ -79,5 +79,10 @@
 /* Leaflet's marker panes sit above normal page content. Dialogs must always
    form a higher isolated layer so signatures, notes and issue forms stay
    fully usable. */
-.backdrop{z-index:2000;isolation:isolate}
-.backdrop .modal{z-index:1}
+.backdrop{z-index:2000;isolation:isolate;inset:0 auto auto 0;width:100%;height:var(--rh-driver-viewport-height,100dvh);overflow:hidden}
+.backdrop .modal{z-index:1;max-height:calc(var(--rh-driver-viewport-height,100dvh) - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:560px){
+ .backdrop{align-items:flex-end;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+ .backdrop .modal{width:100%;max-height:calc(var(--rh-driver-viewport-height,100dvh) - 24px);padding:22px}
+ .backdrop .modal textarea{min-height:94px}
+}

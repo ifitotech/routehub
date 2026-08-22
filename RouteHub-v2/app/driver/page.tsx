@@ -133,6 +133,23 @@ export default function Driver() {
   const stopCopy=locale==='es'?{pickup:'PICKUP',delivery:'DELIVERY',branch:'RETURN TO BRANCH',arrived:'Llegué',confirmPickup:'Confirmar recogida',completeDelivery:'Completar entrega',completeBranch:'Llegué',takePhoto:'Tomar foto',signature:'Firma del cliente',addNote:'Añadir nota',report:'Reportar problema',openMaps:'Abrir en Google Maps',completeRoute:'Completar ruta'}:locale==='fr'?{pickup:'COLLECTE',delivery:'LIVRAISON',branch:'RETOUR À LA SUCCURSALE',arrived:'Arrivé',confirmPickup:'Confirmer la collecte',completeDelivery:'Terminer la livraison',completeBranch:'Arrivé',takePhoto:'Prendre une photo',signature:'Signature du client',addNote:'Ajouter une note',report:'Signaler un problème',openMaps:'Ouvrir dans Google Maps',completeRoute:'Terminer l’itinéraire'}:{pickup:'PICKUP',delivery:'DELIVERY',branch:'RETURN TO BRANCH',arrived:'Arrived',confirmPickup:'Confirm Pickup',completeDelivery:'Complete Delivery',completeBranch:'Arrived',takePhoto:'Take Photo',signature:'Customer Signature',addNote:'Add Note',report:'Report Issue',openMaps:'Open in Google Maps',completeRoute:'Complete Route'}
   const currentStopLabel=stopCopy[currentKind]
 
+  // iOS keeps `position: fixed` dialogs sized to the layout viewport while
+  // its keyboard uses the smaller visual viewport. Keep every driver form in
+  // the actually visible space so textareas never sit behind the keyboard.
+  useEffect(()=>{
+    const viewport=window.visualViewport
+    if(!viewport)return
+    const syncViewportHeight=()=>document.documentElement.style.setProperty('--rh-driver-viewport-height',`${Math.round(viewport.height)}px`)
+    syncViewportHeight()
+    viewport.addEventListener('resize',syncViewportHeight)
+    viewport.addEventListener('scroll',syncViewportHeight)
+    return()=>{
+      viewport.removeEventListener('resize',syncViewportHeight)
+      viewport.removeEventListener('scroll',syncViewportHeight)
+      document.documentElement.style.removeProperty('--rh-driver-viewport-height')
+    }
+  },[])
+
   useEffect(()=>{
     const client=getSupabase()
     let disposed=false
