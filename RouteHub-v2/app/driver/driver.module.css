@@ -81,6 +81,7 @@
    fully usable. */
 .backdrop{z-index:2000;isolation:isolate;inset:0 auto auto 0;width:100%;height:var(--rh-driver-viewport-height,100dvh);overflow:hidden}
 .backdrop .modal{z-index:1;max-height:calc(var(--rh-driver-viewport-height,100dvh) - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal input{width:100%;min-height:48px;margin:8px 0 12px;padding:12px;border:1px solid var(--rh-border);border-radius:12px;background:var(--rh-surface);color:var(--rh-text);font:inherit}
 @media(max-width:560px){
  .backdrop{align-items:flex-end;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
  .backdrop .modal{width:100%;max-height:calc(var(--rh-driver-viewport-height,100dvh) - 24px);padding:22px}
