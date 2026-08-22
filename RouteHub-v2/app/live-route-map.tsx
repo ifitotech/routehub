@@ -16,6 +16,7 @@ type Props={
   showHeader?:boolean
   showLocationUpdated?:boolean
   interactive?:boolean
+  locale?:string
 }
 
 type GeocodeResponse={coordinate:RouteCoordinate|null;label?:string}
@@ -46,7 +47,7 @@ async function geocode(address?:string|null){
  return payload.coordinate||null
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo',showHeader=true,showLocationUpdated=true,interactive=true}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,locale='en'}:Props){
  const[origin,setOrigin]=useState<RouteCoordinate|null>(null)
  const[destination,setDestination]=useState<RouteCoordinate|null>(null)
   const[line,setLine]=useState<RouteCoordinate[]>([])
@@ -83,19 +84,20 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
 
  const visiblePoints=useMemo(()=>[origin,destination,driverLocation].filter(Boolean) as RouteCoordinate[],[origin,destination,driverLocation])
  const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}
+ const copy=locale==='es'?{connected:'Conductor conectado',scheduled:'Ruta programada',live:'EN VIVO',waiting:'EN ESPERA',loading:'Preparando el mapa…',unavailable:'No pudimos ubicar esta ruta todavía.',map:'Mapa de ruta en vivo',driver:'Conductor',origin:'Origen de ruta',destination:'Destino de ruta',updated:'Ubicación actualizada'}:locale==='fr'?{connected:'Conducteur connecté',scheduled:'Itinéraire programmé',live:'EN DIRECT',waiting:'EN ATTENTE',loading:'Préparation de la carte…',unavailable:'Nous ne pouvons pas encore localiser cet itinéraire.',map:'Carte de l’itinéraire',driver:'Conducteur',origin:'Origine de l’itinéraire',destination:'Destination de l’itinéraire',updated:'Position actualisée'}:{connected:'Driver connected',scheduled:'Route scheduled',live:'LIVE',waiting:'WAITING',loading:'Preparing map…',unavailable:'We could not locate this route yet.',map:'Live route map',driver:'Driver',origin:'Route origin',destination:'Route destination',updated:'Location updated'}
 
  return <section className="live-route-map">
-  {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?'Conductor conectado':'Ruta programada'}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?'EN VIVO':'EN ESPERA'}</span></header>}
+  {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?copy.connected:copy.scheduled}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?copy.live:copy.waiting}</span></header>}
   <div className="live-route-canvas">
-   {loading?<div className="live-route-loading">Preparando el mapa…</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>No pudimos ubicar esta ruta todavía.</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label="Mapa de ruta en vivo">
+   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label={copy.map}>
     <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
     <FitBounds points={visiblePoints}/>
     {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
     {origin&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')}><Tooltip direction="top" offset={[0,-18]}>Punto A</Tooltip></Marker>}
     {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination')}><Tooltip direction="top" offset={[0,-18]}>Punto B</Tooltip></Marker>}
-    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')}><Tooltip direction="top" offset={[0,-20]} permanent>Conductor</Tooltip></Marker>}
+    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
   </div>
-  <footer><span><b>A</b>{originAddress||'Origen de ruta'}</span><span><b>B</b>{destinationAddress||'Destino de ruta'}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>Ubicación actualizada</small>}</footer>
+  <footer><span><b>A</b>{originAddress||copy.origin}</span><span><b>B</b>{destinationAddress||copy.destination}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
  </section>
 }
