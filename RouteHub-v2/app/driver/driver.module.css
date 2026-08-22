@@ -75,3 +75,9 @@
  .secondaryActions{display:grid;margin-top:7px;gap:7px}
  .secondaryActions button{min-height:40px;font-size:12px}
 }
+
+/* Leaflet's marker panes sit above normal page content. Dialogs must always
+   form a higher isolated layer so signatures, notes and issue forms stay
+   fully usable. */
+.backdrop{z-index:2000;isolation:isolate}
+.backdrop .modal{z-index:1}

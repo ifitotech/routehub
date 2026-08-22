@@ -178,7 +178,40 @@ export default function Driver() {
     return()=>{disposed=true;window.clearInterval(interval)}
   },[driverId,drivingSession,t.locationPermissionDenied])
 
-  const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}`
+  const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}&travelmode=driving`
+  const openGoogleMaps=()=>{
+    const destination=current?.destination_address?.trim()
+    if(!destination){window.location.assign(navigateUrl);return}
+    const encodedDestination=encodeURIComponent(destination)
+    const userAgent=navigator.userAgent||''
+    const isAppleDevice=/iPad|iPhone|iPod/.test(userAgent)
+    const isAndroid=/Android/i.test(userAgent)
+    if(!isAppleDevice&&!isAndroid){window.location.assign(navigateUrl);return}
+
+    // Prefer the installed Google Maps app. If it is unavailable, return to
+    // the standard Google Maps directions page instead of leaving the driver
+    // on a blank custom-scheme URL.
+    const appUrl=isAppleDevice
+      ? `comgooglemaps://?daddr=${encodedDestination}&directionsmode=driving`
+      : `google.navigation:q=${encodedDestination}&mode=d`
+    let openedNativeApp=false
+    let fallbackTimer:number|undefined
+    const cancelFallback=()=>{
+      openedNativeApp=true
+      if(fallbackTimer)window.clearTimeout(fallbackTimer)
+      document.removeEventListener('visibilitychange',onVisibilityChange)
+      window.removeEventListener('pagehide',cancelFallback)
+    }
+    const onVisibilityChange=()=>{if(document.visibilityState==='hidden')cancelFallback()}
+    document.addEventListener('visibilitychange',onVisibilityChange)
+    window.addEventListener('pagehide',cancelFallback,{once:true})
+    window.location.href=appUrl
+    fallbackTimer=window.setTimeout(()=>{
+      document.removeEventListener('visibilitychange',onVisibilityChange)
+      window.removeEventListener('pagehide',cancelFallback)
+      if(!openedNativeApp)window.location.assign(navigateUrl)
+    },1200)
+  }
   const startTrackingForActiveRoute=async()=>{
     if(!driverId||!current)return false
     try{
@@ -243,9 +276,9 @@ export default function Driver() {
   }
   const markArrived=async()=>{if(!current||busy)return;setBusy(true);try{const {data,error}=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('Arrival was already recorded.');setMessage(locale==='es'?'Llegada registrada.':locale==='fr'?'Arrivée enregistrée.':'Arrival recorded.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
   const attachStopPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await uploadMissionEvidence(file,current.id);setMessage(locale==='es'?'Foto guardada.':locale==='fr'?'Photo enregistrée.':'Photo saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
-  const completeCurrentStop=async()=>{if(!current||busy)return;setBusy(true);try{if(currentKind!=='branch'&&!current.arrived_at)throw Error('Record arrival before completing this stop.');if(currentKind==='branch'){const{error:arrivalError}=await getSupabase().from('routes').update({arrived_at:current.arrived_at||new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId);if(arrivalError)throw arrivalError}let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}await completeMission(current.id,location);setModal(false);setIssueNote('');setIssuePhoto(null);setMessage(locale==='es'?'Parada completada.':locale==='fr'?'Arrêt terminé.':'Stop completed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const completeCurrentStop=async()=>{if(!current||busy)return;setBusy(true);try{if(currentKind==='pickup'&&!current.arrived_at)throw Error('Record arrival before completing this stop.');if((currentKind==='branch'||currentKind==='delivery')&&!current.arrived_at){const{error:arrivalError}=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null);if(arrivalError)throw arrivalError}let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}await completeMission(current.id,location);setModal(false);setIssueNote('');setIssuePhoto(null);setMessage(locale==='es'?'Parada completada.':locale==='fr'?'Arrêt terminé.':'Stop completed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
   const saveStopNote=async()=>{if(!current||busy||!stopNote.trim())return;setBusy(true);try{const {error}=await getSupabase().from('routes').update({driver_note:stopNote.trim(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId);if(error)throw error;setStopNote('');setStopNoteOpen(false);setMessage(locale==='es'?'Nota guardada.':locale==='fr'?'Note enregistrée.':'Note saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
-  const saveSignatureAndComplete=async()=>{if(!current||busy||!signatureCanvas.current)return;setBusy(true);try{await saveCustomerSignature(signatureCanvas.current,{companyId:current.company_id,userId:driverId,missionId:current.id});setSignatureOpen(false);setMessage(locale==='es'?'Firma guardada.':locale==='fr'?'Signature enregistrée.':'Signature saved.');let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}await completeMission(current.id,location);await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const saveSignatureAndComplete=async()=>{if(!current||busy||!signatureCanvas.current)return;setBusy(true);try{await saveCustomerSignature(signatureCanvas.current,{companyId:current.company_id,userId:driverId,missionId:current.id});if(!current.arrived_at){const{error:arrivalError}=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null);if(arrivalError)throw arrivalError}setSignatureOpen(false);setMessage(locale==='es'?'Firma guardada.':locale==='fr'?'Signature enregistrée.':'Signature saved.');let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}await completeMission(current.id,location);await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
   const finalizeRoute=async(method:'normal'|'photo'|'issue',file?:File)=>{if(!finalStop||busy)return;setBusy(true);try{let photoPath:string|undefined;if(file){const evidence=await uploadMissionEvidence(file,finalStop.id,{kind:method==='issue'?'issue':'finalization',attachAsCompletionPhoto:false});photoPath=evidence.path}const {data,error}=await getSupabase().from('routes').update({finalized_at:new Date().toISOString(),finalization_method:method,finalization_note:finalizeNote.trim()||null,finalization_issue:method==='issue'?finalizeIssue||'Other':null,finalization_photo_path:photoPath||null,updated_version:Date.now()}).eq('id',finalStop.id).eq('driver_id',driverId).is('finalized_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('This route was already completed.');setFinalizeOpen(false);setFinalizeIssueOpen(false);setFinalizeIssue('');setFinalizeNote('');setFinalizeIssuePhoto(null);setMessage(locale==='es'?'Ruta completada.':locale==='fr'?'Itinéraire terminé.':'Route completed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
   const startRoute=async()=>{
     // Do not use window.open here: Safari and installed PWAs can treat it as
@@ -256,7 +289,7 @@ export default function Driver() {
       : await update('active')
     if(!saved)return
     setMessage(t.inProgress)
-    window.location.assign(navigateUrl)
+    openGoogleMaps()
   }
   const closeModal=()=>{if(busy)return;setModal(false);setIssueNote('');setIssuePhoto(null)}
   const beginSignature=(event:React.PointerEvent<HTMLCanvasElement>)=>{const canvas=signatureCanvas.current;if(!canvas)return;canvas.setPointerCapture(event.pointerId);const rect=canvas.getBoundingClientRect();const context=canvas.getContext('2d');if(!context)return;context.lineWidth=3;context.lineCap='round';context.strokeStyle='#14233b';context.beginPath();context.moveTo((event.clientX-rect.left)*(canvas.width/rect.width),(event.clientY-rect.top)*(canvas.height/rect.height));const move=(moveEvent:PointerEvent)=>{context.lineTo((moveEvent.clientX-rect.left)*(canvas.width/rect.width),(moveEvent.clientY-rect.top)*(canvas.height/rect.height));context.stroke()};const stop=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',stop);canvas.removeEventListener('pointercancel',stop)};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop)}
@@ -283,12 +316,12 @@ export default function Driver() {
       </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
-        {current.status==='active'&&currentAction==='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>void markArrived()}><MapPin size={19}/>{stopCopy.arrived}</button>}
-        {current.status==='active'&&currentAction!=='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>void completeCurrentStop()}><Check size={19}/>{currentAction==='confirm_pickup'?stopCopy.confirmPickup:currentAction==='complete_branch'?stopCopy.completeBranch:stopCopy.completeDelivery}</button>}
+        {current.status==='active'&&currentKind!=='delivery'&&currentAction==='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>void markArrived()}><MapPin size={19}/>{stopCopy.arrived}</button>}
+        {current.status==='active'&&(currentKind==='delivery'||currentAction!=='arrived')&&<button disabled={busy} className={styles.complete} onClick={()=>void completeCurrentStop()}><Check size={19}/>{currentKind==='delivery'?stopCopy.completeDelivery:currentAction==='confirm_pickup'?stopCopy.confirmPickup:stopCopy.completeBranch}</button>}
         {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>setRouteView('map')}><MapPin size={18}/>{stopCopy.openMaps}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
-      {current.status==='active'&&currentAction!=='arrived'&&currentKind!=='branch'&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>fileInput.current?.click()}><Camera size={18}/>{stopCopy.takePhoto}</button>{currentKind==='delivery'&&<button disabled={busy} onClick={()=>setSignatureOpen(true)}><Signature size={18}/>{stopCopy.signature}</button>}<button disabled={busy} onClick={()=>setStopNoteOpen(true)}><MessageSquare size={18}/>{stopCopy.addNote}</button><button disabled={busy} onClick={()=>setModal(true)}><TriangleAlert size={18}/>{stopCopy.report}</button></div>}
+      {current.status==='active'&&currentKind!=='branch'&&(currentKind==='delivery'||currentAction!=='arrived')&&<div className={styles.secondaryActions}><button disabled={busy} onClick={()=>fileInput.current?.click()}><Camera size={18}/>{stopCopy.takePhoto}</button>{currentKind==='delivery'&&<button disabled={busy} onClick={()=>setSignatureOpen(true)}><Signature size={18}/>{stopCopy.signature}</button>}<button disabled={busy} onClick={()=>setStopNoteOpen(true)}><MessageSquare size={18}/>{stopCopy.addNote}</button><button disabled={busy} onClick={()=>setModal(true)}><TriangleAlert size={18}/>{stopCopy.report}</button></div>}
       <input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void attachStopPhoto(file)}}/>
     </>:completionCandidate&&finalStop?<section className={`card ${styles.finishRoute}`}><ClipboardCheck/><h2>{stopCopy.completeRoute}</h2><p>{locale==='es'?'Todos los stops requeridos están completados. Revisa y confirma cómo deseas cerrar la ruta.':locale==='fr'?'Tous les arrêts requis sont terminés. Vérifiez et confirmez la fin de l’itinéraire.':'All required stops are complete. Review and confirm how you want to finish the route.'}</p><button className={styles.complete} disabled={busy} onClick={()=>setFinalizeOpen(true)}><Check size={19}/>{stopCopy.completeRoute}</button></section>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
       {routeView&&current&&<section className={styles.routeOverlay} aria-label="Route details">
