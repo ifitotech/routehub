@@ -11,8 +11,9 @@ type Props={
  originAddress?:string|null
  destinationAddress?:string|null
  driverLocation?:RouteCoordinate|null
- driverUpdatedAt?:string|null
- title?:string
+  driverUpdatedAt?:string|null
+  title?:string
+  showHeader?:boolean
 }
 
 type GeocodeResponse={coordinate:RouteCoordinate|null;label?:string}
@@ -43,7 +44,7 @@ async function geocode(address?:string|null){
  return payload.coordinate||null
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo'}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Ruta en vivo',showHeader=true}:Props){
  const[origin,setOrigin]=useState<RouteCoordinate|null>(null)
  const[destination,setDestination]=useState<RouteCoordinate|null>(null)
   const[line,setLine]=useState<RouteCoordinate[]>([])
@@ -82,7 +83,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
  const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}
 
  return <section className="live-route-map">
-  <header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?'Conductor conectado':'Ruta programada'}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?'EN VIVO':'EN ESPERA'}</span></header>
+  {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?'Conductor conectado':'Ruta programada'}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?'EN VIVO':'EN ESPERA'}</span></header>}
   <div className="live-route-canvas">
    {loading?<div className="live-route-loading">Preparando el mapa…</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>No pudimos ubicar esta ruta todavía.</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} aria-label="Mapa de ruta en vivo">
     <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
