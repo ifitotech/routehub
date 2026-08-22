@@ -30,7 +30,7 @@ function FitBounds({points}:{points:RouteCoordinate[]}){
  useEffect(()=>{
   if(!points.length)return
   if(points.length===1){map.setView([points[0].lat,points[0].lng],13);return}
-  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[30,30],maxZoom:14})
+  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[16,16],maxZoom:15})
  },[map,key,points])
  return null
 }
