@@ -61,6 +61,9 @@
 .routeHero :global(.live-route-canvas){height:170px}.routeHero :global(.live-route-map-head){padding:10px 14px}.routeHero :global(.live-route-map > footer){padding:8px 12px;font-size:10px}
 @media(max-width:560px){.header{margin-bottom:0;height:38px}.brand img{width:32px;height:32px}.brand strong{font-size:17px}.workspaceHeading{margin-top:0;margin-bottom:6px}.workspaceHeading .workspace{font-size:11px}.workspaceHeading h1{margin:2px 0;font-size:25px}.drivingBar{margin:4px 0 8px;min-height:40px;padding:5px 8px}.startDay,.endDay{min-height:30px;padding:5px 9px;font-size:11px}}
 .routeHero .mission{padding:14px}.routeHero .type{margin-top:10px}.routeHero .mission h2{font-size:clamp(24px,6.5vw,31px);margin:6px 0}.routeHero .address{font-size:14px}.routeHero .details{margin:12px -14px -14px}.routeHero .details div{padding:9px 14px;min-height:58px}
+/* Leaflet panes use z-index values up to the hundreds. Route must sit above
+   the active Today map while the driver inspects the complete plan. */
+.routeOverlay{z-index:1000}
 @media(max-width:560px){
  .page:has(.routeHero){position:fixed;inset:0;width:100%;height:100dvh;box-sizing:border-box;overflow:hidden;padding-bottom:calc(88px + env(safe-area-inset-bottom))}
  /* Keep every current-route action on screen.  The map is deliberately a
