@@ -89,8 +89,10 @@ export default function Manager() {
       <nav className={styles.sidebarNav} aria-label="Primary">
         <Link href="/manager" aria-current="page"><Home size={20}/><span>Today</span></Link>
         <Link href="/routes"><RouteIcon size={20}/><span>Routes</span></Link>
+        <Link href="/routes/live"><MapPin size={20}/><span>Map</span></Link>
         <Link href="/manager/team"><Users size={20}/><span>Drivers</span></Link>
         <Link href="/manager/history"><History size={20}/><span>History</span></Link>
+        <Link href="/manager/more"><MoreHorizontal size={20}/><span>Settings</span></Link>
       </nav>
       <Link href="/routes?new=1" className={styles.newRoute}><Plus size={20}/>New Route</Link>
       <Link href="/manager/more" className={styles.sidebarProfile}><span className={styles.sidebarAvatar}>{greetingName.slice(0, 2).toUpperCase()}</span><span><strong>{greetingName || 'Manager'}</strong><small>Branch Manager</small></span><ChevronDown size={16}/></Link>
