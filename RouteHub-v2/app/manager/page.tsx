@@ -110,8 +110,8 @@ export default function Manager() {
     </header>
 
     <section className={styles.intro}>
-      <h1>{t.helloPrefix} {greetingName} 👋</h1>
-      <p>{t.operationGlance}</p>
+      <h1>{t.helloPrefix} {greetingName}</h1>
+      <p>Today · {branchName || t.mainBranch}</p>
     </section>
 
     <div className={styles.branch} aria-label={`${branchName || t.mainBranch}: ${branchHealthy ? t.allSystemsNormal : t.requireAttention}`}>
