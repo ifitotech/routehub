@@ -471,7 +471,7 @@ export default function Routes() {
     <LiveRoute companyId={companyId} branchId={branchId}/>
 
     <section className={styles.listHeading}>
-      <div><h2>{c.assigned}</h2><p>{c.assignedHelp}</p></div>
+      <div><h2>{routes.length ? c.assigned : c.today}</h2><p>{routes.length ? c.assignedHelp : (locale==='es' ? 'Crea una ruta cuando estés listo.' : locale==='fr' ? 'Créez un itinéraire lorsque vous êtes prêt.' : 'Create a route when you are ready.')}</p></div>
       {!loading && <span>{routes.length} {c.active}</span>}
     </section>
 
@@ -503,7 +503,7 @@ export default function Routes() {
         </article>
       })}
     </section> : <section className={styles.emptyState}>
-      <div><Truck size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
+      <div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
     </section>}
 
     {open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
