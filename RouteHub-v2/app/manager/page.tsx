@@ -13,7 +13,7 @@ import TemporaryRouteAssignments from '../temporary-route-assignments'
 import LiveRoute from '../routes/live-route'
 import styles from './manager-dashboard.module.css'
 
-const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRequests: 0, availableDrivers: 0, openIssues: 0}
+const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRoutes: 0, completedRoutes: 0, openIssues: 0}
 
 export default function Manager() {
   const {t} = useLocale()
@@ -69,9 +69,9 @@ export default function Manager() {
   }, [t.unableLoadReports])
 
   const metrics = [
-    {label: t.activeRoutes, value: summary.activeRoutes, note: t.inProgress, href: '/routes', Icon: Truck, tone: 'blue'},
-    {label: t.activeDrivers, value: summary.availableDrivers, note: t.connected, href: '/manager/team', Icon: Users, tone: 'purple'},
-    {label: t.pendingRequests, value: summary.pendingRequests, note: t.waitingDispatch, href: '/requests', Icon: ClipboardList, tone: 'amber'},
+    {label: 'Active routes', value: summary.activeRoutes, note: t.inProgress, href: '/routes', Icon: Truck, tone: 'blue'},
+    {label: 'Pending routes', value: summary.pendingRoutes, note: t.waitingDispatch, href: '/routes', Icon: ClipboardList, tone: 'amber'},
+    {label: 'Completed routes', value: summary.completedRoutes, note: t.completed, href: '/manager/history', Icon: History, tone: 'purple'},
     {label: t.issues, value: summary.openIssues, note: t.requireAttention, href: '/reports', Icon: AlertTriangle, tone: 'red'},
   ] as const
   const hasIssue = summary.openIssues > 0
@@ -130,8 +130,8 @@ export default function Manager() {
 
     <section className={styles.mobileLiveCard} aria-label="Live operations">
       <div className={styles.mobileLiveTop}><span className={styles.mobileLiveIcon}><Truck size={20} /></span><div><span className={styles.mobileLiveEyebrow}>LIVE OPERATIONS</span><h2>Operations at a glance</h2></div><span className={styles.liveStatus}><i />Live</span></div>
-      <div className={styles.mobileLiveStats}><span><strong>{loading ? '—' : summary.activeRoutes}</strong> active routes</span><span><strong>{loading ? '—' : summary.availableDrivers}</strong> drivers online</span></div>
-      <Link className={styles.mobileLiveCta} href="/routes/live"><MapPin size={18} />Open live map<ChevronRight size={18} /></Link>
+      <div className={styles.mobileLiveStats}><span><strong>{loading ? '—' : summary.activeRoutes}</strong> active routes</span><span><strong>{loading ? '—' : summary.pendingRoutes}</strong> pending routes</span></div>
+      {summary.activeRoutes>0?<Link className={styles.mobileLiveCta} href="/routes/live"><MapPin size={18} />Open live map<ChevronRight size={18} /></Link>:<div className={styles.mobileLiveCta}><Users size={18} />No drivers currently active</div>}
     </section>
 
     <section className={styles.desktopLower}>
@@ -143,7 +143,7 @@ export default function Manager() {
     </div>
     <div className={styles.desktopMapPanel}>
       <div className={styles.desktopPanelHeader}><h2>Live Map</h2><Link href="/routes/live">View all</Link></div>
-      <LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>
+      {summary.activeRoutes>0?<LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>:<div className={styles.empty}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><div><h2>No active drivers</h2><p>Drivers will appear here when they start a route.</p><Link className={styles.emptyCta} href="/manager/team">View team</Link></div></div>}
     </div>
     </section>
 

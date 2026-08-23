@@ -31,9 +31,11 @@ export type DashboardDriver = {
 
 export type DashboardSummary = {
   activeRoutes: number
-  pendingRequests: number
-  availableDrivers: number
+  pendingRoutes: number
+  completedRoutes: number
   openIssues: number
+  pendingRequests?: number
+  availableDrivers?: number
 }
 
 export type ManagerDashboardData = {
@@ -72,9 +74,6 @@ export function selectManagerDashboard(
   const pendingRequests = requests.filter(request => request.company_id === scope.companyId
     && matchesBranch(request.branch_id, scope.branchId)
     && ['pending', 'open'].includes(request.status)).length
-
-  // Driver membership is a branch capability metric, not a daily activity
-  // metric. Company-level Drivers (branch_id null) are eligible in a branch.
   const availableDrivers = new Set(drivers.filter(driver => driver.company_id === scope.companyId
     && driver.role === 'driver'
     && (scope.branchId === null || driver.branch_id === null || driver.branch_id === scope.branchId))
@@ -84,7 +83,9 @@ export function selectManagerDashboard(
     todayRoutes,
     summary: {
       // Preserve the existing product meaning while fixing its scope.
-      activeRoutes: scopedRoutes.filter(route => ['published', 'active'].includes(route.status)).length,
+      activeRoutes: scopedRoutes.filter(route => ['published', 'active', 'paused'].includes(route.status)).length,
+      pendingRoutes: scopedRoutes.filter(route => route.status === 'pending').length,
+      completedRoutes: scopedRoutes.filter(route => route.status === 'completed').length,
       pendingRequests,
       availableDrivers,
       // RouteHub records execution problems on routes, so this reflects
