@@ -263,37 +263,12 @@ export default function Driver() {
 
   const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}&travelmode=driving`
   const openGoogleMaps=()=>{
-    const destination=current?.destination_address?.trim()
-    if(!destination){window.location.assign(navigateUrl);return}
-    const encodedDestination=encodeURIComponent(destination)
-    const userAgent=navigator.userAgent||''
-    const isAppleDevice=/iPad|iPhone|iPod/.test(userAgent)
-    const isAndroid=/Android/i.test(userAgent)
-    if(!isAppleDevice&&!isAndroid){window.location.assign(navigateUrl);return}
-
-    // Prefer the installed Google Maps app. If it is unavailable, return to
-    // the standard Google Maps directions page instead of leaving the driver
-    // on a blank custom-scheme URL.
-    const appUrl=isAppleDevice
-      ? `comgooglemaps://?daddr=${encodedDestination}&directionsmode=driving`
-      : `google.navigation:q=${encodedDestination}&mode=d`
-    let openedNativeApp=false
-    let fallbackTimer:number|undefined
-    const cancelFallback=()=>{
-      openedNativeApp=true
-      if(fallbackTimer)window.clearTimeout(fallbackTimer)
-      document.removeEventListener('visibilitychange',onVisibilityChange)
-      window.removeEventListener('pagehide',cancelFallback)
-    }
-    const onVisibilityChange=()=>{if(document.visibilityState==='hidden')cancelFallback()}
-    document.addEventListener('visibilitychange',onVisibilityChange)
-    window.addEventListener('pagehide',cancelFallback,{once:true})
-    window.location.href=appUrl
-    fallbackTimer=window.setTimeout(()=>{
-      document.removeEventListener('visibilitychange',onVisibilityChange)
-      window.removeEventListener('pagehide',cancelFallback)
-      if(!openedNativeApp)window.location.assign(navigateUrl)
-    },1200)
+    // Use Google's universal HTTPS directions URL. Android and iOS open the
+    // installed Maps app through the platform's verified link handling;
+    // otherwise the same URL safely opens Google Maps in the browser. Custom
+    // schemes such as google.navigation:// can be misread by installed PWAs
+    // as an internal RouteHub path (for example /route/map).
+    window.location.assign(navigateUrl)
   }
   const startTrackingForActiveRoute=async()=>{
     if(!driverId||!current)return false
