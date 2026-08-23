@@ -201,6 +201,7 @@ export default function Routes() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])
+  const [driverLocations, setDriverLocations] = useState<Record<string,string>>({})
   const [routes, setRoutes] = useState<RouteRecord[]>([])
   const [companyId, setCompanyId] = useState('')
   const [currentUserId, setCurrentUserId] = useState('')
@@ -236,16 +237,18 @@ export default function Routes() {
 
       let assigneeQuery = client.from('company_users').select('user_id,role,branch_id,users(email)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'])
       if (membership.branch_id) assigneeQuery = assigneeQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
-      const [contactResult, driverResult, routeResult, branchResult] = await Promise.all([
+      const [contactResult, driverResult, routeResult, branchResult, locationResult] = await Promise.all([
         client.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name'),
         assigneeQuery,
         client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,destination_name,destination_address,destination_phone,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
         client.from('branches').select('id,name,address,primary_driver_id').eq('company_id', membership.company_id).order('name'),
+        client.from('driving_sessions').select('driver_id,last_lat,last_lng,last_updated_at,status').eq('company_id', membership.company_id).in('status',['active','paused']).order('last_updated_at',{ascending:false}),
       ])
       if (contactResult.error) throw contactResult.error
       if (driverResult.error) throw driverResult.error
       if (routeResult.error) throw routeResult.error
       if (branchResult.error) throw branchResult.error
+      if (locationResult.error) throw locationResult.error
 
       const availableBranches = (branchResult.data || []) as Branch[]
       const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
@@ -255,6 +258,9 @@ export default function Routes() {
       setDrivers(availableDrivers)
       setRoutes((routeResult.data || []) as RouteRecord[])
       setBranches(availableBranches)
+      const latestLocations: Record<string,string> = {}
+      for (const row of (locationResult.data || []) as Array<{driver_id:string;last_lat:number|null;last_lng:number|null}>) if (latestLocations[row.driver_id]===undefined && row.last_lat!=null && row.last_lng!=null) latestLocations[row.driver_id] = `${row.last_lat}, ${row.last_lng}`
+      setDriverLocations(latestLocations)
       setForm(current => ({
         ...current,
         driver_id: availableDrivers.some(driver => driver.user_id === current.driver_id) ? current.driver_id : preferredDriver?.user_id || '',
@@ -312,13 +318,13 @@ export default function Routes() {
 
   useEffect(() => {
     if (originMode !== 'previous') return
-    setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || ''}))
-  }, [originMode, previousRoute])
+    setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || driverLocations[current.driver_id] || ''}))
+  }, [originMode, previousRoute, driverLocations])
 
   const setOriginSource = (mode: OriginMode) => {
     setOriginMode(mode)
     if (mode === 'branch') setForm(current => ({...current, origin: defaultBranch?.address || defaultBranch?.name || ''}))
-    if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || ''}))
+    if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || driverLocations[current.driver_id] || ''}))
     if (mode === 'contact') setForm(current => ({...current, origin: contacts[0]?.address || ''}))
     if (mode === 'custom') setForm(current => ({...current, origin: ''}))
   }
