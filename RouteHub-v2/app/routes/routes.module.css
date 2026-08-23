@@ -106,4 +106,5 @@
 .driverField .inputWrap select{padding-top:8px;padding-bottom:8px}.driverField .inputWrap>svg{width:17px;height:17px}
 @media(max-width:520px){.splitFields{grid-template-columns:1fr}}
 .mobileMapButton{display:none}
+@media(min-width:901px){.builder{width:min(1320px,calc(100vw - 64px))}.builderBody{grid-template-columns:minmax(420px,.9fr) minmax(560px,1.1fr);gap:24px}.formColumn{padding:28px}.mapColumn{min-height:620px}}
 @media(max-width:640px){.mobileMapButton{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#2563eb;font:inherit;font-size:12px;font-weight:800}.mapColumn{display:none}.mapColumn.mapColumnOpen{display:block;order:3}.mapColumnOpen .mapShell iframe,.mapColumnOpen .mapPlaceholder{height:220px}}
