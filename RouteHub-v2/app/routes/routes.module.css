@@ -95,6 +95,7 @@
  .builderBody{gap:10px;padding:10px 12px}.formColumn{gap:10px;padding:12px;border-radius:16px}.fieldset legend,.field>span{margin-bottom:5px;font-size:11px}.field small{margin-top:3px}.segmented{gap:5px}.segmented button{min-height:38px;padding:6px;font-size:10px}.field input,.field select,.field textarea,.fieldset .inputWrap input,.fieldset .inputWrap select{min-height:42px;padding:9px 11px 9px 38px}.publishButton{min-height:46px;margin-top:0}.detailsToggle{min-height:42px;padding:8px 11px}
 }
 .splitFields{min-width:0}.splitFields .field{min-width:0}.splitFields input{box-sizing:border-box;max-width:100%}
+.driverField .inputWrap select{padding-top:8px;padding-bottom:8px}.driverField .inputWrap>svg{width:17px;height:17px}
 @media(max-width:520px){.splitFields{grid-template-columns:1fr}}
 .mobileMapButton{display:none}
 @media(max-width:640px){.mobileMapButton{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#2563eb;font:inherit;font-size:12px;font-weight:800}.mapColumn{display:none}.mapColumn.mapColumnOpen{display:block;order:3}.mapColumnOpen .mapShell iframe,.mapColumnOpen .mapPlaceholder{height:220px}}
