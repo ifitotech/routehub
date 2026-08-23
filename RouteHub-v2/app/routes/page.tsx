@@ -94,10 +94,6 @@ const routeStatuses = ['draft', 'pending', 'published', 'active', 'paused']
 const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
   {value: 'delivery', label: 'Delivery'},
-  {value: 'return', label: 'Return to branch'},
-  // `transfer` stays as the compatible database value, but is deliberately
-  // presented as a flexible custom route in the product UI.
-  {value: 'transfer', label: 'Custom route'},
 ]
 const priorities: Array<{value: FormState['priority']; label: string}> = [
   {value: 'normal', label: 'Normal'},
