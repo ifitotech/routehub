@@ -302,11 +302,11 @@ export default function NotificationBell() {
   }
 
   return <div className={`notification-bell ${styles.root}`}>
-    <button className="notification-bell__button" type="button" aria-label={`${copy.label}${unread ? `, ${unread} ${copy.unread}` : ''}`} aria-expanded={open} aria-controls="routehub-notifications" onClick={() => { setOpen(value => !value); if (!open) void load() }}>
+    <button className="notification-bell__button" type="button" aria-label={`${copy.label}${unread ? `, ${unread} ${copy.unread}` : ''}`} aria-expanded={open} aria-controls="routehub-notifications" onPointerDown={event => event.stopPropagation()} onClick={() => { setOpen(value => !value); if (!open) void load() }}>
       <Bell size={20} strokeWidth={2.2} aria-hidden="true" />
       {unread > 0 && <span className="notification-bell__count" aria-label={`${unread} unread`}>{unread > 9 ? '9+' : unread}</span>}
     </button>
-    {open && <div className="notification-bell__panel" id="routehub-notifications" role="dialog" aria-label={copy.title}>
+    {open && <div className="notification-bell__panel" id="routehub-notifications" role="dialog" aria-label={copy.title} onPointerDown={event => event.stopPropagation()}>
       <div className="notification-bell__heading"><div><strong>{copy.title}</strong><span>{unread ? `${unread} ${copy.unread}` : copy.empty}</span></div><button type="button" className="notification-bell__close" onClick={() => setOpen(false)} aria-label={copy.close}><X size={17}/></button></div>
       {loading ? <div className="notification-bell__empty">{copy.loading}</div> : items.length ? <div className="notification-bell__list">{items.map(item => {
         const Icon = iconFor(item.type)
