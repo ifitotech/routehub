@@ -12,6 +12,14 @@
 .eyebrow { margin: 0 0 7px; color: var(--primary); font-size: .73rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
 .title { margin: 0; color: var(--ink); font-size: clamp(2rem, 4.5vw, 3.15rem); letter-spacing: -.045em; }
 .subtitle { max-width: 670px; margin: 9px 0 0; color: var(--muted); line-height: 1.55; }
+.adminStats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; margin-bottom:16px; }
+.adminStats article { padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:var(--surface); box-shadow:0 10px 24px rgb(15 32 58 / 5%); }
+.adminStats span,.adminStats small { display:block; color:var(--muted); font-size:.82rem; }
+.adminStats strong { display:block; margin:8px 0 2px; color:var(--ink); font-size:2rem; line-height:1; }
+.adminStats .alertStat strong { color:#dc2626; }
+.adminNotice { display:flex; align-items:center; gap:9px; margin-top:16px; padding:13px 16px; border:1px solid #dbe7fa; border-radius:14px; background:#f4f8ff; color:#496181; font-size:.82rem; }
+.adminNotice svg { color:var(--primary); flex:0 0 auto; }
+.empty .primaryButton { width:max-content; margin:16px auto 0; text-decoration:none; }
 .avatar { display: grid; flex: 0 0 auto; place-items: center; width: 50px; height: 50px; border: 1px solid #c6d8f8; border-radius: 17px; background: #eaf2ff; color: var(--primary); font-size: .78rem; font-weight: 900; }
 
 .hero {
@@ -83,6 +91,7 @@
 @keyframes spin { to { transform: rotate(360deg) } }
 
 @media (max-width: 760px) {
+  .adminStats { grid-template-columns:1fr; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formGrid { grid-template-columns: 1fr; }
   .primaryButton { width: 100%; }
