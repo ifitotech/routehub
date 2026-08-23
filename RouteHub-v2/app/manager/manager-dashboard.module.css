@@ -91,6 +91,21 @@
   .dashboard :global(.temporary-route-assignments){margin-top:16px}
 }
 
+/* Mobile dashboard: compact overview matching the approved concept. */
+@media (max-width: 1023px){
+  .intro{padding:10px 0 6px!important}
+  .intro h1{font-size:22px!important;line-height:1.15}
+  .intro p{display:block!important;margin:3px 0 0!important;font-size:12px!important}
+  .mobileLiveCard{display:none!important}
+  .metricGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .metric{min-height:132px;padding:14px;border-radius:17px}
+  .metricValue{font-size:30px}
+  .metricLabel{font-size:12px}
+  .metricNote{font-size:10px}
+  .actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+  .action{min-height:62px;padding:10px;border-radius:14px}
+}
+
 @media (min-width: 1440px){
   .workspace{max-width:none;padding-inline:clamp(48px,5vw,104px)}
   .metricGrid{gap:18px;margin-bottom:20px}
