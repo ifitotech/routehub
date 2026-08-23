@@ -213,6 +213,7 @@ export default function Routes() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [justCreated, setJustCreated] = useState(false)
   const [originMode, setOriginMode] = useState<OriginMode>('branch')
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const loadWorkspace = useCallback(async () => {
     setLoading(true)
@@ -516,7 +517,8 @@ export default function Routes() {
             <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{locale==='es' ? 'Añadir otra' : locale==='fr' ? 'Ajouter une autre' : 'Add another'}</button>
           </div>
         </div> : <div className={styles.builderBody}>
-          <div className={styles.mapColumn}>
+          <button type="button" className={styles.mobileMapButton} onClick={() => setPreviewOpen(value => !value)}><MapPin size={16}/>{previewOpen ? 'Hide map' : 'View map'}</button>
+          <div className={`${styles.mapColumn} ${previewOpen ? styles.mapColumnOpen : ''}`}>
             <MapPreview address={previewAddress} c={c}/>
             <div className={styles.previewSummary}><span><i>1</i>{form.origin.trim() || c.branch}</span><span><i>2</i>{selectedContact?.company_name || form.destination.trim() || c.chooseDestination}</span></div>
           </div>
@@ -533,7 +535,7 @@ export default function Routes() {
               <legend>{c.startingPoint}</legend>
               <div className={styles.segmented}>{(['branch','previous'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
               {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{branches.map(branch => <option key={branch.id} value={branch.address || branch.name}>{branch.name}{branch.address ? ` - ${branch.address}` : ''}</option>)}</select></div>}
-              {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} readOnly placeholder={oc.noPrevious}/></div>}
+              {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
               {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{contacts.map(contact => <option key={contact.id} value={contact.address}>{contact.company_name} - {contact.address}</option>)}</select></div>}
               {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} onValueChange={value => setForm(current => ({...current, origin:value}))}/></div>}
             </fieldset>
