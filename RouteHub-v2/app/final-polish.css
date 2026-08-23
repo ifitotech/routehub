@@ -300,6 +300,7 @@ main.app, .premium-shell, .page { max-width: 100%; }
 }
 .notification-bell__panel {
   position: absolute;
+  z-index: 10000;
   top: calc(100% + 10px);
   right: 0;
   width: min(360px, calc(100vw - 32px));
