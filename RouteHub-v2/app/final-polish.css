@@ -263,7 +263,7 @@ main.app, .premium-shell, .page { max-width: 100%; }
 /* Notification bell ----------------------------------------------------
    The bell replaces the role-avatar action in workspace headers while
    keeping profile/settings available from the existing navigation. */
-.notification-bell { position: relative; flex: 0 0 auto; z-index: 40; }
+.notification-bell { position: relative; flex: 0 0 auto; z-index: 10001; isolation: isolate; }
 .notification-bell__button {
   position: relative;
   width: 44px;
