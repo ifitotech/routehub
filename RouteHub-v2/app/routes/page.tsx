@@ -251,10 +251,14 @@ export default function Routes() {
       if (routeResult.error) throw routeResult.error
       if (branchResult.error) throw branchResult.error
       if (locationResult.error) throw locationResult.error
+      const driverIds = ((driverResult.data || []) as Driver[]).map(driver => driver.user_id).filter(Boolean)
+      const profileResult = driverIds.length ? await client.from('users').select('id,name,email').in('id', driverIds) : {data: [], error: null}
+      if (profileResult.error) throw profileResult.error
 
       const availableBranches = (branchResult.data || []) as Branch[]
       const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
-      const availableDrivers = ((driverResult.data || []) as Driver[]).sort((a,b) => Number(b.user_id === defaultBranch?.primary_driver_id) - Number(a.user_id === defaultBranch?.primary_driver_id) || Number(b.role === 'driver') - Number(a.role === 'driver'))
+      const profileById = new Map((profileResult.data || []).map(profile => [profile.id, profile]))
+      const availableDrivers = ((driverResult.data || []) as Driver[]).map(driver => ({...driver, users: profileById.get(driver.user_id) || driver.users})).sort((a,b) => Number(b.user_id === defaultBranch?.primary_driver_id) - Number(a.user_id === defaultBranch?.primary_driver_id) || Number(b.role === 'driver') - Number(a.role === 'driver'))
       const preferredDriver = chooseDefaultAssignee(availableDrivers, defaultBranch?.primary_driver_id)
       setContacts((contactResult.data || []) as Contact[])
       setDrivers(availableDrivers)
@@ -530,7 +534,7 @@ export default function Routes() {
               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => type.value === 'return' ? {...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''} : {...current, type:type.value})}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
-            <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const details = driverDetails(driver,c.teamDriver); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); const fallback=driver.role==='driver'?`${c.driver} ${index+1}`:`${roleName} ${index+1}`; return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback}`}</option> })}</select></div></label>
+              <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const details = driverDetails(driver,c.teamDriver); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const fallback=`${c.driver} ${index+1}`; return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback}`}</option> })}</select></div></label>
 
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
