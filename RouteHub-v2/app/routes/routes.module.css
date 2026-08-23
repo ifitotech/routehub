@@ -32,9 +32,9 @@
   .builder{width:min(430px,100vw);height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;box-shadow:-18px 0 46px rgba(15,23,42,.16);background:#fff}
   .builderHeader{min-height:72px;padding:14px 22px;background:rgba(255,255,255,.96)}
   .builderHeader h2{font-size:21px}
-  .builderBody{display:block;padding:18px 20px 30px}
+  .builderBody{display:flex;flex-direction:column;padding:18px 20px 30px}
   .mapColumn{display:none}
-  .formColumn{padding:0;border:0;border-radius:0;gap:15px;box-shadow:none}
+  .formColumn{order:1;padding:0;border:0;border-radius:0;gap:15px;box-shadow:none}
   .primaryRouteTypes .segmented{gap:6px}
   .primaryRouteTypes .segmented button{min-height:40px;padding:7px 4px;font-size:11px}
   .optionalDetails{padding:13px}
