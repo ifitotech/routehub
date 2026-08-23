@@ -92,7 +92,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   if(!companyId)return null
 
   return <>
-    {(loading||sessions.length>0)&&<section className={`${styles.section} ${expanded?styles.expanded:''}`} aria-labelledby="live-route-title">
+    <section className={`${styles.section} ${expanded?styles.expanded:''}`} aria-labelledby="live-route-title">
       <div className={styles.sectionHeader}><h2 id="live-route-title">{t.liveRoute}</h2>{sessions.length>0&&<span className={styles.liveBadge}><i/>{t.live} · {sessions.length}</span>}</div>
       {error&&<p className="muted" role="status">{error}</p>}
       {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:sessions.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:!hasTodayRoute&&!canShowLocationOnlyMap?<div className={styles.empty}><Radio size={20}/><div><strong>{t.noActiveRoutes}</strong><span>{labels.get(selected?.driver_id||'')||t.driver}: {t.noRoutesToday}</span></div></div>:<>
@@ -110,7 +110,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
         {selectedRoute&&<div className={styles.routeOverview} aria-label={t.currentRoute}><div className={styles.routeOverviewHeader}><Navigation size={16}/><strong>{t.currentRoute}</strong><span>{routeType(selectedRoute.mission_type,t)}</span></div><div className={styles.routeLeg}><i className={styles.originDot}/><div><small>{t.origin}</small><strong>{selectedRoute.origin_address||t.notRecorded}</strong></div></div><div className={styles.routeLine}/><div className={styles.routeLeg}><i className={styles.destinationDot}/><div><small>{t.currentDestination}</small><strong>{selectedRoute.destination_name||selectedRoute.destination_address||t.destination}</strong>{selectedRoute.destination_address&&selectedRoute.destination_name&&<span>{selectedRoute.destination_address}</span>}</div></div></div>}
         {hasLocation&&selected&&<div className={styles.locationReadout} role="status"><span className={styles.locationDot}/><strong>{labels.get(selected.driver_id)||t.driver}</strong><span>{freshnessLabel}{selected.last_accuracy!=null?` · ±${Math.round(selected.last_accuracy)} m`:''}</span></div>}
       </>}
-    </section>}
+    </section>
     {showToday && <section className={styles.today} aria-labelledby="today-routes-title"><div className={styles.sectionHeader}><h2 id="today-routes-title">{t.today}</h2></div>{visibleToday.length===0?<div className={styles.empty}><RouteIcon size={20}/><div><strong>{t.noRoutesToday}</strong><span>{t.createRouteWhenReady}</span></div></div>:<div className={styles.todayList}>{visibleToday.map(route=><div className={styles.todayRow} data-status={route.status||'pending'} key={route.id}><span className={styles.todayIcon}>{route.status==='completed'?'✓':route.status==='active'?'●':'○'}</span><div className={styles.todayText}><strong>{routeType(route.mission_type,t)} · {route.destination_name||route.destination_address||t.destination}</strong><span>{route.status||t.pending}{route.priority==='urgent'?' · '+t.urgent:''}</span></div><span className={styles.todayTime}>{timeLabel(route.scheduled_at)}</span></div>)}</div>}{todayRoutes.length>visibleToday.length&&<Link className={styles.viewAll} href="/routes/manage">{t.viewAll}<ArrowRight size={14}/></Link>}</section>}
   </>
 }
