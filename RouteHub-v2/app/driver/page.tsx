@@ -395,7 +395,7 @@ export default function Driver() {
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
         {current.status==='active'&&currentKind!=='delivery'&&currentAction==='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>{if(currentKind==='pickup')setPickupConfirmOpen(true);else void markArrived()}}><MapPin size={19}/>{stopCopy.arrived}</button>}
         {current.status==='active'&&(currentKind==='delivery'||currentAction!=='arrived')&&<button disabled={busy} className={styles.complete} onClick={()=>{if(currentKind==='delivery')setDeliveryToolsOpen(true);else void completeCurrentStop()}}><Check size={19}/>{currentKind==='delivery'?stopCopy.completeDelivery:currentAction==='confirm_pickup'?stopCopy.confirmPickup:stopCopy.completeBranch}</button>}
-        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={()=>setRouteView('map')}><MapPin size={18}/>{stopCopy.openMaps}</button>}
+        {current.status==='active'&&<button disabled={busy} className={styles.viewRoute} onClick={openGoogleMaps}><MapPin size={18}/>{stopCopy.openMaps}</button>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
       <input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void attachStopPhoto(file)}}/>
