@@ -88,3 +88,9 @@
 :global(html[data-theme="dark"]) .savedContact small,:global(html[data-theme="dark"]) .savedContact span{color:var(--rh-text-secondary)}
 :global(html[data-theme="dark"]) .savedContact strong{color:var(--rh-text)}
 @media(max-width:640px){.page{padding-bottom:190px}}
+/* Compact mobile route builder: keep the essential publish flow visible at a glance. */
+@media(max-width:640px){
+ .builder{max-height:100dvh;height:100dvh;border-radius:18px 18px 0 0}
+ .builderHeader{padding:11px 14px}.builderHeader h2{font-size:20px}.closeButton{width:38px;height:38px}
+ .builderBody{gap:10px;padding:10px 12px}.formColumn{gap:10px;padding:12px;border-radius:16px}.fieldset legend,.field>span{margin-bottom:5px;font-size:11px}.field small{margin-top:3px}.segmented{gap:5px}.segmented button{min-height:38px;padding:6px;font-size:10px}.field input,.field select,.field textarea,.fieldset .inputWrap input,.fieldset .inputWrap select{min-height:42px;padding:9px 11px 9px 38px}.publishButton{min-height:46px;margin-top:0}.detailsToggle{min-height:42px;padding:8px 11px}
+}
