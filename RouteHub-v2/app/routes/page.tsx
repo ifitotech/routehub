@@ -468,7 +468,7 @@ export default function Routes() {
 
     {message && <div className={message.includes('successfully') ? styles.successMessage : styles.message} role="status">{message}</div>}
 
-    <LiveRoute companyId={companyId} branchId={branchId}/>
+    <LiveRoute companyId={companyId} branchId={branchId} showToday={false}/>
 
     <section className={styles.listHeading}>
       <div><h2>{routes.length ? c.assigned : c.today}</h2><p>{routes.length ? c.assignedHelp : (locale==='es' ? 'Crea una ruta cuando estés listo.' : locale==='fr' ? 'Créez un itinéraire lorsque vous êtes prêt.' : 'Create a route when you are ready.')}</p></div>
