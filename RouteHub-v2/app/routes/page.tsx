@@ -40,7 +40,7 @@ type Contact = {
   phone?: string | null
 }
 
-type DriverProfile = {email?: string | null}
+type DriverProfile = {email?: string | null; name?: string | null}
 type Branch = {id: string; name: string; address?: string | null; primary_driver_id?: string | null}
 type OriginMode = 'branch' | 'previous' | 'contact' | 'custom'
 type Driver = {
@@ -146,8 +146,9 @@ function friendlyName(email?: string | null) {
 }
 
 function driverDetails(driver?: Driver, fallback='Team driver') {
-  const email = profileFor(driver || {user_id: ''})?.email || ''
-  return {name: email ? friendlyName(email) : fallback, email}
+  const profile = profileFor(driver || {user_id: ''})
+  const email = profile?.email || ''
+  return {name: profile?.name || (email ? friendlyName(email) : fallback), email}
 }
 
 function typeLabel(type: string | null | undefined, c: RouteCopy) {
@@ -236,7 +237,7 @@ export default function Routes() {
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id || null)
 
-      let assigneeQuery = client.from('company_users').select('user_id,role,branch_id,users(email)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'])
+      let assigneeQuery = client.from('company_users').select('user_id,role,branch_id,users(email,name)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'])
       if (membership.branch_id) assigneeQuery = assigneeQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
       const [contactResult, driverResult, routeResult, branchResult, locationResult] = await Promise.all([
         client.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name'),
