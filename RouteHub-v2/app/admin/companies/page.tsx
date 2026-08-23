@@ -1,21 +1,29 @@
 'use client'
 
 import {Building2, Plus} from 'lucide-react'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
+import {getSupabase} from '../../../lib/supabase'
 import styles from '../admin.module.css'
 
 type Company = {id: number; name: string; branch: string; status: 'Active' | 'Trial' | 'Paused'; users: number}
 
-const seed: Company[] = [{id: 1, name: 'Example HVAC Supply', branch: 'Main branch', status: 'Trial', users: 3}]
+const seed: Company[] = []
 
 export default function Companies() {
   const [companies, setCompanies] = useState(seed)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({name: '', branch: ''})
 
+  useEffect(() => {
+    const load = async () => {
+      const {data} = await getSupabase().from('companies').select('id,name').order('name')
+      if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: 'Workspace', status: 'Active' as const, users: 0})))
+    }
+    void load()
+  }, [])
+
   const save = () => {
     if (!form.name.trim()) return
-    setCompanies([...companies, {id: Date.now(), name: form.name.trim(), branch: form.branch.trim() || 'Main branch', status: 'Trial', users: 0}])
     setForm({name: '', branch: ''})
     setOpen(false)
   }
