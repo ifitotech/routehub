@@ -26,8 +26,13 @@ export default function OrganizationPage() {
   const addBranch = async () => {
     if (!form.name.trim()) return
     const {error} = await getSupabase().rpc('platform_create_branch', {company_id: id, branch_name: form.name.trim(), branch_number: form.number.trim() || null, branch_address: form.address.trim() || null, manager_email: form.email.trim() || null})
-    setMessage(error ? error.message : 'Branch created. Invitation sent when an email was provided.')
-    if (!error) { setForm({name: '', number: '', address: '', email: ''}); setOpen(false); await load() }
+    if (error) { setMessage(error.message); return }
+    if (form.email.trim()) {
+      const invite = await getSupabase().functions.invoke('send-manager-invite', {body: {email: form.email.trim(), companyName: company?.name || 'RouteHub company', branchName: form.name.trim()}})
+      if (invite.error) { setMessage(`Branch created, but invitation failed: ${invite.error.message}`); await load(); return }
+    }
+    setMessage(form.email.trim() ? 'Branch created and invitation sent.' : 'Branch created.')
+    setForm({name: '', number: '', address: '', email: ''}); setOpen(false); await load()
   }
   return <main className="app"><div className={styles.page}>
     <header className={styles.header}><div><Link className={styles.backLink} href="/admin/companies"><ChevronLeft size={16}/> Companies</Link><p className={styles.eyebrow}>CEO / Admin · Organization</p><h1 className={styles.title}>{company?.name || 'Organization'}</h1><p className={styles.subtitle}>Manage branches, managers and members for this company.</p></div><button className={styles.primaryButton} onClick={() => setOpen(!open)}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button></header>
