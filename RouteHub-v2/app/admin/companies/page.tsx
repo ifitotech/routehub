@@ -14,6 +14,8 @@ export default function Companies() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Company | null>(null)
   const [viewing, setViewing] = useState<Company | null>(null)
+  const [branchForm, setBranchForm] = useState({name: '', address: '', email: ''})
+  const [branchMessage, setBranchMessage] = useState('')
   const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
 
   useEffect(() => {
@@ -35,6 +37,13 @@ export default function Companies() {
     if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: (company as any).default_branch_name || 'Main branch', manager: (company as any).branch_manager_name || 'Not assigned', status: 'Active' as const, users: 0})))
   }
 
+  const addBranch = async () => {
+    if (!viewing || !branchForm.name.trim()) return
+    const {error} = await getSupabase().rpc('platform_create_branch', {company_id: viewing.id, branch_name: branchForm.name.trim(), branch_address: branchForm.address.trim() || null, manager_email: branchForm.email.trim() || null})
+    setBranchMessage(error ? error.message : 'Branch created and invitation sent.')
+    if (!error) setBranchForm({name: '', address: '', email: ''})
+  }
+
   return <main className="app">
     <div className={styles.page}>
       <header className={styles.header}>
@@ -42,7 +51,7 @@ export default function Companies() {
         <button className={styles.primaryButton} onClick={() => {setEditing(null); setOpen(value => !value)}}><Plus size={18}/>{open ? 'Close form' : 'Add company'}</button>
       </header>
 
-      {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Branch: {viewing.branch}</p><p className={styles.subtitle}>Branch manager: {viewing.manager}</p><p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
+      {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Default branch: {viewing.branch} · Manager: {viewing.manager}</p><h3>Add branch</h3><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={branchForm.name} onChange={event => setBranchForm({...branchForm, name: event.target.value})}/></label><label className={styles.field}>Address<input placeholder="Branch address" value={branchForm.address} onChange={event => setBranchForm({...branchForm, address: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={branchForm.email} onChange={event => setBranchForm({...branchForm, email: event.target.value})}/></label><button className={styles.primaryButton} disabled={!branchForm.name.trim()} onClick={() => void addBranch()}>Add branch and invite manager</button></div>{branchMessage && <p className={styles.statusMessage}>{branchMessage}</p>}<p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
       {open && <section className={styles.panel}>
         <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header>
         <div className={styles.formGrid}>
