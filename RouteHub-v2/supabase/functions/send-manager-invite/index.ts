@@ -65,7 +65,7 @@ Deno.serve(async (request) => {
     const normalizedEmail = String(email).trim().toLowerCase()
     const code = activationCode()
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString()
-    const {data: inviteRow, error: inviteError} = await service.from('invitations').select('id').eq('branch_id', branchId).eq('email', normalizedEmail).eq('status', 'pending').order('created_at', {ascending: false}).limit(1).maybeSingle()
+    const {data: inviteRow, error: inviteError} = await service.from('invitations').select('id').eq('branch_id', branchId).ilike('email', normalizedEmail).eq('status', 'pending').order('created_at', {ascending: false}).limit(1).maybeSingle()
     if (inviteError) throw inviteError
     if (!inviteRow) return json({error: 'No pending invitation exists for this branch.'}, 404)
     const {error: codeError} = await service.from('invitations').update({activation_code_hash: await hashCode(code), activation_code_expires_at: expiresAt, activation_code_used_at: null}).eq('id', inviteRow.id)
@@ -74,6 +74,7 @@ Deno.serve(async (request) => {
     if (error && !error.message.toLowerCase().includes('already been registered')) throw error
     return json({user_id: data.user?.id, activationCode: code, expiresAt})
   } catch (error) {
-    return json({error: error instanceof Error ? error.message : 'Unable to send invitation'}, 500)
+    const detail = error instanceof Error ? error.message : (error && typeof error === 'object' && 'message' in error ? String((error as {message?: unknown}).message) : '')
+    return json({error: detail || 'Unable to send invitation'}, 500)
   }
 })
