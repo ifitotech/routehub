@@ -3,6 +3,7 @@
 import {Building2, Plus} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
+import Link from 'next/link'
 import styles from '../admin.module.css'
 
 type Company = {id: string; name: string; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number}
@@ -66,7 +67,7 @@ export default function Companies() {
         {companies.map(company => <article className={styles.rowCard} key={company.id}>
           <span className={styles.rowIcon}><Building2 size={20}/></span>
           <div className={styles.identity}><h2>{company.name}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p><p>Branch manager: {company.manager}</p></div>
-          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><button className={styles.secondaryButton} onClick={() => setViewing(company)}>View organization</button><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button></div>
+          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`}>Open organization</Link><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button></div>
         </article>)}
       </section>
     </div>
