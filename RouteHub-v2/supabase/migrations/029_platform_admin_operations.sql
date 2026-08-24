@@ -23,8 +23,8 @@ begin
   insert into public.companies(name, default_branch_name, branch_manager_name) values (trim(company_name), nullif(trim(branch_name), ''), nullif(trim(manager_name), '')) returning id into new_company_id;
   insert into public.branches(company_id, name) values (new_company_id, coalesce(nullif(trim(branch_name), ''), 'Main branch')) returning id into new_branch_id;
   if nullif(trim(manager_email), '') is not null then
-    insert into public.invitations(company_id, branch_id, email, role, status, created_by)
-      values (new_company_id, new_branch_id, lower(trim(manager_email)), 'branch_manager', 'pending', auth.uid());
+    insert into public.invitations(company_id, branch_id, email, role, status, created_by, invited_by)
+      values (new_company_id, new_branch_id, lower(trim(manager_email)), 'branch_manager', 'pending', auth.uid(), auth.uid());
   end if;
   insert into public.platform_audit_events(actor_id, action, entity_type, entity_id, metadata)
     values (auth.uid(), 'company_created', 'company', new_company_id, jsonb_build_object('branch_name', nullif(trim(branch_name), '')));
@@ -56,8 +56,8 @@ begin
   if nullif(trim(branch_name), '') is null then raise exception 'Branch name is required'; end if;
   insert into public.branches(company_id, name, branch_number, address) values (company_id, trim(branch_name), nullif(trim(branch_number), ''), nullif(trim(branch_address), '')) returning id into new_branch_id;
   if nullif(trim(manager_email), '') is not null then
-    insert into public.invitations(company_id, branch_id, email, role, status, created_by)
-      values (company_id, new_branch_id, lower(trim(manager_email)), 'branch_manager', 'pending', auth.uid());
+    insert into public.invitations(company_id, branch_id, email, role, status, created_by, invited_by)
+      values (company_id, new_branch_id, lower(trim(manager_email)), 'branch_manager', 'pending', auth.uid(), auth.uid());
   end if;
   insert into public.platform_audit_events(actor_id, action, entity_type, entity_id, metadata)
     values (auth.uid(), 'branch_created', 'branch', new_branch_id, jsonb_build_object('company_id', company_id, 'manager_email', nullif(lower(trim(manager_email)), '')));
