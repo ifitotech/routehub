@@ -33,7 +33,10 @@ export default function OrganizationPage() {
     const result = await getSupabase().functions.invoke('send-manager-invite', {body: {email: branch.invite.email, companyName: company?.name || 'RouteHub company', branchName: branch.name}})
     let detail = result.error?.message || ''
     if (result.error && 'context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
-    setMessage(result.error ? `Could not resend invitation: ${detail}` : `Invitation resent to ${branch.invite.email}.`)
+    if (result.error && detail.toLowerCase().includes('already been registered')) {
+      const reset = await getSupabase().auth.resetPasswordForEmail(branch.invite.email, {redirectTo: 'https://routehub-wisu.vercel.app/login'})
+      setMessage(reset.error ? `Could not send password setup email: ${reset.error.message}` : `Password setup email sent to ${branch.invite.email}.`)
+    } else setMessage(result.error ? `Could not resend invitation: ${detail}` : `Invitation resent to ${branch.invite.email}.`)
     setResending(null)
   }
   const addBranch = async () => {
