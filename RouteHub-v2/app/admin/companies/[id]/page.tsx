@@ -30,24 +30,24 @@ export default function OrganizationPage() {
   const resendInvite = async (branch: Branch) => {
     if (!branch.invite?.email || resending) return
     setResending(branch.id)
-    const result = await getSupabase().functions.invoke('send-manager-invite', {body: {email: branch.invite.email, companyName: company?.name || 'RouteHub company', branchName: branch.name}})
+    const result = await getSupabase().functions.invoke('send-manager-invite', {body: {email: branch.invite.email, companyName: company?.name || 'RouteHub company', branchName: branch.name, branchId: branch.id}})
     let detail = result.error?.message || ''
     if (result.error && 'context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
-    if (result.error && detail.toLowerCase().includes('already been registered')) {
-      const reset = await getSupabase().auth.resetPasswordForEmail(branch.invite.email, {redirectTo: 'https://routehub-wisu.vercel.app/login'})
-      setMessage(reset.error ? `Could not send password setup email: ${reset.error.message}` : `Password setup email sent to ${branch.invite.email}.`)
-    } else setMessage(result.error ? `Could not resend invitation: ${detail}` : `Invitation resent to ${branch.invite.email}.`)
+    const code = (result.data as {activationCode?: string} | null)?.activationCode
+    setMessage(result.error ? `Could not resend invitation: ${detail}` : `Invitation ready for ${branch.invite.email}. Activation code: ${code || 'not generated'}. Share it securely; it expires in 24 hours.`)
     setResending(null)
   }
   const addBranch = async () => {
     if (!form.name.trim()) return
-    const {error} = await getSupabase().rpc('platform_create_branch', {company_id: id, branch_name: form.name.trim(), branch_number: form.number.trim() || null, branch_address: form.address.trim() || null, manager_email: form.email.trim() || null})
+    let activationCode: string | undefined
+    const {data: createdBranchId, error} = await getSupabase().rpc('platform_create_branch', {company_id: id, branch_name: form.name.trim(), branch_number: form.number.trim() || null, branch_address: form.address.trim() || null, manager_email: form.email.trim() || null})
     if (error) { setMessage(error.message); return }
     if (form.email.trim()) {
-      const invite = await getSupabase().functions.invoke('send-manager-invite', {body: {email: form.email.trim(), companyName: company?.name || 'RouteHub company', branchName: form.name.trim()}})
+      const invite = await getSupabase().functions.invoke('send-manager-invite', {body: {email: form.email.trim(), companyName: company?.name || 'RouteHub company', branchName: form.name.trim(), branchId: createdBranchId}})
       if (invite.error) { setMessage(`Branch created, but invitation failed: ${invite.error.message}`); await load(); return }
+      activationCode = (invite.data as {activationCode?: string} | null)?.activationCode
     }
-    setMessage(form.email.trim() ? 'Branch created and invitation sent.' : 'Branch created.')
+    setMessage(form.email.trim() ? `Branch created. Activation code: ${activationCode || 'not generated'}. Share it securely; it expires in 24 hours.` : 'Branch created.')
     setForm({name: '', number: '', address: '', email: ''}); setOpen(false); await load()
   }
   return <main className="app"><div className={styles.page}>
