@@ -14,7 +14,7 @@ export default function Companies() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Company | null>(null)
   const [viewing, setViewing] = useState<Company | null>(null)
-  const [branchForm, setBranchForm] = useState({name: '', number: '', email: ''})
+  const [branchForm, setBranchForm] = useState({name: '', number: '', address: '', email: ''})
   const [branchMessage, setBranchMessage] = useState('')
   const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
 
@@ -39,9 +39,9 @@ export default function Companies() {
 
   const addBranch = async () => {
     if (!viewing || !branchForm.name.trim()) return
-    const {error} = await getSupabase().rpc('platform_create_branch', {company_id: viewing.id, branch_name: branchForm.name.trim(), branch_number: branchForm.number.trim() || null, manager_email: branchForm.email.trim() || null})
+    const {error} = await getSupabase().rpc('platform_create_branch', {company_id: viewing.id, branch_name: branchForm.name.trim(), branch_number: branchForm.number.trim() || null, branch_address: branchForm.address.trim() || null, manager_email: branchForm.email.trim() || null})
     setBranchMessage(error ? error.message : 'Branch created and invitation sent.')
-    if (!error) setBranchForm({name: '', number: '', email: ''})
+    if (!error) setBranchForm({name: '', number: '', address: '', email: ''})
   }
 
   return <main className="app">
@@ -51,7 +51,7 @@ export default function Companies() {
         <button className={styles.primaryButton} onClick={() => {setEditing(null); setOpen(value => !value)}}><Plus size={18}/>{open ? 'Close form' : 'Add company'}</button>
       </header>
 
-      {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Default branch: {viewing.branch} · Manager: {viewing.manager}</p><h3>Add branch</h3><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={branchForm.name} onChange={event => setBranchForm({...branchForm, name: event.target.value})}/></label><label className={styles.field}>Branch number<input placeholder="Branch number" value={branchForm.number} onChange={event => setBranchForm({...branchForm, number: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={branchForm.email} onChange={event => setBranchForm({...branchForm, email: event.target.value})}/></label><button className={styles.primaryButton} disabled={!branchForm.name.trim()} onClick={() => void addBranch()}>Add branch and invite manager</button></div>{branchMessage && <p className={styles.statusMessage}>{branchMessage}</p>}<p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
+      {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Default branch: {viewing.branch} · Manager: {viewing.manager}</p><h3>Add branch</h3><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={branchForm.name} onChange={event => setBranchForm({...branchForm, name: event.target.value})}/></label><label className={styles.field}>Branch number<input placeholder="Branch number" value={branchForm.number} onChange={event => setBranchForm({...branchForm, number: event.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street, Miami Gardens" value={branchForm.address} onChange={event => setBranchForm({...branchForm, address: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={branchForm.email} onChange={event => setBranchForm({...branchForm, email: event.target.value})}/></label><button className={styles.primaryButton} disabled={!branchForm.name.trim()} onClick={() => void addBranch()}>Add branch and invite manager</button></div>{branchMessage && <p className={styles.statusMessage}>{branchMessage}</p>}<p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
       {open && <section className={styles.panel}>
         <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header>
         <div className={styles.formGrid}>
