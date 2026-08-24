@@ -14,7 +14,7 @@ export default function Companies() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Company | null>(null)
   const [viewing, setViewing] = useState<Company | null>(null)
-  const [form, setForm] = useState({name: '', branch: '', manager: ''})
+  const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
 
   useEffect(() => {
     const load = async () => {
@@ -28,9 +28,9 @@ export default function Companies() {
     if (!form.name.trim()) return
     const {error} = editing
       ? await getSupabase().rpc('platform_update_company', {company_id: editing.id, company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null})
-      : await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null})
+      : await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, manager_email: form.email.trim() || null})
     if (error) return
-    setForm({name: '', branch: '', manager: ''}); setOpen(false); setEditing(null)
+    setForm({name: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
     const {data} = await getSupabase().from('companies').select('id,name,default_branch_name,branch_manager_name').order('name')
     if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: (company as any).default_branch_name || 'Main branch', manager: (company as any).branch_manager_name || 'Not assigned', status: 'Active' as const, users: 0})))
   }
@@ -47,7 +47,7 @@ export default function Companies() {
         <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header>
         <div className={styles.formGrid}>
           <label className={styles.field}>Company name<input aria-label="Company name" placeholder="Company name" value={form.name} onChange={event => setForm({...form, name: event.target.value})}/></label>
-          <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Main branch" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label><label className={styles.field}>Branch manager<input aria-label="Branch manager" placeholder="Manager name" value={form.manager} onChange={event => setForm({...form, manager: event.target.value})}/></label>
+          <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Main branch" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label><label className={styles.field}>Branch manager<input aria-label="Branch manager" placeholder="Manager name" value={form.manager} onChange={event => setForm({...form, manager: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" aria-label="Manager email" placeholder="manager@company.com" value={form.email} onChange={event => setForm({...form, email: event.target.value})}/></label>
           <button className={styles.primaryButton} disabled={!form.name.trim()} onClick={() => void save()}>{editing ? 'Save changes' : 'Create company'}</button>
         </div>
       </section>}
@@ -57,7 +57,7 @@ export default function Companies() {
         {companies.map(company => <article className={styles.rowCard} key={company.id}>
           <span className={styles.rowIcon}><Building2 size={20}/></span>
           <div className={styles.identity}><h2>{company.name}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p><p>Branch manager: {company.manager}</p></div>
-          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><button className={styles.secondaryButton} onClick={() => setViewing(company)}>View organization</button><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch, manager: company.manager}); setOpen(true)}}>Edit</button></div>
+          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><button className={styles.secondaryButton} onClick={() => setViewing(company)}>View organization</button><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button></div>
         </article>)}
       </section>
     </div>

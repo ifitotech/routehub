@@ -14,19 +14,24 @@ drop policy if exists "platform admins read audit" on public.platform_audit_even
 create policy "platform admins read audit" on public.platform_audit_events for select to authenticated
 using (exists (select 1 from public.platform_admins p where p.user_id = auth.uid()));
 
-create or replace function public.platform_create_company(company_name text, branch_name text default null, manager_name text default null)
+create or replace function public.platform_create_company(company_name text, branch_name text default null, manager_name text default null, manager_email text default null)
 returns uuid language plpgsql security definer set search_path = public as $$
-declare new_company_id uuid;
+declare new_company_id uuid; new_branch_id uuid;
 begin
   if not exists (select 1 from public.platform_admins where user_id = auth.uid()) then raise exception 'CEO access required'; end if;
   if nullif(trim(company_name), '') is null then raise exception 'Company name is required'; end if;
   insert into public.companies(name, default_branch_name, branch_manager_name) values (trim(company_name), nullif(trim(branch_name), ''), nullif(trim(manager_name), '')) returning id into new_company_id;
+  insert into public.branches(company_id, name) values (new_company_id, coalesce(nullif(trim(branch_name), ''), 'Main branch')) returning id into new_branch_id;
+  if nullif(trim(manager_email), '') is not null then
+    insert into public.invitations(company_id, branch_id, email, role, status, created_by)
+      values (new_company_id, new_branch_id, lower(trim(manager_email)), 'branch_manager', 'pending', auth.uid());
+  end if;
   insert into public.platform_audit_events(actor_id, action, entity_type, entity_id, metadata)
     values (auth.uid(), 'company_created', 'company', new_company_id, jsonb_build_object('branch_name', nullif(trim(branch_name), '')));
   return new_company_id;
 end; $$;
-revoke all on function public.platform_create_company(text, text, text) from public;
-grant execute on function public.platform_create_company(text, text, text) to authenticated;
+revoke all on function public.platform_create_company(text, text, text, text) from public;
+grant execute on function public.platform_create_company(text, text, text, text) to authenticated;
 
 create or replace function public.platform_update_company(company_id uuid, company_name text, branch_name text default null, manager_name text default null)
 returns void language plpgsql security definer set search_path = public as $$
