@@ -41,6 +41,7 @@ export default function Login() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null)
   useEffect(() => {
     if (window.location.hash.includes('type=recovery')) { setDialog('sign-in'); setMessage('Create a new password to continue.'); return }
+    if (window.location.hash.includes('type=invite')) { setDialog('sign-in'); setMessage('You have been invited to RouteHub. Create a password to accept the invitation.'); return }
     const storedError = sessionStorage.getItem('routehub_auth_error')
     if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setMessage(accessMessage(storedError)); setDialog('sign-in') }
     resolveAccess(getSupabase()).then(access => {
