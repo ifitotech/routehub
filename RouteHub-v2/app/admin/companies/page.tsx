@@ -17,8 +17,8 @@ export default function Companies() {
 
   useEffect(() => {
     const load = async () => {
-      const {data} = await getSupabase().from('companies').select('id,name').order('name')
-      if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: 'Workspace', status: 'Active' as const, users: 0})))
+      const {data} = await getSupabase().from('companies').select('id,name,default_branch_name').order('name')
+      if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: company.default_branch_name || 'Main branch', status: 'Active' as const, users: 0})))
     }
     void load()
   }, [])
@@ -31,7 +31,7 @@ export default function Companies() {
     if (error) return
     setForm({name: '', branch: ''}); setOpen(false); setEditing(null)
     const {data} = await getSupabase().from('companies').select('id,name').order('name')
-    if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: 'Workspace', status: 'Active' as const, users: 0})))
+    if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: company.default_branch_name || 'Main branch', status: 'Active' as const, users: 0})))
   }
 
   return <main className="app">

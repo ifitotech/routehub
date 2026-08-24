@@ -7,6 +7,7 @@ create table if not exists public.platform_audit_events (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+alter table public.companies add column if not exists default_branch_name text;
 alter table public.platform_audit_events enable row level security;
 drop policy if exists "platform admins read audit" on public.platform_audit_events;
 create policy "platform admins read audit" on public.platform_audit_events for select to authenticated
@@ -18,7 +19,7 @@ declare new_company_id uuid;
 begin
   if not exists (select 1 from public.platform_admins where user_id = auth.uid()) then raise exception 'CEO access required'; end if;
   if nullif(trim(company_name), '') is null then raise exception 'Company name is required'; end if;
-  insert into public.companies(name) values (trim(company_name)) returning id into new_company_id;
+  insert into public.companies(name, default_branch_name) values (trim(company_name), nullif(trim(branch_name), '')) returning id into new_company_id;
   insert into public.platform_audit_events(actor_id, action, entity_type, entity_id, metadata)
     values (auth.uid(), 'company_created', 'company', new_company_id, jsonb_build_object('branch_name', nullif(trim(branch_name), '')));
   return new_company_id;
@@ -31,7 +32,7 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not exists (select 1 from public.platform_admins where user_id = auth.uid()) then raise exception 'CEO access required'; end if;
   if nullif(trim(company_name), '') is null then raise exception 'Company name is required'; end if;
-  update public.companies set name = trim(company_name) where id = company_id;
+  update public.companies set name = trim(company_name), default_branch_name = nullif(trim(branch_name), '') where id = company_id;
   if not found then raise exception 'Company not found'; end if;
   insert into public.platform_audit_events(actor_id, action, entity_type, entity_id, metadata)
     values (auth.uid(), 'company_updated', 'company', company_id, jsonb_build_object('branch_name', nullif(trim(branch_name), '')));
