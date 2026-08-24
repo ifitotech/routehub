@@ -20,7 +20,7 @@ Deno.serve(async (request) => {
     const {data: admin} = await anon.from('platform_admins').select('user_id').eq('user_id', userData.user.id).maybeSingle()
     if (!admin) return new Response(JSON.stringify({error: 'CEO access required'}), {status: 403, headers: {...cors, 'content-type': 'application/json'}})
     const supabase = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-    const {data, error} = await supabase.auth.admin.inviteUserByEmail(email, {data: {company_name: companyName, branch_name: branchName, invited_role: 'branch_manager'}})
+    const {data, error} = await supabase.auth.admin.inviteUserByEmail(email, {redirectTo: 'https://routehub-wisu.vercel.app/login', data: {company_name: companyName, branch_name: branchName, invited_role: 'branch_manager'}})
     if (error) throw error
     return new Response(JSON.stringify({user_id: data.user?.id}), {headers: {...cors, 'content-type': 'application/json'}})
   } catch (error) {
