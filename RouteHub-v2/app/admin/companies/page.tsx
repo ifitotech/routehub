@@ -13,12 +13,13 @@ export default function Companies() {
   const [companies, setCompanies] = useState(seed)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Company | null>(null)
+  const [viewing, setViewing] = useState<Company | null>(null)
   const [form, setForm] = useState({name: '', branch: ''})
 
   useEffect(() => {
     const load = async () => {
       const {data} = await getSupabase().from('companies').select('id,name,default_branch_name').order('name')
-      if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: company.default_branch_name || 'Main branch', status: 'Active' as const, users: 0})))
+      if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: (company as {default_branch_name?: string}).default_branch_name || 'Main branch', status: 'Active' as const, users: 0})))
     }
     void load()
   }, [])
@@ -31,7 +32,7 @@ export default function Companies() {
     if (error) return
     setForm({name: '', branch: ''}); setOpen(false); setEditing(null)
     const {data} = await getSupabase().from('companies').select('id,name').order('name')
-    if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: company.default_branch_name || 'Main branch', status: 'Active' as const, users: 0})))
+    if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: (company as {default_branch_name?: string}).default_branch_name || 'Main branch', status: 'Active' as const, users: 0})))
   }
 
   return <main className="app">
@@ -41,6 +42,7 @@ export default function Companies() {
         <button className={styles.primaryButton} onClick={() => {setEditing(null); setOpen(value => !value)}}><Plus size={18}/>{open ? 'Close form' : 'Add company'}</button>
       </header>
 
+      {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Branch: {viewing.branch}</p><p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
       {open && <section className={styles.panel}>
         <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header>
         <div className={styles.formGrid}>
@@ -55,7 +57,7 @@ export default function Companies() {
         {companies.map(company => <article className={styles.rowCard} key={company.id}>
           <span className={styles.rowIcon}><Building2 size={20}/></span>
           <div className={styles.identity}><h2>{company.name}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p></div>
-          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><button className={styles.secondaryButton} onClick={() => alert('Organization details will be available here.')}>View organization</button><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch}); setOpen(true)}}>Edit</button></div>
+          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><button className={styles.secondaryButton} onClick={() => setViewing(company)}>View organization</button><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch}); setOpen(true)}}>Edit</button></div>
         </article>)}
       </section>
     </div>
