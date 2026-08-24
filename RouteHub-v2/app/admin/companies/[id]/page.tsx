@@ -31,7 +31,9 @@ export default function OrganizationPage() {
     if (!branch.invite?.email || resending) return
     setResending(branch.id)
     const result = await getSupabase().functions.invoke('send-manager-invite', {body: {email: branch.invite.email, companyName: company?.name || 'RouteHub company', branchName: branch.name}})
-    setMessage(result.error ? `Could not resend invitation: ${result.error.message}` : `Invitation resent to ${branch.invite.email}.`)
+    let detail = result.error?.message || ''
+    if (result.error && 'context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
+    setMessage(result.error ? `Could not resend invitation: ${detail}` : `Invitation resent to ${branch.invite.email}.`)
     setResending(null)
   }
   const addBranch = async () => {
