@@ -36,6 +36,7 @@ type Contact = {
   id: string
   company_name: string
   contact_name?: string | null
+  location_code?: string | null
   address: string
   phone?: string | null
 }
@@ -240,7 +241,7 @@ export default function Routes() {
       let assigneeQuery = client.from('company_users').select('user_id,role,branch_id,users(email,name)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'])
       if (membership.branch_id) assigneeQuery = assigneeQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
       const [contactResult, driverResult, routeResult, branchResult, locationResult] = await Promise.all([
-        client.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name'),
+        client.from('contacts').select('id,company_name,contact_name,address,phone,location_code').eq('company_id', membership.company_id).order('company_name'),
         assigneeQuery,
         client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,destination_name,destination_address,destination_phone,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
         client.from('branches').select('id,name,address,primary_driver_id').eq('company_id', membership.company_id).order('name'),
@@ -311,7 +312,7 @@ export default function Routes() {
   const selectedContact = contacts.find(contact => contact.id === form.contact_id)
   const destinationSuggestions = useMemo<LocalAddressSuggestion[]>(() => contacts.map(contact => ({
     id: contact.id,
-    primary: contact.company_name,
+    primary: contact.location_code ? `${contact.location_code} · ${contact.company_name}` : contact.company_name,
     secondary: [contact.contact_name, contact.address].filter(Boolean).join(' · '),
     value: `${contact.company_name} - ${contact.address}`,
   })), [contacts])
@@ -339,7 +340,8 @@ export default function Routes() {
     const normalized = value.trim().toLowerCase()
     const contact = contacts.find(item => {
       const option = `${item.company_name} - ${item.address}`.toLowerCase()
-      return option === normalized || item.company_name.toLowerCase() === normalized || item.address.toLowerCase() === normalized
+      const code = item.location_code?.toLowerCase() || ''
+      return option === normalized || code === normalized || item.company_name.toLowerCase() === normalized || item.address.toLowerCase() === normalized
     })
     setForm(current => {
       // A saved contact supplies the complete destination snapshot. If the

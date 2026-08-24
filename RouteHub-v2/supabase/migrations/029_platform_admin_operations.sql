@@ -47,6 +47,7 @@ revoke all on function public.platform_update_company(uuid, text, text, text) fr
 grant execute on function public.platform_update_company(uuid, text, text, text) to authenticated;
 
 alter table public.branches add column if not exists branch_number text;
+alter table public.contacts add column if not exists location_code text;
 create or replace function public.platform_create_branch(company_id uuid, branch_name text, branch_number text, branch_address text, manager_email text)
 returns uuid language plpgsql security definer set search_path = public as $$
 declare new_branch_id uuid;
@@ -55,6 +56,8 @@ begin
   if not exists (select 1 from public.companies where id = company_id) then raise exception 'Company not found'; end if;
   if nullif(trim(branch_name), '') is null then raise exception 'Branch name is required'; end if;
   insert into public.branches(company_id, name, branch_number, address) values (company_id, trim(branch_name), nullif(trim(branch_number), ''), nullif(trim(branch_address), '')) returning id into new_branch_id;
+  insert into public.contacts(company_id, company_name, address, location_code)
+    values (company_id, trim(branch_name), nullif(trim(branch_address), ''), nullif(trim(branch_number), ''));
   if nullif(trim(manager_email), '') is not null then
     insert into public.invitations(company_id, branch_id, email, role, status, created_by, invited_by)
       values (company_id, new_branch_id, lower(trim(manager_email)), 'branch_manager', 'pending', auth.uid(), auth.uid());
