@@ -22,10 +22,13 @@ export default function Companies() {
     void load()
   }, [])
 
-  const save = () => {
+  const save = async () => {
     if (!form.name.trim()) return
-    setForm({name: '', branch: ''})
-    setOpen(false)
+    const {error} = await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null})
+    if (error) return
+    setForm({name: '', branch: ''}); setOpen(false)
+    const {data} = await getSupabase().from('companies').select('id,name').order('name')
+    if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: 'Workspace', status: 'Active' as const, users: 0})))
   }
 
   return <main className="app">
