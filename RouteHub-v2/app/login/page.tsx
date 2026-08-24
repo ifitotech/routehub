@@ -63,6 +63,30 @@ export default function Login() {
     }).catch(() => setWorkspaceHref(null))
   }, [])
   useEffect(() => { if (dialog !== 'sign-in' || !window.location.hash.includes('type=recovery')) return; const input = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]'); const submit = document.querySelector<HTMLButtonElement>('.modalPrimary'); if (!input || !submit || submit.dataset.recoveryReady) return; input.autocomplete = 'new-password'; input.placeholder = 'New password (8+ characters)'; submit.dataset.recoveryReady = 'true'; submit.textContent = 'Update password'; submit.onclick = async () => { if (input.value.length < 8) { setMessage('Use at least 8 characters.'); return }; setBusy(true); const {error} = await getSupabase().auth.updateUser({password: input.value}); setMessage(error?.message || 'Password updated. You can now sign in.'); setBusy(false); if (!error) { window.history.replaceState({}, '', '/login'); setDialog(null) } } }, [dialog])
+  useEffect(() => {
+    if (dialog !== 'sign-in' || !window.location.hash.includes('type=invite')) return
+    const input = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]')
+    const submit = document.querySelector<HTMLButtonElement>('.modalPrimary')
+    if (!input || !submit || submit.dataset.inviteReady) return
+    input.autocomplete = 'new-password'
+    input.placeholder = 'Create password (8+ characters)'
+    submit.dataset.inviteReady = 'true'
+    submit.textContent = 'Accept invitation'
+    submit.onclick = async () => {
+      if (input.value.length < 8) { setMessage('Use at least 8 characters.'); return }
+      setBusy(true)
+      try {
+        const client = getSupabase()
+        const {error} = await client.auth.updateUser({password: input.value})
+        if (error) throw error
+        const access = await resolveAccess(client)
+        window.history.replaceState({}, '', '/login')
+        window.location.replace(workspaceForStrictRole(access.role))
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Could not accept the invitation.')
+      } finally { setBusy(false) }
+    }
+  }, [dialog])
   const open = (mode: DialogMode) => { setMessage(''); setDialog(mode); setMenu(false) }
   const closeDialog = () => { if (!busy) { setDialog(null); setMessage('') } }
   useEffect(() => { if (dialog !== 'sign-in') return; const passwordInput = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]'); if (!passwordInput || passwordInput.parentElement?.querySelector('[data-reset-password]')) return; const link = document.createElement('button'); link.type = 'button'; link.dataset.resetPassword = 'true'; link.textContent = 'Forgot password?'; link.style.cssText = 'display:block;margin:10px 0 0 auto;border:0;background:transparent;color:#2563eb;font:inherit;font-size:13px;font-weight:800;cursor:pointer'; link.onclick = async () => { const address = document.querySelector<HTMLInputElement>('input[autocomplete="username"]')?.value.trim().toLowerCase(); if (!address) { setMessage('Enter your email first.'); return }; setBusy(true); setMessage('Sending password reset email…'); const {error} = await getSupabase().auth.resetPasswordForEmail(address, {redirectTo: 'https://routehub-wisu.vercel.app/login'}); setMessage(error?.message || 'Check your email for a secure password reset link.'); setBusy(false) }; passwordInput.parentElement?.appendChild(link); return () => link.remove() }, [dialog])
