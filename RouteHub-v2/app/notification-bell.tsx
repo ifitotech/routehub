@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {Bell, Check, ClipboardList, Mail, Route as RouteIcon, X} from 'lucide-react'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {getSupabase} from '../lib/supabase'
+import {registerPushNotifications} from '../lib/push-notifications'
 import {useLocale} from '../lib/use-preferences'
 import styles from './notification-bell.module.css'
 
@@ -260,17 +261,26 @@ export default function NotificationBell() {
   }
 
   const enableAlerts = async () => {
-    if (typeof Notification === 'undefined') {
-      setActionMessage(locale === 'es' ? 'Este navegador no admite alertas del sistema.' : locale === 'fr' ? 'Ce navigateur ne prend pas en charge les alertes système.' : 'This browser does not support system alerts.')
+    if (typeof Notification === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      setActionMessage(locale === 'es'
+        ? (isIOS ? 'En iPhone: abre RouteHub en Safari, toca Compartir → Añadir a pantalla de inicio y activa las notificaciones desde la app instalada.' : 'Abre RouteHub en Chrome y permite las notificaciones para este dispositivo.')
+        : isIOS ? 'On iPhone: open RouteHub in Safari, tap Share → Add to Home Screen, then enable notifications in the installed app.' : 'Open RouteHub in Chrome and allow notifications for this device.')
       return
     }
-    const permission = await Notification.requestPermission()
-    setAlertPermission(permission)
-    if (permission === 'granted') {
+    try {
+      await registerPushNotifications(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
+      setAlertPermission('granted')
       playNotificationTone(audioContext)
-      setActionMessage(locale === 'es' ? 'Alertas activadas.' : locale === 'fr' ? 'Alertes activées.' : 'Alerts enabled.')
-    } else {
-      setActionMessage(locale === 'es' ? 'Permite las notificaciones en los ajustes del navegador para activarlas.' : locale === 'fr' ? 'Autorisez les notifications dans les réglages du navigateur pour les activer.' : 'Allow notifications in browser settings to enable them.')
+      setActionMessage(locale === 'es' ? 'Notificaciones del dispositivo activadas. Recibirás cambios de rutas aunque RouteHub esté cerrado.' : 'Device notifications are active. You will receive route updates even when RouteHub is closed.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      setAlertPermission(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
+      if (message.includes('not configured')) {
+        setActionMessage(locale === 'es' ? 'Las notificaciones aún no están configuradas en este entorno. Agrega NEXT_PUBLIC_VAPID_PUBLIC_KEY en Vercel.' : 'Notifications are not configured in this environment yet. Add NEXT_PUBLIC_VAPID_PUBLIC_KEY in Vercel.')
+      } else {
+        setActionMessage(locale === 'es' ? 'Permite las notificaciones en los ajustes del navegador para activarlas.' : 'Allow notifications in browser settings to enable them.')
+      }
     }
   }
 
@@ -319,7 +329,7 @@ export default function NotificationBell() {
         if (item.canAccept) return <div className={`notification-bell__item${isRead ? ' is-read' : ''}`} key={item.id}>{content}</div>
         return <Link className={`notification-bell__item${isRead ? ' is-read' : ''}`} href={item.href} key={item.id} onClick={() => { markRead(item.id); setOpen(false) }}>{content}</Link>
       })}</div> : <div className="notification-bell__empty"><Check size={22}/><strong>{copy.empty}</strong><span>{copy.emptyHelp}</span></div>}
-      {alertPermission !== 'granted' && <button className="notification-bell__alerts" type="button" onClick={() => void enableAlerts()}>{locale === 'es' ? 'Activar alertas con sonido' : locale === 'fr' ? 'Activer les alertes sonores' : 'Enable sound alerts'}</button>}
+      {alertPermission !== 'granted' && <button className="notification-bell__alerts" type="button" onClick={() => void enableAlerts()}>{locale === 'es' ? 'Activar notificaciones del dispositivo' : locale === 'fr' ? 'Activer les notifications de l’appareil' : 'Enable device notifications'}</button>}
       {actionMessage && <p className="notification-bell__feedback" role="status">{actionMessage}</p>}
       {items.length > 0 && unread > 0 && <button className="notification-bell__mark" type="button" onClick={markAllRead}>{copy.markRead}</button>}
     </div>}

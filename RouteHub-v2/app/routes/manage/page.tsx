@@ -7,6 +7,7 @@ import {getSupabase} from '../../../lib/supabase'
 import {canMove,reorder,type Mission} from '../../../lib/planner'
 import {groupRouteQueues} from '../../../lib/route-queue'
 import {useLocale} from '../../../lib/use-preferences'
+import {sendRoutePush} from '../../../lib/route-push'
 import styles from './manage.module.css'
 import fixes from './manage-mobile-fixes.module.css'
 
@@ -142,12 +143,13 @@ export default function ManageRoutes(){
    }
    const {error}=await getSupabase().from('routes').update({mission_type:route.type,origin_address:route.origin,destination_address:route.destination,destination_name:route.destination_name||null,destination_phone:route.destination_phone||null,order_number:route.order_number||null,notes:route.notes||null,updated_version:Date.now()}).eq('id',route.id)
    if(error)throw error
+   void sendRoutePush(route.id, original.driver_id!==route.driver_id?'assigned':'updated')
    setEditing(null);showMessage('Route updated.');await load()
   }catch(error){showMessage(error instanceof Error?error.message:t.unableUpdateRoute,true)}finally{setSavingId(null)}
  }
  const changeStatus=async(route:RouteRow,status:string)=>{
   setSavingId(route.id)
-  try{const {error}=await getSupabase().from('routes').update({status,updated_version:Date.now()}).eq('id',route.id);if(error)throw error;showMessage('Route updated.');await load()}catch(error){showMessage(error instanceof Error?error.message:t.unableUpdateRoute,true)}finally{setSavingId(null)}
+  try{const {error}=await getSupabase().from('routes').update({status,updated_version:Date.now()}).eq('id',route.id);if(error)throw error;void sendRoutePush(route.id,'updated');showMessage('Route updated.');await load()}catch(error){showMessage(error instanceof Error?error.message:t.unableUpdateRoute,true)}finally{setSavingId(null)}
  }
 
  return <main className={`app ${styles.page}`}>

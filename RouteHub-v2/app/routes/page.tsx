@@ -26,6 +26,7 @@ import {
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
+import {sendRoutePush} from '../../lib/route-push'
 import {chooseDefaultAssignee} from '../../lib/route-assignment'
 import GoogleAddressInput, {type LocalAddressSuggestion} from '../google-address-input'
 import styles from './routes.module.css'
@@ -434,7 +435,10 @@ export default function Routes() {
       }).select('id').single()
       if (error) throw error
 
-      if (createdRoute?.id && currentUserId) await recordActivity({companyId,userId:currentUserId,action:'route_created',recordId:createdRoute.id,after:{driver_id:form.driver_id,priority:form.priority,destination:destinationAddress}}).catch(()=>undefined)
+      if (createdRoute?.id && currentUserId) {
+        await recordActivity({companyId,userId:currentUserId,action:'route_created',recordId:createdRoute.id,after:{driver_id:form.driver_id,priority:form.priority,destination:destinationAddress}}).catch(()=>undefined)
+        void sendRoutePush(createdRoute.id, 'assigned')
+      }
       window.dispatchEvent(new Event('routehub:notifications-refresh'))
 
       const requestId = searchParams.get('request')

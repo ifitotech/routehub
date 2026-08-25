@@ -5,7 +5,10 @@ export async function registerPushNotifications(vapidPublicKey: string) {
   if (!vapidPublicKey) throw new Error('Push notifications are not configured yet.')
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') throw new Error('Notification permission was not granted.')
-  const registration = await navigator.serviceWorker.register('/routehub-push-sw.js', { scope: '/' })
+  // PwaRegister owns /sw.js. Reuse it instead of installing a competing root
+  // worker, which made notifications work only while the tab was open.
+  await navigator.serviceWorker.register('/sw.js', {scope: '/', updateViaCache: 'none'})
+  const registration = await navigator.serviceWorker.ready
   const existing = await registration.pushManager.getSubscription()
   const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidPublicKey })
   const json = subscription.toJSON()
