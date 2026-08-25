@@ -136,17 +136,32 @@ export default function Manager() {
       {summary.activeRoutes>0?<Link className={styles.mobileLiveCta} href="/routes/live"><MapPin size={18} />Open live map<ChevronRight size={18} /></Link>:<div className={styles.mobileLiveCta}><Users size={18} />No drivers currently active</div>}
     </section>
 
-    <section className={styles.desktopLower}>
-    <div className={styles.desktopRoutesPanel}>
-    <div className={styles.desktopPanelHeader}><h2>Active Routes</h2><Link href="/routes">View all</Link></div>
-    <section className={`${styles.todayCard} ${hasIssue ? styles.attention : ''}`} aria-live="polite">
-      {loading ? <div className={styles.skeleton} aria-label={t.loading} /> : todayRoutes.length ? <div className={styles.todayList}>{todayRoutes.map(route => <div className={styles.todayRow} key={route.id}><span className={styles.todayBadge} /><span className={styles.todayBody}><strong>{route.destination_name || t.destination}</strong><span>{String(route.mission_type || t.delivery).toUpperCase()} · {route.driver_id ? t.assigned : t.pending}</span></span><span className={styles.todayState}>{route.status || t.published}</span></div>)}</div> : <div className={styles.empty}><span className={styles.emptyIcon}><ClipboardList size={27} aria-hidden="true" /></span><div><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p><Link className={styles.emptyCta} href="/routes">{t.createRoute}</Link></div></div>}
+    <section className={styles.desktopOperations} aria-label="Live operations">
+      <div className={styles.desktopLivePanel}>
+        <div className={styles.desktopPanelHeader}><span><h2>Live operations</h2><p>Drivers and routes currently moving.</p></span><Link href="/routes/live">Open live map</Link></div>
+        {summary.activeRoutes>0?<LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>:<div className={styles.empty}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><div><h2>No active drivers</h2><p>When a driver starts their day or route, their live status will appear here.</p><Link className={styles.emptyCta} href="/manager/team">View team</Link></div></div>}
+      </div>
+      <aside className={styles.desktopQuickPanel} aria-label={t.quickActions}>
+        <div className={styles.desktopPanelHeader}><span><h2>{t.quickActions}</h2><p>Common manager tasks.</p></span></div>
+        <div className={styles.desktopQuickList}>
+          <Link className={styles.action} href="/routes?new=1"><span className={styles.actionIcon}><Plus size={21} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>New route</strong><span>Create a pickup or delivery</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.action} href="/manager/team"><span className={styles.actionIcon}><Users size={20} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>Team members</strong><span>Manage drivers and invitations</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.action} href="/manager/history"><span className={styles.actionIcon}><History size={20} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>View history</strong><span>Review completed work</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
+        </div>
+      </aside>
     </section>
-    </div>
-    <div className={styles.desktopMapPanel}>
-      <div className={styles.desktopPanelHeader}><h2>Live Map</h2><Link href="/routes/live">View all</Link></div>
-      {summary.activeRoutes>0?<LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>:<div className={styles.empty}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><div><h2>No active drivers</h2><p>Drivers will appear here when they start a route.</p><Link className={styles.emptyCta} href="/manager/team">View team</Link></div></div>}
-    </div>
+
+    <section className={styles.desktopTracking}>
+      <div className={styles.desktopRoutesPanel}>
+        <div className={styles.desktopPanelHeader}><span><h2>Route activity</h2><p>Published, active and paused routes for today.</p></span><Link href="/routes">View all</Link></div>
+        <section className={`${styles.todayCard} ${hasIssue ? styles.attention : ''}`} aria-live="polite">
+          {loading ? <div className={styles.skeleton} aria-label={t.loading} /> : todayRoutes.length ? <div className={styles.todayList}>{todayRoutes.map(route => <div className={styles.todayRow} key={route.id}><span className={styles.todayBadge} /><span className={styles.todayBody}><strong>{route.destination_name || t.destination}</strong><span>{String(route.mission_type || t.delivery).toUpperCase()} · {route.driver_id ? t.assigned : t.pending}</span></span><span className={styles.todayState}>{route.status || t.published}</span></div>)}</div> : <div className={styles.empty}><span className={styles.emptyIcon}><ClipboardList size={27} aria-hidden="true" /></span><div><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p><Link className={styles.emptyCta} href="/routes?new=1">{t.createRoute}</Link></div></div>}
+        </section>
+      </div>
+      <div className={`${styles.desktopAttentionPanel} ${hasIssue ? styles.attention : ''}`}>
+        <div className={styles.desktopPanelHeader}><span><h2>Attention needed</h2><p>Problems that need manager review.</p></span><Link href="/reports">View issues</Link></div>
+        <div className={styles.attentionBody}><span className={styles.attentionIcon}><AlertTriangle size={22} /></span><div><strong>{summary.openIssues ? `${summary.openIssues} open issue${summary.openIssues === 1 ? '' : 's'}` : 'No issues reported'}</strong><p>{summary.openIssues ? 'Review route reports and follow up with the driver.' : 'Your team has no route issues to review today.'}</p></div></div>
+      </div>
     </section>
 
     <p className={styles.sectionLabel}>{t.quickActions}</p>
