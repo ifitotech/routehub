@@ -55,8 +55,10 @@ export function setLocalePreference(locale: Locale) {
 }
 
 export function resolvedTheme(preference: ThemePreference): 'light' | 'dark' {
-  if (preference !== 'system') return preference
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  if (preference === 'dark') return 'dark'
+  // Keep the product visual language consistent across navigation. The
+  // browser's system color scheme must not silently switch the workspace.
+  return 'light'
 }
 
 export function applyThemePreference(preference: ThemePreference) {
