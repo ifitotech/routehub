@@ -84,6 +84,7 @@ html[data-theme="light"] .nav a:hover,html[data-theme="light"] .nav a:focus-visi
 .settings-page{max-width:900px}
 .settings-page>h1{font-size:clamp(32px,5vw,48px);letter-spacing:-.04em;margin:8px 0 24px}
 .settings-page .settings-card{margin-top:14px;padding:20px 22px}
+.notification-settings-card{border-color:color-mix(in srgb,var(--rh-primary) 24%,var(--rh-border));background:linear-gradient(135deg,color-mix(in srgb,var(--rh-primary) 7%,var(--rh-surface)),var(--rh-surface))}.notification-settings-status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:#e9fbf4;color:#07875f;font-size:12px;font-weight:850}.notification-settings-help{margin:12px 0 0;line-height:1.45}
 html[data-theme="dark"] .settings-page .settings-card{background:var(--rh-surface);border-color:var(--rh-border);box-shadow:0 12px 30px rgb(0 0 0 / 18%)}
 html[data-theme="light"] .settings-page .settings-card{background:rgba(255,255,255,.92);border-color:rgba(100,116,139,.18)}
 @media(max-width:640px){.nav,.app-bottom-nav{bottom:max(0px,env(safe-area-inset-bottom));width:calc(100vw - 16px);max-width:calc(100vw - 16px);border-radius:20px}.nav a,.app-bottom-nav a{min-height:50px;padding-inline:6px;font-size:11px}.app{padding-bottom:calc(88px + env(safe-area-inset-bottom))}}
