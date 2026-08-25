@@ -352,6 +352,32 @@ html[data-theme='light'] .notification-bell__panel { box-shadow: 0 18px 46px rgb
   .notification-bell__button, .notification-bell__item { transition: none; }
 }
 
+/* Desktop workspace behavior
+   The floating navigation is intentionally a mobile control. On desktop it
+   used to consume viewport space and overlap the lower part of otherwise
+   complete pages. Keep the document available for long lists, while letting
+   each page use the full desktop canvas by default. */
+@media (min-width: 1024px) {
+  .app-bottom-nav,
+  main.app > .nav {
+    display: none !important;
+  }
+
+  main.app,
+  .app {
+    width: 100%;
+    max-width: 1440px;
+    min-height: 100dvh;
+    padding-bottom: 32px;
+  }
+
+  /* Long route/history/contact screens remain naturally scrollable; normal
+     dashboard content no longer reserves a mobile safe-area gutter. */
+  main.app > .topbar {
+    margin-bottom: clamp(22px, 2.4vw, 36px);
+  }
+}
+
 /* Google Places renders its suggestions outside the route dialog. Keep it
    above the modal/backdrop so an address is selected in the same field. */
 .pac-container { z-index: 10060 !important; border: 1px solid var(--rh-border) !important; border-radius: 14px !important; box-shadow: 0 14px 32px rgb(15 23 42 / 18%) !important; font-family: inherit !important; overflow: hidden; }
