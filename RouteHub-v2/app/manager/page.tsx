@@ -90,7 +90,7 @@ export default function Manager() {
         <Link href="/manager" aria-current="page"><Home size={20}/><span>Today</span></Link>
         <Link href="/routes"><RouteIcon size={20}/><span>Routes</span></Link>
         <Link href="/routes/live"><MapPin size={20}/><span>Map</span></Link>
-        <Link href="/manager/team"><Users size={20}/><span>Drivers</span></Link>
+        <Link href="/contacts"><Users size={20}/><span>Contacts</span></Link>
         <Link href="/manager/history"><History size={20}/><span>History</span></Link>
         <Link href="/manager/more"><MoreHorizontal size={20}/><span>Settings</span></Link>
       </nav>
