@@ -94,17 +94,19 @@ test('Complete with Photo stores separate final evidence without replacing deliv
 
 test('Report an Issue supports the required choices, note, and optional photo',()=>{
   const source=driverPage()
-  for(const option of ['Customer unavailable','Wrong address','Material issue','Could not complete','Other'])assert.match(source,new RegExp(`<option>${option}</option>`))
+  for(const option of ['Customer unavailable','Wrong address','Material issue','Could not complete','Other'])assert.match(source,new RegExp(`'${option}'`))
+  assert.match(source,/finalizeIssueOpen&&<div/)
   assert.match(source,/setFinalizeIssuePhoto/)
-  assert.match(source,/update\('issue',issuePhoto\|\|undefined\)/)
+  assert.match(source,/finalizeRoute\('issue',finalizeIssuePhoto\|\|undefined\)/)
 })
 
 test('delivery retains photo and customer signature proof while pickup remains lighter',()=>{
   const source=driverPage()
-  assert.match(source,/currentKind==='delivery'&&<button/)
+  assert.match(source,/deliveryToolsOpen&&currentKind==='delivery'&&<div/)
   assert.match(source,/setSignatureOpen\(true\)/)
   assert.match(source,/saveCustomerSignature/)
-  assert.match(source,/currentKind!=='branch'/)
+  assert.match(source,/saveCustomerSignatureProof/)
+  assert.match(source,/setDeliveryToolsOpen\(true\)/)
 })
 
 test('pickup PO is captured in both the builder and focused driver display',()=>{
