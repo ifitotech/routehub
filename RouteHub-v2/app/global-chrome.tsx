@@ -25,7 +25,7 @@ export default function GlobalChrome(){
   // other authenticated screen uses this exact shared header so moving from
   // Routes, History, Settings or a utility screen never falls back to an old
   // logo/navigation treatment.
-  if(isDriverWorkspace||pathname==='/'||pathname==='/login'||pathname==='/manager'||pathname==='/product'||pathname==='/how-it-works'||pathname==='/for-drivers')return null
+  if(isDriverWorkspace||pathname==='/'||pathname==='/login'||pathname==='/activate-invitation'||pathname==='/manager'||pathname==='/product'||pathname==='/how-it-works'||pathname==='/for-drivers')return null
   const workspaceHomes=['/driver','/manager','/operations','/sales','/counter','/admin']
   const showBack=!workspaceHomes.includes(pathname)
   return <div className={`global-chrome${scrolled ? ' is-scrolled' : ''}`}>

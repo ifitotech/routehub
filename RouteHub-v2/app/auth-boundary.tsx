@@ -5,7 +5,9 @@ import {usePathname, useRouter} from 'next/navigation'
 import {getSupabase} from '../lib/supabase'
 import {canOpenPath, resolveAccess, workspaceForStrictRole} from './auth-access'
 
-const publicPaths = ['/login', '/auth/callback', '/product', '/how-it-works', '/for-drivers']
+// Invitation activation must be public: a manager has no session yet when
+// opening the email link for the first time.
+const publicPaths = ['/login', '/auth/callback', '/activate-invitation', '/product', '/how-it-works', '/for-drivers']
 
 export default function AuthBoundary({children}: {children: React.ReactNode}) {
   const pathname = usePathname()
