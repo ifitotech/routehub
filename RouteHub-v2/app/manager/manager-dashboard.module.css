@@ -117,3 +117,13 @@
   .desktopLower{grid-template-columns:minmax(430px,.8fr) minmax(680px,1.2fr);gap:24px}
   .todayRow{min-height:78px;padding:15px 18px}
 }
+
+/* Laptop/short-monitor fit: keep the complete operational overview visible
+   above the browser chrome without sacrificing the approved desktop layout. */
+@media (min-width: 1024px) and (max-height: 820px){
+  .workspace{padding-top:18px;padding-bottom:24px}
+  .desktopTop{margin-bottom:14px}.metricGrid{gap:12px;margin-bottom:12px}.metric{min-height:78px;padding:12px}.metricValue{font-size:25px}.metric:before{bottom:12px;right:12px}
+  .desktopOperations{gap:14px}.desktopTracking{gap:14px;margin-top:14px}
+  .desktopPanelHeader{padding:12px 15px}.desktopLivePanel :global(.section){padding:0 14px 14px}.desktopLivePanel :global(.mapCard){min-height:220px}.desktopLivePanel :global(.locationPanel){min-height:90px}.desktopQuickList{gap:7px;padding:12px}.desktopQuickPanel .action{min-height:52px;padding:8px 10px}.desktopQuickPanel .actionIcon{width:30px;height:30px}.desktopQuickPanel .actionCopy span{font-size:10px}
+  .desktopRoutesPanel,.desktopAttentionPanel{min-height:150px}.todayRow{min-height:52px;padding:9px 13px}.attentionBody{padding:14px}.attentionIcon{width:34px;height:34px}.desktopRoutesPanel .empty{padding:12px 15px}.desktopRoutesPanel .emptyIcon{width:42px;height:42px}
+}
