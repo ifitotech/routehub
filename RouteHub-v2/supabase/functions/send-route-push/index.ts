@@ -16,8 +16,7 @@ Deno.serve(async request => {
   try {
     const authorization = request.headers.get('Authorization') || ''
     if (!authorization) return json({error: 'Unauthorized'}, 401)
-    const {routeId, event} = await request.json() as {routeId?: string; event?: 'assigned' | 'updated'}
-    if (!routeId || !['assigned', 'updated'].includes(event || '')) return json({error: 'Invalid route notification request'}, 400)
+    const {routeId, event, action} = await request.json() as {routeId?: string; event?: 'assigned' | 'updated'; action?: 'config'}
 
     const url = Deno.env.get('SUPABASE_URL')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -25,6 +24,16 @@ Deno.serve(async request => {
     const callerClient = createClient(url, anonKey, {global: {headers: {Authorization: authorization}}})
     const {data: userData, error: userError} = await callerClient.auth.getUser()
     if (userError || !userData.user) return json({error: 'Unauthorized'}, 401)
+
+    // The VAPID public key is deliberately shareable with the browser. Keeping
+    // it behind an authenticated Edge response avoids duplicating setup in
+    // Vercel while never exposing the private signing key.
+    if (action === 'config') {
+      const publicKey = Deno.env.get('VAPID_PUBLIC_KEY')
+      if (!publicKey) return json({error: 'VAPID push secrets are not configured'}, 503)
+      return json({vapidPublicKey: publicKey})
+    }
+    if (!routeId || !['assigned', 'updated'].includes(event || '')) return json({error: 'Invalid route notification request'}, 400)
 
     const service = createClient(url, serviceKey)
     const {data: route, error: routeError} = await service.from('routes')

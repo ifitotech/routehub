@@ -26,7 +26,7 @@ export default function DeviceNotificationsSetting() {
     }
     setBusy(true)
     try {
-      await registerPushNotifications(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
+      await registerPushNotifications()
       setPermission('granted')
       setMessage(locale === 'es' ? 'Listo. Este dispositivo recibirá las actualizaciones de rutas aunque la app esté cerrada.' : 'Ready. This device will receive route updates even when the app is closed.')
     } catch (error) {

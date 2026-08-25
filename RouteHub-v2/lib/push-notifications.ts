@@ -1,8 +1,18 @@
 import { getSupabase } from './supabase'
 
-export async function registerPushNotifications(vapidPublicKey: string) {
+async function getVapidPublicKey() {
+  const configured = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
+  if (configured) return configured
+  const {data, error} = await getSupabase().functions.invoke('send-route-push', {body: {action: 'config'}})
+  if (error) throw new Error('Push notifications are not configured yet.')
+  const key = typeof data?.vapidPublicKey === 'string' ? data.vapidPublicKey : ''
+  if (!key) throw new Error('Push notifications are not configured yet.')
+  return key
+}
+
+export async function registerPushNotifications(vapidPublicKey?: string) {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Push notifications are not supported in this browser.')
-  if (!vapidPublicKey) throw new Error('Push notifications are not configured yet.')
+  const key = vapidPublicKey || await getVapidPublicKey()
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') throw new Error('Notification permission was not granted.')
   // PwaRegister owns /sw.js. Reuse it instead of installing a competing root
@@ -10,7 +20,7 @@ export async function registerPushNotifications(vapidPublicKey: string) {
   await navigator.serviceWorker.register('/sw.js', {scope: '/', updateViaCache: 'none'})
   const registration = await navigator.serviceWorker.ready
   const existing = await registration.pushManager.getSubscription()
-  const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidPublicKey })
+  const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
   const json = subscription.toJSON()
   const { data: { user } } = await getSupabase().auth.getUser()
   if (!user || !json.endpoint || !json.keys?.p256dh || !json.keys.auth) throw new Error('Sign in before enabling notifications.')
