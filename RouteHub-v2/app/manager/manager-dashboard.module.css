@@ -89,6 +89,10 @@
   .todayCard{min-height:0;overflow-y:auto;border:0;border-radius:0;background:#fff}.todayRow{min-height:70px;padding:12px 16px}.todayBadge{width:4px;height:38px;border-radius:999px;background:#8b5cf6}.todayBody strong{font-size:14px}.todayBody span{font-size:12px}.todayState{font-size:11px;text-transform:capitalize}
   .mapEmbed{height:355px;background:#eaf2fb}.mapEmbed iframe{width:100%;height:100%;border:0;display:block;filter:saturate(.78) contrast(.96)}.mapHint{margin:0;padding:9px 14px;color:#64748b;font-size:11px;border-top:1px solid #edf1f6}
   .dashboard :global(.temporary-route-assignments){margin-top:16px}
+  /* Desktop uses the full workspace shell. The compact action row and
+     bottom navigation belong to mobile and must not duplicate desktop quick
+     actions or consume vertical space. */
+  .sectionLabel,.actions,.nav{display:none!important}
 }
 
 /* Mobile dashboard: compact overview matching the approved concept. */
