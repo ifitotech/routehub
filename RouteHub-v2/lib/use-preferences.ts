@@ -42,7 +42,7 @@ function repairedDictionary(locale: Locale) {
   return Object.fromEntries(Object.entries(translations[locale]).map(([key, value]) => [key, decodeUtf8Garble(repairMojibake(value))])) as typeof translations[Locale]
 }
 
-export type ThemePreference = 'system' | 'light' | 'dark'
+export type ThemePreference = 'light'
 
 export const LANGUAGE_EVENT = 'routehub:language-change'
 export const THEME_EVENT = 'routehub:theme-change'
@@ -54,18 +54,19 @@ export function setLocalePreference(locale: Locale) {
   window.dispatchEvent(new CustomEvent(LANGUAGE_EVENT, {detail: {locale}}))
 }
 
-export function resolvedTheme(preference: ThemePreference): 'light' | 'dark' {
-  if (preference === 'dark') return 'dark'
-  // Keep the product visual language consistent across navigation. The
-  // browser's system color scheme must not silently switch the workspace.
+export function resolvedTheme(_preference: ThemePreference): 'light' {
+  // RouteHub has one approved visual language. A system-level dark setting
+  // must never change just part of a route workflow.
   return 'light'
 }
 
-export function applyThemePreference(preference: ThemePreference) {
-  window.localStorage.setItem('routehub_theme', preference)
-  const resolved = resolvedTheme(preference)
+export function applyThemePreference(_preference: ThemePreference = 'light') {
+  window.localStorage.setItem('routehub_theme', 'light')
+  window.localStorage.removeItem('rh2-theme')
+  const resolved = resolvedTheme('light')
   document.documentElement.dataset.theme = resolved
-  window.dispatchEvent(new CustomEvent(THEME_EVENT, {detail: {preference, resolved}}))
+  document.documentElement.style.colorScheme = resolved
+  window.dispatchEvent(new CustomEvent(THEME_EVENT, {detail: {preference: 'light', resolved}}))
 }
 
 export function useLocale() {
@@ -101,35 +102,25 @@ export function useLocale() {
 }
 
 export function useThemePreference() {
-  const [theme, setTheme] = useState<ThemePreference>('system')
+  const [theme, setTheme] = useState<ThemePreference>('light')
 
   useEffect(() => {
-    const readPreference = (): ThemePreference => {
-      const value = window.localStorage.getItem('routehub_theme')
-      return value === 'light' || value === 'dark' ? value : 'system'
-    }
     const sync = () => {
-      const next = readPreference()
-      setTheme(next)
-      document.documentElement.dataset.theme = resolvedTheme(next)
+      setTheme('light')
+      document.documentElement.dataset.theme = 'light'
+      document.documentElement.style.colorScheme = 'light'
     }
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const onMedia = () => { if (readPreference() === 'system') sync() }
     const onStorage = (event: StorageEvent) => { if (!event.key || event.key === 'routehub_theme') sync() }
     sync()
-    media.addEventListener('change', onMedia)
     window.addEventListener(THEME_EVENT, sync)
     window.addEventListener('storage', onStorage)
     return () => {
-      media.removeEventListener('change', onMedia)
       window.removeEventListener(THEME_EVENT, sync)
       window.removeEventListener('storage', onStorage)
     }
   }, [])
 
-  const changeTheme = useCallback((value: string) => {
-    if (value === 'system' || value === 'light' || value === 'dark') applyThemePreference(value)
-  }, [])
+  const changeTheme = useCallback(() => applyThemePreference('light'), [])
 
   return {theme, setTheme: changeTheme}
 }

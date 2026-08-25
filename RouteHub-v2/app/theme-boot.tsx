@@ -2,24 +2,21 @@
 import {useEffect} from 'react'
 
 function applyThemePreference(){
-  const value=localStorage.getItem('routehub_theme')||localStorage.getItem('rh2-theme')||'light'
-  // RouteHub is designed around the approved light operational workspace.
-  // "System" used to inherit a computer's dark mode and make only some
-  // screens appear to change theme while navigating. Dark remains available
-  // when it is selected intentionally in settings.
-  const resolved=value==='dark' ? 'dark' : 'light'
-  document.documentElement.dataset.theme=resolved
-  document.documentElement.style.colorScheme=resolved
+  // RouteHub's approved product UI is light-only.  Older betas may have a
+  // saved dark/system preference; normalize it here before any workspace is
+  // painted so route, manager and driver screens never switch independently.
+  localStorage.setItem('routehub_theme','light')
+  localStorage.removeItem('rh2-theme')
+  document.documentElement.dataset.theme='light'
+  document.documentElement.style.colorScheme='light'
 }
 
 export default function ThemeBoot(){
   useEffect(()=>{
-    const media=window.matchMedia('(prefers-color-scheme: dark)')
     const sync=()=>applyThemePreference()
     sync()
-    media.addEventListener('change',sync)
     window.addEventListener('routehub:theme-change',sync)
-    return()=>{media.removeEventListener('change',sync);window.removeEventListener('routehub:theme-change',sync)}
+    return()=>window.removeEventListener('routehub:theme-change',sync)
   },[])
   return null
 }
