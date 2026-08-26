@@ -1,8 +1,9 @@
 'use client'
 
-import {Download, ExternalLink, PlusSquare, Share, Smartphone, X} from 'lucide-react'
+import {Bell, BellRing, Download, ExternalLink, PlusSquare, Share, Smartphone, X} from 'lucide-react'
 import {useEffect, useMemo, useState} from 'react'
 import {useLocale} from '../lib/use-preferences'
+import {registerPushNotifications} from '../lib/push-notifications'
 
 type InstallPrompt = Event & {prompt?: () => Promise<void>}
 
@@ -15,6 +16,8 @@ export default function InstallAppCard() {
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null)
   const [open, setOpen] = useState(false)
   const [installed, setInstalled] = useState(false)
+  const [notificationState, setNotificationState] = useState<NotificationPermission | 'unsupported'>('unsupported')
+  const [notificationBusy, setNotificationBusy] = useState(false)
   const copy = useMemo(() => locale === 'es'
     ? {title:'Instalar RouteHub',help:'Instala la app para abrirla más rápido y recibir notificaciones.',install:'Instalar app',guide:'Ver guía',close:'Cerrar',iphone:'En iPhone: abre RouteHub en Safari, pulsa Compartir y luego “Añadir a pantalla de inicio”. Después abre la app desde el nuevo icono.',android:'En Android: abre RouteHub en Chrome y pulsa “Instalar app” o “Añadir a pantalla de inicio”.'}
     : locale === 'fr'
@@ -23,6 +26,7 @@ export default function InstallAppCard() {
 
   useEffect(() => {
     setInstalled(standalone())
+    if (typeof Notification !== 'undefined') setNotificationState(Notification.permission)
     const onPrompt = (event: Event) => setPrompt(event as InstallPrompt)
     const onInstalled = () => { setInstalled(true); setPrompt(null) }
     window.addEventListener('routehub:install-available', onPrompt)
@@ -30,7 +34,16 @@ export default function InstallAppCard() {
     return () => { window.removeEventListener('routehub:install-available', onPrompt); window.removeEventListener('appinstalled', onInstalled) }
   }, [])
 
-  if (installed) return null
+  if (installed) {
+    if (notificationState === 'granted' || notificationState === 'denied') return null
+    const enableNotifications = async () => {
+      setNotificationBusy(true)
+      try { await registerPushNotifications(); setNotificationState('granted') }
+      catch { if (typeof Notification !== 'undefined') setNotificationState(Notification.permission) }
+      finally { setNotificationBusy(false) }
+    }
+    return <section className="card settings-card install-app-card notification-install-prompt"><div><h2><Bell size={19}/> {locale === 'es' ? 'Activa las notificaciones' : 'Enable notifications'}</h2><p className="muted">{locale === 'es' ? 'Recibe avisos de rutas aunque RouteHub esté cerrada.' : 'Receive route alerts even when RouteHub is closed.'}</p></div><button className="primary" type="button" disabled={notificationBusy} onClick={() => void enableNotifications()}><BellRing size={16}/>{notificationBusy ? '…' : (locale === 'es' ? 'Activar' : 'Enable')}</button></section>
+  }
   const iphone = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent)
   const install = async () => { if (prompt?.prompt) { await prompt.prompt(); setPrompt(null) } else setOpen(true) }
   return <>

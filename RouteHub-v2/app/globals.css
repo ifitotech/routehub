@@ -108,7 +108,10 @@ html[data-theme="light"] .settings-page .settings-card{background:rgba(255,255,2
 /* Free address lookup uses a RouteHub-owned result sheet instead of the
    browser's cramped datalist above the mobile keyboard. */
 .routehub-address-input{position:relative;width:100%}
-.routehub-address-input>input{width:100%}
+.routehub-address-control{display:flex;align-items:stretch;gap:8px;width:100%}
+.routehub-address-control>input{min-width:0;flex:1;width:100%}
+.routehub-address-search-button{flex:0 0 auto;min-width:78px;border:1px solid #2563eb;border-radius:12px;background:#2563eb;color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.routehub-address-search-button:disabled{cursor:not-allowed;opacity:.5}
 .routehub-address-suggestions{position:absolute;z-index:30;top:calc(100% + 7px);right:0;left:0;max-height:236px;overflow:auto;padding:6px;border:1px solid var(--rh-border,rgba(148,163,184,.28));border-radius:14px;background:var(--rh-surface,#fff);box-shadow:0 18px 38px rgba(15,23,42,.18)}
 .routehub-address-suggestion{width:100%;min-height:58px;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:9px;padding:9px;border:0;border-radius:10px;background:transparent;color:var(--rh-text,#0f172a);text-align:left;cursor:pointer}
 .routehub-address-suggestion:hover,.routehub-address-suggestion:focus-visible{background:var(--rh-soft-blue,#eff6ff);outline:none}
@@ -116,6 +119,8 @@ html[data-theme="light"] .settings-page .settings-card{background:rgba(255,255,2
 .routehub-address-status{margin:0;padding:13px 12px;color:var(--rh-muted,#64748b);font-size:14px;line-height:1.4}
 .routehub-address-suggestion strong,.routehub-address-suggestion small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.routehub-address-suggestion strong{font-size:14px;font-weight:800}.routehub-address-suggestion small{margin-top:2px;color:var(--rh-muted,#64748b);font-size:12px}.routehub-address-pin{width:26px;height:26px;display:grid;place-items:center;border-radius:9px;background:rgba(37,99,235,.12);color:#2563eb;font-size:17px}
 html[data-theme="dark"] .routehub-address-suggestions{background:#14243b;border-color:rgba(148,163,184,.26);box-shadow:0 18px 42px rgba(0,0,0,.42)}html[data-theme="dark"] .routehub-address-suggestion{color:#f8fafc}html[data-theme="dark"] .routehub-address-suggestion:hover,html[data-theme="dark"] .routehub-address-suggestion:focus-visible{background:rgba(37,99,235,.18)}html[data-theme="dark"] .routehub-address-suggestion small{color:#b7c5d9}
+html[data-theme="dark"] .routehub-address-search-button{border-color:#3b82f6;background:#2563eb;color:#fff}
+@media (max-width:640px){.routehub-address-control{gap:6px}.routehub-address-search-button{min-width:68px;font-size:12px}}
 /* Request actions stay compact while keeping cancel separate from assignment. */
 .request-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .request-actions .request-assign,.request-actions .request-cancel{display:inline-flex;align-items:center;gap:6px}
