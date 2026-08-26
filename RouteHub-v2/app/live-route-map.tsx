@@ -44,7 +44,10 @@ function FitBounds({points}:{points:RouteCoordinate[]}){
 
 async function geocode(address?:string|null){
  if(!address)return null
- const result=await fetch(`/api/geocode?address=${encodeURIComponent(address)}`)
+ const controller=new AbortController()
+ const timeout=window.setTimeout(()=>controller.abort(),8000)
+ let result:Response
+ try{result=await fetch(`/api/geocode?address=${encodeURIComponent(address)}`,{signal:controller.signal})}finally{window.clearTimeout(timeout)}
  if(!result.ok)return null
  const payload=await result.json() as GeocodeResponse
  return payload.coordinate||null
@@ -75,7 +78,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,waypoints
    setLoading(false)
   }).catch(()=>{if(!cancelled){setUnavailable(true);setLoading(false)}})
   return()=>{cancelled=true}
- },[originAddress,destinationAddress,waypoints])
+ },[originAddress,destinationAddress,JSON.stringify(waypoints)])
 
  useEffect(()=>{
   let cancelled=false
