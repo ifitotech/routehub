@@ -1,0 +1,26 @@
+import type {NavigationDestination} from './types'
+
+function destinationValue(destination:NavigationDestination){
+  if(destination.coordinate)return `${destination.coordinate.lat},${destination.coordinate.lng}`
+  return destination.address?.trim()||''
+}
+
+export function googleMapsNavigationUrl(destination:NavigationDestination):string|null{
+  const value=destinationValue(destination)
+  if(!value)return null
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(value)}&travelmode=driving`
+}
+
+export function appleMapsNavigationUrl(destination:NavigationDestination):string|null{
+  const value=destinationValue(destination)
+  if(!value)return null
+  const params=new URLSearchParams({daddr:value,dirflg:'d'})
+  if(destination.label?.trim())params.set('q',destination.label.trim())
+  return `https://maps.apple.com/?${params.toString()}`
+}
+
+export function openNavigation(destination:NavigationDestination,platform=''):string|null{
+  const normalizedPlatform=platform.toLowerCase()
+  if(/iphone|ipad|ipod/.test(normalizedPlatform))return appleMapsNavigationUrl(destination)||googleMapsNavigationUrl(destination)
+  return googleMapsNavigationUrl(destination)
+}

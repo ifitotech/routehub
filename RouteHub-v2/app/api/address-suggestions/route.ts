@@ -1,77 +1,118 @@
 import {NextRequest, NextResponse} from 'next/server'
 
-type CensusMatch = {matchedAddress?: string}
-type NominatimMatch = {display_name?: string}
-type Suggestion = {label: string; primary: string; secondary: string}
+type CensusMatch = {matchedAddress?: string; coordinates?: {x?: number; y?: number}}
+type NominatimMatch = {display_name?: string; lat?: string; lon?: string; place_id?: number; osm_type?: string; osm_id?: number; name?: string}
+type Coordinate = {lat: number; lng: number}
+type LocationSource = 'census' | 'nominatim'
+type Suggestion = {label: string; primary: string; secondary: string; coordinate?: Coordinate; source: LocationSource; externalId?: string; name?: string}
+
+const MAX_QUERY_LENGTH = 180
+const CACHE_TTL_MS = 15 * 60 * 1000
+const cache = new Map<string, {expiresAt: number; suggestions: Suggestion[]}>()
+let lastNominatimRequestAt = 0
 
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
+const validCoordinate = (coordinate: Coordinate | undefined): coordinate is Coordinate => Boolean(coordinate && Number.isFinite(coordinate.lat) && Number.isFinite(coordinate.lng) && coordinate.lat >= -90 && coordinate.lat <= 90 && coordinate.lng >= -180 && coordinate.lng <= 180)
 
-// Nominatim is a useful fallback, but without a paid autocomplete provider it
-// can return POIs or cities that merely share one word. Rank every result by
-// the meaningful parts of what the dispatcher typed and discard weak matches.
-const rankLabels = (query: string, labels: string[]) => {
+function splitLabel(label: string) {
+  const [primary, ...rest] = label.split(',')
+  return {primary: primary?.trim() || label.trim(), secondary: rest.join(',').trim()}
+}
+
+function scoreResult(query: string, label: string) {
   const terms = normalize(query).split(' ').filter(term => term.length > 1)
-  const hasStreetNumber = terms.some(term => /^\d+$/.test(term))
-  return labels
-    .map(label => {
-      const normalized = normalize(label)
-      const firstPart = normalize(label.split(',')[0] || label)
-      const matched = terms.filter(term => normalized.includes(term))
-      const numbers = terms.filter(term => /^\d+$/.test(term))
-      const numberMatch = numbers.every(number => firstPart.includes(number))
-      const score = matched.length * 12 + (numberMatch ? 20 : 0) + (firstPart.startsWith(terms.slice(0, 2).join(' ')) ? 10 : 0)
-      return {label, score, matched: matched.length, numberMatch}
-    })
-    .filter(result => result.matched >= Math.max(1, Math.ceil(terms.length * .6)) && (!hasStreetNumber || result.numberMatch))
-    .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label))
-    .slice(0, 5)
-    .map(result => result.label)
+  const normalized = normalize(label)
+  const firstPart = normalize(label.split(',')[0] || label)
+  const numbers = terms.filter(term => /^\d+$/.test(term))
+  const matched = terms.filter(term => normalized.includes(term))
+  const numberMatch = numbers.every(number => firstPart.includes(number))
+  const score = matched.length * 12 + (numberMatch ? 20 : 0) + (firstPart.startsWith(terms.slice(0, 2).join(' ')) ? 10 : 0)
+  return {score, matched: matched.length, numberMatch, requiresNumber: numbers.length > 0, minimumMatches: Math.max(1, Math.ceil(terms.length * .6))}
 }
 
-const toSuggestions = (labels: string[], query: string): Suggestion[] => {
+function rankSuggestions(query: string, candidates: Suggestion[]) {
   const unique = new Set<string>()
-  return rankLabels(query, labels).flatMap(label => {
-    const normalized = label.trim()
-    if (!normalized || unique.has(normalized.toLowerCase())) return []
-    unique.add(normalized.toLowerCase())
-    const [primary, ...rest] = normalized.split(',')
-    return primary ? [{label: normalized, primary: primary.trim(), secondary: rest.join(',').trim()}] : []
-  })
+  return candidates
+    .map(candidate => ({candidate, ...scoreResult(query, candidate.label)}))
+    .filter(result => result.matched >= result.minimumMatches && (!result.requiresNumber || result.numberMatch))
+    .sort((a, b) => b.score - a.score || a.candidate.label.localeCompare(b.candidate.label))
+    .flatMap(result => {
+      const key = `${normalize(result.candidate.label)}:${result.candidate.coordinate?.lat ?? ''}:${result.candidate.coordinate?.lng ?? ''}`
+      if (!result.candidate.label || unique.has(key)) return []
+      unique.add(key)
+      return [result.candidate]
+    })
+    .slice(0, 5)
 }
 
-/** Free US lookup for the beta; server-side avoids Safari CORS failures. */
+function cacheKey(query: string, near: string) { return `${normalize(query)}|${normalize(near)}` }
+function response(suggestions: Suggestion[]) { return NextResponse.json({suggestions}, {headers: {'Cache-Control': 'private, max-age=300'}}) }
+
+/**
+ * Controlled, explicit beta location lookup. This route is deliberately not
+ * intended for type-ahead use: callers invoke it after selecting Search/Enter;
+ * saved RouteHub contacts and branches are handled in the client first.
+ */
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('q')?.trim() || ''
-  if (query.length < 3 || query.length > 140) return NextResponse.json({suggestions: []})
+  const near = request.nextUrl.searchParams.get('near')?.trim() || ''
+  if (query.length < 3 || query.length > MAX_QUERY_LENGTH) return response([])
+
+  const key = cacheKey(query, near)
+  const cached = cache.get(key)
+  if (cached && cached.expiresAt > Date.now()) return response(cached.suggestions)
+
+  const contextualQuery = near ? `${query}, ${near}` : query
+  let suggestions: Suggestion[] = []
 
   try {
     const url = new URL('https://geocoding.geo.census.gov/geocoder/locations/onelineaddress')
-    url.searchParams.set('address', query)
+    url.searchParams.set('address', contextualQuery)
     url.searchParams.set('benchmark', 'Public_AR_Current')
     url.searchParams.set('format', 'json')
-    const response = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(5000)})
-    if (response.ok) {
-      const payload = await response.json() as {result?: {addressMatches?: CensusMatch[]}}
-      const suggestions = toSuggestions((payload.result?.addressMatches || []).map(match => match.matchedAddress || ''), query)
-      if (suggestions.length) return NextResponse.json({suggestions})
+    const censusResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(5_000)})
+    if (censusResponse.ok) {
+      const payload = await censusResponse.json() as {result?: {addressMatches?: CensusMatch[]}}
+      suggestions = rankSuggestions(query, (payload.result?.addressMatches || []).map(match => {
+        const label = match.matchedAddress?.trim() || ''
+        const coordinate = {lat: Number(match.coordinates?.y), lng: Number(match.coordinates?.x)}
+        return {...splitLabel(label), label, coordinate: validCoordinate(coordinate) ? coordinate : undefined, source: 'census' as const}
+      }))
     }
   } catch {
-    // The independent public fallback below keeps route entry usable.
+    // RouteHub still permits manual address entry when lookup is unavailable.
   }
 
-  try {
-    const url = new URL('https://nominatim.openstreetmap.org/search')
-    url.searchParams.set('format', 'jsonv2')
-    url.searchParams.set('limit', '5')
-    url.searchParams.set('countrycodes', 'us')
-    url.searchParams.set('addressdetails', '1')
-    url.searchParams.set('dedupe', '1')
-    url.searchParams.set('q', `${query}, United States`)
-    const response = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(5000), headers: {Accept: 'application/json', 'User-Agent': 'RouteHub Beta address search'}})
-    if (!response.ok) return NextResponse.json({suggestions: []})
-    const rows = await response.json() as NominatimMatch[]
-    return NextResponse.json({suggestions: toSuggestions(rows.map(row => row.display_name || ''), query)})
-  } catch {
-    return NextResponse.json({suggestions: []})
+  if (!suggestions.length && Date.now() - lastNominatimRequestAt >= 1_100) {
+    try {
+      lastNominatimRequestAt = Date.now()
+      const url = new URL('https://nominatim.openstreetmap.org/search')
+      url.searchParams.set('format', 'jsonv2')
+      url.searchParams.set('limit', '5')
+      url.searchParams.set('countrycodes', 'us')
+      url.searchParams.set('addressdetails', '1')
+      url.searchParams.set('dedupe', '1')
+      url.searchParams.set('q', `${contextualQuery}, United States`)
+      const nominatimResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(5_000), headers: {Accept: 'application/json', 'User-Agent': 'RouteHub Beta location search'}})
+      if (nominatimResponse.ok) {
+        const rows = await nominatimResponse.json() as NominatimMatch[]
+        suggestions = rankSuggestions(query, rows.map(row => {
+          const label = row.display_name?.trim() || ''
+          const coordinate = {lat: Number(row.lat), lng: Number(row.lon)}
+          return {
+            ...splitLabel(label), label,
+            coordinate: validCoordinate(coordinate) ? coordinate : undefined,
+            source: 'nominatim' as const,
+            externalId: row.osm_type && row.osm_id ? `${row.osm_type}:${row.osm_id}` : row.place_id?.toString(),
+            name: row.name?.trim() || undefined,
+          }
+        }))
+      }
+    } catch {
+      // Manual address entry is always a supported fallback.
+    }
   }
+
+  cache.set(key, {expiresAt: Date.now() + CACHE_TTL_MS, suggestions})
+  return response(suggestions)
 }

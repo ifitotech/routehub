@@ -15,13 +15,15 @@ import {canDriverStartRoute, operationalDate, selectDriverTodayQueue} from '../.
 import {routeProgress, stopAction, stopKind} from '../../lib/stop-workflow'
 import {saveCustomerSignature} from '../../lib/signature'
 import {workspaceForStrictRole} from '../auth-access'
+import {openNavigation} from '../../lib/maps/external-navigation'
+import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
 import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
 import styles from './driver.module.css'
 const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 
-type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
+type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;origin_lat?:number|null;origin_lng?:number|null;dest_lat?:number|null;dest_lng?:number|null;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
 type SavedContact = {company_name?:string|null;contact_name?:string|null;address?:string|null;phone?:string|null}
 type StopEvidence = {kind:string;path?:string;url?:string}
 
@@ -65,6 +67,7 @@ export default function Driver() {
   const [loading,setLoading]=useState(true)
   const [loadError,setLoadError]=useState('')
   const [routeView,setRouteView]=useState<'queue'|'details'|'map'|null>(null)
+  const [routeEstimate,setRouteEstimate]=useState<string|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
   const [locationConsentAccepted,setLocationConsentAccepted]=useState(false)
@@ -104,7 +107,7 @@ export default function Driver() {
       // route_date is the operational date. Never use created_at or a UTC
       // conversion here: tomorrow's position 1 must not become today's route.
       const {data,error}=await client.from('routes')
-        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
+        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,origin_lat,origin_lng,dest_lat,dest_lng,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
         .eq('driver_id',userData.user.id)
         .in('status',['published','pending','active','paused','completed','issue','cancelled'])
         .order('position')
@@ -138,6 +141,14 @@ export default function Driver() {
   const completionCandidate=completionQueue[0]
   const finalStop=completionCandidate?.items.filter(item=>item.status!=='cancelled').slice().sort((left,right)=>right.position-left.position||right.id.localeCompare(left.id))[0]
   const selectedRoute=[current,...upcoming,...completed].find(item=>item?.id===selectedRouteId) || current
+  useEffect(()=>{
+    let cancelled=false
+    const destination=current?.dest_lat!=null&&current.dest_lng!=null?{lat:Number(current.dest_lat),lng:Number(current.dest_lng)}:null
+    const origin=drivingSession?.last_lat!=null&&drivingSession.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:current?.origin_lat!=null&&current.origin_lng!=null?{lat:Number(current.origin_lat),lng:Number(current.origin_lng)}:null
+    if(!origin||!destination){setRouteEstimate(null);return}
+    void calculateRoute([origin,destination]).then(estimate=>{if(!cancelled)setRouteEstimate(estimate.source==='osrm'?formatRouteEstimate(estimate,locale):null)})
+    return()=>{cancelled=true}
+  },[current?.id,current?.origin_lat,current?.origin_lng,current?.dest_lat,current?.dest_lng,drivingSession?.last_lat,drivingSession?.last_lng,locale])
   useEffect(()=>{
     let cancelled=false
     const loadEvidence=async()=>{
@@ -321,14 +332,15 @@ export default function Driver() {
     return()=>window.clearInterval(timer)
   },[autoCloseTime,current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
 
-  const navigateUrl=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current?.destination_address||'')}&travelmode=driving`
   const openGoogleMaps=()=>{
     // Use Google's universal HTTPS directions URL. Android and iOS open the
     // installed Maps app through the platform's verified link handling;
     // otherwise the same URL safely opens Google Maps in the browser. Custom
     // schemes such as google.navigation:// can be misread by installed PWAs
     // as an internal RouteHub path (for example /route/map).
-    window.location.assign(navigateUrl)
+    if(!current)return
+    const url=openNavigation({address:current.destination_address,coordinate:current.dest_lat!=null&&current.dest_lng!=null?{lat:Number(current.dest_lat),lng:Number(current.dest_lng)}:null,label:routeLabel(current)},navigator.userAgent)
+    if(url)window.location.assign(url)
   }
   const receivedBy=(route?:Mission|null)=>{
     const match=route?.driver_note?.match(/^Received by:\s*(.+)$/i)
@@ -471,7 +483,8 @@ export default function Driver() {
         {currentKind==='delivery'&&currentPhone&&<div className={`${styles.details} ${styles.singleDetail}`}><a className={styles.contactCall} href={`tel:${currentPhone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact?.contact_name||currentContact?.company_name||routeLabel(current)}</strong></span></a></div>}
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span><b>{currentKind==='delivery'?routeMetaCopy.instructions:'NOTES'}</b>{current.notes}</span></div>}
       </section>
-      <LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>
+      <LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} originCoordinate={current.origin_lat!=null&&current.origin_lng!=null?{lat:Number(current.origin_lat),lng:Number(current.origin_lng)}:null} destinationCoordinate={current.dest_lat!=null&&current.dest_lng!=null?{lat:Number(current.dest_lat),lng:Number(current.dest_lng)}:null} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>
+      {routeEstimate&&<p className={styles.routeEstimate}>{routeEstimate}</p>}
       </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
