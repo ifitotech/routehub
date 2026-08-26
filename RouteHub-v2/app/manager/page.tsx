@@ -175,7 +175,7 @@ export default function Manager() {
     <section className={styles.desktopOperations} aria-label={copy.liveOperations}>
       <div className={styles.desktopLivePanel}>
         <div className={styles.desktopPanelHeader}><span><h2>{copy.liveOperations}</h2><p>{copy.driversMoving}</p></span><Link href="/routes/live">{copy.openLiveMap}</Link></div>
-        {summary.activeRoutes>0?<LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>:<div className={styles.empty}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><div><h2>{copy.noActiveDrivers}</h2><p>{copy.noActiveDriversHelp}</p><Link className={styles.emptyCta} href="/manager/team">{copy.viewTeam}</Link></div></div>}
+        <LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false} overview/>
       </div>
       <aside className={styles.desktopQuickPanel} aria-label={t.quickActions}>
         <div className={styles.desktopPanelHeader}><span><h2>{t.quickActions}</h2><p>{copy.commonTasks}</p></span></div>

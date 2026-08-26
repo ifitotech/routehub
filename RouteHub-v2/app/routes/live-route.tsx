@@ -9,9 +9,11 @@ import {formatLocationAge, loadActiveDrivingSessions, type DrivingSession} from 
 import {locationFreshness} from '../../lib/route-assignment'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './live-route.module.css'
+import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
 
 const InteractiveLiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
+const OperationsMap=dynamic(()=>import('../operations-map'),{ssr:false})
 
 type LiveRouteRecord={id:string;driver_id:string|null;mission_type:string|null;status:string|null;destination_name:string|null;destination_address:string|null;origin_address:string|null;scheduled_at:string|null;route_date:string|null;position:number|null;priority:string|null}
 type Person={user_id:string;email:string|null;role:string|null}
@@ -23,8 +25,8 @@ function personName(email:string|null|undefined){if(!email)return 'Team member';
 function openStreetMapEmbed(lat:number,lng:number){const delta=.008;const bbox=[lng-delta,lat-delta,lng+delta,lat+delta].map(value=>value.toFixed(6)).join(',');return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(`${lat.toFixed(6)},${lng.toFixed(6)}`)}`}
 function openStreetMapLink(lat:number,lng:number){return `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lng.toFixed(6)}#map=15/${lat.toFixed(6)}/${lng.toFixed(6)}`}
 
-export default function LiveRoute({companyId,branchId,expanded=false,showToday=true}:{companyId:string;branchId?:string|null;expanded?:boolean;showToday?:boolean}){
-  const {t}=useLocale()
+export default function LiveRoute({companyId,branchId,expanded=false,showToday=true,overview=false}:{companyId:string;branchId?:string|null;expanded?:boolean;showToday?:boolean;overview?:boolean}){
+  const {t,locale}=useLocale()
   const [sessions,setSessions]=useState<DrivingSession[]>([])
   const [routes,setRoutes]=useState<LiveRouteRecord[]>([])
   const [people,setPeople]=useState<Person[]>([])
@@ -38,7 +40,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
     setLoading(true)
     try{
       const client=getSupabase()
-      let routeQuery=client.from('routes').select('id,driver_id,mission_type,status,destination_name,destination_address,origin_address,scheduled_at,route_date,position,priority').eq('company_id',companyId).in('status',['published','pending','active','paused']).order('position')
+      let routeQuery=client.from('routes').select('id,driver_id,mission_type,status,destination_name,destination_address,origin_address,scheduled_at,route_date,position,priority').eq('company_id',companyId).in('status',['published','pending','active','paused','issue']).order('position')
       if(branchId)routeQuery=routeQuery.eq('branch_id',branchId)
       const [sessionResult,routeResult,peopleResult,branchResult]=await Promise.all([
         loadActiveDrivingSessions(companyId,branchId),
@@ -99,6 +101,8 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   const selectedIsPrimary=Boolean(selected&&selected.driver_id===primaryDriverId)
   const todayRoutes=useMemo(()=>routes.filter(route=>{const date=route.route_date||(route.scheduled_at?route.scheduled_at.slice(0,10):'');return date===todayValue()}).sort((a,b)=>Number(a.position||0)-Number(b.position||0)),[routes])
   const visibleToday=todayRoutes.slice(0,expanded?50:5)
+  const overviewRoutes:OperationsRoute[]=todayRoutes.filter(route=>['published','pending','active','paused','issue'].includes(route.status||'')).map(route=>({id:route.id,origin_address:route.origin_address,destination_address:route.destination_address,destination_name:route.destination_name,status:route.status,driver_id:route.driver_id,position:route.position}))
+  const overviewDrivers:OperationsDriverLocation[]=sessions.filter(session=>session.last_lat!=null&&session.last_lng!=null&&Date.now()-new Date(session.last_updated_at).getTime()<=10*60*1000).map(session=>({id:session.id,driver_id:session.driver_id,location:{lat:Number(session.last_lat),lng:Number(session.last_lng)},label:labels.get(session.driver_id)||t.driver}))
   const hasTodayRoute=Boolean(selected&&selectedRoutes.length)
   const plannedRoutes=todayRoutes.filter(route=>['published','pending','active','paused'].includes(route.status||''))
   const canShowLocationOnlyMap=Boolean(selected&&hasLocation)
@@ -108,7 +112,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
     <section className={`${styles.section} ${expanded?styles.expanded:''}`} aria-labelledby="live-route-title">
       <div className={styles.sectionHeader}><h2 id="live-route-title">{t.liveRoute}</h2>{sessions.length>0&&<span className={styles.liveBadge}><i/>{t.live} · {sessions.length}</span>}</div>
       {error&&<p className="muted" role="status">{error}</p>}
-      {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:sessions.length===0&&plannedRoutes.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:sessions.length===0?<RoutePlanMap locale="en" originAddress={plannedRoutes[0]?.origin_address} stops={plannedRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||undefined}))}/>:!hasTodayRoute&&!canShowLocationOnlyMap?<div className={styles.empty}><Radio size={20}/><div><strong>{t.noActiveRoutes}</strong><span>{labels.get(selected?.driver_id||'')||t.driver}: {t.noRoutesToday}</span></div></div>:<>
+      {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:overview?<>{overviewRoutes.length===0&&overviewDrivers.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:<div className={styles.mapCard}><OperationsMap routes={overviewRoutes} driverLocations={overviewDrivers} locale={locale} interactive/></div>}</>:sessions.length===0&&plannedRoutes.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:sessions.length===0?<RoutePlanMap locale="en" originAddress={plannedRoutes[0]?.origin_address} stops={plannedRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||undefined}))}/>:!hasTodayRoute&&!canShowLocationOnlyMap?<div className={styles.empty}><Radio size={20}/><div><strong>{t.noActiveRoutes}</strong><span>{labels.get(selected?.driver_id||'')||t.driver}: {t.noRoutesToday}</span></div></div>:<>
         {sessions.length>1&&<div className={styles.people} aria-label={t.driver}>{sessions.map(session=><button className={`${styles.person} ${session.driver_id===selected?.driver_id?styles.personActive:''}`} key={session.id} onClick={()=>setSelectedDriver(session.driver_id)}>{labels.get(session.driver_id)||t.driver}</button>)}</div>}
         <div className={styles.mapCard}>
           <InteractiveLiveRouteMap originAddress={selectedRoute?.origin_address} destinationAddress={destination} driverLocation={hasLocation?{lat:Number(selected?.last_lat),lng:Number(selected?.last_lng)}:null} driverUpdatedAt={selected?.last_updated_at} title={t.liveRoute}/>

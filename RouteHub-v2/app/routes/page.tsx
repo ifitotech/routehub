@@ -34,7 +34,7 @@ import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
 import LiveRoute from './live-route'
 
-const RoutePlanMap = nextDynamic(() => import('../route-plan-map'), {ssr: false})
+const OperationsMap = nextDynamic(() => import('../operations-map'), {ssr: false})
 
 type Contact = {
   id: string
@@ -332,10 +332,13 @@ export default function Routes() {
   const pendingRoutes = useMemo(() => routes
     .filter(route => ['published', 'pending', 'draft'].includes(route.status || ''))
     .sort((a,b) => Number(a.position || 0) - Number(b.position || 0) || String(a.scheduled_at || '').localeCompare(String(b.scheduled_at || ''))), [routes])
-  const pendingMapStops = useMemo(() => pendingRoutes
-    .map(route => ({id: route.id, address: route.destination_address, label: route.destination_name || route.destination_address}))
-    .filter(stop => Boolean(stop.address)), [pendingRoutes])
-  const pendingMapOrigin = pendingRoutes.find(route => route.origin_address)?.origin_address || defaultBranch?.address || form.origin
+  const planningMapRoutes = useMemo(() => {
+    const configured = routes
+      .filter(route => ['published', 'pending', 'active', 'paused', 'issue', 'draft'].includes(route.status || ''))
+      .map(route => ({id: route.id, origin_address: route.origin_address, destination_address: route.destination_address, destination_name: route.destination_name, status: route.status, driver_id: route.driver_id, position: route.position}))
+    if(form.destination.trim()) configured.push({id: 'draft-preview', origin_address: form.origin, destination_address: form.destination, destination_name: form.destination_label || form.destination, status: 'pending', driver_id: form.driver_id || null, position: configured.length + 1})
+    return configured
+  }, [form.destination, form.destination_label, form.driver_id, form.origin, routes])
 
   useEffect(() => {
     if (originMode !== 'previous') return
@@ -543,8 +546,8 @@ export default function Routes() {
         </div> : <div className={styles.builderBody}>
           <button type="button" className={styles.mobileMapButton} onClick={() => setPreviewOpen(value => !value)}><MapPin size={16}/>{previewOpen ? (locale==='es' ? 'Ocultar mapa' : locale==='fr' ? 'Masquer la carte' : 'Hide map') : (locale==='es' ? 'Ver mapa' : locale==='fr' ? 'Voir la carte' : 'View map')}</button>
           <div className={`${styles.mapColumn} ${previewOpen ? styles.mapColumnOpen : ''}`}>
-            <RoutePlanMap locale={locale} originAddress={pendingMapOrigin} stops={pendingMapStops}/>
-             <div className={styles.previewSummary}><span><i>S</i>{pendingMapOrigin || c.branch}</span><span><i>1</i>{pendingMapStops.length ? `${pendingMapStops.length} ${locale==='es'?'rutas pendientes':locale==='fr'?'itinéraires en attente':'pending routes'}` : (locale==='es' ? 'Sin rutas pendientes' : locale==='fr' ? 'Aucun itinéraire en attente' : 'No pending routes')}</span></div>
+            <OperationsMap routes={planningMapRoutes} locale={locale} interactive/>
+             <div className={styles.previewSummary}><span><i>S</i>{planningMapRoutes[0]?.origin_address || defaultBranch?.address || c.branch}</span><span><i>1</i>{planningMapRoutes.length ? `${planningMapRoutes.length} ${locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}` : (locale==='es' ? 'Sin rutas configuradas' : locale==='fr' ? 'Aucun itinéraire configuré' : 'No configured routes')}</span></div>
            </div>
 
           <div className={`${styles.formColumn} ${contrast.form}`}>
