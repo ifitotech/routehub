@@ -10,6 +10,7 @@ export type RouteCoordinate={lat:number;lng:number}
 type Props={
  originAddress?:string|null
  destinationAddress?:string|null
+ waypoints?:Array<{address?:string|null;label?:string|null}>
  driverLocation?:RouteCoordinate|null
   driverUpdatedAt?:string|null
   title?:string
@@ -21,9 +22,9 @@ type Props={
 
 type GeocodeResponse={coordinate:RouteCoordinate|null;label?:string}
 
-const makeMarker=(kind:'origin'|'destination'|'driver')=>L.divIcon({
+const makeMarker=(kind:'origin'|'destination'|'driver'|'stop',number?:number)=>L.divIcon({
  className:'route-map-marker-wrap',
- html:`<span class="route-map-marker route-map-marker-${kind}">${kind==='driver'?'🚚':kind==='origin'?'A':'B'}</span>`,
+ html:`<span class="route-map-marker route-map-marker-${kind}">${kind==='driver'?'🚚':kind==='origin'?'A':kind==='stop'?number:'B'}</span>`,
  iconSize:[38,38],
  iconAnchor:[19,19]
 })
@@ -49,9 +50,10 @@ async function geocode(address?:string|null){
  return payload.coordinate||null
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,locale='en'}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,locale='en'}:Props){
  const[origin,setOrigin]=useState<RouteCoordinate|null>(null)
  const[destination,setDestination]=useState<RouteCoordinate|null>(null)
+ const[routePoints,setRoutePoints]=useState<RouteCoordinate[]>([])
   const[line,setLine]=useState<RouteCoordinate[]>([])
  const[loading,setLoading]=useState(true)
  const[unavailable,setUnavailable]=useState(false)
@@ -60,21 +62,25 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
   let cancelled=false
   setLoading(true)
   setUnavailable(false)
-  Promise.all([geocode(originAddress),geocode(destinationAddress)]).then(([nextOrigin,nextDestination])=>{
+  const addresses=[originAddress,...waypoints.map(point=>point.address),destinationAddress]
+  Promise.all(addresses.map(address=>geocode(address))).then((coordinates)=>{
+   const [nextOrigin,...rest]=coordinates
+   const nextDestination=rest.pop()||null
    if(cancelled)return
    setOrigin(nextOrigin)
    setDestination(nextDestination)
-   setLine(nextOrigin&&nextDestination?[nextOrigin,nextDestination]:[])
-   setUnavailable(!nextOrigin&&!nextDestination)
+   setRoutePoints(coordinates.filter(Boolean) as RouteCoordinate[])
+   setLine(coordinates.filter(Boolean) as RouteCoordinate[])
+   setUnavailable(!coordinates.some(Boolean))
    setLoading(false)
   }).catch(()=>{if(!cancelled){setUnavailable(true);setLoading(false)}})
   return()=>{cancelled=true}
- },[originAddress,destinationAddress])
+ },[originAddress,destinationAddress,waypoints])
 
  useEffect(()=>{
   let cancelled=false
   if(!origin||!destination)return
-  const url=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`
+  const url=`https://router.project-osrm.org/route/v1/driving/${routePoints.map(point=>`${point.lng},${point.lat}`).join(';')}?overview=full&geometries=geojson`
   fetch(url).then(async result=>{
    if(!result.ok)throw new Error('Route unavailable')
    const payload=await result.json() as {routes?:Array<{geometry?:{coordinates?:[number,number][]}}>} 
@@ -82,9 +88,9 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
    if(!cancelled&&coordinates.length)setLine(coordinates)
   }).catch(()=>{})
   return()=>{cancelled=true}
-  },[origin,destination])
+  },[origin,destination,routePoints])
 
- const visiblePoints=useMemo(()=>[origin,destination,driverLocation].filter(Boolean) as RouteCoordinate[],[origin,destination,driverLocation])
+ const visiblePoints=useMemo(()=>[...routePoints,driverLocation].filter(Boolean) as RouteCoordinate[],[routePoints,driverLocation])
  const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}
  const copy=locale==='es'?{connected:'Conductor conectado',scheduled:'Ruta programada',live:'EN VIVO',waiting:'EN ESPERA',loading:'Preparando el mapa…',unavailable:'No pudimos ubicar esta ruta todavía.',map:'Mapa de ruta en vivo',driver:'Conductor',origin:'Origen de ruta',destination:'Destino de ruta',updated:'Ubicación actualizada'}:locale==='fr'?{connected:'Conducteur connecté',scheduled:'Itinéraire programmé',live:'EN DIRECT',waiting:'EN ATTENTE',loading:'Préparation de la carte…',unavailable:'Nous ne pouvons pas encore localiser cet itinéraire.',map:'Carte de l’itinéraire',driver:'Conducteur',origin:'Origine de l’itinéraire',destination:'Destination de l’itinéraire',updated:'Position actualisée'}:{connected:'Driver connected',scheduled:'Route scheduled',live:'LIVE',waiting:'WAITING',loading:'Preparing map…',unavailable:'We could not locate this route yet.',map:'Live route map',driver:'Driver',origin:'Route origin',destination:'Route destination',updated:'Location updated'}
 
@@ -96,6 +102,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,driverLoc
     <FitBounds points={visiblePoints}/>
     {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
     {origin&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')}><Tooltip direction="top" offset={[0,-18]}>Punto A</Tooltip></Marker>}
+    {routePoints.slice(1,-1).map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+1)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`Stop ${index+1}`}</Tooltip></Marker>)}
     {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination')}><Tooltip direction="top" offset={[0,-18]}>Punto B</Tooltip></Marker>}
     {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
