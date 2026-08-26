@@ -34,7 +34,9 @@ function FitBounds({points}:{points:RouteCoordinate[]}){
  useEffect(()=>{
   if(!points.length)return
   if(points.length===1){map.setView([points[0].lat,points[0].lng],13);return}
-  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[16,16],maxZoom:15})
+  // Keep the operational view close enough to read street detail while still
+  // fitting the full leg (including the driver's current position).
+  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[34,34],maxZoom:16})
  },[map,key,points])
  return null
 }
