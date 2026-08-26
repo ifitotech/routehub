@@ -77,7 +77,10 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   const selectedRoutes=driverRoutes.filter(item=>((item.route_date||(item.scheduled_at?item.scheduled_at.slice(0,10):''))===todayValue())).sort((a,b)=>{const rank=(value:string|null)=>value==='active'?0:value==='paused'?1:value==='published'?2:3;return rank(a.status)-rank(b.status)||Number(a.position||0)-Number(b.position||0)})
   const selectedRoute=selected?(selected.route_id?driverRoutes.find(item=>item.id===selected.route_id):selectedRoutes.find(item=>['active','paused'].includes(item.status||''))||driverRoutes.find(item=>['active','paused'].includes(item.status||''))):undefined
   const selectedNext=selectedRoutes.find(item=>['published','pending'].includes(item.status||''))
-  const hasLocation=selected?.last_lat!=null&&selected?.last_lng!=null
+  // Do not present an old GPS point as live. Drivers can lose connectivity or
+  // close the app; after ten minutes the manager should see an offline state.
+  const locationIsFresh=Boolean(selected?.last_updated_at && Date.now()-new Date(selected.last_updated_at).getTime() <= 10*60*1000)
+  const hasLocation=locationIsFresh&&selected?.last_lat!=null&&selected?.last_lng!=null
   const destination=selectedRoute?.destination_address||selectedRoute?.destination_name||selectedNext?.destination_address||selectedNext?.destination_name||''
   const locationUrl=hasLocation?openStreetMapLink(Number(selected?.last_lat),Number(selected?.last_lng)):destination?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`:''
   const mapEmbed=hasLocation?openStreetMapEmbed(Number(selected?.last_lat),Number(selected?.last_lng)):''
