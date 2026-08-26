@@ -200,13 +200,36 @@ export default function Driver() {
       ? {title:'Partager la position pendant la journée',body:'Lorsque vous commencez votre journée, RouteHub partage votre position avec votre entreprise pendant les heures de travail pour afficher les opérations en direct. Vous pouvez arrêter le partage en terminant la journée.',check:'J’accepte les conditions de localisation et le suivi pendant ma journée.',required:'Acceptez les conditions de localisation pour commencer la journée.'}
       : {title:'Share location during your driving day',body:'When you start your day, RouteHub shares your location with your company during working hours to support live operations. You can stop sharing by ending your driving day.',check:'I agree to the location terms and tracking during my driving day.',required:'Accept the location terms before starting your driving day.'}
 
+  const driverDialogOpen=modal||stopNoteOpen||recipientPromptOpen||signatureOpen||deliveryToolsOpen||finalizeOpen||finalizeIssueOpen||pickupConfirmOpen||dayPromptOpen
+
+  // Never let a dialog expose or scroll the work screen behind it. This is
+  // especially important on iOS, where opening the keyboard changes only the
+  // visual viewport and otherwise lets the route page peek through.
+  useEffect(()=>{
+    if(!driverDialogOpen)return
+    const body=document.body
+    const root=document.documentElement
+    const previousBodyOverflow=body.style.overflow
+    const previousRootOverflow=root.style.overflow
+    body.style.overflow='hidden'
+    root.style.overflow='hidden'
+    return()=>{
+      body.style.overflow=previousBodyOverflow
+      root.style.overflow=previousRootOverflow
+    }
+  },[driverDialogOpen])
+
   // iOS keeps `position: fixed` dialogs sized to the layout viewport while
   // its keyboard uses the smaller visual viewport. Keep every driver form in
   // the actually visible space so textareas never sit behind the keyboard.
   useEffect(()=>{
     const viewport=window.visualViewport
     if(!viewport)return
-    const syncViewportHeight=()=>document.documentElement.style.setProperty('--rh-driver-viewport-height',`${Math.round(viewport.height)}px`)
+    const syncViewportHeight=()=>{
+      const root=document.documentElement
+      root.style.setProperty('--rh-driver-viewport-height',`${Math.round(viewport.height)}px`)
+      root.style.setProperty('--rh-driver-modal-top',`${Math.round(viewport.offsetTop+viewport.height/2)}px`)
+    }
     syncViewportHeight()
     viewport.addEventListener('resize',syncViewportHeight)
     viewport.addEventListener('scroll',syncViewportHeight)
@@ -214,6 +237,7 @@ export default function Driver() {
       viewport.removeEventListener('resize',syncViewportHeight)
       viewport.removeEventListener('scroll',syncViewportHeight)
       document.documentElement.style.removeProperty('--rh-driver-viewport-height')
+      document.documentElement.style.removeProperty('--rh-driver-modal-top')
     }
   },[])
 
