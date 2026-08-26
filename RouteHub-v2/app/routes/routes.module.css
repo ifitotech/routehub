@@ -116,9 +116,12 @@
 /* Keep the preview in the builder flow.  It must never sit on top of the
    route fields (this is especially important in the desktop drawer). */
 @media(min-width:641px){
-  .builderBody{display:flex;flex-direction:column;gap:16px}
-  .formColumn{order:1;width:100%;box-sizing:border-box}
-  .mapColumn{order:2;position:relative;top:auto;width:100%;display:none!important;z-index:0}
-  .mapColumn.mapColumnOpen{display:block!important}
-  .mapColumnOpen .mapShell iframe,.mapColumnOpen .mapPlaceholder{height:360px}
+  /* Desktop has room for the operational preview and the form side by side.
+     The map is always visible here; on phones it remains behind the View map
+     toggle below. This keeps the route builder useful without covering fields. */
+  .builderBody{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(340px,.92fr);gap:20px;align-items:start}
+  .mobileMapButton{display:none}
+  .formColumn{grid-column:1;grid-row:1;width:100%;box-sizing:border-box}
+  .mapColumn{grid-column:2;grid-row:1;position:sticky;top:88px;width:100%;display:block!important;z-index:0}
+  .mapColumn .route-plan-canvas{height:min(58vh,520px)}
 }

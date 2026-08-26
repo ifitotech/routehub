@@ -16,7 +16,41 @@ import styles from './manager-dashboard.module.css'
 const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRoutes: 0, completedRoutes: 0, openIssues: 0}
 
 export default function Manager() {
-  const {t} = useLocale()
+  const {locale,t} = useLocale()
+  const copy = locale === 'es' ? {
+    activeRoutes: 'Rutas activas', pendingRoutes: 'Rutas pendientes', completedRoutes: 'Rutas completadas',
+    todayOverview: 'Resumen de hoy', lastUpdated: 'Última actualización', liveOperations: 'Operaciones en vivo',
+    driversMoving: 'Conductores y rutas en movimiento.', openLiveMap: 'Abrir mapa en vivo', noActiveDrivers: 'No hay conductores activos',
+    noActiveDriversHelp: 'Cuando un conductor inicie su jornada o una ruta, su estado en vivo aparecerá aquí.', viewTeam: 'Ver equipo',
+    commonTasks: 'Tareas frecuentes del manager.', newRoute: 'Nueva ruta', newRouteHelp: 'Crea una recogida o entrega',
+    teamMembers: 'Miembros del equipo', teamMembersHelp: 'Gestiona conductores e invitaciones', viewHistory: 'Ver historial',
+    viewHistoryHelp: 'Revisa el trabajo completado', routeActivity: 'Rutas pendientes', routeActivityHelp: 'Rutas publicadas y programadas que esperan despacho.',
+    viewAll: 'Ver todo', attentionNeeded: 'Atención necesaria', attentionHelp: 'Problemas que requieren revisión del manager.', viewIssues: 'Ver incidencias',
+    noIssues: 'No hay incidencias reportadas', noIssuesHelp: 'Tu equipo no tiene incidencias de ruta para revisar hoy.', openIssue: 'incidencia abierta', openIssues: 'incidencias abiertas',
+    reviewIssues: 'Revisa los reportes de ruta y da seguimiento al conductor.', branchManager: 'Manager de sucursal', today: 'Hoy', map: 'Mapa', contacts: 'Contactos', settings: 'Configuración',
+  } : locale === 'fr' ? {
+    activeRoutes: 'Itinéraires actifs', pendingRoutes: 'Itinéraires en attente', completedRoutes: 'Itinéraires terminés',
+    todayOverview: 'Aperçu du jour', lastUpdated: 'Dernière mise à jour', liveOperations: 'Opérations en direct',
+    driversMoving: 'Conducteurs et itinéraires actuellement en mouvement.', openLiveMap: 'Ouvrir la carte en direct', noActiveDrivers: 'Aucun conducteur actif',
+    noActiveDriversHelp: 'Lorsqu’un conducteur commence sa journée ou un itinéraire, son statut en direct apparaît ici.', viewTeam: 'Voir l’équipe',
+    commonTasks: 'Tâches courantes du manager.', newRoute: 'Nouvel itinéraire', newRouteHelp: 'Créer une collecte ou une livraison',
+    teamMembers: 'Membres de l’équipe', teamMembersHelp: 'Gérer les conducteurs et les invitations', viewHistory: 'Voir l’historique',
+    viewHistoryHelp: 'Consulter le travail terminé', routeActivity: 'Itinéraires en attente', routeActivityHelp: 'Itinéraires publiés et programmés en attente d’envoi.',
+    viewAll: 'Voir tout', attentionNeeded: 'Attention requise', attentionHelp: 'Problèmes nécessitant la révision du manager.', viewIssues: 'Voir les incidents',
+    noIssues: 'Aucun incident signalé', noIssuesHelp: 'Votre équipe n’a aucun incident à examiner aujourd’hui.', openIssue: 'incident ouvert', openIssues: 'incidents ouverts',
+    reviewIssues: 'Consultez les rapports et assurez le suivi avec le conducteur.', branchManager: 'Manager de succursale', today: 'Aujourd’hui', map: 'Carte', contacts: 'Contacts', settings: 'Paramètres',
+  } : {
+    activeRoutes: 'Active routes', pendingRoutes: 'Pending routes', completedRoutes: 'Completed routes',
+    todayOverview: 'Today Overview', lastUpdated: 'Last updated', liveOperations: 'Live operations',
+    driversMoving: 'Drivers and routes currently moving.', openLiveMap: 'Open live map', noActiveDrivers: 'No active drivers',
+    noActiveDriversHelp: 'When a driver starts their day or route, their live status will appear here.', viewTeam: 'View team',
+    commonTasks: 'Common manager tasks.', newRoute: 'New route', newRouteHelp: 'Create a pickup or delivery',
+    teamMembers: 'Team members', teamMembersHelp: 'Manage drivers and invitations', viewHistory: 'View history',
+    viewHistoryHelp: 'Review completed work', routeActivity: 'Pending routes', routeActivityHelp: 'Published and scheduled routes waiting for dispatch.',
+    viewAll: 'View all', attentionNeeded: 'Attention needed', attentionHelp: 'Problems that need manager review.', viewIssues: 'View issues',
+    noIssues: 'No issues reported', noIssuesHelp: 'Your team has no route issues to review today.', openIssue: 'open issue', openIssues: 'open issues',
+    reviewIssues: 'Review route reports and follow up with the driver.', branchManager: 'Branch Manager', today: 'Today', map: 'Map', contacts: 'Contacts', settings: 'Settings',
+  }
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
   const [companyId, setCompanyId] = useState('')
@@ -56,7 +90,9 @@ export default function Manager() {
         const name = String(metadata?.full_name || metadata?.name || userData.user?.email || '')
         setDisplayName(name)
         setBranchName(String(branch?.name || ''))
-        setTodayRoutes(dashboard.todayRoutes.slice(0, 5))
+        // The dashboard list is a dispatch reference: active/completed routes
+        // have their own Live Operations and History surfaces.
+        setTodayRoutes(dashboard.todayRoutes.filter(route => ['published', 'pending', 'draft'].includes(route.status)).slice(0, 5))
         setSummary(dashboard.summary)
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : t.unableLoadReports)
@@ -69,9 +105,9 @@ export default function Manager() {
   }, [t.unableLoadReports])
 
   const metrics = [
-    {label: 'Active routes', value: summary.activeRoutes, note: t.inProgress, href: '/routes', Icon: Truck, tone: 'blue'},
-    {label: 'Pending routes', value: summary.pendingRoutes, note: t.waitingDispatch, href: '/routes', Icon: ClipboardList, tone: 'amber'},
-    {label: 'Completed routes', value: summary.completedRoutes, note: t.completed, href: '/manager/history', Icon: History, tone: 'purple'},
+    {label: copy.activeRoutes, value: summary.activeRoutes, note: t.inProgress, href: '/routes', Icon: Truck, tone: 'blue'},
+    {label: copy.pendingRoutes, value: summary.pendingRoutes, note: t.waitingDispatch, href: '/routes', Icon: ClipboardList, tone: 'amber'},
+    {label: copy.completedRoutes, value: summary.completedRoutes, note: t.completed, href: '/manager/history', Icon: History, tone: 'purple'},
     {label: t.issues, value: summary.openIssues, note: t.requireAttention, href: '/reports', Icon: AlertTriangle, tone: 'red'},
   ] as const
   const hasIssue = summary.openIssues > 0
@@ -87,21 +123,21 @@ export default function Manager() {
         <span>Route<em>Hub</em></span>
       </Link>
       <nav className={styles.sidebarNav} aria-label="Primary">
-        <Link href="/manager" aria-current="page"><Home size={20}/><span>Today</span></Link>
-        <Link href="/routes"><RouteIcon size={20}/><span>Routes</span></Link>
-        <Link href="/routes/live"><MapPin size={20}/><span>Map</span></Link>
-        <Link href="/contacts"><Users size={20}/><span>Contacts</span></Link>
-        <Link href="/manager/history"><History size={20}/><span>History</span></Link>
-        <Link href="/manager/more"><MoreHorizontal size={20}/><span>Settings</span></Link>
+        <Link href="/manager" aria-current="page"><Home size={20}/><span>{copy.today}</span></Link>
+        <Link href="/routes"><RouteIcon size={20}/><span>{t.routes}</span></Link>
+        <Link href="/routes/live"><MapPin size={20}/><span>{copy.map}</span></Link>
+        <Link href="/contacts"><Users size={20}/><span>{copy.contacts}</span></Link>
+        <Link href="/manager/history"><History size={20}/><span>{t.history}</span></Link>
+        <Link href="/manager/more"><MoreHorizontal size={20}/><span>{copy.settings}</span></Link>
       </nav>
-      <Link href="/routes?new=1" className={styles.newRoute}><Plus size={20}/>New Route</Link>
-      <Link href="/manager/more" className={styles.sidebarProfile}><span className={styles.sidebarAvatar}>{greetingName.slice(0, 2).toUpperCase()}</span><span><strong>{greetingName || 'Manager'}</strong><small>Branch Manager</small></span><ChevronDown size={16}/></Link>
+      <Link href="/routes?new=1" className={styles.newRoute}><Plus size={20}/>{copy.newRoute}</Link>
+      <Link href="/manager/more" className={styles.sidebarProfile}><span className={styles.sidebarAvatar}>{greetingName.slice(0, 2).toUpperCase()}</span><span><strong>{greetingName || 'Manager'}</strong><small>{copy.branchManager}</small></span><ChevronDown size={16}/></Link>
     </aside>
 
     <section className={styles.workspace}>
     <header className={styles.desktopTop}>
-      <h1>Today Overview</h1>
-      <span>Last updated: {updatedAt}</span>
+      <h1>{copy.todayOverview}</h1>
+      <span>{copy.lastUpdated}: {updatedAt}</span>
     </header>
     <header className={styles.header}>
       <Link href="/manager" className={styles.brand} aria-label="RouteHub home">
@@ -113,7 +149,7 @@ export default function Manager() {
 
     <section className={styles.intro}>
       <h1>{t.helloPrefix} {greetingName}</h1>
-      <p>Today · {branchName || t.mainBranch}</p>
+      <p>{copy.today} · {branchName || t.mainBranch}</p>
     </section>
 
     <div className={styles.branch} aria-label={`${branchName || t.mainBranch}: ${branchHealthy ? t.allSystemsNormal : t.requireAttention}`}>
@@ -130,37 +166,37 @@ export default function Manager() {
       </Link>)}
     </section>
 
-    <section className={styles.mobileLiveCard} aria-label="Live operations">
-      <div className={styles.mobileLiveTop}><span className={styles.mobileLiveIcon}><Truck size={20} /></span><div><span className={styles.mobileLiveEyebrow}>LIVE OPERATIONS</span><h2>Operations at a glance</h2></div><span className={styles.liveStatus}><i />Live</span></div>
-      <div className={styles.mobileLiveStats}><span><strong>{loading ? '—' : summary.activeRoutes}</strong> active routes</span><span><strong>{loading ? '—' : summary.pendingRoutes}</strong> pending routes</span></div>
-      {summary.activeRoutes>0?<Link className={styles.mobileLiveCta} href="/routes/live"><MapPin size={18} />Open live map<ChevronRight size={18} /></Link>:<div className={styles.mobileLiveCta}><Users size={18} />No drivers currently active</div>}
+    <section className={styles.mobileLiveCard} aria-label={copy.liveOperations}>
+      <div className={styles.mobileLiveTop}><span className={styles.mobileLiveIcon}><Truck size={20} /></span><div><span className={styles.mobileLiveEyebrow}>{copy.liveOperations.toUpperCase()}</span><h2>{locale==='es'?'Operaciones de un vistazo':locale==='fr'?'Opérations en un coup d’œil':'Operations at a glance'}</h2></div><span className={styles.liveStatus}><i />Live</span></div>
+      <div className={styles.mobileLiveStats}><span><strong>{loading ? '—' : summary.activeRoutes}</strong> {copy.activeRoutes.toLowerCase()}</span><span><strong>{loading ? '—' : summary.pendingRoutes}</strong> {copy.pendingRoutes.toLowerCase()}</span></div>
+      {summary.activeRoutes>0?<Link className={styles.mobileLiveCta} href="/routes/live"><MapPin size={18} />{copy.openLiveMap}<ChevronRight size={18} /></Link>:<div className={styles.mobileLiveCta}><Users size={18} />{copy.noActiveDrivers}</div>}
     </section>
 
-    <section className={styles.desktopOperations} aria-label="Live operations">
+    <section className={styles.desktopOperations} aria-label={copy.liveOperations}>
       <div className={styles.desktopLivePanel}>
-        <div className={styles.desktopPanelHeader}><span><h2>Live operations</h2><p>Drivers and routes currently moving.</p></span><Link href="/routes/live">Open live map</Link></div>
-        {summary.activeRoutes>0?<LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>:<div className={styles.empty}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><div><h2>No active drivers</h2><p>When a driver starts their day or route, their live status will appear here.</p><Link className={styles.emptyCta} href="/manager/team">View team</Link></div></div>}
+        <div className={styles.desktopPanelHeader}><span><h2>{copy.liveOperations}</h2><p>{copy.driversMoving}</p></span><Link href="/routes/live">{copy.openLiveMap}</Link></div>
+        {summary.activeRoutes>0?<LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false}/>:<div className={styles.empty}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><div><h2>{copy.noActiveDrivers}</h2><p>{copy.noActiveDriversHelp}</p><Link className={styles.emptyCta} href="/manager/team">{copy.viewTeam}</Link></div></div>}
       </div>
       <aside className={styles.desktopQuickPanel} aria-label={t.quickActions}>
-        <div className={styles.desktopPanelHeader}><span><h2>{t.quickActions}</h2><p>Common manager tasks.</p></span></div>
+        <div className={styles.desktopPanelHeader}><span><h2>{t.quickActions}</h2><p>{copy.commonTasks}</p></span></div>
         <div className={styles.desktopQuickList}>
-          <Link className={styles.action} href="/routes?new=1"><span className={styles.actionIcon}><Plus size={21} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>New route</strong><span>Create a pickup or delivery</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
-          <Link className={styles.action} href="/manager/team"><span className={styles.actionIcon}><Users size={20} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>Team members</strong><span>Manage drivers and invitations</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
-          <Link className={styles.action} href="/manager/history"><span className={styles.actionIcon}><History size={20} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>View history</strong><span>Review completed work</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.action} href="/routes?new=1"><span className={styles.actionIcon}><Plus size={21} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>{copy.newRoute}</strong><span>{copy.newRouteHelp}</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.action} href="/manager/team"><span className={styles.actionIcon}><Users size={20} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>{copy.teamMembers}</strong><span>{copy.teamMembersHelp}</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
+          <Link className={styles.action} href="/manager/history"><span className={styles.actionIcon}><History size={20} aria-hidden="true" /></span><span className={styles.actionCopy}><strong>{copy.viewHistory}</strong><span>{copy.viewHistoryHelp}</span></span><ChevronRight size={18} aria-hidden="true" /></Link>
         </div>
       </aside>
     </section>
 
     <section className={styles.desktopTracking}>
       <div className={styles.desktopRoutesPanel}>
-        <div className={styles.desktopPanelHeader}><span><h2>Route activity</h2><p>Published, active and paused routes for today.</p></span><Link href="/routes">View all</Link></div>
+        <div className={styles.desktopPanelHeader}><span><h2>{copy.routeActivity}</h2><p>{copy.routeActivityHelp}</p></span><Link href="/routes">{copy.viewAll}</Link></div>
         <section className={`${styles.todayCard} ${hasIssue ? styles.attention : ''}`} aria-live="polite">
           {loading ? <div className={styles.skeleton} aria-label={t.loading} /> : todayRoutes.length ? <div className={styles.todayList}>{todayRoutes.map(route => <div className={styles.todayRow} key={route.id}><span className={styles.todayBadge} /><span className={styles.todayBody}><strong>{route.destination_name || t.destination}</strong><span>{String(route.mission_type || t.delivery).toUpperCase()} · {route.driver_id ? t.assigned : t.pending}</span></span><span className={styles.todayState}>{route.status || t.published}</span></div>)}</div> : <div className={styles.empty}><span className={styles.emptyIcon}><ClipboardList size={27} aria-hidden="true" /></span><div><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p><Link className={styles.emptyCta} href="/routes?new=1">{t.createRoute}</Link></div></div>}
         </section>
       </div>
       <div className={`${styles.desktopAttentionPanel} ${hasIssue ? styles.attention : ''}`}>
-        <div className={styles.desktopPanelHeader}><span><h2>Attention needed</h2><p>Problems that need manager review.</p></span><Link href="/reports">View issues</Link></div>
-        <div className={styles.attentionBody}><span className={styles.attentionIcon}><AlertTriangle size={22} /></span><div><strong>{summary.openIssues ? `${summary.openIssues} open issue${summary.openIssues === 1 ? '' : 's'}` : 'No issues reported'}</strong><p>{summary.openIssues ? 'Review route reports and follow up with the driver.' : 'Your team has no route issues to review today.'}</p></div></div>
+        <div className={styles.desktopPanelHeader}><span><h2>{copy.attentionNeeded}</h2><p>{copy.attentionHelp}</p></span><Link href="/reports">{copy.viewIssues}</Link></div>
+        <div className={styles.attentionBody}><span className={styles.attentionIcon}><AlertTriangle size={22} /></span><div><strong>{summary.openIssues ? `${summary.openIssues} ${summary.openIssues === 1 ? copy.openIssue : copy.openIssues}` : copy.noIssues}</strong><p>{summary.openIssues ? copy.reviewIssues : copy.noIssuesHelp}</p></div></div>
       </div>
     </section>
 
