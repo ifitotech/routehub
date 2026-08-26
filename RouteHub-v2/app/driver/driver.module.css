@@ -99,15 +99,21 @@
   height:var(--rh-driver-viewport-height,100dvh);
   min-height:0;
   overflow-x:hidden;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:none;
+  /* A dialog is a separate task, not a translucent continuation of the
+     route page.  Keep the map, nav and any controls completely out of view
+     and out of reach while it is open. */
+  background:#071429;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
  }
  .backdrop .modal{
   margin:auto;
   max-height:calc(var(--rh-driver-viewport-height,100dvh) - 24px);
   scroll-padding:12px 0 160px;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
  }
 }
 
