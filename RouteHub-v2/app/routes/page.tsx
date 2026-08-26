@@ -32,7 +32,6 @@ import {chooseDefaultAssignee} from '../../lib/route-assignment'
 import GoogleAddressInput, {type LocalAddressSuggestion} from '../google-address-input'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
-import LiveRoute from './live-route'
 
 const OperationsMap = nextDynamic(() => import('../operations-map'), {ssr: false})
 
@@ -96,6 +95,9 @@ const originCopy = {
 // them out of the operational list prevents an exception from being mistaken
 // for a route that is still ready to dispatch.
 const routeStatuses = ['draft', 'pending', 'published', 'active', 'paused']
+// Completed routes stay available in the planning view so dispatchers can
+// distinguish today's work from future work without losing the audit trail.
+const routeListStatuses = [...routeStatuses, 'completed', 'issue']
 const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
   {value: 'delivery', label: 'Delivery'},
@@ -107,9 +109,9 @@ const priorities: Array<{value: FormState['priority']; label: string}> = [
 ]
 
 const routeCopy = {
-  en:{operations:'Route operations',title:'Routes',subtitle:'See every active assignment and publish the next route.',manage:'Manage routes',add:'Add route',assigned:'Pending routes',assignedHelp:'Published and scheduled routes ready for dispatch.',active:'pending',branch:'Branch',destinationPending:'Destination pending',noPo:'No PO',orderReference:'Order reference',viewManage:'View and manage',empty:'No pending routes',emptyHelp:'Publish the first route for your team today.',newAssignment:'New assignment',create:'Create route',close:'Close route form',chooseDestination:'Choose destination',routeType:'Route type',returnToBranch:'Return to branch',returnHelp:'Sets your branch as the destination. You can still choose the starting point.',driver:'Driver',chooseDriver:'Choose driver',startingPoint:'Starting point',originPlaceholder:'Branch or starting address',contactDestination:'Contact or destination',searchPlaceholder:'Search a contact or type an address',searchHelp:'Start typing to see address suggestions, or select a saved contact.',priority:'Priority',date:'Date',time:'Time',po:'PO or order number',optional:'Optional',poExample:'Example: PO-45872',notes:'Notes',notesPlaceholder:'Delivery instructions for the driver',publish:'Publish route',publishing:'Publishing...',published:'Route published successfully.',chooseRequired:'Choose a driver and enter a destination.',workspacePending:'The company workspace is not ready. Refresh and try again.',invalidDate:'Choose a valid date and time.',loadError:'Unable to load route information.',saveError:'Unable to save route.',preview:'Route preview',previewHelp:'Choose a contact or enter an address.',openMaps:'Open in Google Maps',teamDriver:'Team driver',route:'Route',inProgress:'In progress',statusPublished:'Published',paused:'Paused',issue:'Issue',draft:'Draft',pending:'Pending',noTime:'No time set',today:'Today',normal:'Normal',priorityName:'Priority',urgent:'Urgent',pickup:'Pickup',delivery:'Delivery',transfer:'Custom route',return:'Return to branch',pickupFrom:'Pickup from / location',deliveryTo:'Deliver to / delivery address',contactPhone:'Contact phone'},
-  es:{operations:'Operaciones de rutas',title:'Rutas',subtitle:'Consulta las asignaciones activas y publica la próxima ruta.',manage:'Gestionar rutas',add:'Añadir ruta',assigned:'Rutas pendientes',assignedHelp:'Rutas publicadas y programadas listas para despacho.',active:'pendientes',branch:'Sucursal',destinationPending:'Destino pendiente',noPo:'Sin PO',orderReference:'Referencia de orden',viewManage:'Ver y gestionar',empty:'No hay rutas pendientes',emptyHelp:'Publica la primera ruta del equipo para hoy.',newAssignment:'Nueva asignación',create:'Crear ruta',close:'Cerrar formulario',chooseDestination:'Elige un destino',routeType:'Tipo de ruta',returnToBranch:'Regresar a sucursal',returnHelp:'Usa la sucursal como destino. Aún puedes elegir el punto de salida.',driver:'Conductor',chooseDriver:'Elige un conductor',startingPoint:'Punto de salida',originPlaceholder:'Sucursal o dirección de salida',contactDestination:'Contacto o destino',searchPlaceholder:'Busca un contacto o escribe una dirección',searchHelp:'Escribe para ver sugerencias de direcciones o selecciona un contacto guardado.',priority:'Prioridad',date:'Fecha',time:'Hora',po:'PO o número de orden',optional:'Opcional',poExample:'Ejemplo: PO-45872',notes:'Notas',notesPlaceholder:'Instrucciones de entrega para el conductor',publish:'Publicar ruta',publishing:'Publicando...',published:'Ruta publicada correctamente.',chooseRequired:'Elige un conductor e introduce un destino.',workspacePending:'La empresa aún no está lista. Actualiza e inténtalo nuevamente.',invalidDate:'Elige una fecha y hora válidas.',loadError:'No se pudo cargar la información de las rutas.',saveError:'No se pudo guardar la ruta.',preview:'Vista previa de la ruta',previewHelp:'Elige un contacto o escribe una dirección.',openMaps:'Abrir en Google Maps',teamDriver:'Conductor del equipo',route:'Ruta',inProgress:'En progreso',statusPublished:'Publicada',paused:'Pausada',issue:'Incidencia',draft:'Borrador',pending:'Pendiente',noTime:'Sin hora',today:'Hoy',normal:'Normal',priorityName:'Prioridad',urgent:'Urgente',pickup:'Recogida',delivery:'Entrega',transfer:'Ruta personalizada',return:'Regresar a sucursal',pickupFrom:'Recoger en / ubicación',deliveryTo:'Entregar a / dirección de entrega',contactPhone:'Teléfono del contacto'},
-  fr:{operations:'Opérations des itinéraires',title:'Itinéraires',subtitle:'Consultez les affectations actives et publiez le prochain itinéraire.',manage:'Gérer les itinéraires',add:'Ajouter un itinéraire',assigned:'Itinéraires en attente',assignedHelp:'Itinéraires publiés et programmés prêts à être expédiés.',active:'en attente',branch:'Succursale',destinationPending:'Destination en attente',noPo:'Sans PO',orderReference:'Référence de commande',viewManage:'Voir et gérer',empty:'Aucun itinéraire en attente',emptyHelp:'Publiez le premier itinéraire de l’équipe pour aujourd’hui.',newAssignment:'Nouvelle affectation',create:'Créer un itinéraire',close:'Fermer le formulaire',chooseDestination:'Choisir une destination',routeType:'Type d’itinéraire',returnToBranch:'Retour à la succursale',returnHelp:'Utilise la succursale comme destination. Vous pouvez toujours choisir le point de départ.',driver:'Conducteur',chooseDriver:'Choisir un conducteur',startingPoint:'Point de départ',originPlaceholder:'Succursale ou adresse de départ',contactDestination:'Contact ou destination',searchPlaceholder:'Rechercher un contact ou saisir une adresse',searchHelp:'Saisissez une adresse pour afficher des suggestions ou choisissez un contact enregistré.',priority:'Priorité',date:'Date',time:'Heure',po:'PO ou numéro de commande',optional:'Facultatif',poExample:'Exemple : PO-45872',notes:'Notes',notesPlaceholder:'Instructions de livraison pour le conducteur',publish:'Publier l’itinéraire',publishing:'Publication...',published:'Itinéraire publié.',chooseRequired:'Choisissez un conducteur et saisissez une destination.',workspacePending:'L’espace entreprise n’est pas prêt. Actualisez et réessayez.',invalidDate:'Choisissez une date et une heure valides.',loadError:'Impossible de charger les itinéraires.',saveError:'Impossible d’enregistrer l’itinéraire.',preview:'Aperçu de l’itinéraire',previewHelp:'Choisissez un contact ou saisissez une adresse.',openMaps:'Ouvrir dans Google Maps',teamDriver:'Conducteur de l’équipe',route:'Itinéraire',inProgress:'En cours',statusPublished:'Publié',paused:'En pause',issue:'Incident',draft:'Brouillon',pending:'En attente',noTime:'Aucune heure',today:'Aujourd’hui',normal:'Normal',priorityName:'Priorité',urgent:'Urgent',pickup:'Collecte',delivery:'Livraison',transfer:'Itinéraire personnalisé',return:'Retour à la succursale',pickupFrom:'Collecter à / lieu',deliveryTo:'Livrer à / adresse de livraison',contactPhone:'Téléphone du contact'},
+  en:{operations:'Route operations',title:'Routes',subtitle:'Plan, organize and publish your team routes.',manage:'Manage routes',add:'Add route',assigned:'Route plan',assignedHelp:'Today’s work, scheduled routes and completed stops stay organized here.',active:'routes',todaySection:'Today',upcomingSection:'Upcoming / Scheduled',inProgressSection:'In progress',completedSection:'Completed today',completedStatus:'Completed',tomorrow:'Tomorrow',branch:'Branch',destinationPending:'Destination pending',noPo:'No PO',orderReference:'Order reference',viewManage:'View and manage',empty:'No routes scheduled today',emptyHelp:'Publish the first route for your team today.',newAssignment:'New assignment',create:'Create route',close:'Close route form',chooseDestination:'Choose destination',routeType:'Route type',returnToBranch:'Return to branch',returnHelp:'Sets your branch as the destination. You can still choose the starting point.',driver:'Driver',chooseDriver:'Choose driver',startingPoint:'Starting point',originPlaceholder:'Branch or starting address',contactDestination:'Contact or destination',searchPlaceholder:'Search a contact or type an address',searchHelp:'Start typing to see address suggestions, or select a saved contact.',priority:'Priority',date:'Date',time:'Time',po:'PO or order number',optional:'Optional',poExample:'Example: PO-45872',notes:'Notes',notesPlaceholder:'Delivery instructions for the driver',publish:'Publish route',publishing:'Publishing...',published:'Route published successfully.',chooseRequired:'Choose a driver and enter a destination.',workspacePending:'The company workspace is not ready. Refresh and try again.',invalidDate:'Choose a valid date and time.',loadError:'Unable to load route information.',saveError:'Unable to save route.',preview:'Route preview',previewHelp:'Choose a contact or enter an address.',openMaps:'Open in Google Maps',teamDriver:'Team driver',route:'Route',inProgress:'In progress',statusPublished:'Published',paused:'Paused',issue:'Issue',draft:'Draft',pending:'Pending',noTime:'No time set',today:'Today',normal:'Normal',priorityName:'Priority',urgent:'Urgent',pickup:'Pickup',delivery:'Delivery',transfer:'Custom route',return:'Return to branch',pickupFrom:'Pickup from / location',deliveryTo:'Deliver to / delivery address',contactPhone:'Contact phone'},
+  es:{operations:'Operaciones de rutas',title:'Rutas',subtitle:'Planifica, organiza y publica las rutas del equipo.',manage:'Gestionar rutas',add:'Añadir ruta',assigned:'Plan de rutas',assignedHelp:'El trabajo de hoy, las rutas programadas y las completadas quedan organizadas aquí.',active:'rutas',todaySection:'Hoy',upcomingSection:'Próximas / programadas',inProgressSection:'En progreso',completedSection:'Completadas hoy',completedStatus:'Completada',tomorrow:'Mañana',branch:'Sucursal',destinationPending:'Destino pendiente',noPo:'Sin PO',orderReference:'Referencia de orden',viewManage:'Ver y gestionar',empty:'No hay rutas programadas hoy',emptyHelp:'Publica la primera ruta del equipo para hoy.',newAssignment:'Nueva asignación',create:'Crear ruta',close:'Cerrar formulario',chooseDestination:'Elige un destino',routeType:'Tipo de ruta',returnToBranch:'Regresar a sucursal',returnHelp:'Usa la sucursal como destino. Aún puedes elegir el punto de salida.',driver:'Conductor',chooseDriver:'Elige un conductor',startingPoint:'Punto de salida',originPlaceholder:'Sucursal o dirección de salida',contactDestination:'Contacto o destino',searchPlaceholder:'Busca un contacto o escribe una dirección',searchHelp:'Escribe para ver sugerencias de direcciones o selecciona un contacto guardado.',priority:'Prioridad',date:'Fecha',time:'Hora',po:'PO o número de orden',optional:'Opcional',poExample:'Ejemplo: PO-45872',notes:'Notas',notesPlaceholder:'Instrucciones de entrega para el conductor',publish:'Publicar ruta',publishing:'Publicando...',published:'Ruta publicada correctamente.',chooseRequired:'Elige un conductor e introduce un destino.',workspacePending:'La empresa aún no está lista. Actualiza e inténtalo nuevamente.',invalidDate:'Elige una fecha y hora válidas.',loadError:'No se pudo cargar la información de las rutas.',saveError:'No se pudo guardar la ruta.',preview:'Vista previa de la ruta',previewHelp:'Elige un contacto o escribe una dirección.',openMaps:'Abrir en Google Maps',teamDriver:'Conductor del equipo',route:'Ruta',inProgress:'En progreso',statusPublished:'Publicada',paused:'Pausada',issue:'Incidencia',draft:'Borrador',pending:'Pendiente',noTime:'Sin hora',today:'Hoy',normal:'Normal',priorityName:'Prioridad',urgent:'Urgente',pickup:'Recogida',delivery:'Entrega',transfer:'Ruta personalizada',return:'Regresar a sucursal',pickupFrom:'Recoger en / ubicación',deliveryTo:'Entregar a / dirección de entrega',contactPhone:'Teléfono del contacto'},
+  fr:{operations:'Opérations des itinéraires',title:'Itinéraires',subtitle:'Planifiez, organisez et publiez les itinéraires de votre équipe.',manage:'Gérer les itinéraires',add:'Ajouter un itinéraire',assigned:'Plan des itinéraires',assignedHelp:'Le travail du jour, les itinéraires programmés et terminés restent organisés ici.',active:'itinéraires',todaySection:'Aujourd’hui',upcomingSection:'À venir / programmés',inProgressSection:'En cours',completedSection:'Terminés aujourd’hui',completedStatus:'Terminé',tomorrow:'Demain',branch:'Succursale',destinationPending:'Destination en attente',noPo:'Sans PO',orderReference:'Référence de commande',viewManage:'Voir et gérer',empty:'Aucun itinéraire prévu aujourd’hui',emptyHelp:'Publiez le premier itinéraire de l’équipe pour aujourd’hui.',newAssignment:'Nouvelle affectation',create:'Créer un itinéraire',close:'Fermer le formulaire',chooseDestination:'Choisir une destination',routeType:'Type d’itinéraire',returnToBranch:'Retour à la succursale',returnHelp:'Utilise la succursale comme destination. Vous pouvez toujours choisir le point de départ.',driver:'Conducteur',chooseDriver:'Choisir un conducteur',startingPoint:'Point de départ',originPlaceholder:'Succursale ou adresse de départ',contactDestination:'Contact ou destination',searchPlaceholder:'Rechercher un contact ou saisir une adresse',searchHelp:'Saisissez une adresse pour afficher des suggestions ou choisissez un contact enregistré.',priority:'Priorité',date:'Date',time:'Heure',po:'PO ou numéro de commande',optional:'Facultatif',poExample:'Exemple : PO-45872',notes:'Notes',notesPlaceholder:'Instructions de livraison pour le conducteur',publish:'Publier l’itinéraire',publishing:'Publication...',published:'Itinéraire publié.',chooseRequired:'Choisissez un conducteur et saisissez une destination.',workspacePending:'L’espace entreprise n’est pas prêt. Actualisez et réessayez.',invalidDate:'Choisissez une date et une heure valides.',loadError:'Impossible de charger les itinéraires.',saveError:'Impossible d’enregistrer l’itinéraire.',preview:'Aperçu de l’itinéraire',previewHelp:'Choisissez un contact ou saisissez une adresse.',openMaps:'Ouvrir dans Google Maps',teamDriver:'Conducteur de l’équipe',route:'Itinéraire',inProgress:'En cours',statusPublished:'Publié',paused:'En pause',issue:'Incident',draft:'Brouillon',pending:'En attente',noTime:'Aucune heure',today:'Aujourd’hui',normal:'Normal',priorityName:'Priorité',urgent:'Urgent',pickup:'Collecte',delivery:'Livraison',transfer:'Itinéraire personnalisé',return:'Retour à la succursale',pickupFrom:'Collecter à / lieu',deliveryTo:'Livrer à / adresse de livraison',contactPhone:'Téléphone du contact'},
 }
 type RouteCopy = typeof routeCopy.en
 
@@ -164,6 +166,7 @@ function statusLabel(status: string | null | undefined, c: RouteCopy) {
   if (status === 'active') return c.inProgress
   if (status === 'published') return c.statusPublished
   if (status === 'paused') return c.paused
+  if (status === 'completed') return c.completedStatus
   if (status === 'issue') return c.issue
   if (status === 'draft') return c.draft
   return c.pending
@@ -176,14 +179,22 @@ function routeTime(route: RouteRecord, locale:string, c:RouteCopy) {
   return new Intl.DateTimeFormat(locale, {hour: 'numeric', minute: '2-digit'}).format(date)
 }
 
+function routeDateValue(route: RouteRecord) {
+  return route.route_date || route.scheduled_at?.slice(0, 10) || ''
+}
+
 function routeDate(route: RouteRecord, locale:string, c:RouteCopy) {
-  const value = route.scheduled_at || route.route_date
+  const value = routeDateValue(route)
   if (!value) return c.today
-  const date = new Date(value.length === 10 ? `${value}T12:00:00` : value)
+  const date = new Date(`${value}T12:00:00`)
   if (Number.isNaN(date.getTime())) return c.today
-  const today = new Date()
-  if (date.toDateString() === today.toDateString()) return c.today
-  return new Intl.DateTimeFormat(locale, {month: 'short', day: 'numeric'}).format(date)
+  const todayValue = localSchedule().date
+  if (value === todayValue) return c.today
+  const tomorrow = new Date(`${todayValue}T12:00:00`)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowValue = tomorrow.toISOString().slice(0, 10)
+  const formatted = new Intl.DateTimeFormat(locale, {month: 'short', day: 'numeric'}).format(date)
+  return value === tomorrowValue ? `${c.tomorrow}, ${formatted}` : formatted
 }
 
 function MapPreview({address,c}: {address?: string;c:RouteCopy}) {
@@ -247,7 +258,7 @@ export default function Routes() {
       const [contactResult, driverResult, routeResult, branchResult, locationResult] = await Promise.all([
         client.from('contacts').select('id,company_name,contact_name,address,phone,location_code').eq('company_id', membership.company_id).order('company_name'),
         assigneeQuery,
-        client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,destination_name,destination_address,destination_phone,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
+        client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,destination_name,destination_address,destination_phone,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeListStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
         client.from('branches').select('id,name,address,primary_driver_id').eq('company_id', membership.company_id).order('name'),
         client.from('driving_sessions').select('driver_id,last_lat,last_lng,last_updated_at,status').eq('company_id', membership.company_id).in('status',['active','paused']).order('last_updated_at',{ascending:false}),
       ])
@@ -326,12 +337,19 @@ export default function Routes() {
   const previousRoute = useMemo(() => routes
     .filter(route => route.driver_id === form.driver_id && route.route_date === form.date)
     .sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0], [routes, form.driver_id, form.date])
-  // The live operation above is the single source of truth for routes already
-  // in progress. Keep this list focused on routes that are still waiting to be
-  // started so the desktop view never mixes active and pending work.
-  const pendingRoutes = useMemo(() => routes
-    .filter(route => ['published', 'pending', 'draft'].includes(route.status || ''))
-    .sort((a,b) => Number(a.position || 0) - Number(b.position || 0) || String(a.scheduled_at || '').localeCompare(String(b.scheduled_at || ''))), [routes])
+  const todayValue = localSchedule().date
+  const routeSort = (left: RouteRecord, right: RouteRecord) => Number(left.position || 0) - Number(right.position || 0) || String(left.scheduled_at || '').localeCompare(String(right.scheduled_at || '')) || left.id.localeCompare(right.id)
+  const todayRoutes = useMemo(() => routes
+    .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status !== 'completed')
+    .sort(routeSort), [routes, todayValue])
+  const inProgressRoutes = useMemo(() => todayRoutes.filter(route => ['active', 'paused'].includes(route.status || '')), [todayRoutes])
+  const scheduledTodayRoutes = useMemo(() => todayRoutes.filter(route => !['active', 'paused'].includes(route.status || '')), [todayRoutes])
+  const upcomingRoutes = useMemo(() => routes
+    .filter(route => routeDateValue(route) > todayValue && route.status !== 'completed')
+    .sort((left, right) => routeDateValue(left).localeCompare(routeDateValue(right)) || routeSort(left, right)), [routes, todayValue])
+  const completedTodayRoutes = useMemo(() => routes
+    .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'completed')
+    .sort(routeSort), [routes, todayValue])
   const planningMapRoutes = useMemo(() => {
     const configured = routes
       .filter(route => ['published', 'pending', 'active', 'paused', 'issue', 'draft'].includes(route.status || ''))
@@ -474,6 +492,31 @@ export default function Routes() {
     }
   }
 
+  const renderRouteCards = (items: RouteRecord[]) => items.map((route, index) => {
+    const details = driverDetails(route.driver_id ? driverIndex.get(route.driver_id) : undefined,c.teamDriver)
+    const origin = route.origin_name || route.origin_address || c.branch
+    const destination = route.destination_name || route.destination_address || c.destinationPending
+    const priority = route.priority || 'normal'
+    const status = route.status || 'pending'
+    return <article className={`${styles.routeCard} ${priority === 'urgent' ? styles.urgentCard : ''}`} key={route.id}>
+      <div className={styles.cardTop}>
+        <div className={styles.routeIdentity}><span className={styles.routeNumber}>{String(route.position || index + 1).padStart(2, '0')}</span><div><small>{typeLabel(route.mission_type,c)}</small><strong>{destination}</strong></div></div>
+        <div className={`${styles.statusBadge} ${styles[`status_${status}`] || ''}`}><CircleDot size={12}/>{statusLabel(status,c)}</div>
+      </div>
+      <div className={styles.routePath}><MapPin size={17}/><span>{origin}</span><ArrowRight size={16}/><strong>{destination}</strong></div>
+      <div className={styles.routeDetails}>
+        <div><UserRound size={16}/><span><strong>{details.name}</strong>{details.email && <small>{details.email}</small>}</span></div>
+        <div><CalendarDays size={16}/><span><strong>{routeDate(route,locale,c)}</strong><small>{routeTime(route,locale,c)}</small></span></div>
+        {route.mission_type==='pickup'&&<div><PackageCheck size={16}/><span><strong>{route.order_number || c.noPo}</strong><small>{c.orderReference}</small></span></div>}
+        {route.mission_type==='delivery'&&route.order_number&&<div><PackageCheck size={16}/><span><strong>{route.order_number}</strong><small>{locale==='es'?'Trabajo / orden':locale==='fr'?'Chantier / commande':'Job / order'}</small></span></div>}
+      </div>
+      <div className={styles.cardFooter}>
+        <span className={`${styles.priorityBadge} ${styles[`priority_${priority}`] || ''}`}>{priority==='urgent'?c.urgent:priority==='priority'?c.priorityName:c.normal}</span>
+        <Link href="/routes/manage">{c.viewManage}<ChevronRight size={16}/></Link>
+      </div>
+    </article>
+  })
+
   return <main className={styles.page}>
     <header className={styles.header}>
       <div>
@@ -490,43 +533,34 @@ export default function Routes() {
 
     {message && <div className={message.includes('successfully') ? styles.successMessage : styles.message} role="status">{message}</div>}
 
-    <LiveRoute companyId={companyId} branchId={branchId} showToday={false}/>
-
     <section className={styles.listHeading}>
       <div><h2>{c.assigned}</h2><p>{c.assignedHelp}</p></div>
-      {!loading && <span>{pendingRoutes.length} {c.active}</span>}
+      {!loading && <span>{todayRoutes.length} {c.active}</span>}
     </section>
 
     {loading ? <section className={styles.routeGrid} aria-label={c.loadError}>
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
-    </section> : pendingRoutes.length ? <section className={styles.routeGrid}>
-      {pendingRoutes.map((route, index) => {
-        const details = driverDetails(route.driver_id ? driverIndex.get(route.driver_id) : undefined,c.teamDriver)
-        const origin = route.origin_name || route.origin_address || c.branch
-        const destination = route.destination_name || route.destination_address || c.destinationPending
-        const priority = route.priority || 'normal'
-        const status = route.status || 'pending'
-        return <article className={`${styles.routeCard} ${priority === 'urgent' ? styles.urgentCard : ''}`} key={route.id}>
-          <div className={styles.cardTop}>
-            <div className={styles.routeIdentity}><span className={styles.routeNumber}>{String(route.position || index + 1).padStart(2, '0')}</span><div><small>{typeLabel(route.mission_type,c)}</small><strong>{destination}</strong></div></div>
-            <div className={`${styles.statusBadge} ${styles[`status_${status}`] || ''}`}><CircleDot size={12}/>{statusLabel(status,c)}</div>
-          </div>
-          <div className={styles.routePath}><MapPin size={17}/><span>{origin}</span><ArrowRight size={16}/><strong>{destination}</strong></div>
-          <div className={styles.routeDetails}>
-            <div><UserRound size={16}/><span><strong>{details.name}</strong>{details.email && <small>{details.email}</small>}</span></div>
-            <div><CalendarDays size={16}/><span><strong>{routeDate(route,locale,c)}</strong><small>{routeTime(route,locale,c)}</small></span></div>
-            {route.mission_type==='pickup'&&<div><PackageCheck size={16}/><span><strong>{route.order_number || c.noPo}</strong><small>{c.orderReference}</small></span></div>}
-            {route.mission_type==='delivery'&&route.order_number&&<div><PackageCheck size={16}/><span><strong>{route.order_number}</strong><small>{locale==='es'?'Trabajo / orden':locale==='fr'?'Chantier / commande':'Job / order'}</small></span></div>}
-          </div>
-          <div className={styles.cardFooter}>
-            <span className={`${styles.priorityBadge} ${styles[`priority_${priority}`] || ''}`}>{priority==='urgent'?c.urgent:priority==='priority'?c.priorityName:c.normal}</span>
-            <Link href="/routes/manage">{c.viewManage}<ChevronRight size={16}/></Link>
-          </div>
-        </article>
-      })}
-    </section> : <section className={styles.emptyState}>
-      <div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
-    </section>}
+    </section> : <>
+      <section className={styles.routeSection}>
+        <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{todayRoutes.length} {c.active}</span></div>
+        {scheduledTodayRoutes.length ? <section className={styles.routeGrid}>{renderRouteCards(scheduledTodayRoutes)}</section> : <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
+      </section>
+
+      {inProgressRoutes.length > 0 && <section className={styles.routeSection}>
+        <div className={styles.sectionHeading}><h2>{c.inProgressSection}</h2><span>{inProgressRoutes.length} {c.active}</span></div>
+        <section className={styles.routeGrid}>{renderRouteCards(inProgressRoutes)}</section>
+      </section>}
+
+      {upcomingRoutes.length > 0 && <section className={styles.routeSection}>
+        <div className={styles.sectionHeading}><h2>{c.upcomingSection}</h2><span>{upcomingRoutes.length} {c.active}</span></div>
+        <section className={styles.routeGrid}>{renderRouteCards(upcomingRoutes)}</section>
+      </section>}
+
+      {completedTodayRoutes.length > 0 && <section className={styles.routeSection}>
+        <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length} {c.active}</span></div>
+        <section className={styles.routeGrid}>{renderRouteCards(completedTodayRoutes)}</section>
+      </section>}
+    </>}
 
     {open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">

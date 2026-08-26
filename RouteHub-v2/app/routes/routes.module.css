@@ -125,3 +125,13 @@
   .mapColumn{grid-column:2;grid-row:1;position:sticky;top:88px;width:100%;display:block!important;z-index:0}
   .mapColumn .route-plan-canvas{height:min(58vh,520px)}
 }
+
+/* Route planning is intentionally separate from live tracking.  These compact
+   section headers make the date/state grouping clear without repeating the
+   operational map used by Dashboard and Map. */
+.routeSection{margin-top:24px}
+.sectionHeading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 12px}
+.sectionHeading h2{margin:0;font-size:18px;line-height:1.2;color:var(--rh-text,#14233b)}
+.sectionHeading span{padding:6px 10px;border-radius:999px;background:#eaf2ff;color:#1d4ed8;font-size:11px;font-weight:800;white-space:nowrap}
+:global(html[data-theme="dark"]) .sectionHeading span{background:#17345c;color:#bfdbfe}
+:global(html[data-theme="dark"]) .sectionHeading h2{color:var(--rh-text,#f8fafc)}
