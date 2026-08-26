@@ -51,7 +51,15 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
       if(peopleResult.error)throw peopleResult.error
       if(branchResult.error)throw branchResult.error
       const primaryId=String(branchResult.data?.primary_driver_id||'')||null
-      const visibleSessions=[...sessionResult.data].sort((a,b)=>Number(b.driver_id===primaryId)-Number(a.driver_id===primaryId))
+      // A driver may have a day session plus a temporary route session during
+      // transitions. Keep only the freshest session per driver so the live
+      // map never follows an older session without coordinates.
+      const freshestByDriver=new Map<string,DrivingSession>()
+      for(const session of sessionResult.data){
+        const previous=freshestByDriver.get(session.driver_id)
+        if(!previous||new Date(session.last_updated_at).getTime()>new Date(previous.last_updated_at).getTime())freshestByDriver.set(session.driver_id,session)
+      }
+      const visibleSessions=[...freshestByDriver.values()].sort((a,b)=>Number(b.driver_id===primaryId)-Number(a.driver_id===primaryId))
       setPrimaryDriverId(primaryId)
       setSessions(visibleSessions)
       setRoutes((routeResult.data||[]) as LiveRouteRecord[])
