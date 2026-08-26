@@ -96,6 +96,10 @@
   .emptyState>div{grid-row:1 / span 3;margin:0}
   .emptyState .primaryButton{grid-column:1/-1;width:100%;margin-top:8px}
 }
+
+/* Leaflet panes use high z-index values; the route builder must always sit above them. */
+.backdrop{z-index:2000}
+.builder{position:relative;z-index:2001}
 /* Compact mobile route builder: keep the essential publish flow visible at a glance. */
 @media(max-width:640px){
  .builder{max-height:100dvh;height:100dvh;border-radius:18px 18px 0 0}
