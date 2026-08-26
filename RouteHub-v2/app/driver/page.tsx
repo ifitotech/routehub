@@ -220,20 +220,23 @@ export default function Driver() {
           if(permission==='denied'&&!disposed)setLocationStatus(t.locationPermissionDenied)
           return
         }
-        const location=await getCurrentLocation({maximumAge:4*60*1000})
+        const location=await getCurrentLocation({maximumAge:0})
         if(disposed)return
         const result=await updateDrivingLocation(drivingSession.id,driverId,location)
         if(result.error)throw result.error
         setLocationStatus('')
       }catch(error){if(!disposed)setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied)}
     }
-    // Location is intentionally sampled, rather than continuously watched:
-    // one update now and one every five minutes during an active driving day.
-    // Safari may suspend a PWA in the background; the manager then sees the
-    // genuine last-updated time instead of a fabricated moving location.
+    // Take an immediate GPS fix and keep a foreground watch so the manager
+    // sees movement while the driver is actively using the app. The periodic
+    // sample remains as a fallback for devices that throttle watchPosition.
     void sendLocation()
     const interval=window.setInterval(()=>void sendLocation(),5*60*1000)
-    return()=>{disposed=true;window.clearInterval(interval)}
+    const watch=navigator.geolocation.watchPosition(position=>{
+      if(disposed)return
+      void updateDrivingLocation(drivingSession.id,driverId,{lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy})
+    },()=>undefined,{enableHighAccuracy:true,maximumAge:0,timeout:20000})
+    return()=>{disposed=true;window.clearInterval(interval);navigator.geolocation.clearWatch(watch)}
   },[driverId,drivingSession,t.locationPermissionDenied])
 
   // A driver day is automatically closed after 6 PM only when no operational
