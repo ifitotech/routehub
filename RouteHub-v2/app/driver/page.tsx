@@ -26,6 +26,7 @@ type SavedContact = {company_name?:string|null;contact_name?:string|null;address
 type StopEvidence = {kind:string;path?:string;url?:string}
 
 const addressKey=(value?:string|null)=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')
+const locationConsentKey=(driverId:string)=>`routehub-location-consent-v1:${driverId}`
 
 const errorMessage=(error:unknown,fallback:string)=>{
   if(error instanceof Error&&error.message)return error.message
@@ -66,6 +67,8 @@ export default function Driver() {
   const [routeView,setRouteView]=useState<'queue'|'details'|'map'|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
+  const [locationConsentAccepted,setLocationConsentAccepted]=useState(false)
+  const [locationConsentChecked,setLocationConsentChecked]=useState(false)
   const [pickupConfirmOpen,setPickupConfirmOpen]=useState(false) // centered, address-only arrival confirmation
   const [packingListFile,setPackingListFile]=useState<File|null>(null)
   const packingListInput=useRef<HTMLInputElement>(null)
@@ -76,6 +79,12 @@ export default function Driver() {
   const signatureCanvas=useRef<HTMLCanvasElement>(null)
   const {t,locale}=useLocale()
   useEffect(()=>{const timer=window.setInterval(()=>setClockNow(Date.now()),60_000);return()=>window.clearInterval(timer)},[])
+  useEffect(()=>{
+    if(!driverId||typeof window==='undefined')return
+    const accepted=window.localStorage.getItem(locationConsentKey(driverId))==='accepted'
+    setLocationConsentAccepted(accepted)
+    setLocationConsentChecked(accepted)
+  },[driverId])
 
   const load=useCallback(async()=>{
     setLoading(true)
@@ -185,6 +194,11 @@ export default function Driver() {
   const routeMetaCopy=locale==='es'?{po:'PO / ORDER',instructions:'INSTRUCCIONES',call:'Llamar'}:locale==='fr'?{po:'PO / COMMANDE',instructions:'INSTRUCTIONS',call:'Appeler'}:{po:'PO / ORDER',instructions:'INSTRUCTIONS',call:'Call'}
   const stopCopy=locale==='es'?{pickup:'PICKUP',delivery:'DELIVERY',branch:'RETURN TO BRANCH',arrived:'Llegué',confirmPickup:'Confirmar recogida',completeDelivery:'Completar entrega',completeBranch:'Llegué',takePhoto:'Tomar foto',signature:'Firma del cliente',addNote:'Añadir nota',report:'Reportar problema',openMaps:'Abrir en Google Maps',completeRoute:'Completar ruta'}:locale==='fr'?{pickup:'COLLECTE',delivery:'LIVRAISON',branch:'RETOUR À LA SUCCURSALE',arrived:'Arrivé',confirmPickup:'Confirmer la collecte',completeDelivery:'Terminer la livraison',completeBranch:'Arrivé',takePhoto:'Prendre une photo',signature:'Signature du client',addNote:'Ajouter une note',report:'Signaler un problème',openMaps:'Ouvrir dans Google Maps',completeRoute:'Terminer l’itinéraire'}:{pickup:'PICKUP',delivery:'DELIVERY',branch:'RETURN TO BRANCH',arrived:'Arrived',confirmPickup:'Confirm Pickup',completeDelivery:'Complete Delivery',completeBranch:'Arrived',takePhoto:'Take Photo',signature:'Customer Signature',addNote:'Add Note',report:'Report Issue',openMaps:'Open in Google Maps',completeRoute:'Complete Route'}
   const currentStopLabel=stopCopy[currentKind]
+  const locationConsentCopy=locale==='es'
+    ? {title:'Compartir ubicación durante la jornada',body:'Al iniciar tu jornada, RouteHub compartirá tu ubicación con tu empresa durante el horario laboral para mostrar operaciones en vivo. Puedes detenerlo al finalizar la jornada.',check:'Acepto los términos de ubicación y el seguimiento durante mi jornada.',required:'Acepta los términos de ubicación para iniciar la jornada.'}
+    : locale==='fr'
+      ? {title:'Partager la position pendant la journée',body:'Lorsque vous commencez votre journée, RouteHub partage votre position avec votre entreprise pendant les heures de travail pour afficher les opérations en direct. Vous pouvez arrêter le partage en terminant la journée.',check:'J’accepte les conditions de localisation et le suivi pendant ma journée.',required:'Acceptez les conditions de localisation pour commencer la journée.'}
+      : {title:'Share location during your driving day',body:'When you start your day, RouteHub shares your location with your company during working hours to support live operations. You can stop sharing by ending your driving day.',check:'I agree to the location terms and tracking during my driving day.',required:'Accept the location terms before starting your driving day.'}
 
   // iOS keeps `position: fixed` dialogs sized to the layout viewport while
   // its keyboard uses the smaller visual viewport. Keep every driver form in
@@ -228,8 +242,12 @@ export default function Driver() {
         // Only the driver's explicit Start route action can request location.
         // The five-minute sample never reopens a permission prompt.
         const permission=await getLocationPermission()
-        if(permission!=='granted'){
-          if(permission==='denied'&&!disposed)setLocationStatus(t.locationPermissionDenied)
+        // Safari/iOS may not expose a reliable Permissions API state and can
+        // report `prompt` even after the user has already granted access.
+        // Let getCurrentLocation decide in that case; only an explicit denial
+        // should stop the update loop.
+        if(permission==='denied'){
+          if(!disposed)setLocationStatus(t.locationPermissionDenied)
           return
         }
         const location=await getCurrentLocation({maximumAge:0})
@@ -299,6 +317,12 @@ export default function Driver() {
       : {stopDetails:'Stop details',current:'Current stop',upcoming:'Upcoming stop',completed:'Completed',completion:'Completion details',completedAt:'Completed',arrivedAt:'Arrival',time:'Time on route',contact:'Contact',instructions:'Instructions',po:'PO / ORDER',photo:'Photo available',signature:'Signature available',packing:'Packing list available',issue:'Issue reported',receivedBy:'Received by',openMap:'Open map',close:'Close'}
   const startTrackingForActiveRoute=async()=>{
     if(!driverId||!current)return false
+    if(!locationConsentAccepted){
+      dayPromptSeenRef.current=true
+      setDayPromptOpen(true)
+      setMessage(locationConsentCopy.required)
+      return false
+    }
     try{
       const coordinates=await getCurrentLocation()
       const membership=await currentMembership()
@@ -314,6 +338,11 @@ export default function Driver() {
   }
   const beginDrivingDay=async()=>{
     if(!driverId||busy)return
+    if(!locationConsentAccepted){
+      if(!locationConsentChecked){setMessage(locationConsentCopy.required);return}
+      window.localStorage.setItem(locationConsentKey(driverId),'accepted')
+      setLocationConsentAccepted(true)
+    }
     setBusy(true);setLocationStatus('')
     try{
       const membership=await currentMembership()
@@ -439,7 +468,7 @@ export default function Driver() {
     {finalizeOpen&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="finalize-title"><button className={styles.close} aria-label={t.close} onClick={()=>!busy&&setFinalizeOpen(false)}><X/></button><div className={styles.modalIcon}><ClipboardCheck/></div><h2 id="finalize-title">{stopCopy.completeRoute}?</h2><p>{locale==='es'?'Elige cómo deseas finalizar esta ruta.':locale==='fr'?'Choisissez comment terminer cet itinéraire.':'Choose how you want to finish this route.'}</p><button className={styles.photoButton} disabled={busy} onClick={()=>void finalizeRoute('normal')}><Check/>{stopCopy.completeRoute}</button><input ref={finalPhotoInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void finalizeRoute('photo',file)}}/><button className={styles.secondaryButton} disabled={busy} onClick={()=>finalPhotoInput.current?.click()}><Camera/>{locale==='es'?'Completar con foto':locale==='fr'?'Terminer avec photo':'Complete with Photo'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>{setFinalizeOpen(false);setFinalizeIssueOpen(true)}}><TriangleAlert/>{stopCopy.report}</button><button className={styles.secondaryButton} disabled={busy} onClick={()=>setFinalizeOpen(false)}>{t.cancel}</button></section></div>}
     {finalizeIssueOpen&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="finalize-issue-title"><button className={styles.close} aria-label={t.close} onClick={()=>!busy&&setFinalizeIssueOpen(false)}><div><X/></div></button><div className={styles.modalDanger}><TriangleAlert/></div><h2 id="finalize-issue-title">{stopCopy.report}</h2><p>{locale==='es'?'Registra el problema antes de cerrar la ruta.':locale==='fr'?'Enregistrez le problème avant de terminer l’itinéraire.':'Record the issue before closing this route.'}</p><select value={finalizeIssue} onChange={event=>setFinalizeIssue(event.target.value)}><option value="">{locale==='es'?'Selecciona un motivo':locale==='fr'?'Sélectionnez un motif':'Select a reason'}</option>{finalIssueOptions.map(option=><option key={option} value={option}>{option}</option>)}</select><textarea value={finalizeNote} onChange={event=>setFinalizeNote(event.target.value)} placeholder={locale==='es'?'Nota opcional':locale==='fr'?'Note facultative':'Optional note'}/><label className={styles.evidencePicker}><Camera size={17}/><span>{finalizeIssuePhoto?finalizeIssuePhoto.name:(locale==='es'?'Foto opcional':locale==='fr'?'Photo facultative':'Optional photo')}</span><input type="file" accept="image/*" capture="environment" onChange={event=>setFinalizeIssuePhoto(event.target.files?.[0]||null)}/></label><button className={styles.issueButton} disabled={!finalizeIssue||busy} onClick={()=>void finalizeRoute('issue',finalizeIssuePhoto||undefined)}>{locale==='es'?'Guardar problema y completar':locale==='fr'?'Enregistrer le problème et terminer':'Save issue and complete'}</button><button className={styles.secondaryButton} disabled={busy} onClick={()=>setFinalizeIssueOpen(false)}>{t.cancel}</button></section></div>}
     {pickupConfirmOpen&&current&&currentKind==='pickup'&&<div className={styles.backdrop}><section className={styles.modal} role='dialog' aria-modal='true'><button className={styles.close} onClick={()=>setPickupConfirmOpen(false)}><X/></button><div className={styles.modalIcon}><ClipboardCheck/></div><h2>Confirm pickup</h2><p>Confirm that you collected the materials for this PO.</p><div className={`${styles.detailNotes} ${styles.pickupPo}`}><small>PO / ORDER NUMBER</small><div/><strong>{current.order_number||'Not provided'}</strong></div><label className={styles.evidencePicker}><Camera size={18}/><span>{packingListFile?packingListFile.name:'Upload packing list (optional)'}</span><input ref={packingListInput} type='file' accept='image/*' capture='environment' onChange={event=>setPackingListFile(event.target.files?.[0]||null)}/></label><button className={styles.photoButton} style={{minHeight:64,fontSize:18}} disabled={busy} onClick={async()=>{if(packingListFile)await uploadMissionEvidence(packingListFile,current.id,{kind:'photo',attachAsCompletionPhoto:false});setPackingListFile(null);await confirmPickup()}}><ClipboardCheck/>Confirm pickup</button><button className={styles.secondaryButton} style={{width:'100%',minHeight:52}} disabled={busy} onClick={()=>setPickupConfirmOpen(false)}>{t.cancel}</button></section></div>}
-    {dayPromptOpen&&membershipRole==='driver'&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="day-start-title"><div className={styles.modalIcon}><Play/></div><h2 id="day-start-title">Start your driving day</h2><p>You have <strong>{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length}</strong> route{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length===1?'':'s'} assigned for today.</p><button className={styles.photoButton} disabled={busy} onClick={()=>void beginDrivingDay()}><Play/>{busy?'Starting…':'Start day and share location'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>{dayPromptSeenRef.current=true;setDayPromptOpen(false)}}>Not now</button></section></div>}
+    {dayPromptOpen&&membershipRole==='driver'&&<div className={styles.backdrop} role="presentation"><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="day-start-title"><div className={styles.modalIcon}><Play/></div><h2 id="day-start-title">Start your driving day</h2><p>You have <strong>{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length}</strong> route{missions.filter(item=>['published','pending','active','paused'].includes(item.status)).length===1?'':'s'} assigned for today.</p>{!locationConsentAccepted&&<div className={styles.locationConsent}><strong>{locationConsentCopy.title}</strong><p>{locationConsentCopy.body}</p><label className={styles.consentRow}><input type="checkbox" checked={locationConsentChecked} onChange={event=>setLocationConsentChecked(event.target.checked)}/><span>{locationConsentCopy.check}</span></label></div>}<button className={styles.photoButton} disabled={busy||(!locationConsentAccepted&&!locationConsentChecked)} onClick={()=>void beginDrivingDay()}><Play/>{busy?'Starting…':'Start day and share location'}</button><button className={styles.issueLink} disabled={busy} onClick={()=>{dayPromptSeenRef.current=true;setDayPromptOpen(false)}}>Not now</button></section></div>}
     <nav className={styles.driverNav} aria-label="Driver navigation"><button type="button" aria-current={!routeView?'page':undefined} onClick={()=>setRouteView(null)}><Home size={18}/><span>Today</span></button><button type="button" aria-current={routeView?'page':undefined} onClick={()=>setRouteView('queue')}><List size={18}/><span>Route</span></button><Link href="/driver/history"><HistoryIcon size={18}/><span>{t.history}</span></Link><Link href="/driver/settings"><CircleUserRound size={18}/><span>Profile</span></Link></nav>
     {deliveryToolsOpen&&currentKind==='delivery'&&<div className={styles.backdrop}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="delivery-tools-title"><button className={styles.close} aria-label={t.close} onClick={()=>setDeliveryToolsOpen(false)}><X/></button><div className={styles.modalIcon}><ClipboardCheck/></div><h2 id="delivery-tools-title">Complete delivery</h2><p>Add proof if needed, then finish this delivery.</p><div className={styles.deliveryTools}><button className={styles.toolButton} onClick={()=>fileInput.current?.click()}><Camera/><span>{current?.completion_photo_path?'Photo added':'Take photo'}</span></button><button className={styles.toolButton} onClick={()=>{setDeliveryToolsOpen(false);setSignatureOpen(true)}}><Signature/><span>Customer signature</span></button><button className={styles.toolButton} onClick={()=>{setDeliveryToolsOpen(false);setStopNoteOpen(true)}}><MessageSquare/><span>Add note</span></button><button className={styles.toolButton} onClick={()=>{setDeliveryToolsOpen(false);setModal(true)}}><TriangleAlert/><span>Report issue</span></button></div><button className={styles.photoButton} disabled={busy} onClick={()=>{setDeliveryToolsOpen(false);void completeDelivery()}}><Check/>{stopCopy.completeDelivery}</button><button className={styles.secondaryButton} disabled={busy} onClick={()=>setDeliveryToolsOpen(false)}>{t.cancel}</button></section></div>}
   </main>
