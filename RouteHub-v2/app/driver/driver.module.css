@@ -79,7 +79,7 @@
 /* Leaflet's marker panes sit above normal page content. Dialogs must always
    form a higher isolated layer so signatures, notes and issue forms stay
    fully usable. */
-.backdrop{z-index:2000;isolation:isolate;inset:0 auto auto 0;width:100%;height:var(--rh-driver-viewport-height,100dvh);overflow:hidden}
+.backdrop{z-index:2147483000;isolation:isolate;inset:0 auto auto 0;width:100%;height:var(--rh-driver-viewport-height,100dvh);overflow:hidden}
 .backdrop .modal{z-index:1;max-height:calc(var(--rh-driver-viewport-height,100dvh) - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal input{width:100%;min-height:48px;margin:8px 0 12px;padding:12px;border:1px solid var(--rh-border);border-radius:12px;background:var(--rh-surface);color:var(--rh-text);font:inherit}
 @media(max-width:560px){
@@ -93,7 +93,8 @@
    recipient field and completion buttons outside the visible viewport. */
 @media(max-width:560px){
  .backdrop{
-  display:block;
+  display:grid;
+  place-items:center;
   inset:0 0 auto;
   height:var(--rh-driver-viewport-height,100dvh);
   min-height:0;
@@ -104,11 +105,10 @@
   padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
  }
  .backdrop .modal{
-  margin:0 auto;
+  margin:auto;
   max-height:calc(var(--rh-driver-viewport-height,100dvh) - 24px);
   scroll-padding:12px 0 160px;
  }
- .backdrop .modal:focus-within{margin-top:0}
 }
 
 .primaryActions .complete{min-height:70px;font-size:19px}
