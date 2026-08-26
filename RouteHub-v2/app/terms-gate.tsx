@@ -36,7 +36,9 @@ export default function TermsGate() {
         const id = data.user?.id
         if (!active || !id) return
         setUserId(id)
-        setOpen(!hasAcceptedTerms(id))
+        const accepted = hasAcceptedTerms(id)
+        setChecked(accepted)
+        setOpen(!accepted)
       } catch {
         // AuthBoundary owns authentication and redirects. Terms must never
         // turn a transient auth/network error into a blank workspace.
@@ -44,7 +46,7 @@ export default function TermsGate() {
     }
     void sync()
     const {data: listener} = getSupabase().auth.onAuthStateChange(event => {
-      if (event === 'SIGNED_OUT') { setUserId(null); setOpen(false) }
+      if (event === 'SIGNED_OUT') { setUserId(null); setOpen(false); setChecked(false) }
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') void sync()
     })
     return () => { active = false; listener.subscription.unsubscribe() }
