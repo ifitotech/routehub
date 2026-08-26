@@ -112,6 +112,8 @@ html[data-theme="light"] .app .muted{color:#64748b}
   border-bottom: 1px solid var(--rh-border) !important;
   background: var(--rh-bg) !important;
   background: color-mix(in srgb, var(--rh-bg) 88%, transparent) !important;
+  /* Keep the shared header interactive on every authenticated page. */
+  pointer-events: auto !important;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
