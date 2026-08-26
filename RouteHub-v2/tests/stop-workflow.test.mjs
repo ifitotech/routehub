@@ -117,10 +117,12 @@ test('pickup PO is captured in both the builder and focused driver display',()=>
 
 test('manager can edit pickup, delivery, and branch data without replacing the queue',()=>{
   const source=managePage()
-  assert.match(source,/Stop type<select/)
-  assert.match(source,/Pickup From \/ Location/)
-  assert.match(source,/Delivery address/)
-  assert.match(source,/Return to Branch/)
+  // The manager editor is localized, so assert the semantic controls and their
+  // English copy source rather than a hard-coded rendered label.
+  assert.match(source,/\{copy\.stopType\}<select/)
+  assert.match(source,/pickupFrom:'Pickup from \/ location'/)
+  assert.match(source,/deliveryAddress:'Delivery address'/)
+  assert.match(source,/return:'Return to branch'/)
   assert.match(source,/destination_phone/)
 })
 

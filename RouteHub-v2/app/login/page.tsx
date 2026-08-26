@@ -38,29 +38,39 @@ function DriverPreview() {
 }
 
 export default function Login() {
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null)
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null); const [checkingPwaSession, setCheckingPwaSession] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('source') === 'pwa')
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const tokenHash = params.get('token_hash')
     const tokenType = params.get('type')
     if (tokenHash && (tokenType === 'invite' || tokenType === 'recovery')) {
+      setCheckingPwaSession(false)
       void getSupabase().auth.verifyOtp({token_hash: tokenHash, type: tokenType as 'invite' | 'recovery'}).then(({error}) => {
         if (error) setMessage(error.message)
         else { window.location.hash = `type=${tokenType}`; setDialog('sign-in'); setMessage(tokenType === 'invite' ? 'You have been invited to RouteHub. Create a password to accept the invitation.' : 'Create a new password to continue.') }
       })
       return
     }
-    if (window.location.hash.includes('type=recovery')) { setDialog('sign-in'); setMessage('Create a new password to continue.'); return }
-    if (window.location.hash.includes('type=invite')) { setDialog('sign-in'); setMessage('You have been invited to RouteHub. Create a password to accept the invitation.'); return }
+    if (window.location.hash.includes('type=recovery')) { setCheckingPwaSession(false); setDialog('sign-in'); setMessage('Create a new password to continue.'); return }
+    if (window.location.hash.includes('type=invite')) { setCheckingPwaSession(false); setDialog('sign-in'); setMessage('You have been invited to RouteHub. Create a password to accept the invitation.'); return }
     const storedError = sessionStorage.getItem('routehub_auth_error')
-    if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setMessage(accessMessage(storedError)); setDialog('sign-in') }
-    resolveAccess(getSupabase()).then(access => {
+    if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setCheckingPwaSession(false); setMessage(accessMessage(storedError)); setDialog('sign-in') }
+    const client = getSupabase()
+    client.auth.getSession().then(({data}) => {
+      if (!data.session) { setCheckingPwaSession(false); return null }
+      return resolveAccess(client)
+    }).then(access => {
+      if (!access) return
       if (access.user) {
         window.location.replace(workspaceForStrictRole(access.role))
         return
       }
       setWorkspaceHref(null)
-    }).catch(() => setWorkspaceHref(null))
+    }).catch(error => {
+      setCheckingPwaSession(false)
+      setMessage(accessMessage(error instanceof Error ? error.message : ''))
+      setDialog('sign-in')
+    })
   }, [])
   useEffect(() => { if (dialog !== 'sign-in' || !window.location.hash.includes('type=recovery')) return; const input = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]'); const submit = document.querySelector<HTMLButtonElement>('.modalPrimary'); if (!input || !submit || submit.dataset.recoveryReady) return; input.autocomplete = 'new-password'; input.placeholder = 'New password (8+ characters)'; submit.dataset.recoveryReady = 'true'; submit.textContent = 'Update password'; submit.onclick = async () => { if (input.value.length < 8) { setMessage('Use at least 8 characters.'); return }; setBusy(true); const {error} = await getSupabase().auth.updateUser({password: input.value}); setMessage(error?.message || 'Password updated. You can now sign in.'); setBusy(false); if (!error) { window.history.replaceState({}, '', '/login'); setDialog(null) } } }, [dialog])
   useEffect(() => {
@@ -92,6 +102,7 @@ export default function Login() {
   useEffect(() => { if (dialog !== 'sign-in') return; const passwordInput = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]'); if (!passwordInput || passwordInput.parentElement?.querySelector('[data-reset-password]')) return; const link = document.createElement('button'); link.type = 'button'; link.dataset.resetPassword = 'true'; link.textContent = 'Forgot password?'; link.style.cssText = 'display:block;margin:10px 0 0 auto;border:0;background:transparent;color:#2563eb;font:inherit;font-size:13px;font-weight:800;cursor:pointer'; link.onclick = async () => { const address = document.querySelector<HTMLInputElement>('input[autocomplete="username"]')?.value.trim().toLowerCase(); if (!address) { setMessage('Enter your email first.'); return }; setBusy(true); setMessage('Sending password reset email…'); const {error} = await getSupabase().auth.resetPasswordForEmail(address, {redirectTo: 'https://routehub-wisu.vercel.app/login'}); setMessage(error?.message || 'Check your email for a secure password reset link.'); setBusy(false) }; passwordInput.parentElement?.appendChild(link); return () => link.remove() }, [dialog])
   const signIn = async () => { if (!email || !password || busy) return; setBusy(true); setMessage('Signing in…'); try { const client = getSupabase(); await client.auth.signOut(); const {error} = await client.auth.signInWithPassword({email: email.trim().toLowerCase(), password}); if (error) throw error; const access = await resolveAccess(client); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to sign in.'; setMessage(raw.startsWith('ROLE_') || raw === 'MULTIPLE_ROLES' || raw === 'TRIAL_EXPIRED' ? accessMessage(raw) : raw) } finally { setBusy(false) } }
   const requestAccess = async () => { if (!fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8 || busy) return; setBusy(true); setMessage('Creating your workspace…'); try { const client = getSupabase(); await client.auth.signOut(); const {data, error} = await client.auth.signUp({email: email.trim().toLowerCase(), password, options: {data: {full_name: fullName.trim(), company_name: companyName.trim(), phone: phone.trim()}}}); if (error) throw error; if (!data.session) { setMessage('Your account was created. Check your email to confirm it, then sign in.'); return }; const {error: workspaceError} = await client.rpc('create_trial_workspace', {requester_name: fullName.trim(), requester_company: companyName.trim(), requester_phone: phone.trim() || null}); if (workspaceError) throw workspaceError; const access = await resolveAccess(client); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to create your workspace.'; setMessage(raw.includes('already registered') ? 'This email already has an account. Sign in instead.' : raw) } finally { setBusy(false) } }
+  if (checkingPwaSession) return <main className={styles.landing}><section className={styles.hero}><div className={styles.heroCopy}><p className={styles.badge}><i/> RouteHub</p><h1>Opening your workspace…</h1><p className={styles.subtitle}>Restoring your secure RouteHub session.</p></div></section></main>
   const primaryAction = workspaceHref ? <Link className={styles.primaryButton} href={workspaceHref}>Open RouteHub <ArrowRight size={18}/></Link> : <button className={styles.primaryButton} onClick={() => open('request')}>Get Started <ArrowRight size={18}/></button>
   return <main className={styles.landing}>
     <header className={styles.header}><Link href="/" className={styles.wordmark}><Image src="/routehub-regular-new.jpg" alt="RouteHub" width={64} height={64} priority/><span>Route<em>Hub</em></span></Link><button className={styles.menuButton} onClick={() => setMenu(!menu)} aria-label="Open navigation" aria-expanded={menu}>{menu ? <X/> : <Menu/>}</button><nav className={menu ? `${styles.nav} ${styles.navOpen}` : styles.nav}><Link href="/product" onClick={() => setMenu(false)}>Product</Link><Link href="/how-it-works" onClick={() => setMenu(false)}>How it works</Link><Link href="/for-drivers" onClick={() => setMenu(false)}>For Drivers</Link><div className={styles.mobileActions}>{workspaceHref ? <Link href={workspaceHref}>Open RouteHub</Link> : <><button onClick={() => open('sign-in')}>Sign in</button><button className={styles.mobilePrimary} onClick={() => open('request')}>Get Started</button></>}</div></nav><div className={styles.headerActions}>{workspaceHref ? <Link className={styles.signIn} href={workspaceHref}>Open RouteHub</Link> : <button className={styles.signIn} onClick={() => open('sign-in')}>Sign in</button>}{primaryAction}</div></header>
