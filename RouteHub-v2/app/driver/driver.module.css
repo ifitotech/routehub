@@ -88,6 +88,29 @@
  .backdrop .modal textarea{min-height:94px}
 }
 
+/* Keep every driver dialog usable when the iOS/Android keyboard opens.  A
+   normal document-height overlay gets split behind Leaflet, which leaves the
+   recipient field and completion buttons outside the visible viewport. */
+@media(max-width:560px){
+ .backdrop{
+  display:block;
+  inset:0 0 auto;
+  height:var(--rh-driver-viewport-height,100dvh);
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
+ }
+ .backdrop .modal{
+  margin:0 auto;
+  max-height:calc(var(--rh-driver-viewport-height,100dvh) - 24px);
+  scroll-padding:12px 0 160px;
+ }
+ .backdrop .modal:focus-within{margin-top:0}
+}
+
 .primaryActions .complete{min-height:70px;font-size:19px}
 
 .primaryActions .start{min-height:70px;font-size:19px}
