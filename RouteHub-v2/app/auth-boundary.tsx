@@ -7,7 +7,7 @@ import {canOpenPath, resolveAccess, workspaceForStrictRole} from './auth-access'
 
 // Invitation activation must be public: a manager has no session yet when
 // opening the email link for the first time.
-const publicPaths = ['/login', '/auth/callback', '/activate-invitation', '/product', '/how-it-works', '/for-drivers']
+const publicPaths = ['/login', '/auth/callback', '/activate-invitation', '/product', '/how-it-works', '/for-drivers', '/terms']
 
 export default function AuthBoundary({children}: {children: React.ReactNode}) {
   const pathname = usePathname()
