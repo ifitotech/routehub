@@ -110,6 +110,6 @@ export default function LiveRouteMap({originAddress,destinationAddress,waypoints
     {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
   </div>
-  <footer><span><b>A</b>{originAddress||copy.origin}</span><span><b>B</b>{destinationAddress||copy.destination}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
+  <footer><span><b>S</b>{originAddress||copy.origin}</span><span><b>E</b>{destinationAddress||copy.destination}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
  </section>
 }
