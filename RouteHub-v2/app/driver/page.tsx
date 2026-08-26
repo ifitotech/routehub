@@ -234,7 +234,9 @@ export default function Driver() {
     const interval=window.setInterval(()=>void sendLocation(),5*60*1000)
     const watch=navigator.geolocation.watchPosition(position=>{
       if(disposed)return
-      void updateDrivingLocation(drivingSession.id,driverId,{lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy})
+      void updateDrivingLocation(drivingSession.id,driverId,{lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy}).then(result=>{
+        if(result.error&&!disposed)setLocationStatus(result.error.message)
+      })
     },()=>undefined,{enableHighAccuracy:true,maximumAge:0,timeout:20000})
     return()=>{disposed=true;window.clearInterval(interval);navigator.geolocation.clearWatch(watch)}
   },[driverId,drivingSession,t.locationPermissionDenied])
