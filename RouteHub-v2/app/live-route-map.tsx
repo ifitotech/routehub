@@ -24,7 +24,7 @@ type GeocodeResponse={coordinate:RouteCoordinate|null;label?:string}
 
 const makeMarker=(kind:'origin'|'destination'|'driver'|'stop',number?:number)=>L.divIcon({
  className:'route-map-marker-wrap',
- html:`<span class="route-map-marker route-map-marker-${kind}">${kind==='driver'?'🚚':kind==='origin'?'A':kind==='stop'?number:'B'}</span>`,
+ html:`<span class="route-map-marker route-map-marker-${kind}">${kind==='driver'?'🚚':kind==='origin'?'S':kind==='stop'?number:'E'}</span>`,
  iconSize:[38,38],
  iconAnchor:[19,19]
 })
@@ -104,10 +104,10 @@ export default function LiveRouteMap({originAddress,destinationAddress,waypoints
     <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
     <FitBounds points={visiblePoints}/>
     {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
-    {origin&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')}><Tooltip direction="top" offset={[0,-18]}>Punto A</Tooltip></Marker>}
+    {origin&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>Start</Tooltip></Marker>}
     {routePoints.slice(1,-1).map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+1)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`Stop ${index+1}`}</Tooltip></Marker>)}
-    {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination')}><Tooltip direction="top" offset={[0,-18]}>Punto B</Tooltip></Marker>}
-    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
+    {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>End</Tooltip></Marker>}
+    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
   </div>
   <footer><span><b>A</b>{originAddress||copy.origin}</span><span><b>B</b>{destinationAddress||copy.destination}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
