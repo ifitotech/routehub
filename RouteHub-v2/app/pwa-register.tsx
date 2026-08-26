@@ -4,6 +4,11 @@ import {useEffect} from 'react'
 
 export default function PwaRegister() {
   useEffect(() => {
+    const onInstallPrompt = (event: Event) => {
+      event.preventDefault()
+      window.dispatchEvent(new CustomEvent('routehub:install-available', {detail: event}))
+    }
+    window.addEventListener('beforeinstallprompt', onInstallPrompt)
     if (!('serviceWorker' in navigator)) return
     let registration: ServiceWorkerRegistration | undefined
     let active = true
@@ -37,6 +42,7 @@ export default function PwaRegister() {
     window.addEventListener('pageshow', clearReloadGuard, {once: true})
     return () => {
       active = false
+      window.removeEventListener('beforeinstallprompt', onInstallPrompt)
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       window.removeEventListener('online', update)
       window.removeEventListener('focus', update)

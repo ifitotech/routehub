@@ -8,6 +8,7 @@ import {useLocale} from '../../lib/use-preferences'
 import GoogleAddressInput from '../google-address-input'
 import NotificationBell from '../notification-bell'
 import DeviceNotificationsSetting from '../device-notifications-setting'
+import InstallAppCard from '../install-app-card'
 import {requestOnboardingReplay} from '../../lib/onboarding'
 
 export default function Settings() {
@@ -90,6 +91,7 @@ export default function Settings() {
     {isCeo && <section className="card settings-card"><h2>Platform access</h2><div className="branch-summary"><strong>CEO / Platform administrator</strong><p className="muted">Full access to companies, branches, approvals and audit activity.</p></div></section>}
     <section className="card settings-card"><h2>{t.preferences}</h2><label>{t.language}<select value={locale} onChange={event => setLocale(event.target.value)}><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option></select></label></section>
     <DeviceNotificationsSetting/>
+    <InstallAppCard/>
     {!isCeo && <section className="card settings-card"><h2><Sparkles size={19}/> {copy.tour}</h2><p className="muted">{copy.tourHelp}</p><button className="secondary" type="button" onClick={requestOnboardingReplay}>{copy.tourAction}</button></section>}
     {!isCeo && <section className="card settings-card"><h2>{t.planBilling}</h2><p className="plan-name">{plan === 'free' ? t.free : plan.toUpperCase()}</p><p className="muted">{trialEnd ? `${t.premiumTrial}: ${new Date(trialEnd).toLocaleDateString(locale)}` : t.noTrial}</p><button className="primary" onClick={() => setMessage(t.billingSoon)}>{t.upgradePro}</button></section>}
     <section className="card settings-card"><h2>{t.support}</h2><p className="muted">{t.supportHelp}</p><button className="secondary" onClick={() => setMessage(t.supportReady)}>{t.contactSupport}</button>{message && <p className="muted" role="status">{message}</p>}</section>
