@@ -35,5 +35,27 @@ export async function createMission(input:MissionInput){
 }
 export async function updateMission(id:string,patch:Partial<{driver_id:string;status:MissionStatus;priority:Priority;notes:string;position:number}>){const user=await currentUser();const membership=await currentMembership();const result=await getSupabase().from('routes').update(patch).eq('id',id).eq('company_id',membership.company_id).select().single();if(!result.error)await recordActivity({companyId:membership.company_id,userId:user.id,action:'mission_updated',recordId:id,after:patch});return result}
 export async function setMissionStatus(id:string,status:MissionStatus){const user=await currentUser();const result=await getSupabase().from('routes').update({status,updated_version:Date.now()}).eq('id',id).eq('driver_id',user.id).select().single();if(result.error)throw result.error;return result.data}
-export async function completeMission(id:string,providedLocation?:{lat:number;lng:number;accuracy:number},options?:{driverNote?:string}){const user=await currentUser();const membership=await currentMembership();let location=providedLocation;try{location=location||await getCurrentLocation()}catch{}const completion={...buildCompletionPatch(location),...(options?.driverNote===undefined?{}:{driver_note:options.driverNote})};const result=await getSupabase().from('routes').update(completion).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['active','paused']).select().maybeSingle();if(result.error)throw result.error;if(!result.data)throw new Error('This stop was already completed or is no longer active.');try{await recordActivity({companyId:membership.company_id,userId:user.id,action:'delivery_completed',recordId:id,after:{method:completion.completion_method,location:location||null}})}catch{}return result.data}
+export async function completeMission(id:string,providedLocation?:{lat:number;lng:number;accuracy:number},options?:{driverNote?:string}){
+  const user=await currentUser()
+  const membership=await currentMembership()
+  let location=providedLocation
+  try{location=location||await getCurrentLocation()}catch{}
+
+  const completionBase=buildCompletionPatch(location)
+  const completion=options?.driverNote===undefined?completionBase:{...completionBase,driver_note:options.driverNote}
+  const update=async(payload:typeof completionBase|typeof completion)=>getSupabase().from('routes').update(payload).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['active','paused']).select().maybeSingle()
+
+  let result=await update(completion)
+  const message=result.error?.message?.toLowerCase()||''
+  // Recipient details are optional proof. Older beta schemas may not yet have
+  // driver_note, so that optional field must never block completing the stop.
+  if(result.error&&options?.driverNote!==undefined&&message.includes('driver_note')&&(message.includes('column')||message.includes('schema cache'))){
+    result=await update(completionBase)
+  }
+  if(result.error)throw result.error
+  if(!result.data)throw new Error('This stop was already completed or is no longer active.')
+
+  try{await recordActivity({companyId:membership.company_id,userId:user.id,action:'delivery_completed',recordId:id,after:{method:completionBase.completion_method,location:location||null,recipient_name:options?.driverNote?.replace(/^Received by:\\s*/i,'')||null}})}catch{}
+  return result.data
+}
 export type TeamRole=Role
