@@ -55,12 +55,22 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
 
+ useEffect(()=>{
+  if(!deviceLocation||!points.length)return
+  const nextStop=points[1]||points[0]
+  let cancelled=false
+  void calculateRoute([deviceLocation,nextStop]).then(estimate=>{
+   if(!cancelled&&estimate.coordinates.length>1)setLine(estimate.coordinates)
+  })
+  return()=>{cancelled=true}
+ },[deviceLocation?.lat,deviceLocation?.lng,points])
+
  const center=points[0]||{lat:39.8283,lng:-98.5795}
  const copy=locale==='es'?{label:'Mapa de todas las paradas',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Recorrido completo',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa de la ruta'}:locale==='fr'?{label:'Carte de tous les arrêts',loading:'Préparation de l’itinéraire…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',map:'Itinéraire complet',stop:'Arrêt',single:'arrêt programmé',plural:'arrêts programmés',complete:'Vue complète de l’itinéraire'}:{label:'Map of all stops',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Full route',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view'}
  return <section className="route-plan-map" aria-label={copy.label}>
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
-   <Fit points={points}/>
+   <Fit points={deviceLocation?[deviceLocation]:points}/>
    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
    {points.slice(1).map((point,index)=><Marker key={validStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{validStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={L.divIcon({className:'route-plan-driver-location',html:'<span style="display:block;width:18px;height:18px;border-radius:50%;background:#1763de;border:3px solid #fff;box-shadow:0 1px 8px #1238;"/>',iconSize:[18,18],iconAnchor:[9,9]})}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
