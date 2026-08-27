@@ -44,16 +44,44 @@ export async function completeMission(id:string,providedLocation?:{lat:number;ln
   const completionBase=buildCompletionPatch(location)
   const completion=options?.driverNote===undefined?completionBase:{...completionBase,driver_note:options.driverNote}
   const update=async(payload:typeof completionBase|typeof completion)=>getSupabase().from('routes').update(payload).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['active','paused']).select().maybeSingle()
+  const readCurrentState=()=>getSupabase().from('routes').select().eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).maybeSingle()
+  const reportTechnicalReconciliation=async(error:unknown)=>{
+    try{
+      const message=error instanceof Error?error.message:String(error||'Completion response could not be confirmed')
+      await getSupabase().from('app_error_reports').insert({
+        user_id:user.id,
+        company_id:membership.company_id,
+        branch_id:membership.branch_id??null,
+        route_id:id,
+        action:'completion_reconciled',
+        error_message:message.slice(0,500),
+        context:{source:'driver_completion',reconciled:true}
+      })
+    }catch{}
+  }
 
   let result=await update(completion)
-  const message=result.error?.message?.toLowerCase()||''
   // Recipient details are optional proof. Older beta schemas may not yet have
   // driver_note, so that optional field must never block completing the stop.
-  if(result.error&&options?.driverNote!==undefined&&message.includes('driver_note')&&(message.includes('column')||message.includes('schema cache'))){
+  // This also supports existing RLS policies that allow completion but do not
+  // yet permit that optional beta field.
+  const firstError=result.error
+  if(result.error&&options?.driverNote!==undefined){
     result=await update(completionBase)
   }
-  if(result.error)throw result.error
-  if(!result.data)throw new Error('This stop was already completed or is no longer active.')
+  if(result.error||!result.data){
+    // A mobile request can reach Supabase and lose its response. Confirm the
+    // authoritative state before treating it as a failed delivery, so a driver
+    // is never trapped on a stop that was already completed.
+    const currentState=await readCurrentState()
+    if(!currentState.error&&currentState.data?.status==='completed'){
+      if(firstError)void reportTechnicalReconciliation(firstError)
+      return currentState.data
+    }
+    if(result.error)throw result.error
+    if(currentState.error)throw currentState.error
+    throw new Error('We could not confirm this stop. It remains pending.')
+  }
 
   try{await recordActivity({companyId:membership.company_id,userId:user.id,action:'delivery_completed',recordId:id,after:{method:completionBase.completion_method,location:location||null,recipient_name:options?.driverNote?.replace(/^Received by:\\s*/i,'')||null}})}catch{}
   return result.data
