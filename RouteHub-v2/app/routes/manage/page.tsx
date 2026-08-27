@@ -152,7 +152,21 @@ export default function ManageRoutes(){
  }
  const changeStatus=async(route:RouteRow,status:string)=>{
   setSavingId(route.id)
-  try{const {error}=await getSupabase().from('routes').update({status,updated_version:Date.now()}).eq('id',route.id);if(error)throw error;void sendRoutePush(route.id,'updated');showMessage(copy.routeUpdated);await load()}catch(error){showMessage(error instanceof Error?error.message:t.unableUpdateRoute,true)}finally{setSavingId(null)}
+  try{
+   const {error}=await getSupabase().from('routes').update({status,updated_version:Date.now()}).eq('id',route.id)
+   if(error)throw error
+   // Removing a queued route must relink the next stop to the last remaining
+   // destination. The RPC is authoritative and also keeps tenant/branch RLS.
+   if(status==='cancelled'&&route.driver_id){
+    let queueQuery=getSupabase().from('routes').select('id,position').eq('company_id',route.company_id).eq('route_date',route.route_date).eq('driver_id',route.driver_id).in('status',['draft','pending','published','paused']).order('position').order('id')
+    queueQuery=route.branch_id===null?queueQuery.is('branch_id',null):queueQuery.eq('branch_id',route.branch_id)
+    const {data:remaining,error:queueError}=await queueQuery
+    if(queueError)throw queueError
+    const ids=(remaining??[]).map(item=>item.id)
+    if(ids.length){const {error:reorderError}=await getSupabase().rpc('reorder_route_queue',{p_route_ids:ids});if(reorderError)throw reorderError}
+   }
+   void sendRoutePush(route.id,'updated');showMessage(copy.routeUpdated);await load()
+  }catch(error){showMessage(error instanceof Error?error.message:t.unableUpdateRoute,true)}finally{setSavingId(null)}
  }
 
  return <main className={`app ${styles.page}`}>
