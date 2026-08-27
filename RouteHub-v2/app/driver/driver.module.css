@@ -134,3 +134,36 @@
 @media(max-width:719px){.driverNav{left:50%;right:auto;bottom:10px;transform:translateX(-50%);width:min(530px,calc(100% - 28px));min-height:64px;padding:7px 10px;border-radius:22px}}
 .pickupPo{display:grid;justify-items:center;gap:10px;text-align:center;padding:22px 16px;background:#edf6ff;border-radius:14px;color:#14233b}.pickupPo small{font-size:15px;font-weight:800}.pickupPo>div{width:100%;border-top:1px dashed #b9cbe0}.pickupPo strong{font-size:46px;line-height:1;letter-spacing:.03em}:global(html[data-theme="dark"]) .pickupPo{background:#223a59;color:#f8fafc}.pickupPo>div{border-color:#7891b3}
 .locationConsent{margin:16px 0;padding:14px;border:1px solid var(--rh-border);border-radius:14px;background:var(--rh-primary-soft);color:var(--rh-text)}.locationConsent strong{display:block}.locationConsent p{margin:7px 0 12px;font-size:13px;line-height:1.45}.consentRow{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.4;cursor:pointer}.consentRow input{flex:0 0 auto;width:18px;min-height:18px;margin:1px 0 0;accent-color:var(--rh-primary)}
+
+/* First-pass interaction polish: visual feedback only, no workflow changes. */
+.page button:not(:disabled){transition:transform 140ms ease-out}
+.page button:not(:disabled):active{transform:scale(.98)}
+.locationLive i{animation:driver-status-pulse 2.7s ease-in-out infinite}
+.empty{animation:driver-empty-enter 210ms ease-out both}
+.driverNav a:not(:disabled),.driverNav button:not(:disabled){transition:transform 140ms ease-out,background-color 180ms ease,color 180ms ease}
+.driverNav a:active,.driverNav button:active{transform:scale(.96)}
+@keyframes driver-status-pulse{0%,100%{box-shadow:0 0 0 4px rgb(16 185 129 / 16%)}50%{box-shadow:0 0 0 7px rgb(16 185 129 / 8%)}}
+@keyframes driver-empty-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+ .page button:not(:disabled),.driverNav a:not(:disabled),.driverNav button:not(:disabled){transition:none}
+ .page button:not(:disabled):active,.driverNav a:active,.driverNav button:active{transform:none}
+.locationLive i,.empty{animation:none}
+}
+
+/* Subsequent polish passes: presentation only for existing Driver flows. */
+.backdrop .modal{transition:opacity 200ms ease-out,transform 220ms ease-out}
+.backdrop .modal h2{letter-spacing:-.02em}
+.backdrop .modal .secondaryButton,.backdrop .modal .toolButton,.backdrop .modal .evidencePicker{transition:background-color 150ms ease-out,border-color 150ms ease-out,transform 140ms ease-out}
+.backdrop .modal button:not(:disabled):active,.backdrop .modal label.evidencePicker:active{transform:scale(.98)}
+.photoButton svg,.issueButton svg{flex:0 0 auto}
+.pickupPo{box-shadow:inset 0 0 0 1px rgb(36 107 235 / 5%)}
+.signaturePad{box-shadow:0 2px 8px rgb(15 29 53 / 4%)}
+.completed{animation:driver-complete-in 280ms ease-out both}
+.toast{animation:driver-toast-in 200ms ease-out both}
+@keyframes driver-complete-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes driver-toast-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+ .backdrop .modal,.backdrop .modal .secondaryButton,.backdrop .modal .toolButton,.backdrop .modal .evidencePicker{transition:none}
+ .backdrop .modal button:not(:disabled):active,.backdrop .modal label.evidencePicker:active{transform:none}
+ .completed,.toast{animation:none}
+}
