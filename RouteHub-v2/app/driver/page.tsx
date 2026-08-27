@@ -453,6 +453,7 @@ export default function Driver() {
       setRecipientPromptOpen(false)
       setRecipientName('')
       setBusy(false)
+      await new Promise<void>(resolve=>setTimeout(resolve,0))
       await completeCurrentStop()
     }catch(error){setMessage(errorMessage(error,t.unableUpdateRoute));setBusy(false)}
   }
