@@ -71,7 +71,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  return <section className="route-plan-map" aria-label={copy.label}>
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
-   <Fit points={deviceLocation?[deviceLocation]:points}/>
+   <Fit points={deviceLocation?[deviceLocation,...points.slice(1,2)]:points}/>
    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
    {points.slice(1).map((point,index)=><Marker key={validStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{validStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={L.divIcon({className:'route-plan-driver-location',html:'<span style="display:block;width:18px;height:18px;border-radius:50%;background:#1763de;border:3px solid #fff;box-shadow:0 1px 8px #1238;"/>',iconSize:[18,18],iconAnchor:[9,9]})}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
