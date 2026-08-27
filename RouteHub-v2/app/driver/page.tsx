@@ -15,7 +15,6 @@ import {canDriverStartRoute, operationalDate, selectDriverTodayQueue} from '../.
 import {routeProgress, stopAction, stopKind} from '../../lib/stop-workflow'
 import {saveCustomerSignature} from '../../lib/signature'
 import {workspaceForStrictRole} from '../auth-access'
-import {googleMapsNavigationUrl} from '../../lib/maps/external-navigation'
 import {createRealtimeRefresh} from '../../lib/realtime-sync'
 import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
 import {reportAppError} from '../../lib/error-reporting'
@@ -343,14 +342,10 @@ const [recipientError,setRecipientError]=useState('')
   },[autoCloseTime,current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
 
   const openGoogleMaps=(route:Mission|null|undefined=current)=>{
-    // Use Google's universal HTTPS directions URL. Android and iOS open the
-    // installed Maps app through the platform's verified link handling;
-    // otherwise the same URL safely opens Google Maps in the browser. Custom
-    // schemes such as google.navigation:// can be misread by installed PWAs
-    // as an internal RouteHub path (for example /route/map).
     if(!route)return
-    const url=googleMapsNavigationUrl({address:route.destination_address,coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,label:routeLabel(route)})
-    if(url)window.location.assign(url)
+    // Keep navigation inside RouteHub. The route overlay uses the free
+    // Leaflet + OSRM map and follows the driver's operational GPS session.
+    setRouteView('map')
   }
   const receivedBy=(route?:Mission|null)=>{
     const match=route?.driver_note?.match(/^Received by:\s*(.+)$/i)
