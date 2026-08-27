@@ -35,7 +35,10 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const arrivalNotified=useRef(false)
  const [loading,setLoading]=useState(true)
  const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.address)),[stops])
- const addresses=useMemo(()=>[originAddress,...validStops.map(stop=>stop.address)].filter(Boolean) as string[],[originAddress,validStops])
+ // Driver navigation shows the active stop and only one upcoming reference.
+ // The driver page sorts active work first before passing these stops.
+ const navigationStops=useMemo(()=>validStops.slice(0,2),[validStops])
+ const addresses=useMemo(()=>[originAddress,...navigationStops.map(stop=>stop.address)].filter(Boolean) as string[],[originAddress,navigationStops])
 
  useEffect(()=>{
   let cancelled=false
@@ -83,12 +86,12 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const center=points[0]||{lat:39.8283,lng:-98.5795}
  const copy=locale==='es'?{label:'Mapa de navegación',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Navegación',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa',next:'Próxima parada',gps:'GPS activo',gpsLost:'Sin señal GPS',recenter:'Mi ubicación'}:{label:'Navigation map',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Navigation',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view',next:'Next stop',gps:'GPS active',gpsLost:'GPS signal unavailable',recenter:'My location'}
  return <section className="route-plan-map" aria-label={copy.label}>
-  <header className="route-plan-nav"><div><small>{copy.next}</small><strong>{validStops[0]?.label||validStops[0]?.address||copy.stop}</strong></div><span className={deviceLocation?'is-live':''}>{deviceLocation?copy.gps:copy.gpsLost}</span></header>
+  <header className="route-plan-nav"><div><small>{copy.next}</small><strong>{navigationStops[0]?.label||navigationStops[0]?.address||copy.stop}</strong></div><span className={deviceLocation?'is-live':''}>{deviceLocation?copy.gps:copy.gpsLost}</span></header>
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
    <Fit points={points}/>
    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
-   {points.slice(1).map((point,index)=><Marker key={validStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{validStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
+   {points.slice(1).map((point,index)=><Marker key={navigationStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{navigationStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={L.divIcon({className:'route-plan-driver-location',html:'<span style="display:block;width:18px;height:18px;border-radius:50%;background:#1763de;border:3px solid #fff;box-shadow:0 1px 8px #1238;"/>',iconSize:[18,18],iconAnchor:[9,9]})}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
   </MapContainer>} {deviceLocation&&<button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}>{copy.recenter}</button>}</div>
   <footer><span>{deviceLocation&&estimate?.distanceMeters!=null?`${Math.max(0,Math.round(estimate.distanceMeters/1609.344*10)/10)} mi · ${Math.max(1,Math.round((estimate.durationSeconds||0)/60))} min`: `${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</span><small>{deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75?(locale==='es'?'Llegaste a la próxima parada': 'Arrived at next stop'):copy.complete}</small></footer>
