@@ -52,8 +52,11 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
 
  useEffect(()=>{
   if(typeof navigator==='undefined'||!navigator.geolocation)return
-  const watch=navigator.geolocation.watchPosition(position=>setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude}),()=>undefined,{enableHighAccuracy:true,maximumAge:10000,timeout:20000})
-  return()=>navigator.geolocation.clearWatch(watch)
+  const update=()=>navigator.geolocation.getCurrentPosition(position=>setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude}),()=>undefined,{enableHighAccuracy:true,maximumAge:0,timeout:20000})
+  update()
+  const timer=window.setInterval(update,10000)
+  const watch=navigator.geolocation.watchPosition(position=>setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude}),()=>undefined,{enableHighAccuracy:true,maximumAge:5000,timeout:20000})
+  return()=>{window.clearInterval(timer);navigator.geolocation.clearWatch(watch)}
  },[])
 
  useEffect(()=>{
