@@ -3,6 +3,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
+import {Compass,LocateFixed,Route as RouteIcon} from 'lucide-react'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,nextRouteManeuver} from '../lib/maps/routing'
@@ -152,7 +153,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
    {points.slice(1).map((point,index)=><Marker key={displayedStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{displayedStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverMarker(deviceLocation.heading)}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
-  </MapContainer>} {deviceLocation&&<button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}>{copy.recenter}</button>}</div>
+  </MapContainer>} {deviceLocation&&<><button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}><LocateFixed size={18}/>{copy.recenter}</button><div className="route-plan-float-controls"><button type="button" aria-label="Compass" onClick={()=>{if(map)map.setView(map.getCenter(),map.getZoom())}}><Compass size={21}/></button><button type="button" aria-label="Route overview" onClick={()=>{if(map&&points.length>1)map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})}}><RouteIcon size={21}/></button></div></>}</div>
   <footer className="route-plan-bottom"><div><strong>{deviceLocation&&estimate?.durationSeconds!=null?`${Math.max(1,Math.round(estimate.durationSeconds/60))} min`:`${validStops.length}`}</strong><span>{deviceLocation&&estimate?.distanceMeters!=null?`${Math.max(0,Math.round(estimate.distanceMeters/1609.344*10)/10)} mi · ${new Date(Date.now()+(estimate.durationSeconds||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive?<button type="button" onClick={()=>void toggleNavigation()}>{copy.exit}</button>:<small>{estimate?.maneuvers?.[1]?.instruction|| (deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75?(locale==='es'?'Llegaste a la próxima parada': 'Arrived at next stop'):copy.complete)}</small>}</footer>
  </section>
 }
