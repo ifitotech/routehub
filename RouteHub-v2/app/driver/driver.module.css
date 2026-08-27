@@ -71,7 +71,7 @@
  .page:has(.routeHero){position:fixed;inset:0;width:100%;height:100dvh;box-sizing:border-box;overflow:hidden;padding-bottom:calc(88px + env(safe-area-inset-bottom))}
  /* Keep every current-route action on screen.  The map is deliberately a
     compact, read-only preview; navigation still opens Google Maps. */
- .routeHero :global(.live-route-canvas){height:min(148px,19dvh)}
+.routeHero :global(.live-route-canvas){height:min(44dvh,420px);min-height:260px}
  .primaryActions{margin-top:8px;gap:7px}
  .primaryActions button{min-height:44px}
  .secondaryActions{display:grid;margin-top:7px;gap:7px}
