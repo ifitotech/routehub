@@ -17,6 +17,7 @@ import {saveCustomerSignature} from '../../lib/signature'
 import {workspaceForStrictRole} from '../auth-access'
 import {createRealtimeRefresh} from '../../lib/realtime-sync'
 import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
+import {googleMapsNavigationUrl} from '../../lib/maps/external-navigation'
 import {reportAppError} from '../../lib/error-reporting'
 import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
@@ -363,11 +364,11 @@ const [recipientError,setRecipientError]=useState('')
     return()=>window.clearInterval(timer)
   },[autoCloseTime,current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
 
+  const openRouteMap=()=>setRouteView('map')
   const openGoogleMaps=(route:Mission|null|undefined=current)=>{
     if(!route)return
-    // Keep navigation inside RouteHub. The route overlay uses the free
-    // Leaflet + OSRM map and follows the driver's operational GPS session.
-    setRouteView('map')
+    const url=googleMapsNavigationUrl({address:route.destination_address,coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,label:route.destination_name})
+    if(url)window.location.assign(url)
   }
   const receivedBy=(route?:Mission|null)=>{
     const match=route?.driver_note?.match(/^Received by:\s*(.+)$/i)
@@ -484,7 +485,7 @@ const [recipientError,setRecipientError]=useState('')
       : await update('active')
     if(!saved)return
     setMessage(t.inProgress)
-    openGoogleMaps()
+    openRouteMap()
   }
   const closeModal=()=>{if(busy)return;setModal(false);setIssueNote('');setIssuePhoto(null)}
   const beginSignature=(event:React.PointerEvent<HTMLCanvasElement>)=>{const canvas=signatureCanvas.current;if(!canvas)return;canvas.setPointerCapture(event.pointerId);const rect=canvas.getBoundingClientRect();const context=canvas.getContext('2d');if(!context)return;context.lineWidth=3;context.lineCap='round';context.strokeStyle='#14233b';context.beginPath();context.moveTo((event.clientX-rect.left)*(canvas.width/rect.width),(event.clientY-rect.top)*(canvas.height/rect.height));const move=(moveEvent:PointerEvent)=>{context.lineTo((moveEvent.clientX-rect.left)*(canvas.width/rect.width),(moveEvent.clientY-rect.top)*(canvas.height/rect.height));context.stroke()};const stop=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',stop);canvas.removeEventListener('pointercancel',stop)};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop)}
@@ -517,7 +518,7 @@ const [recipientError,setRecipientError]=useState('')
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
         {current.status==='active'&&currentKind!=='delivery'&&currentAction==='arrived'&&<button disabled={busy} className={styles.complete} onClick={()=>{if(currentKind==='pickup')setPickupConfirmOpen(true);else void markArrived()}}><MapPin size={19}/>{stopCopy.arrived}</button>}
         {current.status==='active'&&(currentKind==='delivery'||currentAction!=='arrived')&&<button disabled={busy} className={styles.complete} onClick={()=>{if(currentKind==='delivery')setDeliveryToolsOpen(true);else void completeCurrentStop()}}><Check size={19}/>{currentKind==='delivery'?stopCopy.completeDelivery:currentAction==='confirm_pickup'?stopCopy.confirmPickup:stopCopy.completeBranch}</button>}
-        {current.destination_address&&<button disabled={busy} className={styles.viewRoute} onClick={()=>openGoogleMaps(current)}><MapPin size={18}/>{stopCopy.openMaps}</button>}
+         {current.destination_address&&<><button disabled={busy} className={styles.viewRoute} onClick={openRouteMap}><MapPin size={18}/>{detailCopy.openMap}</button><button disabled={busy} className={styles.viewRoute} onClick={()=>openGoogleMaps(current)}><MapPin size={18}/>{stopCopy.openMaps}</button></>}
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
       <input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void attachStopPhoto(file)}}/>
