@@ -454,10 +454,9 @@ export default function Driver() {
       const driverNote=existingNote&&!existingNote.startsWith('Received by:')?`${recipientNote}\n${existingNote}`:recipientNote
       const {error}=await getSupabase().from('routes').update({driver_note:driverNote,updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId)
       if(error)throw error
-      setRecipientPromptOpen(false)
-      setRecipientName('')
-      setBusy(false)
-      await new Promise<void>(resolve=>setTimeout(resolve,0))
+      // Keep the confirmation sheet open until the authoritative completion
+      // succeeds. This prevents a failed completion from leaving the driver
+      // on the route screen with no actionable feedback.
       await completeCurrentStop(true)
     }catch(error){setMessage(errorMessage(error,t.unableUpdateRoute));setBusy(false)}
   }
