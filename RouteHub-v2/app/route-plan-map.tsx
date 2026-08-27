@@ -29,6 +29,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [points,setPoints]=useState<Coordinate[]>([])
  const [line,setLine]=useState<Coordinate[]>([])
  const [deviceLocation,setDeviceLocation]=useState<Coordinate|null>(null)
+ const [estimate,setEstimate]=useState<{distanceMeters?:number;durationSeconds?:number}|null>(null)
  const [loading,setLoading]=useState(true)
  const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.address)),[stops])
  const addresses=useMemo(()=>[originAddress,...validStops.map(stop=>stop.address)].filter(Boolean) as string[],[originAddress,validStops])
@@ -44,7 +45,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
    setLoading(false)
    if(coordinates.length<2)return
    const estimate=await calculateRoute(coordinates)
-   if(!cancelled&&estimate.coordinates.length)setLine(estimate.coordinates)
+   if(!cancelled&&estimate.coordinates.length){setLine(estimate.coordinates);setEstimate(estimate)}
   }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setLoading(false)}})
   return()=>{cancelled=true}
  },[addresses])
@@ -60,7 +61,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   const nextStop=points[1]||points[0]
   let cancelled=false
   void calculateRoute([deviceLocation,nextStop]).then(estimate=>{
-   if(!cancelled&&estimate.coordinates.length>1)setLine(estimate.coordinates)
+   if(!cancelled&&estimate.coordinates.length>1){setLine(estimate.coordinates);setEstimate(estimate)}
   })
   return()=>{cancelled=true}
  },[deviceLocation?.lat,deviceLocation?.lng,points])
@@ -75,6 +76,6 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
    {points.slice(1).map((point,index)=><Marker key={validStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{validStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={L.divIcon({className:'route-plan-driver-location',html:'<span style="display:block;width:18px;height:18px;border-radius:50%;background:#1763de;border:3px solid #fff;box-shadow:0 1px 8px #1238;"/>',iconSize:[18,18],iconAnchor:[9,9]})}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
   </MapContainer>}</div>
-  <footer><span>{validStops.length} {validStops.length===1?copy.single:copy.plural}</span><small>{copy.complete}</small></footer>
+  <footer><span>{deviceLocation&&estimate?.distanceMeters!=null?`${Math.max(0,Math.round(estimate.distanceMeters/1609.344*10)/10)} mi · ${Math.max(1,Math.round((estimate.durationSeconds||0)/60))} min`: `${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</span><small>{deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75?(locale==='es'?'Llegaste a la próxima parada': 'Arrived at next stop'):copy.complete}</small></footer>
  </section>
 }
