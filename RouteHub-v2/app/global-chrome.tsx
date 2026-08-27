@@ -8,6 +8,11 @@ import NotificationBell from './notification-bell'
 export default function GlobalChrome(){
   const pathname=usePathname(),router=useRouter()
   const isDriverWorkspace=pathname.startsWith('/driver')
+  const dashboardHref = isDriverWorkspace
+    ? '/driver'
+    : pathname.startsWith('/admin')
+      ? '/admin'
+      : '/manager'
   const [scrolled,setScrolled]=useState(false)
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -30,7 +35,7 @@ export default function GlobalChrome(){
   const showBack=!workspaceHomes.includes(pathname)
   return <div className={`global-chrome${scrolled ? ' is-scrolled' : ''}`}>
     {showBack&&<button className="global-back" aria-label="Go back" onClick={()=>window.history.length>1?router.back():router.push('/')}><ArrowLeft size={20}/></button>}
-    <button className="global-logo" aria-label="Open my dashboard" onClick={()=>router.push('/')}><Image src="/routehub-regular-new.jpg" alt="" width={774} height={774} priority/><span>Route<em>Hub</em></span></button>
+    <button className="global-logo" aria-label="Open my dashboard" onClick={()=>router.push(dashboardHref)}><Image src="/routehub-regular-new.jpg" alt="" width={774} height={774} priority/><span>Route<em>Hub</em></span></button>
     <NotificationBell />
   </div>
 }

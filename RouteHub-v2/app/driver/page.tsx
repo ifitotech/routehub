@@ -15,7 +15,8 @@ import {canDriverStartRoute, operationalDate, selectDriverTodayQueue} from '../.
 import {routeProgress, stopAction, stopKind} from '../../lib/stop-workflow'
 import {saveCustomerSignature} from '../../lib/signature'
 import {workspaceForStrictRole} from '../auth-access'
-import {openNavigation} from '../../lib/maps/external-navigation'
+import {googleMapsNavigationUrl} from '../../lib/maps/external-navigation'
+import {createRealtimeRefresh} from '../../lib/realtime-sync'
 import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
 import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
@@ -23,7 +24,7 @@ import styles from './driver.module.css'
 const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 
-type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;origin_lat?:number|null;origin_lng?:number|null;dest_lat?:number|null;dest_lng?:number|null;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
+type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;origin_lat?:number|null;origin_lng?:number|null;destination_lat?:number|null;destination_lng?:number|null;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
 type SavedContact = {company_name?:string|null;contact_name?:string|null;address?:string|null;phone?:string|null}
 type StopEvidence = {kind:string;path?:string;url?:string}
 
@@ -31,8 +32,11 @@ const addressKey=(value?:string|null)=>String(value||'').toLowerCase().replace(/
 const locationConsentKey=(driverId:string)=>`routehub-location-consent-v1:${driverId}`
 
 const errorMessage=(error:unknown,fallback:string)=>{
-  if(error instanceof Error&&error.message)return error.message
-  if(error&&typeof error==='object'&&'message' in error&&typeof error.message==='string'&&error.message)return error.message
+  const raw=error instanceof Error?error.message:error&&typeof error==='object'&&'message' in error&&typeof error.message==='string'?error.message:''
+  // Database policy text is an implementation detail; never expose it as a
+  // large toast in the driver UI. Keep the concise, localized fallback.
+  if(raw&&/only update route progress|only update route/i.test(raw))return fallback
+  if(raw)return raw
   return fallback
 }
 
@@ -107,7 +111,7 @@ export default function Driver() {
       // route_date is the operational date. Never use created_at or a UTC
       // conversion here: tomorrow's position 1 must not become today's route.
       const {data,error}=await client.from('routes')
-        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,origin_lat,origin_lng,dest_lat,dest_lng,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
+        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,origin_lat,origin_lng,destination_lat,destination_lng,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
         .eq('driver_id',userData.user.id)
         .in('status',['published','pending','active','paused','completed','issue','cancelled'])
         .order('position')
@@ -143,12 +147,12 @@ export default function Driver() {
   const selectedRoute=[current,...upcoming,...completed].find(item=>item?.id===selectedRouteId) || current
   useEffect(()=>{
     let cancelled=false
-    const destination=current?.dest_lat!=null&&current.dest_lng!=null?{lat:Number(current.dest_lat),lng:Number(current.dest_lng)}:null
+    const destination=current?.destination_lat!=null&&current.destination_lng!=null?{lat:Number(current.destination_lat),lng:Number(current.destination_lng)}:null
     const origin=drivingSession?.last_lat!=null&&drivingSession.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:current?.origin_lat!=null&&current.origin_lng!=null?{lat:Number(current.origin_lat),lng:Number(current.origin_lng)}:null
     if(!origin||!destination){setRouteEstimate(null);return}
     void calculateRoute([origin,destination]).then(estimate=>{if(!cancelled)setRouteEstimate(estimate.source==='osrm'?formatRouteEstimate(estimate,locale):null)})
     return()=>{cancelled=true}
-  },[current?.id,current?.origin_lat,current?.origin_lng,current?.dest_lat,current?.dest_lng,drivingSession?.last_lat,drivingSession?.last_lng,locale])
+  },[current?.id,current?.origin_lat,current?.origin_lng,current?.destination_lat,current?.destination_lng,drivingSession?.last_lat,drivingSession?.last_lng,locale])
   useEffect(()=>{
     let cancelled=false
     const loadEvidence=async()=>{
@@ -178,6 +182,10 @@ export default function Driver() {
   const dayMapOrigin=dayRoutes[0]?.origin_address||current?.origin_address
   const dayMapStops=dayRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||route.destination_address}))
   const currentKind=stopKind(current?.mission_type)
+  const currentRouteStops=current
+    ? dayRoutes.filter(route=>route.company_id===current.company_id&&route.branch_id===current.branch_id&&route.route_date===current.route_date).sort((left,right)=>left.position-right.position||left.id.localeCompare(right.id))
+    : []
+  const currentStopIndex=current?currentRouteStops.findIndex(route=>route.id===current.id):-1
   const hasArrived=Boolean(current?.arrived_at)
   const currentAction=stopAction(currentKind,hasArrived)
   const temporaryExecution=membershipRole!=null&&membershipRole!=='driver'
@@ -256,17 +264,17 @@ export default function Driver() {
     const client=getSupabase()
     let disposed=false
     let channel:ReturnType<typeof client.channel>|undefined
-    const refresh=()=>{if(!disposed)void load()}
+    const sync=createRealtimeRefresh(()=>{if(!disposed)return load()},150)
     void client.auth.getUser().then(({data})=>{
       if(disposed||!data.user)return
-      channel=client.channel(`driver-routes-${data.user.id}`).on('postgres_changes',{event:'*',schema:'public',table:'routes',filter:`driver_id=eq.${data.user.id}`},refresh).subscribe()
+      channel=client.channel(`driver-routes-${data.user.id}`).on('postgres_changes',{event:'*',schema:'public',table:'routes',filter:`driver_id=eq.${data.user.id}`},sync.schedule).subscribe()
     })
-    refresh()
-    const timer=setInterval(refresh,10000)
-    const onVisibility=()=>{if(document.visibilityState==='visible')refresh()}
-    window.addEventListener('focus',refresh)
+    sync.schedule()
+    const timer=setInterval(sync.schedule,10000)
+    const onVisibility=()=>{if(document.visibilityState==='visible')sync.schedule()}
+    window.addEventListener('focus',sync.schedule)
     document.addEventListener('visibilitychange',onVisibility)
-    return()=>{disposed=true;clearInterval(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',onVisibility);if(channel)void client.removeChannel(channel)}
+    return()=>{disposed=true;clearInterval(timer);sync.dispose();window.removeEventListener('focus',sync.schedule);document.removeEventListener('visibilitychange',onVisibility);if(channel)void client.removeChannel(channel)}
   },[load])
 
   useEffect(()=>{
@@ -339,7 +347,7 @@ export default function Driver() {
     // schemes such as google.navigation:// can be misread by installed PWAs
     // as an internal RouteHub path (for example /route/map).
     if(!current)return
-    const url=openNavigation({address:current.destination_address,coordinate:current.dest_lat!=null&&current.dest_lng!=null?{lat:Number(current.dest_lat),lng:Number(current.dest_lng)}:null,label:routeLabel(current)},navigator.userAgent)
+    const url=googleMapsNavigationUrl({address:current.destination_address,coordinate:current.destination_lat!=null&&current.destination_lng!=null?{lat:Number(current.destination_lat),lng:Number(current.destination_lng)}:null,label:routeLabel(current)})
     if(url)window.location.assign(url)
   }
   const receivedBy=(route?:Mission|null)=>{
@@ -469,7 +477,7 @@ export default function Driver() {
     <header className={styles.header}><div className={styles.brand}><Image src="/routehub-driver-new.jpg" alt="RouteHub Driver" width={48} height={48} priority/><strong>RouteHub</strong></div><NotificationBell /></header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
     {membershipRole==='driver'&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
     {temporaryExecution&&drivingSession&&<div className={styles.drivingBar}><span className={styles.locationLive}><i/>{temporaryLabel}</span></div>}
-    {locationStatus&&<div className={styles.toast} role="status">{locationStatus}</div>}
+    {locationStatus&&<div className={styles.locationNotice} role="status"><span className={styles.locationNoticeDot} aria-hidden="true" />{locationStatus}</div>}
     {message&&<div className={styles.toast} role="status">{message}</div>}
     {loadError&&<div className={styles.loadError} role="status"><span>{loadError}</span><button disabled={loading} onClick={()=>void load()}>{t.retry || 'Retry'}</button></div>}
     {loading&&!missions.length?<section className={`${styles.loading} card`} aria-busy="true"><span/><span/><span/></section>:current?<>
@@ -479,12 +487,15 @@ export default function Driver() {
         <div className={styles.type}>{currentStopLabel}</div>
         <h2>{routeLabel(current)}</h2>
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
+        <div className={styles.routeMeta} aria-live="polite">
+          {currentStopIndex>=0&&currentRouteStops.length>0&&<span>{locale==='es'?`Parada ${currentStopIndex+1} de ${currentRouteStops.length}`:locale==='fr'?`Arrêt ${currentStopIndex+1} sur ${currentRouteStops.length}`:`Stop ${currentStopIndex+1} of ${currentRouteStops.length}`}</span>}
+          {routeEstimate&&<span>{routeEstimate}</span>}
+        </div>
         {currentKind==='pickup'&&<div className={`${styles.details} ${styles.singleDetail}`}><div><small>{routeMetaCopy.po}</small><strong>{current.order_number||'—'}</strong></div></div>}
         {currentKind==='delivery'&&currentPhone&&<div className={`${styles.details} ${styles.singleDetail}`}><a className={styles.contactCall} href={`tel:${currentPhone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact?.contact_name||currentContact?.company_name||routeLabel(current)}</strong></span></a></div>}
         {current.notes&&<div className={styles.notes}><TriangleAlert size={18}/><span><b>{currentKind==='delivery'?routeMetaCopy.instructions:'NOTES'}</b>{current.notes}</span></div>}
       </section>
-      <LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} originCoordinate={current.origin_lat!=null&&current.origin_lng!=null?{lat:Number(current.origin_lat),lng:Number(current.origin_lng)}:null} destinationCoordinate={current.dest_lat!=null&&current.dest_lng!=null?{lat:Number(current.dest_lat),lng:Number(current.dest_lng)}:null} driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>
-      {routeEstimate&&<p className={styles.routeEstimate}>{routeEstimate}</p>}
+      <LiveRouteMap originAddress={current.origin_address} destinationAddress={current.destination_address} originCoordinate={current.origin_lat!=null&&current.origin_lng!=null?{lat:Number(current.origin_lat),lng:Number(current.origin_lng)}:null} destinationCoordinate={current.destination_lat!=null&&current.destination_lng!=null?{lat:Number(current.destination_lat),lng:Number(current.destination_lng)}:null} driverLocation={drivingSession?.last_lat!=null&&drivingSession.last_lng!=null?{lat:drivingSession.last_lat,lng:drivingSession.last_lng}:null} driverUpdatedAt={drivingSession?.last_updated_at} title="Ruta en vivo" showHeader={false} showLocationUpdated={false} interactive={false} locale={locale}/>
       </section>
       <div className={styles.primaryActions}>
         {['published','pending'].includes(current.status)&&<button disabled={busy} className={styles.start} onClick={()=>void startRoute()}><Play size={19}/>{t.start}</button>}
@@ -494,7 +505,7 @@ export default function Driver() {
         {current.status==='paused'&&<button disabled={busy} className={styles.start} onClick={()=>void update('active')}><RotateCcw size={19}/>{t.resume}</button>}
       </div>
       <input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void attachStopPhoto(file)}}/>
-    </>:completionCandidate&&finalStop?<section className={`card ${styles.finishRoute}`}><ClipboardCheck/><h2>{stopCopy.completeRoute}</h2><p>{locale==='es'?'Todos los stops requeridos están completados. Revisa y confirma cómo deseas cerrar la ruta.':locale==='fr'?'Tous les arrêts requis sont terminés. Vérifiez et confirmez la fin de l’itinéraire.':'All required stops are complete. Review and confirm how you want to finish the route.'}</p><button className={styles.complete} disabled={busy} onClick={()=>setFinalizeOpen(true)}><Check size={19}/>{stopCopy.completeRoute}</button></section>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
+    </>:current&&completionCandidate&&finalStop?<section className={`card ${styles.finishRoute}`}><ClipboardCheck/><h2>{stopCopy.completeRoute}</h2><p>{locale==='es'?'Todos los stops requeridos están completados. Revisa y confirma cómo deseas cerrar la ruta.':locale==='fr'?'Tous les arrêts requis sont terminés. Vérifiez et confirmez la fin de l’itinéraire.':'All required stops are complete. Review and confirm how you want to finish the route.'}</p><button className={styles.complete} disabled={busy} onClick={()=>setFinalizeOpen(true)}><Check size={19}/>{stopCopy.completeRoute}</button></section>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
       {routeView&&<section className={styles.routeOverlay} aria-label="Route details">
       <header className={styles.routeOverlayHeader}><button type="button" onClick={()=>routeView==='details'?setRouteView('queue'):setRouteView(null)} aria-label="Back"><ArrowLeft size={20}/></button><strong>{routeView==='details'?detailCopy.stopDetails:'Route'}</strong><span /></header>
       {routeView==='queue'||routeView==='map'?<><div className={styles.routeTabs}><button className={routeView==='queue'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('queue')}>Stops</button><button className={routeView==='map'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('map')}>Map</button></div>{routeView==='queue'?<div className={styles.stopList}>{!dayRoutes.length?<div className={styles.empty}><List size={24}/><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p></div>:dayRoutes.map((route,index)=>{const kind=stopKind(route.mission_type);const status=route.status==='completed'||route.status==='issue'?detailCopy.completed:route.status==='active'||route.status==='paused'?detailCopy.current:route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):detailCopy.upcoming;return <button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{route.position||index+1}</span><span><strong>{routeLabel(route)}</strong><small>{kind==='branch'?stopCopy.branch:kind.toUpperCase()} · {status}{route.status==='active'&&elapsedLabel(route)?` · ${elapsedLabel(route)}`:''}</small></span><ChevronRight size={18}/></button>})}</div>:<RoutePlanMap locale={locale} originAddress={dayMapOrigin} stops={dayMapStops}/>}</>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{routeLabel(selectedRoute)}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{stopKind(selectedRoute.mission_type)==='branch'?stopCopy.branch:stopKind(selectedRoute.mission_type).toUpperCase()}</small><strong>{selectedRoute.status==='active'?detailCopy.current:selectedRoute.status==='completed'||selectedRoute.status==='issue'?detailCopy.completed:detailCopy.upcoming}</strong>{selectedRoute.scheduled_at&&<p><Clock3 size={17}/>{new Date(selectedRoute.scheduled_at).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'})}</p>}{selectedRoute.arrived_at&&<p><Clock3 size={17}/>{detailCopy.arrivedAt}: {new Date(selectedRoute.arrived_at).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'})}</p>}{selectedRoute.status==='active'&&<button type="button" className={styles.viewRoute} onClick={()=>setRouteView('map')}>{detailCopy.openMap}{elapsedLabel(selectedRoute)?` · ${elapsedLabel(selectedRoute)}`:''}</button>}{selectedRoute.order_number&&<div className={styles.detailNotes}><b>{detailCopy.po}</b><span>{selectedRoute.order_number}</span></div>}{receivedBy(selectedRoute)&&<div className={styles.detailNotes}><b>{detailCopy.receivedBy}</b><span>{receivedBy(selectedRoute)}</span></div>}{selectedRoute.destination_phone&&<p><Phone size={17}/>{selectedRoute.destination_phone}</p>}{selectedRoute.notes&&<div className={styles.detailNotes}><b>{detailCopy.instructions}</b><span>{selectedRoute.notes}</span></div>}{selectedRoute.status==='completed'||selectedRoute.status==='issue'?<div className={styles.detailNotes}><b>{detailCopy.completion}</b>{selectedRoute.completed_at&&<span><Clock3 size={15}/> {detailCopy.completedAt}: {new Date(selectedRoute.completed_at).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'})}</span>}{selectedRoute.arrived_at&&selectedRoute.completed_at&&<span><Clock3 size={15}/> {detailCopy.time}: {elapsedLabel(selectedRoute)}</span>}{selectedRoute.finalization_method==='issue'&&<span>{detailCopy.issue}{selectedRoute.finalization_issue?`: ${selectedRoute.finalization_issue}`:''}</span>}{evidencePreview.photo&&<img src={evidencePreview.photo} alt={detailCopy.photo} style={{width:'100%',maxHeight:220,objectFit:'cover',borderRadius:12,marginTop:10}}/>}{evidencePreview.signature&&<img src={evidencePreview.signature} alt={detailCopy.signature} style={{width:'100%',maxHeight:140,objectFit:'contain',background:'#fff',borderRadius:12,marginTop:10}}/>}{selectedEvidence.map((evidence,index)=><span key={`${evidence.kind}-${index}`}>✓ {evidence.kind==='signature'?detailCopy.signature:evidence.kind==='photo'?detailCopy.photo:detailCopy.packing}</span>)}{selectedRoute.driver_note&&!receivedBy(selectedRoute)&&<span><FileText size={15}/> {selectedRoute.driver_note}</span>}{selectedRoute.finalization_note&&<span><FileText size={15}/> {selectedRoute.finalization_note}</span>}</div>:null}</div>}</section>}
