@@ -13,7 +13,10 @@ export type RouteEstimate={
   distanceMeters?:number
   durationSeconds?:number
   source:'osrm'|'fallback'
+  maneuvers?:RouteManeuver[]
 }
+
+export type RouteManeuver={instruction:string;distanceMeters?:number;coordinate:MapCoordinate}
 
 export type NavigationDestination={
   address?:string|null
