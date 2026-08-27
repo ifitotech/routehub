@@ -72,6 +72,8 @@ type Driver = {
 
 type RouteRecord = {
   id: string
+  company_id?: string | null
+  branch_id?: string | null
   driver_id: string | null
   mission_type: string | null
   priority: string | null
@@ -126,11 +128,6 @@ const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
   {value: 'delivery', label: 'Delivery'},
   {value: 'return', label: 'Return to branch'},
-]
-const priorities: Array<{value: FormState['priority']; label: string}> = [
-  {value: 'normal', label: 'Normal'},
-  {value: 'priority', label: 'Priority'},
-  {value: 'urgent', label: 'Urgent'},
 ]
 
 const routeCopy = {
@@ -287,7 +284,7 @@ export default function Routes() {
       const [contactResult, driverResult, routeResult, branchResult, locationResult] = await Promise.all([
         client.from('contacts').select('id,company_name,contact_name,address,phone,location_code,latitude,longitude,location_source,location_external_id').eq('company_id', membership.company_id).order('company_name'),
         assigneeQuery,
-        client.from('routes').select('id,driver_id,mission_type,priority,status,origin_name,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_lat,destination_lng,destination_location_source,destination_location_external_id,destination_phone,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeListStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
+        client.from('routes').select('id,company_id,branch_id,driver_id,mission_type,priority,status,origin_name,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_lat,destination_lng,destination_location_source,destination_location_external_id,destination_phone,scheduled_at,route_date,position,notes,order_number').eq('company_id', membership.company_id).in('status', routeListStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
         client.from('branches').select('id,name,address,primary_driver_id,latitude,longitude,location_source,location_external_id').eq('company_id', membership.company_id).order('name'),
         client.from('driving_sessions').select('driver_id,last_lat,last_lng,last_updated_at,status').eq('company_id', membership.company_id).in('status',['active','paused']).order('last_updated_at',{ascending:false}),
       ])
@@ -403,12 +400,22 @@ export default function Routes() {
     .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'completed')
     .sort(routeSort), [routes, todayValue])
   const planningMapRoutes = useMemo(() => {
+    // The planning preview is scoped to today's operational routes. Future
+    // routes remain available in their own scheduled section and must not
+    // affect today's map or marker numbering. Legacy rows without a date or
+    // branch remain visible for backwards compatibility.
     const configured = routes
-      .filter(route => ['published', 'pending', 'active', 'paused', 'issue', 'draft'].includes(route.status || ''))
-      .map(route => ({id: route.id, origin_address: route.origin_address, destination_address: route.destination_address, destination_name: route.destination_name, status: route.status, driver_id: route.driver_id, position: route.position}))
-    if(form.destination.trim()) configured.push({id: 'draft-preview', origin_address: form.origin, destination_address: form.destination, destination_name: form.destination_label || form.destination, status: 'pending', driver_id: form.driver_id || null, position: configured.length + 1})
+      .filter(route => {
+        const date = routeDateValue(route)
+        const today = !date || date === todayValue
+        const branch = !branchId || !route.branch_id || route.branch_id === branchId
+        const operational = ['published', 'pending', 'active', 'paused', 'issue', 'draft'].includes(route.status || '')
+        return today && branch && operational
+      })
+      .map(route => ({id: route.id, origin_address: route.origin_address, origin_lat: route.origin_lat, origin_lng: route.origin_lng, destination_address: route.destination_address, destination_name: route.destination_name, destination_lat: route.destination_lat, destination_lng: route.destination_lng, status: route.status, driver_id: route.driver_id, position: route.position}))
+    if(form.destination.trim()) configured.push({id: 'draft-preview', origin_address: form.origin, origin_lat: null, origin_lng: null, destination_address: form.destination, destination_name: form.destination_label || form.destination, destination_lat: null, destination_lng: null, status: 'pending', driver_id: form.driver_id || null, position: configured.length + 1})
     return configured
-  }, [form.destination, form.destination_label, form.driver_id, form.origin, routes])
+  }, [branchId, form.destination, form.destination_label, form.driver_id, form.origin, routes, todayValue])
 
   useEffect(() => {
     if (originMode !== 'previous') return
@@ -725,7 +732,7 @@ export default function Routes() {
 
             <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}`}</option> })}</select></div></label>
 
-            {form.driver_id && form.date === todayValue && priorityRoutes.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Prioridad en la ruta' : locale==='fr' ? 'Priorité dans l’itinéraire' : 'Route priority'} <em>{c.optional}</em></span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>{priorityRoutes.map(route => <option key={route.id} value={route.id}>{locale==='es' ? `Antes de ${route.destination_name || route.destination_address || 'la próxima parada'}` : locale==='fr' ? `Avant ${route.destination_name || route.destination_address || 'la prochaine étape'}` : `Before ${route.destination_name || route.destination_address || 'next stop'}`}</option>)}</select></div></label>}
+            {form.driver_id && form.date === todayValue && priorityRoutes.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Posición en la ruta' : locale==='fr' ? 'Position dans l’itinéraire' : 'Position in route'} <em>{c.optional}</em></span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>{priorityRoutes.map(route => <option key={route.id} value={route.id}>{locale==='es' ? `Antes de ${route.destination_name || route.destination_address || 'la próxima parada'}` : locale==='fr' ? `Avant ${route.destination_name || route.destination_address || 'la prochaine étape'}` : `Before ${route.destination_name || route.destination_address || 'next stop'}`}</option>)}</select></div></label>}
 
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
@@ -756,10 +763,6 @@ export default function Routes() {
             {form.type!=='return'&&<button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>}
 
             {detailsOpen && form.type!=='return' && <div className={styles.optionalDetails}>
-              <fieldset className={styles.fieldset}>
-                <legend>{c.priority}</legend>
-                <div className={`${styles.segmented} ${styles.prioritySegments}`}>{priorities.map(priority => <button className={form.priority === priority.value ? styles.segmentActive : ''} data-priority={priority.value} type="button" key={priority.value} aria-pressed={form.priority === priority.value} onClick={() => setForm(current => ({...current, priority: priority.value}))}>{priority.value==='urgent'?c.urgent:priority.value==='priority'?c.priorityName:c.normal}</button>)}</div>
-              </fieldset>
               <div className={styles.splitFields}>
                 <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
                 <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>

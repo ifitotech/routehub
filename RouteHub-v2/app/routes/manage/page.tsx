@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import {AlertTriangle,ArrowDown,ArrowUp,GripVertical,MoreHorizontal,Pause,Play,Plus,RotateCcw,Save,Trash2} from 'lucide-react'
+import {ArrowDown,ArrowUp,GripVertical,MoreHorizontal,Pause,Play,Plus,RotateCcw,Save,Trash2} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import {canMove,reorder,type Mission} from '../../../lib/planner'
 import {groupRouteQueues} from '../../../lib/route-queue'
@@ -156,7 +156,7 @@ export default function ManageRoutes(){
  }
 
  return <main className={`app ${styles.page}`}>
-  <header className={styles.header}><div><span className="eyebrow">{copy.dispatch}</span><h1>{t.manageRoutes}</h1><p>{copy.intro}</p></div><Link className="primary" href="/routes?priority=urgent"><AlertTriangle size={17}/>{t.addRoute}</Link></header>
+  <header className={styles.header}><div><span className="eyebrow">{copy.dispatch}</span><h1>{t.manageRoutes}</h1><p>{copy.intro}</p></div><Link className="primary" href="/routes"><Plus size={17}/>{t.addRoute}</Link></header>
   <div className={styles.tabs} role="tablist"><button className={tab==='planned'?styles.active:''} onClick={()=>setTab('planned')} role="tab" aria-selected={tab==='planned'}>{t.pending}<b>{plannedCount}</b></button><button className={tab==='history'?styles.active:''} onClick={()=>setTab('history')} role="tab" aria-selected={tab==='history'}>{t.history}<b>{historyCount}</b></button></div>
   {message&&<div className={`${styles.toast} ${messageError?styles.toastError:''}`} role="status">{message}{undo&&<button onClick={undoOrder}><RotateCcw size={15}/>{copy.undo}</button>}{retry&&<button onClick={()=>void saveQueue(retry.queueKey,retry.routeIds)}><RotateCcw size={15}/>{copy.retry}</button>}</div>}
   {loading?<div className={styles.skeletons} aria-label={copy.loading} aria-busy="true">{[1,2,3].map(i=><div className={styles.skeletonCard} key={i}/>)}</div>:tab==='planned'?<section className={styles.timeline}>
