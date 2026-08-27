@@ -31,6 +31,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [deviceLocation,setDeviceLocation]=useState<Coordinate|null>(null)
  const [estimate,setEstimate]=useState<{distanceMeters?:number;durationSeconds?:number}|null>(null)
  const lastReroute=useRef(0)
+ const arrivalNotified=useRef(false)
  const [loading,setLoading]=useState(true)
  const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.address)),[stops])
  const addresses=useMemo(()=>[originAddress,...validStops.map(stop=>stop.address)].filter(Boolean) as string[],[originAddress,validStops])
@@ -66,6 +67,17 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   lastReroute.current=Date.now()
   void calculateRoute([deviceLocation,nextStop]).then(next=>{if(next.coordinates.length>1){setLine(next.coordinates);setEstimate(next)}})
  },[deviceLocation?.lat,deviceLocation?.lng,line,points])
+
+ useEffect(()=>{
+  if(!deviceLocation||!points.length)return
+  const target=points[1]||points[0]
+  const radians=Math.PI/180
+  const dLat=(target.lat-deviceLocation.lat)*radians,dLng=(target.lng-deviceLocation.lng)*radians
+  const a=Math.sin(dLat/2)**2+Math.cos(deviceLocation.lat*radians)*Math.cos(target.lat*radians)*Math.sin(dLng/2)**2
+  const distance=2*6371000*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+  if(distance<75&&!arrivalNotified.current){arrivalNotified.current=true;window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{distance}}))}
+  if(distance>=100)arrivalNotified.current=false
+ },[deviceLocation?.lat,deviceLocation?.lng,points])
 
  const center=points[0]||{lat:39.8283,lng:-98.5795}
  const copy=locale==='es'?{label:'Mapa de todas las paradas',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Recorrido completo',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa de la ruta'}:locale==='fr'?{label:'Carte de tous les arrêts',loading:'Préparation de l’itinéraire…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',map:'Itinéraire complet',stop:'Arrêt',single:'arrêt programmé',plural:'arrêts programmés',complete:'Vue complète de l’itinéraire'}:{label:'Map of all stops',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Full route',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view'}

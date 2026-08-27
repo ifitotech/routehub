@@ -315,6 +315,19 @@ const [recipientError,setRecipientError]=useState('')
     return()=>{disposed=true;window.clearInterval(interval);navigator.geolocation.clearWatch(watch)}
   },[driverId,drivingSession,t.locationPermissionDenied])
 
+  useEffect(()=>{
+    const onArrival=()=>{
+      if(!current||current.arrived_at||!driverId)return
+      void (async()=>{
+        const {data,error}=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null).select('id').maybeSingle()
+        if(error){void reportAppError({action:'gps_arrival',error,companyId:current.company_id,branchId:current.branch_id,routeId:current.id});return}
+        if(data){setMessage(locale==='es'?'Llegaste a la parada.':locale==='fr'?'Vous êtes arrivé à l’arrêt.':'You arrived at the stop.');void load()}
+      })()
+    }
+    window.addEventListener('routehub:arrival',onArrival)
+    return()=>window.removeEventListener('routehub:arrival',onArrival)
+  },[current,driverId,load,locale])
+
   // A driver day is automatically closed after 6 PM only when no operational
   // work remains. Active, paused, published, and pending routes always keep
   // the session open so the driver is never disconnected mid-route.
