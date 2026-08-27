@@ -43,23 +43,25 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  // The driver page sorts active work first before passing these stops.
  const navigationStops=useMemo(()=>validStops.slice(0,2),[validStops])
  const displayedStops=view==='navigate'?navigationStops:validStops
- const addresses=useMemo(()=>[originAddress,...displayedStops.map(stop=>stop.address)].filter(Boolean) as string[],[originAddress,displayedStops])
+ const addressKey=[originAddress,...displayedStops.map(stop=>stop.address)].filter(Boolean).join('\u001f')
 
  useEffect(()=>{
   let cancelled=false
   setLoading(true)
+  const addresses=addressKey?addressKey.split('\u001f'):[]
   Promise.all(addresses.map(address=>geocodeAddress(address))).then(async next=>{
    if(cancelled)return
    const coordinates=next.map(location=>location?.coordinate).filter(Boolean) as Coordinate[]
    setPoints(coordinates)
-   setLine(coordinates)
+   setLine(view==='plan'?coordinates:[])
    setLoading(false)
    if(coordinates.length<2)return
-   const estimate=await calculateRoute(coordinates)
+   const routePoints=view==='plan'?coordinates:(deviceLocation?[deviceLocation,coordinates[1]]:coordinates.slice(0,2))
+   const estimate=await calculateRoute(routePoints)
    if(!cancelled&&estimate.coordinates.length){setLine(estimate.coordinates);setEstimate(estimate)}
   }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setLoading(false)}})
   return()=>{cancelled=true}
- },[addresses])
+ },[addressKey,view])
 
  useEffect(()=>{
   if(typeof navigator==='undefined'||!navigator.geolocation)return
@@ -86,14 +88,14 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  }
 
  useEffect(()=>{
-  if(!deviceLocation||line.length<2||!points.length)return
+  if(view!=='navigate'||!deviceLocation||line.length<2||!points.length)return
   const toMeters=(a:Coordinate,b:Coordinate)=>{const r=6371000,rad=Math.PI/180;const dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;const x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;return 2*r*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
   const nearest=Math.min(...line.map(point=>toMeters(deviceLocation,point)))
   if(nearest<150||Date.now()-lastReroute.current<30000)return
   const nextStop=points[1]||points[0]
   lastReroute.current=Date.now()
   void calculateRoute([deviceLocation,nextStop]).then(next=>{if(next.coordinates.length>1){setLine(next.coordinates);setEstimate(next)}})
- },[deviceLocation?.lat,deviceLocation?.lng,line,points])
+ },[view,deviceLocation?.lat,deviceLocation?.lng,line,points])
 
  useEffect(()=>{
   if(!deviceLocation||!points.length)return
