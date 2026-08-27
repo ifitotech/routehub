@@ -5,7 +5,16 @@ type ReportInput={action:string;error:unknown;companyId?:string;branchId?:string
 const recent=new Map<string,number>()
 
 export function normalizeAppError(error:unknown){
-  const raw=error instanceof Error?error.message:String(error||'Unknown error')
+  const raw=error instanceof Error
+    ? error.message
+    : error && typeof error==='object'
+      ? [
+          'message' in error && typeof error.message==='string'?error.message:'',
+          'details' in error && typeof error.details==='string'?`details: ${error.details}`:'',
+          'hint' in error && typeof error.hint==='string'?`hint: ${error.hint}`:'',
+          'code' in error && typeof error.code==='string'?`code: ${error.code}`:''
+        ].filter(Boolean).join(' | ') || JSON.stringify(error)
+      : String(error||'Unknown error')
   return raw.replace(/(access_token|refresh_token|service_role|apikey|authorization)[=:][^\s,;]+/gi,'$1=[redacted]').slice(0,500)
 }
 

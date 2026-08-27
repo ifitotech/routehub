@@ -11,7 +11,10 @@ const CACHE_TTL_MS = 15 * 60 * 1000
 const cache = new Map<string, {expiresAt: number; suggestions: Suggestion[]}>()
 let lastNominatimRequestAt = 0
 
-const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
+const normalize = (value: string) => value.toLowerCase()
+  // Treat common ordinal street forms as their numeric equivalent (33 Pl = 33rd Pl).
+  .replace(/(\d+)(st|nd|rd|th)\b/g, '$1')
+  .replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
 const validCoordinate = (coordinate: Coordinate | undefined): coordinate is Coordinate => Boolean(coordinate && Number.isFinite(coordinate.lat) && Number.isFinite(coordinate.lng) && coordinate.lat >= -90 && coordinate.lat <= 90 && coordinate.lng >= -180 && coordinate.lng <= 180)
 
 function splitLabel(label: string) {
@@ -25,7 +28,10 @@ function scoreResult(query: string, label: string) {
   const firstPart = normalize(label.split(',')[0] || label)
   const numbers = terms.filter(term => /^\d+$/.test(term))
   const matched = terms.filter(term => normalized.includes(term))
-  const numberMatch = numbers.every(number => firstPart.includes(number))
+  // Street numbers and ZIP codes can appear in different comma-separated
+  // parts of a provider label. Matching only the first part incorrectly
+  // discarded valid street+ZIP searches.
+  const numberMatch = numbers.every(number => normalized.includes(number))
   const score = matched.length * 12 + (numberMatch ? 20 : 0) + (firstPart.startsWith(terms.slice(0, 2).join(' ')) ? 10 : 0)
   return {score, matched: matched.length, numberMatch, requiresNumber: numbers.length > 0, minimumMatches: Math.max(1, Math.ceil(terms.length * .6))}
 }
