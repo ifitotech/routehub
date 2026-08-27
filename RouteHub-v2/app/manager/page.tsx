@@ -137,7 +137,11 @@ export default function Manager() {
     <section className={styles.workspace}>
     <header className={styles.desktopTop}>
       <h1>{copy.todayOverview}</h1>
-      <span>{copy.lastUpdated}: {updatedAt}</span>
+      <div className={styles.desktopTopMeta}>
+        <span>{copy.lastUpdated}: {updatedAt}</span>
+        <NotificationBell />
+        <span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span>
+      </div>
     </header>
     <header className={styles.header}>
       <Link href="/manager" className={styles.brand} aria-label="RouteHub home">

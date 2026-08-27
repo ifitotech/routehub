@@ -1,4 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server'
+import {geocodingConfig,mapProviderLimits} from '../../../lib/maps/map-config'
 
 type CensusMatch = {matchedAddress?: string; coordinates?: {x?: number; y?: number}}
 type NominatimMatch = {display_name?: string; lat?: string; lon?: string; place_id?: number; osm_type?: string; osm_id?: number; name?: string}
@@ -6,7 +7,6 @@ type Coordinate = {lat: number; lng: number}
 type LocationSource = 'census' | 'nominatim'
 type Suggestion = {label: string; primary: string; secondary: string; coordinate?: Coordinate; source: LocationSource; externalId?: string; name?: string}
 
-const MAX_QUERY_LENGTH = 180
 const CACHE_TTL_MS = 15 * 60 * 1000
 const cache = new Map<string, {expiresAt: number; suggestions: Suggestion[]}>()
 let lastNominatimRequestAt = 0
@@ -56,7 +56,7 @@ function response(suggestions: Suggestion[]) { return NextResponse.json({suggest
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('q')?.trim() || ''
   const near = request.nextUrl.searchParams.get('near')?.trim() || ''
-  if (query.length < 3 || query.length > MAX_QUERY_LENGTH) return response([])
+  if (query.length < mapProviderLimits.minimumSearchCharacters || query.length > mapProviderLimits.maximumSearchCharacters) return response([])
 
   const key = cacheKey(query, near)
   const cached = cache.get(key)
@@ -66,18 +66,18 @@ export async function GET(request: NextRequest) {
   let suggestions: Suggestion[] = []
 
   try {
-    const url = new URL('https://geocoding.geo.census.gov/geocoder/locations/onelineaddress')
+    const url = new URL(geocodingConfig.censusEndpoint)
     url.searchParams.set('address', contextualQuery)
     url.searchParams.set('benchmark', 'Public_AR_Current')
     url.searchParams.set('format', 'json')
-    const censusResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(5_000)})
+    const censusResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(geocodingConfig.requestTimeoutMs)})
     if (censusResponse.ok) {
       const payload = await censusResponse.json() as {result?: {addressMatches?: CensusMatch[]}}
       suggestions = rankSuggestions(query, (payload.result?.addressMatches || []).map(match => {
         const label = match.matchedAddress?.trim() || ''
         const coordinate = {lat: Number(match.coordinates?.y), lng: Number(match.coordinates?.x)}
         return {...splitLabel(label), label, coordinate: validCoordinate(coordinate) ? coordinate : undefined, source: 'census' as const}
-      }))
+      }).filter(candidate => validCoordinate(candidate.coordinate)))
     }
   } catch {
     // RouteHub still permits manual address entry when lookup is unavailable.
@@ -86,14 +86,14 @@ export async function GET(request: NextRequest) {
   if (!suggestions.length && Date.now() - lastNominatimRequestAt >= 1_100) {
     try {
       lastNominatimRequestAt = Date.now()
-      const url = new URL('https://nominatim.openstreetmap.org/search')
+      const url = new URL(geocodingConfig.nominatimEndpoint)
       url.searchParams.set('format', 'jsonv2')
       url.searchParams.set('limit', '5')
       url.searchParams.set('countrycodes', 'us')
       url.searchParams.set('addressdetails', '1')
       url.searchParams.set('dedupe', '1')
       url.searchParams.set('q', `${contextualQuery}, United States`)
-      const nominatimResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(5_000), headers: {Accept: 'application/json', 'User-Agent': 'RouteHub Beta location search'}})
+      const nominatimResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(geocodingConfig.requestTimeoutMs), headers: {Accept: 'application/json', 'User-Agent': geocodingConfig.userAgent}})
       if (nominatimResponse.ok) {
         const rows = await nominatimResponse.json() as NominatimMatch[]
         suggestions = rankSuggestions(query, rows.map(row => {
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
             externalId: row.osm_type && row.osm_id ? `${row.osm_type}:${row.osm_id}` : row.place_id?.toString(),
             name: row.name?.trim() || undefined,
           }
-        }))
+        }).filter(candidate => validCoordinate(candidate.coordinate)))
       }
     } catch {
       // Manual address entry is always a supported fallback.

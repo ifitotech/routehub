@@ -8,6 +8,7 @@ import {canMove,reorder,type Mission} from '../../../lib/planner'
 import {groupRouteQueues} from '../../../lib/route-queue'
 import {useLocale} from '../../../lib/use-preferences'
 import {sendRoutePush} from '../../../lib/route-push'
+import {createRealtimeRefresh} from '../../../lib/realtime-sync'
 import styles from './manage.module.css'
 import fixes from './manage-mobile-fixes.module.css'
 
@@ -68,8 +69,9 @@ export default function ManageRoutes(){
  useEffect(()=>{void load();return()=>window.clearTimeout(resetTimer.current)},[load])
  useEffect(()=>{
   const client=getSupabase()
-  const channel=client.channel('manage-route-order').on('postgres_changes',{event:'*',schema:'public',table:'routes'},()=>void load()).subscribe()
-  return()=>{void client.removeChannel(channel)}
+  const sync=createRealtimeRefresh(()=>load(),150)
+  const channel=client.channel('manage-route-order').on('postgres_changes',{event:'*',schema:'public',table:'routes'},sync.schedule).subscribe()
+  return()=>{sync.dispose();void client.removeChannel(channel)}
  },[load])
 
  const queues=useMemo(()=>{

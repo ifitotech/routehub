@@ -10,3 +10,6 @@
 .people{display:flex;gap:6px;overflow:auto;padding:0 0 10px}.person{border:1px solid var(--rh-border);border-radius:999px;background:var(--rh-surface);color:var(--rh-text);padding:7px 11px;font-size:11px;font-weight:750;white-space:nowrap}.personActive{background:var(--rh-primary-soft);border-color:var(--rh-primary);color:var(--rh-primary)}
 html[data-theme="dark"] .locationPanel{background:linear-gradient(135deg,#102447,#0c1a30 68%)}
 @media(max-width:640px){.mapFooter{align-items:flex-start;flex-wrap:wrap}.liveSummary{width:100%}.lastUpdate{order:3}.openMap{order:2}}@media(prefers-reduced-motion:reduce){.mapCard{scroll-behavior:auto}}
+@media(min-width:1100px){.mapCard{min-height:540px}.map{min-height:390px}.routeOverview{padding:18px}.routeLeg strong{font-size:14px}}
+@media(min-width:641px) and (max-width:1099px){.mapCard{min-height:460px}.map{min-height:320px}}
+@media(max-width:640px){.mapCard{border-radius:18px}.map{min-height:250px}.routeOverview{margin-top:8px;padding:12px}.today{margin-top:18px}}

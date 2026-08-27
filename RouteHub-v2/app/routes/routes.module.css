@@ -117,6 +117,34 @@
 @media(min-width:901px){.builder{width:min(920px,calc(100vw - 64px));max-height:calc(100vh - 64px)}.builderBody{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}.formColumn{padding:24px;max-width:100%}.mapColumn{min-height:560px}}
 @media(max-width:640px){.mobileMapButton{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#2563eb;font:inherit;font-size:12px;font-weight:800}.mapColumn{display:none}.mapColumn.mapColumnOpen{display:block;order:3}.mapColumnOpen .mapShell iframe,.mapColumnOpen .mapPlaceholder{height:220px}}
 
+/* Responsive base layout: the builder remains a focused two-column workspace
+   on large screens and a single readable flow on touch devices. */
+@media (min-width: 1280px){
+  .page{width:min(1240px,calc(100% - 72px));}
+  .builder{width:min(1120px,calc(100vw - 96px));}
+  .builderBody{grid-template-columns:minmax(0,1.05fr) minmax(420px,.95fr);gap:24px;}
+}
+@media (min-width: 641px) and (max-width: 900px){
+  .page{padding-inline:24px;}
+  .builderBody{grid-template-columns:1fr;}
+  .mapColumn{position:relative;top:auto;order:2;}
+  .formColumn{grid-column:1;}
+  .mapColumn{grid-column:1;}
+  .mapColumn .route-plan-canvas{height:360px;}
+}
+@media (max-width: 640px){
+  .page{width:100%;box-sizing:border-box;padding-inline:14px;}
+  .header{gap:14px;}
+  .headerActions{width:100%;}
+  .headerActions>*{flex:1 1 0;}
+  .routeGrid{grid-template-columns:1fr;}
+  .routeCard{padding:16px;}
+  .builderBody{min-height:0;overflow:auto;overscroll-behavior:contain;}
+  .formColumn{min-width:0;}
+  .locationConfirmationActions{flex-direction:column;}
+  .locationConfirmationActions button{width:100%;}
+}
+
 /* Keep the preview in the builder flow.  It must never sit on top of the
    route fields (this is especially important in the desktop drawer). */
 @media(min-width:641px){
@@ -126,7 +154,8 @@
   .builderBody{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(340px,.92fr);gap:20px;align-items:start}
   .mobileMapButton{display:none}
   .formColumn{grid-column:1;grid-row:1;width:100%;box-sizing:border-box}
-  .mapColumn{grid-column:2;grid-row:1;position:sticky;top:88px;width:100%;display:block!important;z-index:0}
+  .mapColumn{grid-column:2;grid-row:1;position:relative;top:auto;width:100%;display:block!important;z-index:0;align-self:start}
+  .formColumn{position:relative;z-index:1}
   .mapColumn .route-plan-canvas{height:min(58vh,520px)}
 }
 
@@ -139,3 +168,8 @@
 .sectionHeading span{padding:6px 10px;border-radius:999px;background:#eaf2ff;color:#1d4ed8;font-size:11px;font-weight:800;white-space:nowrap}
 :global(html[data-theme="dark"]) .sectionHeading span{background:#17345c;color:#bfdbfe}
 :global(html[data-theme="dark"]) .sectionHeading h2{color:var(--rh-text,#f8fafc)}
+.routeTopbar{display:flex;align-items:center;justify-content:space-between;min-height:64px;margin:0 0 28px;padding:0 4px;border-bottom:1px solid var(--rh-border,#e2e8f0)}
+.routeBrand{display:flex;align-items:center;gap:9px;color:var(--rh-text,#14233b);text-decoration:none;font-size:18px;letter-spacing:-.04em}.routeBrand>span{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#2563eb;color:#fff;font-weight:900}.routeBrand strong span{color:#2563eb}.routeTopbarActions{display:flex;align-items:center;gap:18px}.routeBack{color:var(--rh-primary,#2563eb);font-size:13px;font-weight:750;text-decoration:none}.routeBack:hover{text-decoration:underline}
+:global(html[data-theme="dark"]) .routeTopbar{border-color:var(--rh-border)}
+:global(html[data-theme="dark"]) .routeBrand{color:var(--rh-text)}
+@media(max-width:640px){.routeTopbar{min-height:54px;margin-bottom:20px}.routeBack{font-size:12px}.routeBrand{font-size:16px}.routeBrand>span{width:29px;height:29px}}

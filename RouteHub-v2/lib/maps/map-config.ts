@@ -12,6 +12,14 @@ export const routingConfig={
   endpoint:(process.env.NEXT_PUBLIC_ROUTING_ENDPOINT||'https://router.project-osrm.org').replace(/\/$/,'')
 } as const
 
+/** Server-side geocoding providers used by the controlled beta search routes. */
+export const geocodingConfig={
+  censusEndpoint:'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress',
+  nominatimEndpoint:'https://nominatim.openstreetmap.org/search',
+  userAgent:'RouteHub Beta location search',
+  requestTimeoutMs:5000
+} as const
+
 export const mapProviderLimits={
   minimumSearchCharacters:3,
   maximumSearchCharacters:180,

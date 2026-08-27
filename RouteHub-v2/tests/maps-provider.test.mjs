@@ -10,6 +10,13 @@ test('navigation uses coordinates before a human-readable address',()=>{
   assert.match(openNavigation(destination,'iPhone'),/maps\.apple\.com/)
 })
 
+test('driver next stop keeps progress visible and uses the Google universal link',async()=>{
+  const source=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
+  assert.match(source,/currentStopIndex\+1/)
+  assert.match(source,/googleMapsNavigationUrl\(/)
+  assert.match(source,/current\.destination_lat!=null&&current\.destination_lng!=null/)
+})
+
 test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>{
   const source=await readFile(new URL('../lib/maps/routing.ts',import.meta.url),'utf8')
   assert.match(source,/coordinates:coordinates\.length\?coordinates:fallback/)
@@ -24,4 +31,29 @@ test('geocoding adapter rejects incomplete queries and invalid coordinates',asyn
   assert.match(source,/Number\.isFinite\(coordinate\.lng\)/)
   assert.match(source,/minimumSearchCharacters/)
   assert.match(source,/maximumSearchCharacters/)
+})
+
+test('geocoding API routes use the centralized provider configuration',async()=>{
+  const suggestions=await readFile(new URL('../app/api/address-suggestions/route.ts',import.meta.url),'utf8')
+  const geocode=await readFile(new URL('../app/api/geocode/route.ts',import.meta.url),'utf8')
+  assert.match(suggestions,/geocodingConfig\.censusEndpoint/)
+  assert.match(suggestions,/geocodingConfig\.nominatimEndpoint/)
+  assert.match(geocode,/geocodingConfig\.censusEndpoint/)
+  assert.match(geocode,/geocodingConfig\.nominatimEndpoint/)
+  assert.doesNotMatch(suggestions,/new URL\('https:\/\/geocoding\.geo\.census\.gov/)
+  assert.doesNotMatch(geocode,/new URL\('https:\/\/nominatim\.openstreetmap\.org/)
+})
+
+test('address suggestions discard provider results without usable coordinates',async()=>{
+  const source=await readFile(new URL('../app/api/address-suggestions/route.ts',import.meta.url),'utf8')
+  assert.match(source,/\.filter\(candidate => validCoordinate\(candidate\.coordinate\)\)/)
+})
+
+test('route location storage has one canonical destination coordinate contract',async()=>{
+  const migration=await readFile(new URL('../supabase/migrations/033_normalize_route_location_columns.sql',import.meta.url),'utf8')
+  const driver=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
+  assert.match(migration,/destination_location_external_id/)
+  assert.match(migration,/destination_lat = coalesce\(destination_lat, dest_lat\)/)
+  assert.match(driver,/destination_lat,destination_lng/)
+  assert.doesNotMatch(driver,/select\([^\n]*dest_lat,dest_lng/)
 })

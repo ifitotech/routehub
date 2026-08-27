@@ -2,7 +2,7 @@
 
 import {Fragment,useEffect,useMemo,useState} from 'react'
 import L from 'leaflet'
-import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
+import {MapContainer,Marker,Polyline,TileLayer,Tooltip,Popup,useMap} from 'react-leaflet'
 import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {mapTileConfig} from '../lib/maps/map-config'
@@ -18,8 +18,8 @@ export type OperationsRoute={
  destination_name?:string|null
  origin_lat?:number|null
  origin_lng?:number|null
- dest_lat?:number|null
- dest_lng?:number|null
+ destination_lat?:number|null
+ destination_lng?:number|null
  status?:string|null
  driver_id?:string|null
  position?:number|null
@@ -65,6 +65,17 @@ function driverMarker(){
  return L.divIcon({className:'operations-driver-marker-wrap',html:'<span class="operations-driver-marker">🚚</span>',iconSize:[48,48],iconAnchor:[24,24]})
 }
 
+function ageLabel(updatedAt:string|null|undefined,locale:string){
+ if(!updatedAt)return locale==='es'?'Sin actualización':locale==='fr'?'Aucune mise à jour':'No update'
+ const age=Math.max(0,Date.now()-new Date(updatedAt).getTime())
+ if(!Number.isFinite(age))return locale==='es'?'Sin actualización':locale==='fr'?'Aucune mise à jour':'No update'
+ const minutes=Math.floor(age/60000)
+ if(minutes<1)return locale==='es'?'Actualizado ahora':locale==='fr'?'Mis à jour à l’instant':'Updated just now'
+ if(minutes<60)return locale==='es'?`Actualizado hace ${minutes} min`:locale==='fr'?`Mis à jour il y a ${minutes} min`:`Updated ${minutes} min ago`
+ const hours=Math.floor(minutes/60)
+ return locale==='es'?`Última actualización hace ${hours} h`:locale==='fr'?`Dernière mise à jour il y a ${hours} h`:`Last updated ${hours} hr ago`
+}
+
 function FitBounds({points}:{points:Coordinate[]}){
  const map=useMap()
  const pointKey=points.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join('|')
@@ -85,8 +96,8 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
 export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [loading,setLoading]=useState(true)
- const visibleRoutes=useMemo(()=>routes.filter(route=>route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.dest_lat,route.dest_lng)),[routes])
- const routeKey=visibleRoutes.map(route=>[route.id,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.dest_lat,route.dest_lng,route.status,route.position].join(':')).join('|')
+ const visibleRoutes=useMemo(()=>routes.filter(route=>route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng)),[routes])
+ const routeKey=visibleRoutes.map(route=>[route.id,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.position].join(':')).join('|')
 
  useEffect(()=>{
   let cancelled=false
@@ -94,7 +105,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   void Promise.all(visibleRoutes.map(async(route,index)=>{
    const [origin,destination]=await Promise.all([
     resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng),
-    resolveCoordinate(route.destination_address,route.dest_lat,route.dest_lng),
+    resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng),
    ])
    const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
    const estimate=points.length>1?await calculateRoute(points):{coordinates:points}
@@ -104,6 +115,10 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
  },[routeKey])
 
  const allPoints=useMemo(()=>[...resolved.flatMap(route=>route.points),...driverLocations.map(driver=>driver.location)],[driverLocations,resolved])
+ const driverDestinations=useMemo(()=>new Map(driverLocations.map(driver=>{
+  const next=resolved.find(route=>route.driver_id===driver.driver_id&&['active','paused','published','pending'].includes(route.status||''))
+  return [driver.id,next?.points[next.points.length-1]||null] as const
+ })),[driverLocations,resolved])
  const center=allPoints[0]||fallbackCenter
  const copy=locale==='es'
   ?{label:'Mapa operativo de rutas',loading:'Preparando mapa operativo…',unavailable:'No hay rutas activas ni conductores compartiendo ubicación.',current:'Ruta actual',pending:'Pendientes',issue:'Incidencias',driver:'Conductor',start:'Inicio'}
@@ -121,7 +136,13 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
      {route.points[0]&&<Marker position={[route.points[0].lat,route.points[0].lng]} icon={originMarker(routeColor(route.status))}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
      {route.points[route.points.length-1]&&<Marker position={[route.points[route.points.length-1].lat,route.points[route.points.length-1].lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={200}><Tooltip direction="top" offset={[0,-16]}>{`${statusLabel(route.status,locale)} · ${route.destination_name||route.destination_address||copy.driver}`}</Tooltip></Marker>}
     </Fragment>)}
-    {driverLocations.map(driver=><Marker key={driver.id} position={[driver.location.lat,driver.location.lng]} icon={driverMarker()} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-22]} permanent>{driver.label||copy.driver}{driver.nextStop?` · ${driver.nextStop}`:''}</Tooltip></Marker>)}
+    {driverLocations.map(driver=>{const destination=driverDestinations.get(driver.id);return <Fragment key={driver.id}>
+      {destination&&<Polyline positions={[[driver.location.lat,driver.location.lng],[destination.lat,destination.lng]]} pathOptions={{color:'#2563eb',weight:3,dashArray:'7 8',opacity:.8}}/>}
+      <Marker position={[driver.location.lat,driver.location.lng]} icon={driverMarker()} zIndexOffset={1000}>
+       <Tooltip direction="top" offset={[0,-22]} permanent>{driver.label||copy.driver}{driver.nextStop?` · ${driver.nextStop}`:''}</Tooltip>
+       <Popup><strong>{driver.label||copy.driver}</strong><br/><span>{driver.status==='on_route'?'On route':driver.status==='available'?'Available':driver.status==='unavailable'?'Location unavailable':'Driving'}</span><br/><small>{ageLabel(driver.updatedAt,locale)}</small>{driver.nextStop&&<><br/><small>{driver.nextStop}</small></>}</Popup>
+      </Marker>
+    </Fragment>})}
    </MapContainer>}
    <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{driverLocations.length} {copy.driver.toLowerCase()}{driverLocations.length===1?'':'s'}</span></div>
   </div>

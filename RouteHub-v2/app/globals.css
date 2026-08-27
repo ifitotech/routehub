@@ -136,3 +136,12 @@ html[data-theme="dark"] [class*="history_issue"] [class*="history_status"],html[
 html[data-theme="dark"] [class*="history_details"]{border-color:#30445f!important}
 html[data-theme="dark"] [class*="history_detailGrid"]>div,html[data-theme="dark"] [class*="history_notes"]{background:#122238!important}
 html[data-theme="dark"] [class*="history_detailGrid"] span,html[data-theme="dark"] [class*="history_detailGrid"] small,html[data-theme="dark"] [class*="history_notes"]>span{color:#b7c5d9!important}
+
+/* Shared responsive shell: keep navigation consistent without changing page logic. */
+.nav{isolation:isolate;bottom:calc(14px + env(safe-area-inset-bottom));padding:6px;gap:3px;min-height:64px;align-items:stretch}
+.nav a{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;min-height:50px;border-radius:14px;color:#d7e3f4;transition:background .18s ease,color .18s ease}
+.nav a[aria-current="page"]{background:#e8f1ff;color:var(--rh-primary)}
+.back-link{display:inline-flex;align-items:center;gap:6px;margin:8px 0 14px;color:var(--rh-primary);font-weight:700;text-decoration:none}
+.nav a:focus-visible{outline:3px solid rgba(37,99,235,.45);outline-offset:-2px}
+@media(min-width:1024px){.nav{bottom:18px;min-width:420px;justify-content:space-evenly}.nav a{flex:1}}
+@media(max-width:560px){.nav{width:calc(100vw - 28px);max-width:560px;bottom:calc(10px + env(safe-area-inset-bottom));border-radius:22px}.nav a{min-width:0;flex:1;padding-inline:8px;font-size:12px}}

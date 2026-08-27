@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import {useSearchParams} from 'next/navigation'
 import nextDynamic from 'next/dynamic'
 import {useCallback, useEffect, useMemo, useState} from 'react'
@@ -29,6 +30,7 @@ import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
 import {sendRoutePush} from '../../lib/route-push'
 import {chooseDefaultAssignee} from '../../lib/route-assignment'
+import NotificationBell from '../notification-bell'
 import type {GeocodedLocation} from '../../lib/maps/types'
 import GoogleAddressInput, {type AddressSearchSuggestion, type LocalAddressSuggestion} from '../google-address-input'
 import styles from './routes.module.css'
@@ -610,6 +612,10 @@ export default function Routes() {
   })
 
   return <main className={styles.page}>
+    <div className={styles.routeTopbar}>
+      <Link className={styles.routeBrand} href="/manager" aria-label="RouteHub dashboard"><Image src="/routehub-regular-new.jpg" alt="" width={32} height={32} priority/><strong>Route<span>Hub</span></strong></Link>
+      <div className={styles.routeTopbarActions}><Link href="/manager" className={styles.routeBack}>Dashboard</Link><NotificationBell /></div>
+    </div>
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>{c.operations.toUpperCase()}</p>
@@ -617,6 +623,7 @@ export default function Routes() {
         <p>{c.subtitle}</p>
       </div>
       <div className={styles.headerActions}>
+        <Link className={styles.secondaryButton} href="/routes/live"><MapPin size={18}/>{locale==='es'?'Mapa en vivo':locale==='fr'?'Carte en direct':'Live map'}</Link>
         <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
         <Link className={styles.secondaryButton} href="/routes/manage"><RouteIcon size={18}/>{c.manage}</Link>
         <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>

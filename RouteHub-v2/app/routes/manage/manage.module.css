@@ -47,3 +47,22 @@
 .editor label:nth-child(3),.editor label:nth-child(4),.editor label:last-of-type{grid-column:1/-1}
 .editor em{font-size:10px;color:var(--rh-text-secondary);font-style:normal;font-weight:700}
 @media(max-width:720px){.editor label:nth-child(3),.editor label:nth-child(4),.editor label:last-of-type{grid-column:auto}}
+
+/* Keep route management dense on desktop and comfortably tappable on mobile. */
+@media (min-width: 1100px){
+  .page{width:min(1180px,calc(100% - 80px));max-width:none;}
+  .timeline{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+  .driverQueue,.history,.skeletons{grid-column:1/-1;}
+}
+@media (min-width: 721px) and (max-width: 1099px){
+  .page{padding-inline:28px;}
+  .route{grid-template-columns:28px 42px minmax(0,1fr) auto;}
+}
+@media (max-width: 720px){
+  .page{width:100%;box-sizing:border-box;padding-inline:14px;padding-bottom:150px;}
+  .header h1{font-size:32px;}
+  .tabs{position:sticky;top:0;z-index:3;background:var(--rh-bg);}
+  .route{min-width:0;}
+  .routeMain h2,.routeMain p,.routeMain small{max-width:100%;}
+  .actions button{min-width:42px;min-height:42px;}
+}

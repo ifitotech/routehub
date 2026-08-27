@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {ArrowRight, ExternalLink, MapPin, Navigation, Radio, Route as RouteIcon} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
+import {createRealtimeRefresh} from '../../lib/realtime-sync'
 import {formatLocationAge, loadActiveDrivingSessions, type DrivingSession} from '../../lib/driving-session'
 import {locationFreshness} from '../../lib/route-assignment'
 import {useLocale} from '../../lib/use-preferences'
@@ -15,7 +16,7 @@ const InteractiveLiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 const OperationsMap=dynamic(()=>import('../operations-map'),{ssr:false})
 
-type LiveRouteRecord={id:string;driver_id:string|null;mission_type:string|null;status:string|null;destination_name:string|null;destination_address:string|null;origin_address:string|null;origin_lat:number|null;origin_lng:number|null;dest_lat:number|null;dest_lng:number|null;scheduled_at:string|null;route_date:string|null;position:number|null;priority:string|null}
+type LiveRouteRecord={id:string;driver_id:string|null;mission_type:string|null;status:string|null;destination_name:string|null;destination_address:string|null;origin_address:string|null;origin_lat:number|null;origin_lng:number|null;destination_lat:number|null;destination_lng:number|null;scheduled_at:string|null;route_date:string|null;position:number|null;priority:string|null}
 type Person={user_id:string;email:string|null;role:string|null}
 
 function todayValue(){const now=new Date();return new Date(now.getTime()-now.getTimezoneOffset()*60_000).toISOString().slice(0,10)}
@@ -39,7 +40,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
     setLoading(true)
     try{
       const client=getSupabase()
-      let routeQuery=client.from('routes').select('id,driver_id,mission_type,status,destination_name,destination_address,origin_address,origin_lat,origin_lng,dest_lat,dest_lng,scheduled_at,route_date,position,priority').eq('company_id',companyId).in('status',['published','pending','active','paused','issue']).order('position')
+      let routeQuery=client.from('routes').select('id,driver_id,mission_type,status,destination_name,destination_address,origin_address,origin_lat,origin_lng,destination_lat,destination_lng,scheduled_at,route_date,position,priority').eq('company_id',companyId).in('status',['published','pending','active','paused','issue']).order('position')
       if(branchId)routeQuery=routeQuery.eq('branch_id',branchId)
       const [sessionResult,routeResult,peopleResult,branchResult]=await Promise.all([
         loadActiveDrivingSessions(companyId,branchId),
@@ -75,10 +76,10 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   useEffect(()=>{
     if(!companyId)return
     const client=getSupabase();let disposed=false
-    const refresh=()=>{if(!disposed)void load()}
-    const channel=client.channel(`live-route-${companyId}`).on('postgres_changes',{event:'*',schema:'public',table:'driving_sessions',filter:`company_id=eq.${companyId}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'routes',filter:`company_id=eq.${companyId}`},refresh).subscribe()
-    const timer=window.setInterval(refresh,30_000)
-    return()=>{disposed=true;window.clearInterval(timer);void client.removeChannel(channel)}
+    const sync=createRealtimeRefresh(()=>{if(!disposed)return load()},150)
+    const channel=client.channel(`live-route-${companyId}`).on('postgres_changes',{event:'*',schema:'public',table:'driving_sessions',filter:`company_id=eq.${companyId}`},sync.schedule).on('postgres_changes',{event:'*',schema:'public',table:'routes',filter:`company_id=eq.${companyId}`},sync.schedule).subscribe()
+    const timer=window.setInterval(sync.schedule,30_000)
+    return()=>{disposed=true;window.clearInterval(timer);sync.dispose();void client.removeChannel(channel)}
   },[companyId,load])
 
   const selected=sessions.find(item=>item.driver_id===selectedDriver)||sessions[0]
@@ -99,7 +100,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   const selectedIsPrimary=Boolean(selected&&selected.driver_id===primaryDriverId)
   const todayRoutes=useMemo(()=>routes.filter(route=>{const date=route.route_date||(route.scheduled_at?route.scheduled_at.slice(0,10):'');return date===todayValue()}).sort((a,b)=>Number(a.position||0)-Number(b.position||0)),[routes])
   const visibleToday=todayRoutes.slice(0,expanded?50:5)
-  const overviewRoutes:OperationsRoute[]=todayRoutes.filter(route=>['published','pending','active','paused','issue'].includes(route.status||'')).map(route=>({id:route.id,origin_address:route.origin_address,destination_address:route.destination_address,destination_name:route.destination_name,origin_lat:route.origin_lat,origin_lng:route.origin_lng,dest_lat:route.dest_lat,dest_lng:route.dest_lng,status:route.status,driver_id:route.driver_id,position:route.position}))
+  const overviewRoutes:OperationsRoute[]=todayRoutes.filter(route=>['published','pending','active','paused','issue'].includes(route.status||'')).map(route=>({id:route.id,origin_address:route.origin_address,destination_address:route.destination_address,destination_name:route.destination_name,origin_lat:route.origin_lat,origin_lng:route.origin_lng,destination_lat:route.destination_lat,destination_lng:route.destination_lng,status:route.status,driver_id:route.driver_id,position:route.position}))
   const overviewDrivers:OperationsDriverLocation[]=sessions.filter(session=>session.last_lat!=null&&session.last_lng!=null&&Date.now()-new Date(session.last_updated_at).getTime()<=10*60*1000).map(session=>{const active=routes.find(route=>route.driver_id===session.driver_id&&['active','paused'].includes(route.status||''));const next=routes.find(route=>route.driver_id===session.driver_id&&['published','pending'].includes(route.status||''));return {id:session.id,driver_id:session.driver_id,location:{lat:Number(session.last_lat),lng:Number(session.last_lng)},label:labels.get(session.driver_id)||t.driver,status:active?'on_route':'driving',nextStop:active?.destination_name||next?.destination_name||next?.destination_address||null}})
   const hasTodayRoute=Boolean(selected&&selectedRoutes.length)
   const plannedRoutes=todayRoutes.filter(route=>['published','pending','active','paused'].includes(route.status||''))
@@ -113,7 +114,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
       {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:overview?<>{overviewRoutes.length===0&&overviewDrivers.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:<div className={styles.mapCard}><OperationsMap routes={overviewRoutes} driverLocations={overviewDrivers} locale={locale} interactive/></div>}</>:sessions.length===0&&plannedRoutes.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:sessions.length===0?<RoutePlanMap locale="en" originAddress={plannedRoutes[0]?.origin_address} stops={plannedRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||undefined}))}/>:!hasTodayRoute&&!canShowLocationOnlyMap?<div className={styles.empty}><Radio size={20}/><div><strong>{t.noActiveRoutes}</strong><span>{labels.get(selected?.driver_id||'')||t.driver}: {t.noRoutesToday}</span></div></div>:<>
         {sessions.length>1&&<div className={styles.people} aria-label={t.driver}>{sessions.map(session=><button className={`${styles.person} ${session.driver_id===selected?.driver_id?styles.personActive:''}`} key={session.id} onClick={()=>setSelectedDriver(session.driver_id)}>{labels.get(session.driver_id)||t.driver}</button>)}</div>}
         <div className={styles.mapCard}>
-          <InteractiveLiveRouteMap originAddress={selectedRoute?.origin_address} destinationAddress={destination} originCoordinate={selectedRoute?.origin_lat!=null&&selectedRoute.origin_lng!=null?{lat:Number(selectedRoute.origin_lat),lng:Number(selectedRoute.origin_lng)}:null} destinationCoordinate={selectedRoute?.dest_lat!=null&&selectedRoute.dest_lng!=null?{lat:Number(selectedRoute.dest_lat),lng:Number(selectedRoute.dest_lng)}:null} driverLocation={hasLocation?{lat:Number(selected?.last_lat),lng:Number(selected?.last_lng)}:null} driverUpdatedAt={selected?.last_updated_at} title={t.liveRoute}/>
+          <InteractiveLiveRouteMap originAddress={selectedRoute?.origin_address} destinationAddress={destination} originCoordinate={selectedRoute?.origin_lat!=null&&selectedRoute.origin_lng!=null?{lat:Number(selectedRoute.origin_lat),lng:Number(selectedRoute.origin_lng)}:null} destinationCoordinate={selectedRoute?.destination_lat!=null&&selectedRoute.destination_lng!=null?{lat:Number(selectedRoute.destination_lat),lng:Number(selectedRoute.destination_lng)}:null} driverLocation={hasLocation?{lat:Number(selected?.last_lat),lng:Number(selected?.last_lng)}:null} driverUpdatedAt={selected?.last_updated_at} title={t.liveRoute}/>
           <div className={styles.locationPanel}>
             <span className={styles.mapLabel}><Navigation size={14}/>{t.live}</span>
             <div className={styles.locationHero}><span className={styles.locationMarker}><Navigation size={22}/></span><div className={styles.liveSummary}><strong>{labels.get(selected?.driver_id||'')||t.driver}</strong><span>{selectedIsPrimary?'Primary Driver':`${roles.get(selected?.driver_id||'')||'Team member'} · Temporary assignment`}</span><span>{selectedRoute?`${routeType(selectedRoute.mission_type,t)} → ${selectedRoute.destination_name||selectedRoute.destination_address||t.currentDestination}`:t.noActiveRoutes}</span>{!selectedRoute&&selectedNext&&<span>{t.nextRoute}: {routeType(selectedNext.mission_type,t)} · {selectedNext.destination_name||selectedNext.destination_address}</span>}</div></div>
