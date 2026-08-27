@@ -32,6 +32,8 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [estimate,setEstimate]=useState<{distanceMeters?:number;durationSeconds?:number}|null>(null)
  const [map,setMap]=useState<L.Map|null>(null)
  const [view,setView]=useState<'navigate'|'plan'>('navigate')
+ const [navigationActive,setNavigationActive]=useState(false)
+ const wakeLock=useRef<any>(null)
  const lastReroute=useRef(0)
  const arrivalNotified=useRef(false)
  const [loading,setLoading]=useState(true)
@@ -64,6 +66,13 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
 
+ useEffect(()=>()=>{void wakeLock.current?.release?.()},[])
+ const toggleNavigation=async()=>{
+  if(navigationActive){await wakeLock.current?.release?.();wakeLock.current=null;setNavigationActive(false);return}
+  try{wakeLock.current=await (navigator as any).wakeLock?.request?.('screen')}catch{}
+  setNavigationActive(true)
+ }
+
  useEffect(()=>{
   if(!deviceLocation||line.length<2||!points.length)return
   const toMeters=(a:Coordinate,b:Coordinate)=>{const r=6371000,rad=Math.PI/180;const dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;const x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;return 2*r*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
@@ -90,6 +99,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  return <section className="route-plan-map" aria-label={copy.label}>
   <header className="route-plan-nav"><div><small>{view==='navigate'?copy.next:copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation?'is-live':''}>{deviceLocation?copy.gps:copy.gpsLost}</span></header>
   <div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>
+  {view==='navigate'&&<div className="route-plan-actions"><button onClick={()=>void toggleNavigation()}>{navigationActive?(locale==='es'?'Detener navegación':'Stop navigation'):(locale==='es'?'Iniciar navegación':'Start navigation')}</button>{deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75&&<button className="arrived" onClick={()=>window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true}}))}>{locale==='es'?'Llegué':'I arrived'}</button>}</div>}
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
    <Fit points={points}/>
