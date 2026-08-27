@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
 import {mapTileConfig} from '../lib/maps/map-config'
@@ -30,6 +30,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [line,setLine]=useState<Coordinate[]>([])
  const [deviceLocation,setDeviceLocation]=useState<Coordinate|null>(null)
  const [estimate,setEstimate]=useState<{distanceMeters?:number;durationSeconds?:number}|null>(null)
+ const lastReroute=useRef(0)
  const [loading,setLoading]=useState(true)
  const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.address)),[stops])
  const addresses=useMemo(()=>[originAddress,...validStops.map(stop=>stop.address)].filter(Boolean) as string[],[originAddress,validStops])
@@ -55,6 +56,16 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   const watch=navigator.geolocation.watchPosition(position=>setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude}),()=>undefined,{enableHighAccuracy:true,maximumAge:5000,timeout:20000})
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
+
+ useEffect(()=>{
+  if(!deviceLocation||line.length<2||!points.length)return
+  const toMeters=(a:Coordinate,b:Coordinate)=>{const r=6371000,rad=Math.PI/180;const dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;const x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;return 2*r*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+  const nearest=Math.min(...line.map(point=>toMeters(deviceLocation,point)))
+  if(nearest<150||Date.now()-lastReroute.current<30000)return
+  const nextStop=points[1]||points[0]
+  lastReroute.current=Date.now()
+  void calculateRoute([deviceLocation,nextStop]).then(next=>{if(next.coordinates.length>1){setLine(next.coordinates);setEstimate(next)}})
+ },[deviceLocation?.lat,deviceLocation?.lng,line,points])
 
  const center=points[0]||{lat:39.8283,lng:-98.5795}
  const copy=locale==='es'?{label:'Mapa de todas las paradas',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Recorrido completo',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa de la ruta'}:locale==='fr'?{label:'Carte de tous les arrêts',loading:'Préparation de l’itinéraire…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',map:'Itinéraire complet',stop:'Arrêt',single:'arrêt programmé',plural:'arrêts programmés',complete:'Vue complète de l’itinéraire'}:{label:'Map of all stops',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Full route',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view'}
