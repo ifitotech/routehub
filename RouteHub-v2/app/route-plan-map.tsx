@@ -35,6 +35,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [navigationActive,setNavigationActive]=useState(false)
  const wakeLock=useRef<any>(null)
  const lastReroute=useRef(0)
+ const navigationTarget=useRef('')
  const arrivalNotified=useRef(false)
  const [loading,setLoading]=useState(true)
  const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.address)),[stops])
@@ -65,6 +66,17 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   const watch=navigator.geolocation.watchPosition(position=>setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude}),()=>undefined,{enableHighAccuracy:true,maximumAge:5000,timeout:20000})
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
+
+ useEffect(()=>{
+  if(view!=='navigate'||!deviceLocation||points.length<2)return
+  const target=points[1]
+  const key=`${target.lat.toFixed(5)},${target.lng.toFixed(5)}`
+  if(navigationTarget.current===key)return
+  navigationTarget.current=key
+  void calculateRoute([deviceLocation,target]).then(next=>{
+   if(next.coordinates.length>1){setLine(next.coordinates);setEstimate(next)}
+  })
+ },[view,deviceLocation?.lat,deviceLocation?.lng,points])
 
  useEffect(()=>()=>{void wakeLock.current?.release?.()},[])
  const toggleNavigation=async()=>{
