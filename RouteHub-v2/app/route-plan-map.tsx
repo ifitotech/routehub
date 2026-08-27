@@ -8,7 +8,7 @@ import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,nextRouteManeuver} from '../lib/maps/routing'
 
 type Coordinate={lat:number;lng:number}
-type GpsFix=Coordinate&{accuracy:number;updatedAt:number}
+type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 export type PlannedStop={id:string;address?:string|null;label?:string|null}
 
 type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string}
@@ -25,6 +25,23 @@ function Fit({points}:{points:Coordinate[]}){
  useEffect(()=>{if(points.length>1)map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14});else if(points[0])map.setView([points[0].lat,points[0].lng],13)},[map,key,points])
  return null
 }
+
+function FollowDriver({location,enabled}:{location:GpsFix|null;enabled:boolean}){
+ const map=useMap()
+ useEffect(()=>{
+  if(!enabled||!location)return
+  // panTo keeps the map and its tiles mounted; only the camera follows GPS.
+  map.panTo([location.lat,location.lng],{animate:true,duration:.45})
+  if(map.getZoom()<15)map.setZoom(16)
+ },[map,location?.lat,location?.lng,enabled])
+ return null
+}
+
+const driverMarker=(heading:number|null)=>L.divIcon({
+ className:'route-plan-driver-location',
+ html:`<span class="route-plan-driver-arrow" style="transform:rotate(${Number.isFinite(heading)?heading:0}deg)"></span>`,
+ iconSize:[34,34],iconAnchor:[17,17]
+})
 
 export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [points,setPoints]=useState<Coordinate[]>([])
@@ -74,7 +91,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
 
  useEffect(()=>{
   if(typeof navigator==='undefined'||!navigator.geolocation)return
-  const watch=navigator.geolocation.watchPosition(position=>{setGpsError(false);setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy,updatedAt:Date.now()})},()=>setGpsError(true),{enableHighAccuracy:true,maximumAge:5000,timeout:20000})
+  const watch=navigator.geolocation.watchPosition(position=>{setGpsError(false);setDeviceLocation({lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy,heading:Number.isFinite(position.coords.heading)?position.coords.heading:null,updatedAt:Date.now()})},()=>setGpsError(true),{enableHighAccuracy:true,maximumAge:5000,timeout:20000})
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
  useEffect(()=>{const timer=window.setInterval(()=>setGpsClock(Date.now()),5000);return()=>window.clearInterval(timer)},[])
@@ -122,8 +139,8 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const maneuver=useMemo(()=>nextRouteManeuver(estimate?.maneuvers,line,deviceLocation),[deviceLocation?.lat,deviceLocation?.lng,estimate?.maneuvers,line])
  const gpsWeak=Boolean(gpsError||!deviceLocation||deviceLocation.accuracy>75||gpsClock-deviceLocation.updatedAt>20_000)
  const gpsMeta=deviceLocation?`${Math.round(deviceLocation.accuracy)} m · ${Math.max(0,Math.round((gpsClock-deviceLocation.updatedAt)/1000))} s`:''
- const copy=locale==='es'?{label:'Mapa de navegación',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Navegación',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa',next:'Próxima parada',gps:'GPS activo',gpsWeak:'Señal GPS débil',gpsLost:'Sin señal GPS',recenter:'Mi ubicación'}:{label:'Navigation map',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Navigation',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view',next:'Next stop',gps:'GPS active',gpsWeak:'Weak GPS signal',gpsLost:'GPS signal unavailable',recenter:'My location'}
- return <section className={`route-plan-map route-plan-${view}`} aria-label={copy.label}>
+ const copy=locale==='es'?{label:'Mapa de navegación',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Navegación',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa',next:'Próxima parada',gps:'GPS activo',gpsWeak:'Señal GPS débil',gpsLost:'Sin señal GPS',recenter:'Mi ubicación',exit:'Salir'}:{label:'Navigation map',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Navigation',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view',next:'Next stop',gps:'GPS active',gpsWeak:'Weak GPS signal',gpsLost:'GPS signal unavailable',recenter:'My location',exit:'Exit'}
+ return <section className={`route-plan-map route-plan-${view}${navigationActive?' is-driving':''}`} aria-label={copy.label}>
   <header className="route-plan-nav"><div><small>{view==='navigate'?copy.next:copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation&&!gpsWeak?'is-live':''}>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}{deviceLocation&&<small> · {gpsMeta}</small>}</span></header>
   <div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>
   {view==='navigate'&&<div className="route-plan-actions"><button onClick={()=>void toggleNavigation()}>{navigationActive?(locale==='es'?'Detener navegación':'Stop navigation'):(locale==='es'?'Iniciar navegación':'Start navigation')}</button>{deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75&&<button className="arrived" onClick={()=>window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true}}))}>{locale==='es'?'Llegué':'I arrived'}</button>}</div>}
@@ -131,10 +148,11 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
    <Fit points={points}/>
+   <FollowDriver location={deviceLocation} enabled={view==='navigate'&&navigationActive}/>
    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
    {points.slice(1).map((point,index)=><Marker key={displayedStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{displayedStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
-   {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={L.divIcon({className:'route-plan-driver-location',html:'<span style="display:block;width:18px;height:18px;border-radius:50%;background:#1763de;border:3px solid #fff;box-shadow:0 1px 8px #1238;"/>',iconSize:[18,18],iconAnchor:[9,9]})}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
+   {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverMarker(deviceLocation.heading)}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
   </MapContainer>} {deviceLocation&&<button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}>{copy.recenter}</button>}</div>
-  <footer className="route-plan-bottom"><div><strong>{deviceLocation&&estimate?.durationSeconds!=null?`${Math.max(1,Math.round(estimate.durationSeconds/60))} min`:`${validStops.length}`}</strong><span>{deviceLocation&&estimate?.distanceMeters!=null?`${Math.max(0,Math.round(estimate.distanceMeters/1609.344*10)/10)} mi · ${new Date(Date.now()+(estimate.durationSeconds||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div><small>{estimate?.maneuvers?.[1]?.instruction|| (deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75?(locale==='es'?'Llegaste a la próxima parada': 'Arrived at next stop'):copy.complete)}</small></footer>
+  <footer className="route-plan-bottom"><div><strong>{deviceLocation&&estimate?.durationSeconds!=null?`${Math.max(1,Math.round(estimate.durationSeconds/60))} min`:`${validStops.length}`}</strong><span>{deviceLocation&&estimate?.distanceMeters!=null?`${Math.max(0,Math.round(estimate.distanceMeters/1609.344*10)/10)} mi · ${new Date(Date.now()+(estimate.durationSeconds||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive?<button type="button" onClick={()=>void toggleNavigation()}>{copy.exit}</button>:<small>{estimate?.maneuvers?.[1]?.instruction|| (deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75?(locale==='es'?'Llegaste a la próxima parada': 'Arrived at next stop'):copy.complete)}</small>}</footer>
  </section>
 }
