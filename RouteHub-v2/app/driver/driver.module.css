@@ -167,3 +167,5 @@
  .backdrop .modal button:not(:disabled):active,.backdrop .modal label.evidencePicker:active{transform:none}
  .completed,.toast{animation:none}
 }
+.locationNotice{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;z-index:70;width:min(calc(100% - 32px),420px);display:flex;align-items:flex-start;gap:8px;margin:0;padding:10px 14px;border:1px solid #f0d58c;border-radius:14px;background:#fff8df;color:var(--rh-text);box-shadow:0 8px 24px rgba(15,29,53,.12);font-size:12px;line-height:1.35;font-weight:650;transform:translateX(-50%);animation:locationNoticeIn .2s ease-out;pointer-events:none}@keyframes locationNoticeIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.locationNotice{animation:none}}
