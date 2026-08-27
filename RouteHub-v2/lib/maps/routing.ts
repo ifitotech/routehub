@@ -29,6 +29,27 @@ export function normalizeOsrmRoute(payload:OsrmResponse,fallback:MapCoordinate[]
   }
 }
 
+function distanceMeters(a:MapCoordinate,b:MapCoordinate){
+  const radians=Math.PI/180
+  const dLat=(b.lat-a.lat)*radians,dLng=(b.lng-a.lng)*radians
+  const value=Math.sin(dLat/2)**2+Math.cos(a.lat*radians)*Math.cos(b.lat*radians)*Math.sin(dLng/2)**2
+  return 2*6371000*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
+}
+
+/**
+ * Chooses the first maneuver still ahead of the driver's closest route point.
+ * Selecting by raw geographic distance is incorrect after passing a turn: the
+ * previous turn is then the closest point and would remain on screen.
+ */
+export function nextRouteManeuver(maneuvers:RouteManeuver[]|undefined,route:MapCoordinate[],location:MapCoordinate|null){
+  if(!maneuvers?.length)return undefined
+  if(!location||!route.length)return maneuvers[0]
+  const currentIndex=route.reduce((best,point,index)=>distanceMeters(location,point)<distanceMeters(location,route[best])?index:best,0)
+  const withProgress=maneuvers.map(maneuver=>({maneuver,index:route.reduce((best,point,index)=>distanceMeters(maneuver.coordinate,point)<distanceMeters(maneuver.coordinate,route[best])?index:best,0)}))
+  // A small tolerance avoids jumping ahead because GPS can be a few meters off.
+  return withProgress.find(item=>item.index>=currentIndex-2)?.maneuver||withProgress[withProgress.length-1]?.maneuver
+}
+
 export function routeRequestUrl(points:MapCoordinate[]):string|null{
   if(points.length<2)return null
   const path=points.map(point=>`${point.lng},${point.lat}`).join(';')

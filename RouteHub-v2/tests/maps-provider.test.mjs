@@ -10,11 +10,11 @@ test('navigation uses coordinates before a human-readable address',()=>{
   assert.match(openNavigation(destination,'iPhone'),/maps\.apple\.com/)
 })
 
-test('driver next stop keeps progress visible and uses the Google universal link',async()=>{
+test('driver next stop keeps progress visible and opens the in-app navigation map',async()=>{
   const source=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
   assert.match(source,/currentStopIndex\+1/)
-  assert.match(source,/googleMapsNavigationUrl\(/)
-  assert.match(source,/current\.destination_lat!=null&&current\.destination_lng!=null/)
+  assert.match(source,/setRouteView\('map'\)/)
+  assert.match(source,/RoutePlanMap/)
 })
 
 test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>{

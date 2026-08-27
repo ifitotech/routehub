@@ -25,6 +25,13 @@ export async function reportAppError(input:ReportInput){
     const now=Date.now(); if(now-(recent.get(key)||0)<30000)return
     recent.set(key,now)
     const user=await currentUser(); const membership=await currentMembership()
-    await getSupabase().from('app_error_reports').insert({user_id:user.id,company_id:input.companyId||membership.company_id,branch_id:input.branchId??membership.branch_id??null,route_id:input.routeId??null,action:input.action,error_message:message,context:input.context||{}})
+    const runtime=typeof window==='undefined'?{}:{
+      app_version:process.env.NEXT_PUBLIC_APP_VERSION||'web',
+      browser:navigator.userAgent.slice(0,300),
+      platform:(navigator as Navigator&{userAgentData?:{platform?:string}}).userAgentData?.platform||navigator.platform||'unknown',
+      online:navigator.onLine,
+      url:window.location.pathname
+    }
+    await getSupabase().from('app_error_reports').insert({user_id:user.id,company_id:input.companyId||membership.company_id,branch_id:input.branchId??membership.branch_id??null,route_id:input.routeId??null,action:input.action,error_message:message,context:{...runtime,...(input.context||{})}})
   }catch{}
 }
