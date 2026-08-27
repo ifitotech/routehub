@@ -106,6 +106,7 @@ type FormState = {
   date: string
   time: string
   driver_id: string
+  insert_before_id: string
 }
 
 const originCopy = {
@@ -124,6 +125,7 @@ const routeListStatuses = [...routeStatuses, 'completed', 'issue']
 const routeTypes: Array<{value: FormState['type']; label: string}> = [
   {value: 'pickup', label: 'Pickup'},
   {value: 'delivery', label: 'Delivery'},
+  {value: 'return', label: 'Return to branch'},
 ]
 const priorities: Array<{value: FormState['priority']; label: string}> = [
   {value: 'normal', label: 'Normal'},
@@ -157,6 +159,7 @@ function initialForm(priority: FormState['priority'] = 'normal'): FormState {
     notes: '',
     ...localSchedule(),
     driver_id: '',
+    insert_before_id: '',
   }
 }
 
@@ -253,6 +256,7 @@ export default function Routes() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [justCreated, setJustCreated] = useState(false)
   const [originMode, setOriginMode] = useState<OriginMode>('branch')
+  const [insertBeforeId, setInsertBeforeId] = useState('')
   const [previewOpen, setPreviewOpen] = useState(false)
   const [selectedDestinationLocation, setSelectedDestinationLocation] = useState<GeocodedLocation | null>(null)
   const [pendingLocation, setPendingLocation] = useState<GeocodedLocation | null>(null)
@@ -493,6 +497,7 @@ export default function Routes() {
     setJustCreated(false)
     setSelectedDestinationLocation(null)
     setPendingLocation(null)
+    setInsertBeforeId('')
     setOpen(true)
   }
 
@@ -535,6 +540,17 @@ export default function Routes() {
       const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
       if (positionError) throw positionError
 
+      let queueQuery = client.from('routes')
+        .select('id,position,destination_name,mission_type,status')
+        .eq('company_id', companyId)
+        .eq('driver_id', form.driver_id)
+        .eq('route_date', form.date)
+        .in('status', ['draft','pending','published','paused'])
+        .order('position', {ascending: true})
+      queueQuery = branchId ? queueQuery.eq('branch_id', branchId) : queueQuery.is('branch_id', null)
+      const {data: lastQueue, error: queueError} = await queueQuery
+      if (queueError) throw queueError
+
       const {data: createdRoute,error} = await client.from('routes').insert({
         company_id: companyId,
         branch_id: branchId,
@@ -562,6 +578,21 @@ export default function Routes() {
       }).select('id').single()
       if (error) throw error
 
+      // New work is appended first, then atomically inserted before the
+      // selected upcoming stop. The RPC keeps the active/completed history
+      // untouched and recalculates origins for the remaining queue.
+      if (createdRoute?.id) {
+        const mutableIds = (lastQueue || []).map(route => route.id)
+        const insertionIndex = insertBeforeId ? mutableIds.indexOf(insertBeforeId) : -1
+        const nextIds = mutableIds.filter(id => id !== createdRoute.id)
+        if (insertionIndex >= 0) nextIds.splice(insertionIndex, 0, createdRoute.id)
+        else nextIds.push(createdRoute.id)
+        if (nextIds.length) {
+          const {error: reorderError} = await client.rpc('reorder_route_queue', {p_route_ids: nextIds})
+          if (reorderError) throw reorderError
+        }
+      }
+
       if (createdRoute?.id && currentUserId) {
         await recordActivity({companyId,userId:currentUserId,action:'route_created',recordId:createdRoute.id,after:{driver_id:form.driver_id,priority:form.priority,destination:destinationAddress}}).catch(()=>undefined)
         void sendRoutePush(createdRoute.id, 'assigned')
@@ -576,6 +607,7 @@ export default function Routes() {
 
       setForm(current => ({...initialForm(), driver_id: current.driver_id}))
       setSelectedDestinationLocation(null)
+      setInsertBeforeId('')
       await loadWorkspace()
       setMessage(c.published)
       setJustCreated(true)
@@ -610,6 +642,8 @@ export default function Routes() {
       </div>
     </article>
   })
+
+  const priorityRoutes = routes.filter(route => route.driver_id === form.driver_id && route.route_date === form.date && ['draft','pending','published','paused'].includes(route.status || '')).sort(routeSort)
 
   return <main className={styles.page}>
     <div className={styles.routeTopbar}>
@@ -689,7 +723,9 @@ export default function Routes() {
               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => type.value === 'return' ? {...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''} : {...current, type:type.value})}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
-              <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}`}</option> })}</select></div></label>
+            <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}`}</option> })}</select></div></label>
+
+            {form.driver_id && form.date === todayValue && priorityRoutes.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Prioridad en la ruta' : locale==='fr' ? 'Priorité dans l’itinéraire' : 'Route priority'} <em>{c.optional}</em></span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>{priorityRoutes.map(route => <option key={route.id} value={route.id}>{locale==='es' ? `Antes de ${route.destination_name || route.destination_address || 'la próxima parada'}` : locale==='fr' ? `Avant ${route.destination_name || route.destination_address || 'la prochaine étape'}` : `Before ${route.destination_name || route.destination_address || 'next stop'}`}</option>)}</select></div></label>}
 
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
