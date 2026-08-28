@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {CircleUserRound, History as HistoryIcon, Home, List} from 'lucide-react'
+import {Home, List, Map as MapIcon, MoreHorizontal} from 'lucide-react'
 import {usePathname} from 'next/navigation'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './driver.module.css'
@@ -12,10 +12,11 @@ export default function DriverBottomNav() {
   const {t} = useLocale()
   const isHome = pathname === '/driver'
 
+  const isMap=pathname==='/driver' && typeof window!=='undefined' && new URLSearchParams(window.location.search).get('view')==='map'
   return <nav className={styles.driverNav} aria-label="Driver navigation">
-    <Link href="/driver" aria-current={isHome ? 'page' : undefined}><Home size={18}/><span>{t.home}</span></Link>
-    <Link href="/driver" aria-label="Route"><List size={18}/><span>Route</span></Link>
-    <Link href="/driver/history" aria-current={pathname === '/driver/history' ? 'page' : undefined}><HistoryIcon size={18}/><span>{t.history}</span></Link>
-    <Link href="/driver/settings" aria-current={pathname === '/driver/settings' ? 'page' : undefined}><CircleUserRound size={18}/><span>Profile</span></Link>
+    <Link href="/driver" aria-current={isHome&&!isMap ? 'page' : undefined}><Home size={18}/><span>Today</span></Link>
+    <Link href="/driver?view=map" aria-current={isMap ? 'page' : undefined}><MapIcon size={18}/><span>Map</span></Link>
+    <Link href="/driver?view=route" aria-current={pathname === '/driver'&&!isHome ? 'page' : undefined}><List size={18}/><span>Route</span></Link>
+    <Link href="/driver/settings"><MoreHorizontal size={18}/><span>More</span></Link>
   </nav>
 }

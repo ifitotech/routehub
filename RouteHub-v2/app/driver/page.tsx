@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useRef, useState} from 'react'
+import {useSearchParams} from 'next/navigation'
 import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, ClipboardCheck, Clock3, FileText, History as HistoryIcon, Home, List, MapPin, MessageSquare, Pause, Phone, Play, RotateCcw, Signature, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
 import {uploadMissionEvidence} from '../../lib/mission-evidence'
@@ -42,6 +43,7 @@ const errorMessage=(error:unknown,fallback:string)=>{
 }
 
 export default function Driver() {
+  const searchParams=useSearchParams()
   const [missions,setMissions]=useState<Mission[]>([])
   const [contacts,setContacts]=useState<SavedContact[]>([])
   const [message,setMessage]=useState('')
@@ -73,6 +75,7 @@ const [recipientError,setRecipientError]=useState('')
   const [loading,setLoading]=useState(true)
   const [loadError,setLoadError]=useState('')
   const [routeView,setRouteView]=useState<'queue'|'details'|'map'|null>(null)
+  useEffect(()=>{const view=searchParams.get('view');if(view==='map')setRouteView('map');else if(view==='route')setRouteView('queue');else if(view===null)setRouteView(null)},[searchParams])
   const [routeEstimate,setRouteEstimate]=useState<string|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
