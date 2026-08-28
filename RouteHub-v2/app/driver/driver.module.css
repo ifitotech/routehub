@@ -223,3 +223,12 @@
 @keyframes mapFromToday{from{opacity:.35;transform:translateY(22%) scale(.84);border-radius:28px}to{opacity:1;transform:none;border-radius:0}}
 @keyframes mapToToday{from{opacity:1;transform:none;border-radius:0}to{opacity:.2;transform:translateY(22%) scale(.84);border-radius:28px}}
 @media(prefers-reduced-motion:reduce){.page:has(.routeHero) .routeHero,.routeOverlayMap,.routeOverlayReturning,.routeOverlayQueue{transition:none;animation:none}}
+
+/* Today must keep its completion controls reachable on compact phones while
+   preserving the larger mini map on taller Pro / Ultra screens. */
+@media(max-width:719px){
+ .page:has(.routeHero){overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:none}
+ .page:has(.routeHero)::-webkit-scrollbar{display:none}
+ .page:has(.routeHero) .routeHero :global(.live-route-map.is-activatable) :global(.live-route-canvas){height:clamp(138px,17dvh,180px)!important;min-height:0!important;max-height:none!important}
+ .page:has(.routeHero) .primaryActions{margin-bottom:calc(12px + env(safe-area-inset-bottom))}
+}
