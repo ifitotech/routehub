@@ -240,7 +240,6 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   else setSheetExpanded(value=>!value)
  }
  const beginSheetTouch=(event:React.TouchEvent<HTMLElement>)=>{
-  if(event.target instanceof Element&&event.target.closest('button,a,input,textarea,select'))return
   const touch=event.touches[0]
   if(touch)sheetTouchStart.current={x:touch.clientX,y:touch.clientY}
  }
