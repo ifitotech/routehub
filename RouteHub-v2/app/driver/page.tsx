@@ -465,7 +465,6 @@ const [recipientError,setRecipientError]=useState('')
     setTodayDragY(0)
     if(Math.abs(dy)<70||Math.abs(dy)<=Math.abs(dx)*1.25)return
     if(dy<0)openRouteQueue()
-    else openRouteMap()
   }
   const openGoogleMaps=(route:Mission|null|undefined=current)=>{
     if(!route)return
