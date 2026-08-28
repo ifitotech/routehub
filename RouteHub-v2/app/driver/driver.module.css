@@ -232,3 +232,11 @@
  .page:has(.routeHero) .routeHero :global(.live-route-map.is-activatable) :global(.live-route-canvas){height:clamp(138px,17dvh,180px)!important;min-height:0!important;max-height:none!important}
  .page:has(.routeHero) .primaryActions{margin-bottom:calc(12px + env(safe-area-inset-bottom))}
 }
+/* The fixed tab bar must never cover the last stop action.  Earlier compact
+   layouts locked Today to the viewport, which clipped the lower card on
+   shorter iPhones and Android devices.  Keep it naturally scrollable only
+   when content needs the room, with one precise safe-area reserve. */
+@media(max-width:719px){
+ .page:has(.routeHero){position:relative;height:auto;min-height:100dvh;overflow-x:hidden;overflow-y:auto;padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+ .page:has(.routeHero) .routeHero + .primaryActions{margin-bottom:0!important}
+}
