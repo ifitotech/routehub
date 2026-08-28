@@ -16,6 +16,13 @@ export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?
 
 type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean;onReturnToday?:()=>void;onExitNavigation?:()=>void;onArrive?:()=>void|Promise<void>;transitioningOut?:boolean}
 
+function bearingBetween(from:Coordinate,to:Coordinate){
+ const radians=Math.PI/180
+ const y=Math.sin((to.lng-from.lng)*radians)*Math.cos(to.lat*radians)
+ const x=Math.cos(from.lat*radians)*Math.sin(to.lat*radians)-Math.sin(from.lat*radians)*Math.cos(to.lat*radians)*Math.cos((to.lng-from.lng)*radians)
+ return (Math.atan2(y,x)/radians+360)%360
+}
+
 const marker=(number:number,active=false)=>L.divIcon({
  className:'route-plan-marker-wrap',
  html:`<span class="route-plan-marker${active?' is-active':''}">${number}</span>`,
@@ -175,8 +182,14 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   if(typeof navigator==='undefined'||!navigator.geolocation)return
   const watch=navigator.geolocation.watchPosition(position=>{
    const updatedAt=Date.now()
-   const candidate={lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy,heading:Number.isFinite(position.coords.heading)?position.coords.heading:null,updatedAt}
+   const raw={lat:position.coords.latitude,lng:position.coords.longitude}
    const previous=acceptedGpsFix.current
+   const reportedHeading=Number.isFinite(position.coords.heading)?position.coords.heading:null
+   // iOS Safari frequently reports a null heading for web geolocation. Use
+   // the last accepted movement as a conservative fallback so the camera can
+   // still face forward while driving.
+   const movementHeading=previous&&distanceMeters(previous,raw)>=4?bearingBetween(previous,raw):previous?.heading??null
+   const candidate={...raw,accuracy:position.coords.accuracy,heading:reportedHeading??movementHeading,updatedAt}
    // Do not let a weak fix pull the marker across parallel roads or cause a
    // false reroute. A normal driving movement is still always accepted.
    const elapsedSeconds=previous?Math.max(1,(updatedAt-previous.updatedAt)/1000):0
