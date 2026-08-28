@@ -424,6 +424,21 @@ const [recipientError,setRecipientError]=useState('')
     const dx=touch.clientX-start.x,dy=touch.clientY-start.y
     if(dy>70&&dy>Math.abs(dx)*1.25)returnToToday()
   }
+  const beginTodaySwipe=(event:React.TouchEvent<HTMLElement>)=>{
+    if(event.target instanceof Element&&event.target.closest('button,a,input,textarea,select'))return
+    const touch=event.touches[0]
+    if(touch)routeTouchStart.current={x:touch.clientX,y:touch.clientY}
+  }
+  const finishTodaySwipe=(event:React.TouchEvent<HTMLElement>)=>{
+    const start=routeTouchStart.current
+    routeTouchStart.current=null
+    const touch=event.changedTouches[0]
+    if(!start||!touch)return
+    const dx=touch.clientX-start.x,dy=touch.clientY-start.y
+    if(Math.abs(dy)<70||Math.abs(dy)<=Math.abs(dx)*1.25)return
+    if(dy<0)openRouteQueue()
+    else openRouteMap()
+  }
   const openGoogleMaps=(route:Mission|null|undefined=current)=>{
     if(!route)return
     const url=googleMapsNavigationUrl({address:route.destination_address,coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,label:route.destination_name})
@@ -549,7 +564,7 @@ const [recipientError,setRecipientError]=useState('')
   const closeModal=()=>{if(busy)return;setModal(false);setIssueNote('');setIssuePhoto(null)}
   const beginSignature=(event:React.PointerEvent<HTMLCanvasElement>)=>{const canvas=signatureCanvas.current;if(!canvas)return;canvas.setPointerCapture(event.pointerId);const rect=canvas.getBoundingClientRect();const context=canvas.getContext('2d');if(!context)return;context.lineWidth=3;context.lineCap='round';context.strokeStyle='#14233b';context.beginPath();context.moveTo((event.clientX-rect.left)*(canvas.width/rect.width),(event.clientY-rect.top)*(canvas.height/rect.height));const move=(moveEvent:PointerEvent)=>{context.lineTo((moveEvent.clientX-rect.left)*(canvas.width/rect.width),(moveEvent.clientY-rect.top)*(canvas.height/rect.height));context.stroke()};const stop=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',stop);canvas.removeEventListener('pointercancel',stop)};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop)}
 
-  return <main className={`app ${styles.page}`} onPointerDown={routeView===null?beginTodayDrag:undefined} onPointerMove={routeView===null?moveTodayDrag:undefined} onPointerUp={routeView===null?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView===null){todayDragStart.current=null;setTodayDragY(0)}}}>
+  return <main className={`app ${styles.page}`} onPointerDown={routeView===null?beginTodayDrag:undefined} onPointerMove={routeView===null?moveTodayDrag:undefined} onPointerUp={routeView===null?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView===null){todayDragStart.current=null;setTodayDragY(0)}}} onTouchStart={routeView===null?beginTodaySwipe:undefined} onTouchEnd={routeView===null?finishTodaySwipe:undefined}>
     <header className={styles.header}><div className={styles.brand}><Image src="/routehub-driver-new.jpg" alt="RouteHub Driver" width={48} height={48} priority/><strong>RouteHub</strong></div>{routeView!=='map'&&<NotificationBell />}</header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
     {membershipRole==='driver'&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
     {temporaryExecution&&drivingSession&&<div className={styles.drivingBar}><span className={styles.locationLive}><i/>{temporaryLabel}</span></div>}
