@@ -22,7 +22,8 @@ type Props={
  title?:string
  showHeader?:boolean
  showLocationUpdated?:boolean
- interactive?:boolean
+  interactive?:boolean
+  onActivate?:()=>void
  locale?:string
 }
 
@@ -50,7 +51,7 @@ async function resolveCoordinate(address:string|null|undefined,known:RouteCoordi
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,locale='en'}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,locale='en'}:Props){
  const [routePoints,setRoutePoints]=useState<RouteCoordinate[]>([])
  const [line,setLine]=useState<RouteCoordinate[]>([])
  const [loading,setLoading]=useState(true)
@@ -92,7 +93,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
  const destination=routePoints[routePoints.length-1]||null
  const intermediate=routePoints.slice(1,-1)
 
- return <section className="live-route-map">
+ return <section className={`live-route-map ${onActivate?'is-activatable':''}`} onClick={onActivate} onKeyDown={event=>{if(onActivate&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onActivate()}}} role={onActivate?'button':undefined} tabIndex={onActivate?0:undefined}>
   {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?copy.connected:copy.scheduled}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?copy.live:copy.waiting}</span></header>}
   <div className="live-route-canvas">
    {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label={copy.map}>
