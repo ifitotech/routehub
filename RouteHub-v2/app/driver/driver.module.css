@@ -239,4 +239,6 @@
 @media(max-width:719px){
  .page:has(.routeHero){position:relative;height:auto;min-height:100dvh;overflow-x:hidden;overflow-y:auto;padding-bottom:calc(104px + env(safe-area-inset-bottom))}
  .page:has(.routeHero) .routeHero + .primaryActions{margin-bottom:0!important}
+ .page:has(.routeHero) .routeHero + .primaryActions{margin-top:10px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+ .page:has(.routeHero) .routeHero + .primaryActions:before{margin:0 2px 4px}
 }
