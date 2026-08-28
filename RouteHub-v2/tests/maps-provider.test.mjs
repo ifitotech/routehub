@@ -10,13 +10,14 @@ test('navigation uses coordinates before a human-readable address',()=>{
   assert.match(openNavigation(destination,'iPhone'),/maps\.apple\.com/)
 })
 
-test('driver next stop keeps progress visible and opens the in-app navigation map',async()=>{
+test('driver keeps route progress visible, uses Google Maps for driving, and retains a reference map',async()=>{
   const source=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
   assert.match(source,/currentStopIndex\+1/)
   assert.match(source,/setRouteView\('map'\)/)
-  assert.match(source,/RoutePlanMap/)
-  assert.match(source,/routeFocusDate/)
-  assert.match(source,/pastDue:routeFocusDate<today/)
+  assert.match(source,/openGoogleMaps\(current\)/)
+  assert.match(source,/Route reference/)
+  assert.match(source,/dayMapWaypoints/)
+  assert.doesNotMatch(source,/autoStartNavigation/)
 })
 
 test('driver navigation identifies unfinished overdue work as pending',async()=>{
