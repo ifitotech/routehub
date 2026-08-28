@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import {useCallback, useEffect, useMemo, useState} from 'react'
-import {ArrowLeft, CalendarClock, ChevronDown, ClipboardList, History, Home, Image as ImageIcon, MapPin, MoreHorizontal, Navigation, Route as RouteIcon, Ruler, UserRound, X} from 'lucide-react'
+import {AlertTriangle, CalendarDays, Camera, CheckCircle2, ChevronDown, Clock3, FileText, Image as ImageIcon, MapPin, Navigation, Ruler, Search, Signature, UserRound, X} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import {currentMembership} from '../../../lib/data'
 import {useLocale} from '../../../lib/use-preferences'
+import ManagerShell from '../manager-shell'
 import styles from './history.module.css'
 
 type HistoryRoute = {
@@ -16,14 +17,19 @@ type HistoryRoute = {
   priority?: string | null
   destination_name?: string | null
   destination_address?: string | null
+  destination_phone?: string | null
   origin_name?: string | null
   origin_address?: string | null
   order_number?: string | null
   notes?: string | null
+  driver_note?: string | null
   route_date?: string | null
   scheduled_at?: string | null
   created_at?: string | null
   completed_at?: string | null
+  route_started_at?: string | null
+  route_completed_at?: string | null
+  arrived_at?: string | null
   completion_method?: string | null
   completion_lat?: number | null
   completion_lng?: number | null
@@ -31,196 +37,64 @@ type HistoryRoute = {
   completion_distance_m?: number | null
   completion_warning?: string | null
   completion_photo_path?: string | null
+  customer_signature_path?: string | null
+  finalized_at?: string | null
+  finalization_method?: string | null
+  finalization_note?: string | null
+  finalization_issue?: string | null
+  finalization_photo_path?: string | null
 }
 
 type TeamMember = {user_id: string; users?: {email?: string | null} | {email?: string | null}[] | null}
+type Period = 'today' | '7d' | '30d' | 'all' | 'custom'
 
-const text = {
-  en: {
-    operations: 'OPERATIONS', subtitle: 'Completed deliveries, evidence, locations and driver notes.',
-    completed: 'Completed', issue: 'Issue reported', cancelled: 'Cancelled', delivery: 'Delivery',
-    pickup: 'Pickup', transfer: 'Transfer', return: 'Return to branch', route: 'Route',
-    completedAt: 'Completed', recordedAt: 'Recorded', scheduled: 'Scheduled', driver: 'Driver',
-    origin: 'Origin', destination: 'Destination', po: 'PO / order', priority: 'Priority',
-    completion: 'Completion', location: 'Completion location', accuracy: 'GPS accuracy',
-    distance: 'Distance from destination', evidence: 'Delivery evidence', notes: 'Driver notes',
-    details: 'View full delivery details', hide: 'Hide full details', openMap: 'Open completion location',
-    viewPhoto: 'View delivery photo', hidePhoto: 'Hide photo', loadingPhoto: 'Loading photo…',
-    notRecorded: 'Not recorded', noHistory: 'No route history', historyHelp: 'Completed routes and reported issues will appear here.',
-    unableLoad: 'Unable to load route history.', unablePhoto: 'Could not load delivery evidence.', branch: 'Main branch',
-  },
-  es: {
-    operations: 'OPERACIONES', subtitle: 'Entregas terminadas, evidencia, ubicaciones y notas del conductor.',
-    completed: 'Completada', issue: 'Problema reportado', cancelled: 'Cancelada', delivery: 'Entrega',
-    pickup: 'Recogida', transfer: 'Transferencia', return: 'Regreso a sucursal', route: 'Ruta',
-    completedAt: 'Completada', recordedAt: 'Registrada', scheduled: 'Programada', driver: 'Conductor',
-    origin: 'Origen', destination: 'Destino', po: 'PO / orden', priority: 'Prioridad',
-    completion: 'Completada con', location: 'Ubicación de finalización', accuracy: 'Precisión GPS',
-    distance: 'Distancia al destino', evidence: 'Evidencia de entrega', notes: 'Notas del conductor',
-    details: 'Ver todos los detalles de la entrega', hide: 'Ocultar detalles', openMap: 'Abrir ubicación de finalización',
-    viewPhoto: 'Ver foto de la entrega', hidePhoto: 'Ocultar foto', loadingPhoto: 'Cargando foto…',
-    notRecorded: 'No registrado', noHistory: 'No hay historial', historyHelp: 'Las rutas completadas e incidencias aparecerán aquí.',
-    unableLoad: 'No se pudo cargar el historial.', unablePhoto: 'No se pudo cargar la evidencia de entrega.', branch: 'Sucursal principal',
-  },
-  fr: {
-    operations: 'OPÉRATIONS', subtitle: 'Livraisons terminées, preuves, emplacements et notes du conducteur.',
-    completed: 'Terminée', issue: 'Problème signalé', cancelled: 'Annulée', delivery: 'Livraison',
-    pickup: 'Collecte', transfer: 'Transfert', return: 'Retour à la succursale', route: 'Itinéraire',
-    completedAt: 'Terminée', recordedAt: 'Enregistrée', scheduled: 'Prévue', driver: 'Conducteur',
-    origin: 'Origine', destination: 'Destination', po: 'PO / commande', priority: 'Priorité',
-    completion: 'Terminée avec', location: 'Lieu de finalisation', accuracy: 'Précision GPS',
-    distance: 'Distance jusqu’à la destination', evidence: 'Preuve de livraison', notes: 'Notes du conducteur',
-    details: 'Voir tous les détails de la livraison', hide: 'Masquer les détails', openMap: 'Ouvrir le lieu de finalisation',
-    viewPhoto: 'Voir la photo de livraison', hidePhoto: 'Masquer la photo', loadingPhoto: 'Chargement de la photo…',
-    notRecorded: 'Non enregistré', noHistory: 'Aucun historique', historyHelp: 'Les itinéraires terminés et problèmes apparaîtront ici.',
-    unableLoad: 'Impossible de charger l’historique.', unablePhoto: 'Impossible de charger la preuve de livraison.', branch: 'Succursale principale',
-  },
+const copy = {
+  en: {title: 'History', subtitle: 'Operational records, proof and what happened at every stop.', manager: 'Branch Manager', back: 'Today', filters: 'Filters', today: 'Today', sevenDays: '7 days', thirtyDays: '30 days', all: 'All', custom: 'Custom date', from: 'From', to: 'To', search: 'Search route, contact, address, PO or driver', status: 'Status', allStatuses: 'All statuses', completed: 'Completed', issue: 'Issue', cancelled: 'Cancelled', type: 'Type', allTypes: 'All types', pickup: 'Pickup', delivery: 'Delivery', return: 'Return to branch', transfer: 'Transfer', driver: 'Driver', allDrivers: 'All drivers', clear: 'Clear', routes: 'routes', completedCount: 'completed', issueCount: 'issues', route: 'Route', recorded: 'Recorded', completedAt: 'Completed', duration: 'Duration', noHistory: 'No history found', historyHelp: 'Completed routes, cancellations and reported issues will appear here.', unableLoad: 'Unable to load route history.', unableEvidence: 'Could not load evidence.', notRecorded: 'Not recorded', details: 'View details', hide: 'Hide details', overview: 'Overview', workDetails: 'Work details', proof: 'Proof of delivery', issues: 'Issues', location: 'Location', destination: 'Destination', origin: 'Origin', order: 'PO / order number', priority: 'Priority', scheduled: 'Scheduled', started: 'Started', arrived: 'Arrived', completionMethod: 'Completion method', openLocation: 'Open location', accuracy: 'GPS accuracy', distance: 'Distance at completion', notes: 'Notes', driverNotes: 'Driver notes', viewPhoto: 'View photo', hidePhoto: 'Hide photo', viewSignature: 'View signature', hideSignature: 'Hide signature', loading: 'Loading…', photo: 'Photo', signature: 'Signature', finalizationPhoto: 'Finalization photo', pod: 'POD available', phone: 'Phone', warning: 'Completion warning', issueDetails: 'Issue details', finalizationNote: 'Finalization note', arrivedLabel: 'Arrived'},
+  es: {title: 'Historial', subtitle: 'Registros operativos, evidencia y lo que ocurrió en cada parada.', manager: 'Manager de sucursal', back: 'Hoy', filters: 'Filtros', today: 'Hoy', sevenDays: '7 días', thirtyDays: '30 días', all: 'Todo', custom: 'Fecha personalizada', from: 'Desde', to: 'Hasta', search: 'Buscar ruta, contacto, dirección, PO o conductor', status: 'Estado', allStatuses: 'Todos los estados', completed: 'Completada', issue: 'Incidencia', cancelled: 'Cancelada', type: 'Tipo', allTypes: 'Todos los tipos', pickup: 'Recogida', delivery: 'Entrega', return: 'Regreso a sucursal', transfer: 'Transferencia', driver: 'Conductor', allDrivers: 'Todos los conductores', clear: 'Limpiar', routes: 'rutas', completedCount: 'completadas', issueCount: 'incidencias', route: 'Ruta', recorded: 'Registrada', completedAt: 'Completada', duration: 'Duración', noHistory: 'No se encontró historial', historyHelp: 'Las rutas completadas, canceladas e incidencias aparecerán aquí.', unableLoad: 'No se pudo cargar el historial.', unableEvidence: 'No se pudo cargar la evidencia.', notRecorded: 'No registrado', details: 'Ver detalles', hide: 'Ocultar detalles', overview: 'Resumen', workDetails: 'Detalles del trabajo', proof: 'Prueba de entrega', issues: 'Incidencias', location: 'Ubicación', destination: 'Destino', origin: 'Origen', order: 'Número de PO / orden', priority: 'Prioridad', scheduled: 'Programada', started: 'Iniciada', arrived: 'Llegada', completionMethod: 'Método de finalización', openLocation: 'Abrir ubicación', accuracy: 'Precisión GPS', distance: 'Distancia al completar', notes: 'Notas', driverNotes: 'Notas del conductor', viewPhoto: 'Ver foto', hidePhoto: 'Ocultar foto', viewSignature: 'Ver firma', hideSignature: 'Ocultar firma', loading: 'Cargando…', photo: 'Foto', signature: 'Firma', finalizationPhoto: 'Foto de finalización', pod: 'POD disponible', phone: 'Teléfono', warning: 'Advertencia de finalización', issueDetails: 'Detalles de la incidencia', finalizationNote: 'Nota de finalización', arrivedLabel: 'Llegada'},
+  fr: {title: 'Historique', subtitle: 'Enregistrements opérationnels, preuves et événements de chaque arrêt.', manager: 'Manager de succursale', back: "Aujourd’hui", filters: 'Filtres', today: "Aujourd’hui", sevenDays: '7 jours', thirtyDays: '30 jours', all: 'Tout', custom: 'Date personnalisée', from: 'Du', to: 'Au', search: 'Rechercher itinéraire, contact, adresse, PO ou conducteur', status: 'Statut', allStatuses: 'Tous les statuts', completed: 'Terminée', issue: 'Incident', cancelled: 'Annulée', type: 'Type', allTypes: 'Tous les types', pickup: 'Collecte', delivery: 'Livraison', return: 'Retour à la succursale', transfer: 'Transfert', driver: 'Conducteur', allDrivers: 'Tous les conducteurs', clear: 'Effacer', routes: 'itinéraires', completedCount: 'terminés', issueCount: 'incidents', route: 'Itinéraire', recorded: 'Enregistrée', completedAt: 'Terminée', duration: 'Durée', noHistory: 'Aucun historique trouvé', historyHelp: 'Les itinéraires terminés, annulés et incidents apparaîtront ici.', unableLoad: "Impossible de charger l’historique.", unableEvidence: 'Impossible de charger la preuve.', notRecorded: 'Non enregistré', details: 'Voir les détails', hide: 'Masquer les détails', overview: 'Résumé', workDetails: 'Détails du travail', proof: 'Preuve de livraison', issues: 'Incidents', location: 'Emplacement', destination: 'Destination', origin: 'Origine', order: 'Numéro PO / commande', priority: 'Priorité', scheduled: 'Prévue', started: 'Démarrée', arrived: 'Arrivée', completionMethod: 'Méthode de finalisation', openLocation: 'Ouvrir l’emplacement', accuracy: 'Précision GPS', distance: 'Distance à la finalisation', notes: 'Notes', driverNotes: 'Notes du conducteur', viewPhoto: 'Voir la photo', hidePhoto: 'Masquer la photo', viewSignature: 'Voir la signature', hideSignature: 'Masquer la signature', loading: 'Chargement…', photo: 'Photo', signature: 'Signature', finalizationPhoto: 'Photo de finalisation', pod: 'POD disponible', phone: 'Téléphone', warning: 'Avertissement', issueDetails: 'Détails de l’incident', finalizationNote: 'Note de finalisation', arrivedLabel: 'Arrivée'},
 } as const
 
-type HistoryCopy = (typeof text)[keyof typeof text]
+type Copy = (typeof copy)[keyof typeof copy]
 
-function emailFor(member?: TeamMember) {
-  const user = Array.isArray(member?.users) ? member?.users[0] : member?.users
-  return user?.email || ''
-}
-
-function friendlyName(email: string) {
-  if (!email) return ''
-  return email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase())
-}
-
-function typeLabel(type: string | null | undefined, c: HistoryCopy) {
-  if (type === 'pickup') return c.pickup
-  if (type === 'delivery') return c.delivery
-  if (type === 'transfer') return c.transfer
-  if (type === 'return') return c.return
-  return c.route
-}
-
-function statusLabel(status: HistoryRoute['status'], c: HistoryCopy) {
-  return status === 'completed' ? c.completed : status === 'issue' ? c.issue : c.cancelled
-}
-
-function routeMoment(route: HistoryRoute) {
-  return route.completed_at || route.created_at || route.scheduled_at || route.route_date || ''
-}
-
-function prettyDate(value: string | null | undefined, locale: string, fallback: string) {
-  if (!value) return fallback
-  const date = new Date(value.length === 10 ? `${value}T12:00:00` : value)
-  return Number.isNaN(date.getTime()) ? fallback : date.toLocaleString(locale, {dateStyle: 'medium', timeStyle: value.length === 10 ? undefined : 'short'})
-}
-
-function coordinates(route: HistoryRoute) {
-  return route.completion_lat != null && route.completion_lng != null
-    ? `${Number(route.completion_lat).toFixed(6)}, ${Number(route.completion_lng).toFixed(6)}`
-    : ''
-}
+function emailFor(member?: TeamMember) { const user = Array.isArray(member?.users) ? member?.users[0] : member?.users; return user?.email || '' }
+function friendlyName(email: string) { return email ? email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase()) : '' }
+function typeKey(type: string | null | undefined) { return type === 'pickup' || type === 'delivery' || type === 'return' || type === 'transfer' ? type : '' }
+function typeLabel(type: string | null | undefined, c: Copy) { if (type === 'pickup') return c.pickup; if (type === 'delivery') return c.delivery; if (type === 'transfer') return c.transfer; if (type === 'return') return c.return; return c.route }
+function routeMoment(route: HistoryRoute) { return route.route_completed_at || route.completed_at || route.finalized_at || route.created_at || route.scheduled_at || route.route_date || '' }
+function parseDate(value: string | null | undefined) { if (!value) return null; const date = new Date(value.length === 10 ? `${value}T12:00:00` : value); return Number.isNaN(date.getTime()) ? null : date }
+function prettyDate(value: string | null | undefined, locale: string, fallback: string) { const date = parseDate(value); return date ? date.toLocaleString(locale, {dateStyle: 'medium', timeStyle: value?.length === 10 ? undefined : 'short'}) : fallback }
+function localDateKey(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
+function durationLabel(route: HistoryRoute, _c: Copy) { const start = parseDate(route.route_started_at)?.getTime(); const end = parseDate(route.route_completed_at)?.getTime(); if (start == null || end == null || end < start) return ''; const minutes = Math.max(0, Math.round((end - start) / 60000)); if (minutes < 60) return `${minutes} min`; const hours = Math.floor(minutes / 60); const rest = minutes % 60; return rest ? `${hours}h ${rest}min` : `${hours}h` }
+function coordinates(route: HistoryRoute) { return route.completion_lat != null && route.completion_lng != null ? `${Number(route.completion_lat).toFixed(6)}, ${Number(route.completion_lng).toFixed(6)}` : '' }
+function statusLabel(route: HistoryRoute, c: Copy) { return route.status === 'completed' ? c.completed : route.status === 'issue' ? c.issue : c.cancelled }
 
 export default function ManagerHistoryPage() {
-  const {locale, t} = useLocale()
-  const c = text[locale]
-  const [routes, setRoutes] = useState<HistoryRoute[]>([])
-  const [people, setPeople] = useState<Record<string, TeamMember>>({})
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [photos, setPhotos] = useState<Record<string, string>>({})
-  const [photoLoading, setPhotoLoading] = useState<string | null>(null)
+  const {locale} = useLocale(); const c = copy[locale]
+  const [routes, setRoutes] = useState<HistoryRoute[]>([]); const [people, setPeople] = useState<Record<string, TeamMember>>({}); const [message, setMessage] = useState(''); const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState<Period>('30d'); const [fromDate, setFromDate] = useState(''); const [toDate, setToDate] = useState(''); const [search, setSearch] = useState(''); const [status, setStatus] = useState(''); const [kind, setKind] = useState(''); const [driverId, setDriverId] = useState('')
+  const [evidenceUrls, setEvidenceUrls] = useState<Record<string, string>>({}); const [evidenceLoading, setEvidenceLoading] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const membership = await currentMembership()
-      const client = getSupabase()
-      const {data, error} = await client
-        .from('routes')
-        .select('id,status,driver_id,mission_type,priority,destination_name,destination_address,origin_name,origin_address,order_number,notes,route_date,scheduled_at,created_at,completed_at,completion_method,completion_lat,completion_lng,completion_accuracy,completion_distance_m,completion_warning,completion_photo_path')
-        .eq('company_id', membership.company_id)
-        .in('status', ['completed', 'issue', 'cancelled'])
-        .limit(250)
-      if (error) throw error
-      const history = ((data || []) as HistoryRoute[]).sort((a, b) => new Date(routeMoment(b)).getTime() - new Date(routeMoment(a)).getTime())
-      setRoutes(history)
-      const ids = [...new Set(history.map(route => route.driver_id).filter((value): value is string => Boolean(value)))]
-      if (ids.length) {
-        const {data: members, error: memberError} = await client.from('company_users').select('user_id,users(email)').eq('company_id', membership.company_id).in('user_id', ids)
-        if (memberError) throw memberError
-        setPeople(Object.fromEntries(((members || []) as TeamMember[]).map(member => [member.user_id, member])))
-      } else setPeople({})
-      setMessage('')
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : c.unableLoad)
-    } finally {
-      setLoading(false)
-    }
-  }, [c.unableLoad])
-
+  const load = useCallback(async () => { setLoading(true); try { const membership = await currentMembership(); const client = getSupabase(); const {data, error} = await client.from('routes').select('id,status,driver_id,mission_type,priority,destination_name,destination_address,destination_phone,origin_name,origin_address,order_number,notes,driver_note,route_date,scheduled_at,created_at,completed_at,route_started_at,route_completed_at,arrived_at,completion_method,completion_lat,completion_lng,completion_accuracy,completion_distance_m,completion_warning,completion_photo_path,customer_signature_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path').eq('company_id', membership.company_id).in('status', ['completed', 'issue', 'cancelled']).limit(250); if (error) throw error; setRoutes(((data || []) as HistoryRoute[]).sort((a, b) => (parseDate(routeMoment(b))?.getTime() || 0) - (parseDate(routeMoment(a))?.getTime() || 0))); const ids = [...new Set(((data || []) as HistoryRoute[]).map(route => route.driver_id).filter((value): value is string => Boolean(value)))]; if (ids.length) { const {data: members, error: memberError} = await client.from('company_users').select('user_id,users(email)').eq('company_id', membership.company_id).in('user_id', ids); if (memberError) throw memberError; setPeople(Object.fromEntries(((members || []) as TeamMember[]).map(member => [member.user_id, member]))) } else setPeople({}); setMessage('') } catch (error) { setMessage(error instanceof Error ? error.message : c.unableLoad) } finally { setLoading(false) } }, [c.unableLoad])
   useEffect(() => { void load() }, [load])
+  const driverOptions = useMemo(() => Object.entries(people).map(([id, member]) => ({id, name: friendlyName(emailFor(member)), email: emailFor(member)})).sort((a, b) => a.name.localeCompare(b.name)), [people])
+  const filteredRoutes = useMemo(() => { const now = new Date(); const today = localDateKey(now); const start = new Date(now); start.setHours(0, 0, 0, 0); if (period === '7d') start.setDate(start.getDate() - 6); if (period === '30d') start.setDate(start.getDate() - 29); const query = search.trim().toLowerCase(); return routes.filter(route => { const moment = parseDate(routeMoment(route)); const dateKey = moment ? localDateKey(moment) : ''; if (period === 'today' && dateKey !== today) return false; if ((period === '7d' || period === '30d') && (!moment || moment < start)) return false; if (period === 'custom' && ((fromDate && dateKey < fromDate) || (toDate && dateKey > toDate))) return false; if (status && route.status !== status) return false; if (kind && typeKey(route.mission_type) !== kind) return false; if (driverId && route.driver_id !== driverId) return false; if (query) { const email = route.driver_id ? emailFor(people[route.driver_id]) : ''; const haystack = [route.destination_name, route.destination_address, route.origin_name, route.origin_address, route.order_number, route.notes, email].filter(Boolean).join(' ').toLowerCase(); if (!haystack.includes(query)) return false } return true }) }, [driverId, fromDate, kind, people, period, routes, search, status, toDate])
+  const completedCount = filteredRoutes.filter(route => route.status === 'completed').length; const issueCount = filteredRoutes.filter(route => route.status === 'issue').length
+  const toggleEvidence = async (route: HistoryRoute, kindName: 'photo' | 'signature' | 'finalization') => { const path = kindName === 'photo' ? route.completion_photo_path : kindName === 'signature' ? route.customer_signature_path : route.finalization_photo_path; if (!path || evidenceLoading) return; const key = `${route.id}:${kindName}`; if (evidenceUrls[key]) { setEvidenceUrls(current => { const next = {...current}; delete next[key]; return next }); return } setEvidenceLoading(key); try { const {data, error} = await getSupabase().storage.from('route-evidence').createSignedUrl(path, 60 * 20); if (error) throw error; setEvidenceUrls(current => ({...current, [key]: data.signedUrl})) } catch (error) { setMessage(error instanceof Error ? error.message : c.unableEvidence) } finally { setEvidenceLoading(null) } }
+  const clearFilters = () => { setPeriod('30d'); setFromDate(''); setToDate(''); setSearch(''); setStatus(''); setKind(''); setDriverId('') }
 
-  const togglePhoto = async (route: HistoryRoute) => {
-    if (!route.completion_photo_path || photoLoading) return
-    if (photos[route.id]) {
-      setPhotos(current => {
-        const next = {...current}
-        delete next[route.id]
-        return next
-      })
-      return
-    }
-    setPhotoLoading(route.id)
-    try {
-      const {data, error} = await getSupabase().storage.from('route-evidence').createSignedUrl(route.completion_photo_path, 60 * 20)
-      if (error) throw error
-      setPhotos(current => ({...current, [route.id]: data.signedUrl}))
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : c.unablePhoto)
-    } finally {
-      setPhotoLoading(null)
-    }
-  }
-
-  const routeCount = useMemo(() => routes.length, [routes.length])
-
-  return <main className={`app ${styles.page}`}>
-    <header className={styles.header}>
-      <Link href="/manager" className={styles.back}><ArrowLeft size={18}/>{t.home}</Link>
-      <div><span className="eyebrow">{c.operations}</span><h1>{t.history}</h1><p>{c.subtitle}</p>{!loading && <span className={styles.count}>{routeCount} {routeCount === 1 ? c.route : t.routes}</span>}</div>
-    </header>
-    {message && <p className={styles.message} role="status">{message}</p>}
-    {loading ? <section className={styles.list} aria-busy="true" aria-label="Loading history">{[1, 2, 3].map(item => <div key={item} className={styles.skeleton}/>)}</section> : <section className={styles.list}>
-      {routes.map(route => {
-        const location = coordinates(route)
-        const email = route.driver_id ? emailFor(people[route.driver_id]) : ''
-        const driver = friendlyName(email)
-        const hasDetails = Boolean(route.origin_name || route.origin_address || route.order_number || route.priority || route.scheduled_at || route.completion_method || location || route.completion_distance_m != null || route.completion_accuracy != null || route.completion_warning || route.notes || route.completion_photo_path)
-        return <article className={`${styles.route} ${styles[route.status]}`} key={route.id}>
-          <div className={styles.routeTop}>
-            <span className={styles.icon}><RouteIcon size={18}/></span>
-            <div className={styles.copy}><strong>{route.destination_name || route.destination_address || c.destination}</strong><span>{typeLabel(route.mission_type, c)} · {route.origin_address || route.origin_name || c.branch} → {route.destination_address || c.destination}</span></div>
-            <span className={styles.status}>{statusLabel(route.status, c)}</span>
-          </div>
-          <div className={styles.meta}><span><CalendarClock size={14}/>{route.completed_at ? `${c.completedAt}: ${prettyDate(route.completed_at, locale, c.notRecorded)}` : `${c.recordedAt}: ${prettyDate(routeMoment(route), locale, c.notRecorded)}`}</span>{route.completion_method && <span><Navigation size={14}/>{c.completion}: {route.completion_method.toUpperCase()}</span>}</div>
-          {hasDetails && <details className={styles.details}>
-            <summary><ClipboardList size={16}/><span className={styles.showDetails}>{c.details}</span><span className={styles.hideDetails}>{c.hide}</span><ChevronDown size={17}/></summary>
-            <div className={styles.detailGrid}>
-              <div><span>{c.driver}</span><strong>{driver || email || c.notRecorded}</strong>{email && driver && <small>{email}</small>}</div>
-              <div><span>{c.priority}</span><strong>{route.priority || c.notRecorded}</strong></div>
-              <div><span>{c.po}</span><strong>{route.order_number || c.notRecorded}</strong></div>
-              <div><span>{c.scheduled}</span><strong>{prettyDate(route.scheduled_at || route.route_date, locale, c.notRecorded)}</strong></div>
-              <div className={styles.full}><span>{c.origin}</span><strong>{route.origin_name || route.origin_address || c.branch}</strong><small>{route.origin_address && route.origin_name ? route.origin_address : ''}</small></div>
-              <div className={styles.full}><span>{c.destination}</span><strong>{route.destination_name || route.destination_address || c.notRecorded}</strong><small>{route.destination_address && route.destination_name ? route.destination_address : ''}</small></div>
-              {location && <div className={styles.full}><span>{c.location}</span><strong>{location}</strong><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`} target="_blank" rel="noreferrer"><MapPin size={14}/>{c.openMap}</a></div>}
-              {route.completion_accuracy != null && <div><span>{c.accuracy}</span><strong>±{Math.round(route.completion_accuracy)} m</strong></div>}
-              {route.completion_distance_m != null && <div><span>{c.distance}</span><strong><Ruler size={14}/>{Math.round(route.completion_distance_m)} m</strong></div>}
-            </div>
-            {route.completion_warning && <p className={styles.warning}>{route.completion_warning}</p>}
-            {route.notes && <section className={styles.notes}><span>{c.notes}</span><p>{route.notes}</p></section>}
-            {route.completion_photo_path && <div className={styles.evidence}><span>{c.evidence}</span><button type="button" onClick={() => void togglePhoto(route)}><ImageIcon size={16}/>{photoLoading === route.id ? c.loadingPhoto : photos[route.id] ? c.hidePhoto : c.viewPhoto}</button>{photos[route.id] && <div className={styles.photoWrap}><img src={photos[route.id]} alt={`${c.evidence}: ${route.destination_name || route.destination_address || c.route}`}/><button type="button" className={styles.closePhoto} onClick={() => void togglePhoto(route)} aria-label={c.hidePhoto}><X size={16}/></button></div>}</div>}
-          </details>}
-        </article>
-      })}
-      {!routes.length && <section className={styles.empty}><RouteIcon size={27}/><h2>{c.noHistory}</h2><p>{c.historyHelp}</p></section>}
-    </section>}
-    <nav className="nav" aria-label="Manager navigation"><Link href="/manager"><Home size={17}/><span>{t.home}</span></Link><Link href="/routes"><RouteIcon size={17}/><span>{t.routes}</span></Link><Link href="/manager/history" aria-current="page"><History size={17}/><span>{t.history}</span></Link><Link href="/manager/more"><MoreHorizontal size={17}/><span>{t.more}</span></Link></nav>
-  </main>
+  return <ManagerShell active="history" roleLabel={c.manager}><div className={styles.page}>
+    <header className={styles.header}><div className={styles.headerCopy}><span className={styles.eyebrow}>OPERATIONS</span><h1>{c.title}</h1><p>{c.subtitle}</p></div><Link href="/manager" className={styles.back}>{c.back}</Link></header>
+    <section className={styles.filters} aria-label={c.filters}><div className={styles.periods}>{(['today', '7d', '30d', 'all', 'custom'] as Period[]).map(value => <button type="button" key={value} className={period === value ? styles.periodActive : ''} onClick={() => setPeriod(value)}>{value === 'today' ? c.today : value === '7d' ? c.sevenDays : value === '30d' ? c.thirtyDays : value === 'all' ? c.all : c.custom}</button>)}</div><label className={styles.search}><Search size={17}/><input value={search} onChange={event => setSearch(event.target.value)} placeholder={c.search} aria-label={c.search}/></label><div className={styles.selects}><label><span>{c.status}</span><select value={status} onChange={event => setStatus(event.target.value)}><option value="">{c.allStatuses}</option><option value="completed">{c.completed}</option><option value="issue">{c.issue}</option><option value="cancelled">{c.cancelled}</option></select></label><label><span>{c.type}</span><select value={kind} onChange={event => setKind(event.target.value)}><option value="">{c.allTypes}</option><option value="pickup">{c.pickup}</option><option value="delivery">{c.delivery}</option><option value="return">{c.return}</option><option value="transfer">{c.transfer}</option></select></label>{driverOptions.length > 0 && <label><span>{c.driver}</span><select value={driverId} onChange={event => setDriverId(event.target.value)}><option value="">{c.allDrivers}</option>{driverOptions.map(driver => <option value={driver.id} key={driver.id}>{driver.name || driver.email}</option>)}</select></label>}</div>{period === 'custom' && <div className={styles.dateFields}><label><span>{c.from}</span><input type="date" value={fromDate} onChange={event => setFromDate(event.target.value)}/></label><label><span>{c.to}</span><input type="date" value={toDate} onChange={event => setToDate(event.target.value)}/></label></div>}<button type="button" className={styles.clear} onClick={clearFilters}>{c.clear}</button></section>
+    {!loading && <p className={styles.summary}><strong>{filteredRoutes.length}</strong> {c.routes}<span>·</span><strong>{completedCount}</strong> {c.completedCount}<span>·</span><strong>{issueCount}</strong> {c.issueCount}</p>}{message && <p className={styles.message} role="status">{message}</p>}
+    {loading ? <section className={styles.list} aria-busy="true" aria-label={c.loading}>{[1, 2, 3].map(item => <div key={item} className={styles.skeleton}/>)}</section> : <section className={styles.list}>{filteredRoutes.map(route => <HistoryRow key={route.id} route={route} people={people} c={c} locale={locale} evidenceUrls={evidenceUrls} evidenceLoading={evidenceLoading} onToggleEvidence={toggleEvidence}/>)}{!filteredRoutes.length && <section className={styles.empty}><Clock3 size={28}/><h2>{c.noHistory}</h2><p>{c.historyHelp}</p></section>}</section>}
+  </div></ManagerShell>
 }
+
+function HistoryRow({route, people, c, locale, evidenceUrls, evidenceLoading, onToggleEvidence}: {route: HistoryRoute; people: Record<string, TeamMember>; c: Copy; locale: string; evidenceUrls: Record<string, string>; evidenceLoading: string | null; onToggleEvidence: (route: HistoryRoute, kind: 'photo' | 'signature' | 'finalization') => Promise<void>}) {
+  const email = route.driver_id ? emailFor(people[route.driver_id]) : ''; const driver = friendlyName(email); const location = coordinates(route); const hasEvidence = Boolean(route.completion_photo_path || route.customer_signature_path || route.finalization_photo_path); const hasIssue = route.status === 'issue' || Boolean(route.finalization_issue || route.completion_warning); const duration = durationLabel(route, c); const destination = route.destination_name || route.destination_address || c.destination
+  return <article className={`${styles.route} ${styles[`route_${route.status}`]}`}><div className={styles.routeMain}><div className={styles.routeDate}><CalendarDays size={16}/><span>{prettyDate(route.route_date || routeMoment(route), locale, c.notRecorded)}</span></div><div className={styles.routeIdentity}><span className={styles.routeType}>{typeLabel(route.mission_type, c)}</span><h2>{destination}</h2><p>{route.destination_address || route.origin_address || ''}</p></div><div className={styles.routeDriver}><UserRound size={16}/><span>{driver || email || c.notRecorded}</span></div><div className={styles.routeStatus}><span className={styles.status}>{statusLabel(route, c)}</span>{hasEvidence && <span className={styles.evidenceBadge}><CheckCircle2 size={14}/>{c.pod}</span>}{hasIssue && <span className={styles.issueBadge}><AlertTriangle size={14}/>{c.issue}</span>}</div><div className={styles.routeTiming}><span>{route.completed_at || route.route_completed_at ? `${c.completedAt}: ${prettyDate(route.route_completed_at || route.completed_at, locale, c.notRecorded)}` : `${c.recorded}: ${prettyDate(routeMoment(route), locale, c.notRecorded)}`}</span>{duration && <strong><Clock3 size={15}/>{duration}</strong>}</div></div><details className={styles.details}><summary><FileText size={16}/><span className={styles.showDetails}>{c.details}</span><span className={styles.hideDetails}>{c.hide}</span><ChevronDown size={17}/></summary><div className={styles.detailSections}><section><h3>{c.overview}</h3><div className={styles.detailGrid}><Detail label={c.type} value={typeLabel(route.mission_type, c)}/><Detail label={c.driver} value={driver || email || c.notRecorded} extra={email && driver ? email : undefined}/><Detail label={c.started} value={prettyDate(route.route_started_at, locale, c.notRecorded)}/><Detail label={c.completedAt} value={prettyDate(route.route_completed_at || route.completed_at || route.finalized_at, locale, c.notRecorded)}/>{duration && <Detail label={c.duration} value={duration}/>} {route.completion_method && <Detail label={c.completionMethod} value={route.completion_method}/>}</div></section>{(route.origin_name || route.origin_address || route.destination_name || route.destination_address || route.order_number || route.priority || route.notes || route.driver_note || route.destination_phone) && <section><h3>{c.workDetails}</h3><div className={styles.detailGrid}>{(route.origin_name || route.origin_address) && <Detail label={c.origin} value={route.origin_name || route.origin_address} extra={route.origin_name && route.origin_address ? route.origin_address : undefined}/>} {(route.destination_name || route.destination_address) && <Detail label={c.destination} value={route.destination_name || route.destination_address} extra={route.destination_name && route.destination_address ? route.destination_address : undefined}/>} {route.destination_phone && <Detail label={c.phone} value={route.destination_phone}/>} {route.order_number && <Detail label={c.order} value={route.order_number}/>} {route.priority && <Detail label={c.priority} value={route.priority}/>} {route.scheduled_at && <Detail label={c.scheduled} value={prettyDate(route.scheduled_at, locale, c.notRecorded)}/>} {route.notes && <Detail label={c.notes} value={route.notes} full/>} {route.driver_note && <Detail label={c.driverNotes} value={route.driver_note} full/>}</div></section>}{hasEvidence && <section><h3>{c.proof}</h3><div className={styles.evidenceActions}>{route.completion_photo_path && <EvidenceButton icon={<Camera size={16}/>} label={evidenceLoading === `${route.id}:photo` ? c.loading : evidenceUrls[`${route.id}:photo`] ? c.hidePhoto : c.viewPhoto} onClick={() => void onToggleEvidence(route, 'photo')}/>} {route.customer_signature_path && <EvidenceButton icon={<Signature size={16}/>} label={evidenceLoading === `${route.id}:signature` ? c.loading : evidenceUrls[`${route.id}:signature`] ? c.hideSignature : c.viewSignature} onClick={() => void onToggleEvidence(route, 'signature')}/>} {route.finalization_photo_path && <EvidenceButton icon={<ImageIcon size={16}/>} label={evidenceLoading === `${route.id}:finalization` ? c.loading : c.finalizationPhoto} onClick={() => void onToggleEvidence(route, 'finalization')}/>}</div><EvidencePreview route={route} kind="photo" url={evidenceUrls[`${route.id}:photo`]} onToggle={onToggleEvidence} label={c.photo}/><EvidencePreview route={route} kind="signature" url={evidenceUrls[`${route.id}:signature`]} onToggle={onToggleEvidence} label={c.signature}/><EvidencePreview route={route} kind="finalization" url={evidenceUrls[`${route.id}:finalization`]} onToggle={onToggleEvidence} label={c.photo}/></section>}{(hasIssue || route.finalization_note) && <section className={styles.issueSection}><h3><AlertTriangle size={16}/>{c.issues}</h3>{route.finalization_issue && <p><strong>{c.issueDetails}:</strong> {route.finalization_issue}</p>}{route.completion_warning && <p><strong>{c.warning}:</strong> {route.completion_warning}</p>}{route.finalization_note && <p><strong>{c.finalizationNote}:</strong> {route.finalization_note}</p>}</section>}{(location || route.completion_accuracy != null || route.completion_distance_m != null || route.arrived_at) && <section><h3><MapPin size={16}/>{c.location}</h3><div className={styles.detailGrid}>{route.arrived_at && <Detail label={c.arrivedLabel} value={prettyDate(route.arrived_at, locale, c.notRecorded)}/>} {location && <div className={styles.full}><span>{c.location}</span><strong>{location}</strong><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`} target="_blank" rel="noreferrer"><Navigation size={14}/>{c.openLocation}</a></div>} {route.completion_accuracy != null && <Detail label={c.accuracy} value={`±${Math.round(route.completion_accuracy)} m`}/>} {route.completion_distance_m != null && <Detail label={c.distance} value={`${Math.round(route.completion_distance_m)} m`} icon={<Ruler size={14}/>}/>}</div></section>}</div></details></article>
+}
+
+function Detail({label, value, extra, full, icon}: {label: string; value?: string | null; extra?: string | null; full?: boolean; icon?: React.ReactNode}) { return <div className={full ? styles.full : undefined}><span>{label}</span><strong>{icon}{value || ''}</strong>{extra && <small>{extra}</small>}</div> }
+function EvidenceButton({icon, label, onClick}: {icon: React.ReactNode; label: string; onClick: () => void}) { return <button type="button" onClick={onClick}>{icon}{label}</button> }
+function EvidencePreview({route, kind, url, onToggle, label}: {route: HistoryRoute; kind: 'photo' | 'signature' | 'finalization'; url?: string; onToggle: (route: HistoryRoute, kind: 'photo' | 'signature' | 'finalization') => Promise<void>; label: string}) { if (!url) return null; return <div className={styles.evidencePreview}><img src={url} alt={kind === 'signature' ? 'Signature' : label}/><button type="button" onClick={() => void onToggle(route, kind)} aria-label="Close"><X size={16}/></button></div> }

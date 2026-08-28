@@ -43,14 +43,15 @@ const isCoordinate=(lat:number|null|undefined,lng:number|null|undefined):lat is 
 
 function routeColor(status?:string|null){
  if(status==='issue')return '#dc2626'
+ if(status==='completed')return '#16a34a'
  if(status==='active'||status==='paused')return '#16a34a'
  return '#eab308'
 }
 
 function statusLabel(status:string|undefined|null,locale:string){
- if(locale==='es')return status==='issue'?'Incidencia':status==='active'||status==='paused'?'Ruta actual':'Pendiente'
- if(locale==='fr')return status==='issue'?'Incident':status==='active'||status==='paused'?'Itinéraire actuel':'En attente'
- return status==='issue'?'Issue':status==='active'||status==='paused'?'Current route':'Pending'
+ if(locale==='es')return status==='issue'?'Incidencia':status==='completed'?'Completada':status==='active'||status==='paused'?'Ruta actual':'Pendiente'
+ if(locale==='fr')return status==='issue'?'Incident':status==='completed'?'Terminé':status==='active'||status==='paused'?'Itinéraire actuel':'En attente'
+ return status==='issue'?'Issue':status==='completed'?'Completed':status==='active'||status==='paused'?'Current route':'Pending'
 }
 
 function routeMarker(number:number,color:string){

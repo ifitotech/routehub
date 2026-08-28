@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useMemo, useState} from 'react'
-import {AlertTriangle, ArrowRight, ClipboardList, ExternalLink, MapPin, Navigation, Radio, Route as RouteIcon, Truck} from 'lucide-react'
+import {AlertTriangle, ArrowRight, ExternalLink, MapPin, Navigation, Radio, Route as RouteIcon, Truck} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {createRealtimeRefresh} from '../../lib/realtime-sync'
 import {formatLocationAge, loadActiveDrivingSessions, type DrivingSession} from '../../lib/driving-session'
@@ -15,18 +15,25 @@ import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
 const InteractiveLiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
 const OperationsMap=dynamic(()=>import('../operations-map'),{ssr:false})
-const ClipboardIcon=ClipboardList
 
-type LiveRouteRecord={id:string;driver_id:string|null;mission_type:string|null;status:string|null;destination_name:string|null;destination_address:string|null;origin_address:string|null;origin_lat:number|null;origin_lng:number|null;destination_lat:number|null;destination_lng:number|null;scheduled_at:string|null;route_date:string|null;position:number|null;priority:string|null}
+type LiveRouteRecord={id:string;driver_id:string|null;mission_type:string|null;status:string|null;destination_name:string|null;destination_address:string|null;origin_address:string|null;origin_lat:number|null;origin_lng:number|null;destination_lat:number|null;destination_lng:number|null;scheduled_at:string|null;route_date:string|null;position:number|null;priority:string|null;route_started_at:string|null;route_completed_at:string|null}
 type Person={user_id:string;email:string|null;role:string|null}
 
 function todayValue(){const now=new Date();return new Date(now.getTime()-now.getTimezoneOffset()*60_000).toISOString().slice(0,10)}
 function routeType(value:string|null|undefined,t:Record<string,string>){return value==='pickup'?t.pickup:value==='delivery'?t.delivery:value==='transfer'?t.transfer:value==='return'?t.return:t.routes}
 function timeLabel(value:string|null|undefined){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(date)}
+function elapsedLabel(start:string|null|undefined,now=Date.now()){
+  if(!start)return ''
+  const started=new Date(start).getTime()
+  if(!Number.isFinite(started))return ''
+  const minutes=Math.max(0,Math.floor((now-started)/60_000))
+  const hours=Math.floor(minutes/60)
+  return hours?`${hours}h ${minutes%60}m`:`${minutes} min`
+}
 function personName(email:string|null|undefined){if(!email)return 'Team member';const name=email.split('@')[0].replace(/[._-]+/g,' ').trim();return name?name.replace(/\b\w/g,char=>char.toUpperCase()):email}
 function openStreetMapLink(lat:number,lng:number){return `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lng.toFixed(6)}#map=15/${lat.toFixed(6)}/${lng.toFixed(6)}`}
 
-export default function LiveRoute({companyId,branchId,expanded=false,showToday=true,overview=false}:{companyId:string;branchId?:string|null;expanded?:boolean;showToday?:boolean;overview?:boolean}){
+export default function LiveRoute({companyId,branchId,expanded=false,showToday=true,overview=false,compact=false}:{companyId:string;branchId?:string|null;expanded?:boolean;showToday?:boolean;overview?:boolean;compact?:boolean}){
   const {t,locale}=useLocale()
   const [sessions,setSessions]=useState<DrivingSession[]>([])
   const [routes,setRoutes]=useState<LiveRouteRecord[]>([])
@@ -41,7 +48,7 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
     setLoading(true)
     try{
       const client=getSupabase()
-      let routeQuery=client.from('routes').select('id,driver_id,mission_type,status,destination_name,destination_address,origin_address,origin_lat,origin_lng,destination_lat,destination_lng,scheduled_at,route_date,position,priority').eq('company_id',companyId).in('status',['published','pending','active','paused','issue']).order('position')
+      let routeQuery=client.from('routes').select('id,driver_id,mission_type,status,destination_name,destination_address,origin_address,origin_lat,origin_lng,destination_lat,destination_lng,scheduled_at,route_date,position,priority,route_started_at,route_completed_at').eq('company_id',companyId).in('status',['published','pending','active','paused','issue','completed']).order('position')
       if(branchId)routeQuery=routeQuery.eq('branch_id',branchId)
       const [sessionResult,routeResult,peopleResult,branchResult]=await Promise.all([
         loadActiveDrivingSessions(companyId,branchId),
@@ -101,18 +108,53 @@ export default function LiveRoute({companyId,branchId,expanded=false,showToday=t
   const selectedIsPrimary=Boolean(selected&&selected.driver_id===primaryDriverId)
   const todayRoutes=useMemo(()=>routes.filter(route=>{const date=route.route_date||(route.scheduled_at?route.scheduled_at.slice(0,10):'');return date===todayValue()}).sort((a,b)=>Number(a.position||0)-Number(b.position||0)),[routes])
   const visibleToday=todayRoutes.slice(0,expanded?50:5)
-  const overviewRoutes:OperationsRoute[]=todayRoutes.filter(route=>['published','pending','active','paused','issue'].includes(route.status||'')).map(route=>({id:route.id,origin_address:route.origin_address,destination_address:route.destination_address,destination_name:route.destination_name,origin_lat:route.origin_lat,origin_lng:route.origin_lng,destination_lat:route.destination_lat,destination_lng:route.destination_lng,status:route.status,driver_id:route.driver_id,position:route.position}))
-  const overviewDrivers:OperationsDriverLocation[]=sessions.filter(session=>session.last_lat!=null&&session.last_lng!=null&&Date.now()-new Date(session.last_updated_at).getTime()<=10*60*1000).map(session=>{const active=routes.find(route=>route.driver_id===session.driver_id&&['active','paused'].includes(route.status||''));const next=routes.find(route=>route.driver_id===session.driver_id&&['published','pending'].includes(route.status||''));return {id:session.id,driver_id:session.driver_id,location:{lat:Number(session.last_lat),lng:Number(session.last_lng)},label:labels.get(session.driver_id)||t.driver,status:active?'on_route':'driving',nextStop:active?.destination_name||next?.destination_name||next?.destination_address||null}})
+  const overviewRoutes:OperationsRoute[]=todayRoutes.filter(route=>['published','pending','active','paused','issue','completed'].includes(route.status||'')).map(route=>({id:route.id,origin_address:route.origin_address,destination_address:route.destination_address,destination_name:route.destination_name,origin_lat:route.origin_lat,origin_lng:route.origin_lng,destination_lat:route.destination_lat,destination_lng:route.destination_lng,status:route.status,driver_id:route.driver_id,position:route.position}))
+  const issueCount=overviewRoutes.filter(route=>route.status==='issue').length
+  const overviewDrivers:OperationsDriverLocation[]=sessions.filter(session=>session.last_lat!=null&&session.last_lng!=null).map(session=>{const active=routes.find(route=>route.driver_id===session.driver_id&&['active','paused'].includes(route.status||''));const next=routes.find(route=>route.driver_id===session.driver_id&&['published','pending'].includes(route.status||''));const fresh=Date.now()-new Date(session.last_updated_at).getTime()<=10*60*1000;return {id:session.id,driver_id:session.driver_id,location:{lat:Number(session.last_lat),lng:Number(session.last_lng)},updatedAt:session.last_updated_at,label:labels.get(session.driver_id)||t.driver,status:fresh?(active?'on_route':'driving'):'unavailable',nextStop:active?.destination_name||next?.destination_name||next?.destination_address||null}})
   const hasTodayRoute=Boolean(selected&&selectedRoutes.length)
   const plannedRoutes=todayRoutes.filter(route=>['published','pending','active','paused'].includes(route.status||''))
   const canShowLocationOnlyMap=Boolean(selected&&hasLocation)
   if(!companyId)return null
 
+  if(compact){
+    const compactTitle=locale==='es'?'Operación en vivo':locale==='fr'?'Opération en direct':'Live operation'
+    const noOperation=locale==='es'?'No hay una operación activa ahora mismo.':locale==='fr'?'Aucune opération active pour le moment.':'No active operation right now.'
+    const drivingDay=locale==='es'?'Jornada activa':locale==='fr'?'Journée active':'Driving Day active'
+    const noRoute=locale==='es'?'No hay una ruta iniciada.':locale==='fr'?'Aucun itinéraire commencé.':'No route started.'
+    const startedLabel=locale==='es'?'Ruta iniciada':locale==='fr'?'Itinéraire commencé':'Route started'
+    const elapsedText=locale==='es'?'transcurrido':locale==='fr'?'écoulé':'elapsed'
+    const stopLabel=locale==='es'?'Parada':locale==='fr'?'Arrêt':'Stop'
+    const viewRoute=locale==='es'?'Ver ruta':locale==='fr'?'Voir l’itinéraire':'View route'
+    const viewMap=locale==='es'?'Ver en mapa':locale==='fr'?'Voir sur la carte':'View on map'
+    const currentStops=selectedRoutes.filter(route=>route.status!=='cancelled')
+    const stopIndex=selectedRoute?currentStops.findIndex(route=>route.id===selectedRoute.id):-1
+    return <section className={styles.compactSection} aria-label={compactTitle}>
+      <div className={styles.compactHeader}><div><span className={styles.compactEyebrow}>{compactTitle}</span><h2>{selected?labels.get(selected.driver_id)||t.driver:noOperation}</h2></div>{selected&&<span className={`${styles.compactStatus} ${hasLocation?styles.compactStatusLive:styles.compactStatusStale}`}><i/>{hasLocation?freshnessLabel:t.locationUnavailable}</span>}</div>
+      {error&&<p className={styles.compactError} role="status">{error}</p>}
+      {loading?<div className={styles.compactLoading}>{t.loading}</div>:!selected?<div className={styles.compactEmpty}><Radio size={20}/><strong>{noOperation}</strong></div>:!selectedRoute?<div className={styles.compactEmpty}><Radio size={20}/><div><strong>{drivingDay}</strong><span>{noRoute}</span></div></div>:<>
+        <div className={styles.compactRoute}><div className={styles.compactRouteTitle}><span className={styles.compactRouteIcon}><Truck size={18}/></span><div><strong>{selectedRoute.destination_name||selectedRoute.destination_address||t.currentDestination}</strong><span>{routeType(selectedRoute.mission_type,t)} · {selectedRoute.status}</span></div></div><span className={styles.compactPosition}>{stopIndex>=0?`${stopLabel} ${stopIndex+1} / ${currentStops.length}`:stopLabel}</span></div>
+        <div className={styles.compactMeta}>{selectedRoute.route_started_at&&<span>{startedLabel} {timeLabel(selectedRoute.route_started_at)} · {elapsedLabel(selectedRoute.route_started_at)} {elapsedText}</span>}<span>{formatLocationAge(selected.last_updated_at,Date.now(),{unavailable:t.locationUnavailable,justNow:t.updatedJustNow,minute:`${t.lastUpdated} 1 min ago`,minutes:`${t.lastUpdated} {n} min ago`,hours:`${t.lastUpdated} {n} hr ago`})}{selected.last_accuracy!=null?` · ±${Math.round(selected.last_accuracy)} m`:''}</span></div>
+        <div className={styles.compactActions}><Link href="/routes/manage">{viewRoute}<ArrowRight size={15}/></Link><Link href="/routes/live">{viewMap}<MapPin size={15}/></Link></div>
+      </>}
+    </section>
+  }
+
   return <>
     <section className={`${styles.section} ${expanded?styles.expanded:''}`} aria-labelledby="live-route-title">
       <div className={styles.sectionHeader}><h2 id="live-route-title">{t.liveRoute}</h2>{sessions.length>0&&<span className={styles.liveBadge}><i/>{t.live} · {sessions.length}</span>}</div>
       {error&&<p className="muted" role="status">{error}</p>}
-      {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:overview?<>{overviewRoutes.length===0&&overviewDrivers.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:expanded?<div className={styles.operationsConsole}><div className={styles.mapCard}><OperationsMap routes={overviewRoutes} driverLocations={overviewDrivers} locale={locale} interactive/></div><aside className={styles.operationsSide}><header><span><Radio size={15}/>{t.live}</span><strong>{overviewDrivers.length} {overviewDrivers.length===1?t.driver:`${t.driver}s`}</strong><small>{overviewRoutes.length} {t.routes.toLowerCase()}</small></header><section className={styles.operationsList}>{overviewDrivers.length?overviewDrivers.map(driver=><div className={styles.operationsDriver} key={driver.id}><span className={styles.operationsDriverIcon}><Truck size={17}/></span><div><strong>{driver.label||t.driver}</strong><small>{driver.nextStop||t.noActiveRoutes}</small></div><i /></div>):<div className={styles.operationsEmpty}><Truck size={19}/><span>{t.noActiveDrivers}</span></div>}</section><section className={styles.operationsHealth}><span><AlertTriangle size={16}/></span><div><strong>{overviewRoutes.filter(route=>route.status==='issue').length||'0'} {t.issues}</strong><small>{overviewRoutes.filter(route=>route.status==='issue').length?t.requireAttention:t.allSystemsNormal}</small></div></section><Link className={styles.operationsManage} href="/routes/manage"><ClipboardIcon/>{t.manageRoutes}<ArrowRight size={15}/></Link></aside></div>:<div className={styles.mapCard}><OperationsMap routes={overviewRoutes} driverLocations={overviewDrivers} locale={locale} interactive/></div>}</>:sessions.length===0&&plannedRoutes.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:sessions.length===0?<RoutePlanMap locale="en" originAddress={plannedRoutes[0]?.origin_address} stops={plannedRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||undefined}))}/>:!hasTodayRoute&&!canShowLocationOnlyMap?<div className={styles.empty}><Radio size={20}/><div><strong>{t.noActiveRoutes}</strong><span>{labels.get(selected?.driver_id||'')||t.driver}: {t.noRoutesToday}</span></div></div>:<>
+      {loading?<div className={styles.empty}><Radio size={18}/><span>{t.loading}</span></div>:overview?<>{overviewRoutes.length===0&&overviewDrivers.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:expanded?<div className={styles.operationsConsole}><div className={styles.mapCard}><OperationsMap routes={overviewRoutes} driverLocations={overviewDrivers} locale={locale} interactive/></div><aside className={styles.operationsSide}>
+        <header><span><Radio size={15}/>{t.live}</span><strong>{overviewDrivers.length} {overviewDrivers.length===1?t.driver:`${t.driver}s`}</strong><small>{overviewRoutes.length} {t.routes.toLowerCase()}</small></header>
+        {sessions.length>1&&<div className={styles.people} aria-label={t.driver}>{sessions.map(session=><button className={`${styles.person} ${session.driver_id===selected?.driver_id?styles.personActive:''}`} key={session.id} onClick={()=>setSelectedDriver(session.driver_id)}>{labels.get(session.driver_id)||t.driver}</button>)}</div>}
+        {!selected?<div className={styles.operationsEmpty}><Truck size={19}/><strong>{t.noActiveDrivers}</strong></div>:<section className={styles.operationSummary}>
+          <div className={styles.operationSummaryHeader}><div><span className={styles.operationEyebrow}>{selectedRoute?t.currentRoute:t.liveRoute}</span><strong>{labels.get(selected.driver_id)||t.driver}</strong></div><span className={`${styles.freshnessBadge} ${locationIsFresh?styles.freshnessLive:styles.freshnessStale}`}><i/>{locationIsFresh?freshnessLabel:t.locationUnavailable}</span></div>
+          <div className={styles.operationStatus}>{selectedRoute?<><strong>{selectedRoute.destination_name||selectedRoute.destination_address||t.currentDestination}</strong><span>{routeType(selectedRoute.mission_type,t)} · {selectedRoute.status}</span></>:<><strong>{t.liveRoute}</strong><span>{locale==='es'?'Jornada activa · sin ruta iniciada':locale==='fr'?'Journée active · aucun itinéraire commencé':'Driving Day active · no route started'}</span></>}</div>
+          {selectedRoute&&<div className={styles.operationFacts}><span><b>{t.currentStop}</b>{selectedRoutes.findIndex(route=>route.id===selectedRoute.id)+1} / {selectedRoutes.length}</span>{selectedRoute.route_started_at&&<span><b>{locale==='es'?'Iniciada':locale==='fr'?'Commencé':'Started'}</b>{timeLabel(selectedRoute.route_started_at)} · {elapsedLabel(selectedRoute.route_started_at)}</span>}<span><b>{t.lastUpdated}</b>{formatLocationAge(selected.last_updated_at,Date.now(),{unavailable:t.locationUnavailable,justNow:t.updatedJustNow,minute:`${t.lastUpdated} 1 min ago`,minutes:`${t.lastUpdated} {n} min ago`,hours:`${t.lastUpdated} {n} hr ago`})}</span></div>}
+          {!selectedRoute&&selectedNext&&<div className={styles.operationNext}><b>{t.nextRoute}</b><span>{routeType(selectedNext.mission_type,t)} · {selectedNext.destination_name||selectedNext.destination_address}</span></div>}
+          <div className={styles.operationActions}><Link href="/routes/manage">{locale==='es'?'Ver ruta':locale==='fr'?'Voir l’itinéraire':'View route'}<ArrowRight size={15}/></Link></div>
+        </section>}
+        {issueCount>0&&<section className={styles.operationsHealth}><span><AlertTriangle size={16}/></span><div><strong>{issueCount} {t.issues}</strong><small>{t.requireAttention}</small></div></section>}
+      </aside></div>:<div className={styles.mapCard}><OperationsMap routes={overviewRoutes} driverLocations={overviewDrivers} locale={locale} interactive/></div>}</>:sessions.length===0&&plannedRoutes.length===0?<div className={styles.empty}><MapPin size={20}/><div><strong>{t.noLiveRoutes}</strong><span>{t.driverLocationWillAppear}</span></div></div>:sessions.length===0?<RoutePlanMap locale="en" originAddress={plannedRoutes[0]?.origin_address} stops={plannedRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||undefined}))}/>:!hasTodayRoute&&!canShowLocationOnlyMap?<div className={styles.empty}><Radio size={20}/><div><strong>{t.noActiveRoutes}</strong><span>{labels.get(selected?.driver_id||'')||t.driver}: {t.noRoutesToday}</span></div></div>:<>
         {sessions.length>1&&<div className={styles.people} aria-label={t.driver}>{sessions.map(session=><button className={`${styles.person} ${session.driver_id===selected?.driver_id?styles.personActive:''}`} key={session.id} onClick={()=>setSelectedDriver(session.driver_id)}>{labels.get(session.driver_id)||t.driver}</button>)}</div>}
         <div className={styles.mapCard}>
           <InteractiveLiveRouteMap originAddress={selectedRoute?.origin_address} destinationAddress={destination} originCoordinate={selectedRoute?.origin_lat!=null&&selectedRoute.origin_lng!=null?{lat:Number(selectedRoute.origin_lat),lng:Number(selectedRoute.origin_lng)}:null} destinationCoordinate={selectedRoute?.destination_lat!=null&&selectedRoute.destination_lng!=null?{lat:Number(selectedRoute.destination_lat),lng:Number(selectedRoute.destination_lng)}:null} driverLocation={hasLocation?{lat:Number(selected?.last_lat),lng:Number(selected?.last_lng)}:null} driverUpdatedAt={selected?.last_updated_at} title={t.liveRoute}/>

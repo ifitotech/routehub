@@ -42,6 +42,16 @@
   .lockedRoute .actions{grid-column:4}
 }
 
+.headerActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.reorderToggle{min-height:42px;padding:0 14px;border:1px solid var(--rh-border);border-radius:12px;background:var(--rh-surface);color:var(--rh-primary);font:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease,transform 140ms ease}.reorderToggle:hover{background:var(--rh-primary-soft);border-color:color-mix(in srgb,var(--rh-primary) 35%,var(--rh-border))}.reorderToggle:active{transform:scale(.985)}
+.routeSectionLabel{margin:8px 4px -2px;color:var(--rh-text-secondary);font-size:11px;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
+.gripPlaceholder{width:28px;height:54px;display:block;flex:none}
+.routeMeta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin-top:8px;color:var(--rh-text-secondary);font-size:11px}.routeMeta span{display:inline-flex;align-items:center;gap:4px}.routeMeta svg{color:var(--rh-primary)}
+.completedRoute{background:var(--rh-success-soft);border-color:color-mix(in srgb,var(--rh-success) 23%,var(--rh-border));box-shadow:none}.completedRoute:hover{transform:none;border-color:color-mix(in srgb,var(--rh-success) 35%,var(--rh-border))}.completedPosition{background:#d8f5e7;color:var(--rh-success)}.issueRoute{border-color:color-mix(in srgb,var(--rh-warning) 45%,var(--rh-border));background:var(--rh-warning-soft)}.issuePosition{background:#ffedc4;color:#b45309}
+.historyCompleted{background:var(--rh-success-soft)!important}.history>article{min-width:0}.history>article div{min-width:0}.history>article div b,.history>article div span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:720px){.headerActions{width:100%;display:grid;grid-template-columns:1fr 1fr}.headerActions .primary,.reorderToggle{width:100%;justify-content:center}.tabs{overflow-x:auto}.tabs button{min-width:110px;white-space:nowrap}.gripPlaceholder{width:30px;height:44px}.routeMeta{font-size:10px}.routeSectionLabel{margin-top:6px}.completedRoute .actions,.issueRoute .actions{grid-column:1/-1;border-top:1px solid var(--rh-border);padding-top:10px}.completedRoute .routeMain,.issueRoute .routeMain{grid-column:3}}
+@media(prefers-reduced-motion:reduce){.reorderToggle{transition:none}}
+
 /* Editing a route now exposes the operational stop fields without changing
    the queue card layout. Keep full addresses and instructions readable. */
 .editor label:nth-child(3),.editor label:nth-child(4),.editor label:last-of-type{grid-column:1/-1}
@@ -66,3 +76,9 @@
   .routeMain h2,.routeMain p,.routeMain small{max-width:100%;}
   .actions button{min-width:42px;min-height:42px;}
 }
+.statusActive,.statusPending,.statusCompleted,.statusIssue,.statusCancelled{display:inline-flex!important;align-items:center;border:1px solid transparent}
+.statusActive{background:var(--rh-primary-soft)!important;color:var(--rh-primary)!important}
+.statusPending{background:#f2f5f9!important;color:var(--rh-text-secondary)!important}
+.statusCompleted{background:var(--rh-success-soft)!important;color:#087443!important}
+.statusIssue{background:var(--rh-warning-soft)!important;color:#a15c00!important}
+.statusCancelled{background:#f1f3f5!important;color:var(--rh-text-secondary)!important}

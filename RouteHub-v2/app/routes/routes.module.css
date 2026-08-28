@@ -175,3 +175,25 @@
 :global(html[data-theme="dark"]) .routeTopbar{border-color:var(--rh-border)}
 :global(html[data-theme="dark"]) .routeBrand{color:var(--rh-text)}
 @media(max-width:640px){.routeTopbar{min-height:54px;margin-bottom:20px}.routeBack{font-size:12px}.routeBrand{font-size:16px}.routeBrand>span{width:29px;height:29px}}
+
+/* Phase 7: keep the creation flow operational and compact while giving the
+   supporting map enough room to confirm real locations. */
+.page{padding-top:24px}
+.builderSubtitle{margin:6px 0 0;color:#667892;font-size:13px;font-weight:500}
+.selectedContactCard{display:flex;align-items:center;gap:11px;padding:12px 13px;border:1px solid #c9d8ff;border-radius:14px;background:#f5f8ff}
+.selectedContactIcon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:#eaf2ff;color:#1667f2}
+.selectedContactInfo{min-width:0;display:grid;gap:2px;flex:1}
+.selectedContactInfo strong{overflow:hidden;color:#0f1d35;font-size:14px;text-overflow:ellipsis;white-space:nowrap}
+.selectedContactInfo span,.selectedContactInfo small{overflow:hidden;color:#667892;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.selectedContactInfo small{font-size:11px}
+.selectedContactChange{flex:0 0 auto;border:0;background:transparent;color:#1667f2;font-size:12px;font-weight:800;cursor:pointer}
+.selectedContactChange:hover{text-decoration:underline}
+.primaryRouteTypes .segmented{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(min-width:1024px){
+  .builderBody{grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:22px}
+}
+@media(max-width:520px){
+  .primaryRouteTypes .segmented{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .primaryRouteTypes .segmented button{padding-inline:4px;font-size:10px}
+  .selectedContactCard{align-items:flex-start}
+}

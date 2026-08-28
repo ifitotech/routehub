@@ -12,3 +12,9 @@
 .page>:last-child{flex:1;min-height:0}.error{margin:0 0 12px;padding:12px 14px;border:1px solid #fecaca;border-radius:12px;background:#fef2f2;color:#b91c1c;font-size:13px}
 @media(max-width:900px){.page{min-height:auto}.hero>div{display:block}.hero p{margin:0 0 4px}.hero h1{font-size:32px}.back{margin-bottom:8px}.hero>div>span{display:block;max-width:620px;margin-top:7px;color:var(--rh-text-secondary);font-size:13px;line-height:1.45}}
 @media(max-width:760px){.page{padding:14px 14px calc(98px + env(safe-area-inset-bottom))}.topbar{padding-bottom:14px}.liveStatus{display:none}.hero{align-items:stretch;flex-direction:column;padding:20px 0 12px}.heroActions{display:grid;grid-template-columns:1fr 1fr;justify-content:stretch}.heroActions>a{padding:9px 8px}.headerActions>a{display:none}}
+
+/* The ManagerShell owns global navigation; keep this page focused on the
+   map and its operational context at every supported viewport. */
+.page.page.managerMapPage{padding-top:24px!important;max-width:none}
+.managerMapPage .hero{padding-top:0}
+@media(min-width:1024px){.managerMapPage{min-height:calc(100dvh - 48px)}.managerMapPage .hero{padding-bottom:18px}}

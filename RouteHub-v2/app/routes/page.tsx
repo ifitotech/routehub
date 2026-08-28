@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import {useSearchParams} from 'next/navigation'
 import nextDynamic from 'next/dynamic'
 import {useCallback, useEffect, useMemo, useState} from 'react'
@@ -31,7 +30,7 @@ import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
 import {sendRoutePush} from '../../lib/route-push'
 import {chooseDefaultAssignee} from '../../lib/route-assignment'
-import NotificationBell from '../notification-bell'
+import ManagerShell from '../manager/manager-shell'
 import type {GeocodedLocation} from '../../lib/maps/types'
 import GoogleAddressInput, {type AddressSearchSuggestion, type LocalAddressSuggestion} from '../google-address-input'
 import styles from './routes.module.css'
@@ -341,7 +340,9 @@ export default function Routes() {
         type: ['pickup','delivery','transfer','return'].includes(requestedType || '') ? requestedType as FormState['type'] : current.type,
         priority: requestedPriority === 'urgent' || requestedPriority === 'priority' ? requestedPriority : current.priority,
         contact_id: contact?.id || '',
-        destination: contact ? `${contact.company_name} - ${contact.address}` : requestedDestination || current.destination,
+        destination: contact?.address || requestedDestination || current.destination,
+        destination_label: contact?.company_name || current.destination_label,
+        destination_phone: contact?.phone || current.destination_phone,
       }))
       setOpen(true)
     }
@@ -418,9 +419,9 @@ export default function Routes() {
         return today && branch && operational
       })
       .map(route => ({id: route.id, origin_address: route.origin_address, origin_lat: route.origin_lat, origin_lng: route.origin_lng, destination_address: route.destination_address, destination_name: route.destination_name, destination_lat: route.destination_lat, destination_lng: route.destination_lng, status: route.status, driver_id: route.driver_id, position: route.position}))
-    if(form.destination.trim()) configured.push({id: 'draft-preview', origin_address: form.origin, origin_lat: null, origin_lng: null, destination_address: form.destination, destination_name: form.destination_label || form.destination, destination_lat: null, destination_lng: null, status: 'pending', driver_id: form.driver_id || null, position: configured.length + 1})
+    if(form.destination.trim()) configured.push({id: 'draft-preview', origin_address: form.origin, origin_lat: originMode === 'branch' ? defaultBranch?.latitude || null : null, origin_lng: originMode === 'branch' ? defaultBranch?.longitude || null : null, destination_address: form.destination, destination_name: form.destination_label || selectedContact?.company_name || form.destination, destination_lat: selectedDestinationLocation?.coordinate.lat ?? selectedContact?.latitude ?? null, destination_lng: selectedDestinationLocation?.coordinate.lng ?? selectedContact?.longitude ?? null, status: 'pending', driver_id: form.driver_id || null, position: configured.length + 1})
     return configured
-  }, [branchId, form.destination, form.destination_label, form.driver_id, form.origin, routes, todayValue])
+  }, [branchId, defaultBranch?.latitude, defaultBranch?.longitude, form.destination, form.destination_label, form.driver_id, form.origin, originMode, routes, selectedContact?.company_name, selectedContact?.latitude, selectedContact?.longitude, selectedDestinationLocation, todayValue])
 
   useEffect(() => {
     if (originMode !== 'previous') return
@@ -704,11 +705,8 @@ export default function Routes() {
 
   const priorityRoutes = routes.filter(route => route.driver_id === form.driver_id && route.route_date === form.date && ['draft','pending','published','paused'].includes(route.status || '')).sort(routeSort)
 
-  return <main className={styles.page}>
-    <div className={styles.routeTopbar}>
-      <Link className={styles.routeBrand} href="/manager" aria-label="RouteHub dashboard"><Image src="/routehub-regular-new.jpg" alt="" width={32} height={32} priority/><strong>Route<span>Hub</span></strong></Link>
-      <div className={styles.routeTopbarActions}><Link href="/manager" className={styles.routeBack}>Dashboard</Link><NotificationBell /></div>
-    </div>
+  return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
+    <div className={styles.page}>
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>{c.operations.toUpperCase()}</p>
@@ -757,7 +755,7 @@ export default function Routes() {
     {open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">
         <div className={`${styles.builderHeader} ${contrast.header}`}>
-          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{c.create}</h2></div>
+          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itinéraire' : 'New route'}</h2><p className={styles.builderSubtitle}>{locale==='es' ? 'Crea una recogida o entrega en pocos pasos.' : locale==='fr' ? 'Créez une collecte ou une livraison en quelques étapes.' : 'Create a pickup or delivery in a few steps.'}</p></div>
           <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
         </div>
 
@@ -782,9 +780,20 @@ export default function Routes() {
               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => type.value === 'return' ? {...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''} : {...current, type:type.value})}>{typeLabel(type.value,c)}</button>)}</div>
             </fieldset>
 
+            {selectedContact && <section className={styles.selectedContactCard} aria-label={locale==='es' ? 'Contacto seleccionado' : locale==='fr' ? 'Contact sélectionné' : 'Selected contact'}>
+              <div className={styles.selectedContactIcon}><Users size={18}/></div>
+              <div className={styles.selectedContactInfo}><strong>{selectedContact.company_name}</strong><span>{selectedContact.address}</span>{selectedContact.phone && <small>{selectedContact.phone}</small>}</div>
+              <button type="button" className={styles.selectedContactChange} onClick={() => setForm(current => ({...current, contact_id:'', destination:'', destination_label:'', destination_phone:''}))}>{locale==='es' ? 'Cambiar' : locale==='fr' ? 'Modifier' : 'Change'}</button>
+            </section>}
+
             <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}`}</option> })}</select></div></label>
 
             {form.driver_id && form.date === todayValue && priorityRoutes.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Posición en la ruta' : locale==='fr' ? 'Position dans l’itinéraire' : 'Position in route'} <em>{c.optional}</em></span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>{priorityRoutes.map(route => <option key={route.id} value={route.id}>{locale==='es' ? `Antes de ${route.destination_name || route.destination_address || 'la próxima parada'}` : locale==='fr' ? `Avant ${route.destination_name || route.destination_address || 'la prochaine étape'}` : `Before ${route.destination_name || route.destination_address || 'next stop'}`}</option>)}</select></div></label>}
+
+            <div className={styles.splitFields}>
+              <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
+              <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
+            </div>
 
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
@@ -823,10 +832,6 @@ export default function Routes() {
             {form.type!=='return'&&<button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>}
 
             {detailsOpen && form.type!=='return' && <div className={styles.optionalDetails}>
-              <div className={styles.splitFields}>
-                <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
-                <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
-              </div>
               {form.type!=='pickup'&&<label className={styles.field}><span>{locale==='es'?'Job / número de orden':locale==='fr'?'Chantier / numéro de commande':'Job / order number'} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>}
               <label className={styles.field}><span>{form.type==='delivery'?(locale==='es'?'Instrucciones de entrega':locale==='fr'?'Instructions de livraison':'Delivery instructions'):c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={form.type==='delivery'?c.notesPlaceholder:c.notes} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
               {form.type==='pickup'&&!selectedContact&&<label className={styles.field}><span>{c.contactPhone} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/></label>}
@@ -837,5 +842,6 @@ export default function Routes() {
         </div>}
       </section>
     </div>}
-  </main>
+    </div>
+  </ManagerShell>
 }

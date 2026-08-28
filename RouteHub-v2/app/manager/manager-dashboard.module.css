@@ -46,6 +46,17 @@
  .mobileLiveStats{display:flex;gap:8px;margin:13px 0 11px}.mobileLiveStats span{flex:1;padding:9px 10px;border:1px solid rgba(148,183,235,.2);border-radius:11px;background:rgba(255,255,255,.06);color:#b9cbed;font-size:11px}.mobileLiveStats strong{display:block;color:#fff;font-size:21px;line-height:1.05}.mobileLiveCta{display:flex;align-items:center;gap:8px;min-height:42px;padding:0 12px;border-radius:11px;background:#2563eb;color:#fff;font-size:13px;font-weight:800;text-decoration:none}.mobileLiveCta svg:last-child{margin-left:auto}
  .desktopLower,.sectionLabel,.desktopOnly{display:none}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.action{min-height:58px;padding:10px;border-radius:14px;gap:8px}.actionIcon{width:32px;height:32px;border-radius:9px}.actionCopy strong{font-size:12px}.actionCopy span{display:none}.action>svg{width:16px}.nav{position:fixed;z-index:50;left:50%;right:auto;bottom:10px;width:min(530px,calc(100% - 28px));transform:translateX(-50%);margin:0;border-radius:22px;padding-bottom:7px}
 }
+
+/* Today is a scrollable operational view on touch devices. Other Manager
+   pages keep their existing layout because this selector only matches the
+   phase-four Today surface. */
+@media (max-width: 1023px) {
+  .dashboard:has(.todayLayout) .workspace {
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+}
 @media (min-width: 1280px){
   .desktopOperations{grid-template-columns:minmax(0,1.55fr) minmax(280px,.75fr);gap:18px;align-items:stretch}
   .desktopRoutesPanel,.desktopLivePanel,.desktopQuickPanel,.desktopTracking{border-radius:18px}

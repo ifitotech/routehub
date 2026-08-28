@@ -6,10 +6,11 @@ import {Building2, Camera, Save, Sparkles} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
 import GoogleAddressInput from '../google-address-input'
-import NotificationBell from '../notification-bell'
 import DeviceNotificationsSetting from '../device-notifications-setting'
 import InstallAppCard from '../install-app-card'
 import {requestOnboardingReplay} from '../../lib/onboarding'
+import ManagerShell from '../manager/manager-shell'
+import styles from './settings.module.css'
 
 export default function Settings() {
   const {locale, t, setLocale} = useLocale()
@@ -85,7 +86,7 @@ export default function Settings() {
   }
 
   const userInitials = (fullName || email || 'U').split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join('') || 'U'
-  return <main className="app settings-page"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link><NotificationBell /></header><p className="eyebrow">{t.account.toUpperCase()}</p><h1>{t.settings}</h1>
+ return <ManagerShell active="settings" roleLabel={t.managerRole}><div className={`app settings-page ${styles.page}`}><p className="eyebrow">{t.account.toUpperCase()}</p><h1>{t.settings}</h1>
     <section className="card settings-card"><div className="settings-card-heading"><h2>{t.profile}</h2><button className="secondary edit-button" type="button" onClick={() => setEditingProfile(value => !value)}>{copy.edit}</button></div><div className="profile-summary"><div className="profile-avatar">{avatarUrl ? <img src={avatarUrl} alt=""/> : <span>{(fullName || email || 'U').slice(0, 2).toUpperCase()}</span>}</div><div><strong>{fullName || t.profile}</strong><p className="muted">{phone || copy.phone}</p></div></div>{editingProfile && <div className="settings-edit-panel"><label className="secondary photo-picker"><Camera size={17}/>{copy.photo}<input type="file" accept="image/*" onChange={event => choosePhoto(event.target.files?.[0])}/></label><label>{copy.name}<input value={fullName} onChange={event => setFullName(event.target.value)} placeholder={copy.name}/></label><label>{t.signedInEmail}<input value={email} readOnly/></label><label>{copy.phone}<input type="tel" value={phone} onChange={event => setPhone(event.target.value)} placeholder="(000) 000-0000"/></label><button className="primary" disabled={profileSaving} onClick={saveProfile}><Save size={17}/>{profileSaving ? t.saving : copy.save}</button></div>}<button className="secondary" onClick={signOut}>{t.logout}</button></section>
     {!isCeo && <section className="card settings-card"><div className="settings-card-heading"><h2><Building2 size={19}/> {copy.branch}</h2>{branch && <button className="secondary edit-button" type="button" onClick={() => setEditingBranch(value => !value)}>{copy.edit}</button>}</div>{branch ? <>{!editingBranch ? <div className="branch-summary"><strong>{branch.name || copy.branchName}</strong><p className="muted">{branch.address || t.addressNotConfigured}</p><p className="muted">{branch.phone || copy.branchPhone}</p></div> : <div className="settings-edit-panel"><label>{copy.branchName}<input value={branch.name} onChange={event => setBranch({...branch, name: event.target.value})}/></label><label>{copy.branchAddress}<GoogleAddressInput value={branch.address} autoComplete="street-address" onValueChange={value => setBranch(current => current ? {...current,address:value} : current)} placeholder={t.addressPlaceholder}/></label><label>{copy.branchPhone}<input type="tel" value={branch.phone} onChange={event => setBranch({...branch, phone: event.target.value})} placeholder="(000) 000-0000"/></label><button className="primary" disabled={branchSaving} onClick={saveBranch}><Save size={17}/>{branchSaving ? t.saving : copy.saveBranch}</button></div>}<Link className="secondary" href="/manager/branches">{t.branches}</Link></> : <p className="muted">{copy.noBranch}</p>}</section>}
     {isCeo && <section className="card settings-card"><h2>Platform access</h2><div className="branch-summary"><strong>CEO / Platform administrator</strong><p className="muted">Full access to companies, branches, approvals and audit activity.</p></div></section>}
@@ -95,5 +96,5 @@ export default function Settings() {
     {!isCeo && <section className="card settings-card"><h2><Sparkles size={19}/> {copy.tour}</h2><p className="muted">{copy.tourHelp}</p><button className="secondary" type="button" onClick={requestOnboardingReplay}>{copy.tourAction}</button></section>}
     {!isCeo && <section className="card settings-card"><h2>{t.planBilling}</h2><p className="plan-name">{plan === 'free' ? t.free : plan.toUpperCase()}</p><p className="muted">{trialEnd ? `${t.premiumTrial}: ${new Date(trialEnd).toLocaleDateString(locale)}` : t.noTrial}</p><button className="primary" onClick={() => setMessage(t.billingSoon)}>{t.upgradePro}</button></section>}
     <section className="card settings-card"><h2>{t.support}</h2><p className="muted">{t.supportHelp}</p><button className="secondary" onClick={() => setMessage(t.supportReady)}>{t.contactSupport}</button>{message && <p className="muted" role="status">{message}</p>}</section>
-  </main>
+  </div></ManagerShell>
 }

@@ -266,3 +266,45 @@
 :global([data-theme='dark']) .closeButton,
 :global([data-theme='dark']) .cancelButton,
 :global([data-theme='dark']) .field input { background: #0e1c2f; }
+
+/* Phase 6: manager contacts use the shared RouteHub operational language. */
+.page {
+  --ink: var(--rh-text, #0f1d35);
+  --muted: var(--rh-text-secondary, #667892);
+  --line: var(--rh-border, #dde5ee);
+  --surface: var(--rh-surface, #ffffff);
+  --primary: var(--rh-primary, #1667f2);
+  width: 100%;
+  max-width: 1180px;
+}
+.header { align-items: center; margin-bottom: 20px; }
+.header h1 { font-size: clamp(1.9rem, 3vw, 2.5rem); }
+.addButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 12px; background: var(--primary); }
+.addButton span { font-size: .9rem; }
+.searchPanel { min-height: 54px; border-radius: 14px; box-shadow: 0 8px 22px rgb(15 29 53 / 5%); }
+.searchPanel input { height: 52px; }
+.list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.contactCard { grid-template-columns: 46px minmax(0, 1fr); align-items: start; min-height: 0; padding: 18px; border-radius: 16px; box-shadow: 0 8px 22px rgb(15 29 53 / 5%); }
+.identityHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.phone { display: flex; align-items: center; gap: 5px; margin: 5px 0 0; color: var(--muted); font-size: .82rem; }
+.phone svg { color: var(--primary); }
+.cardActions { align-items: center; gap: 8px; margin-top: 13px; }
+.cardActions a, .cardActions button { min-height: 38px; padding: 0 11px; border-radius: 11px; font-size: .78rem; }
+.pickupAction { border-color: #b8e8f0 !important; background: #effcff !important; color: #087f9b !important; }
+.deliveryAction { border-color: #c8d9ff !important; background: var(--rh-soft-blue, #eaf2ff) !important; color: var(--primary) !important; }
+.secondaryActions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.secondaryActions a, .secondaryActions button { min-height: 34px; padding: 0 9px; background: transparent; }
+
+@media (max-width: 720px) {
+  .header { align-items: center; }
+  .addButton { width: auto; padding: 0 14px; font-size: .9rem; }
+  .addButton span { display: inline; font-size: .85rem; }
+  .addButton::after { display: none; }
+  .list { grid-template-columns: 1fr; gap: 10px; }
+  .contactCard { grid-template-columns: 42px minmax(0, 1fr); padding: 15px; }
+  .cardActions { display: grid; grid-template-columns: 1fr 1fr; }
+  .cardActions a span, .cardActions button span { display: inline; }
+  .cardActions > .pickupAction, .cardActions > .deliveryAction { justify-content: center; min-height: 44px; }
+  .secondaryActions { grid-column: 1 / -1; margin-left: 0; }
+  .secondaryActions a, .secondaryActions button { min-height: 36px; }
+}
