@@ -16,7 +16,18 @@ export type RouteEstimate={
   maneuvers?:RouteManeuver[]
 }
 
-export type RouteManeuver={instruction:string;distanceMeters?:number;coordinate:MapCoordinate}
+export type RouteManeuver={
+  instruction:string
+  distanceMeters?:number
+  coordinate:MapCoordinate
+  type?:string
+  modifier?:string
+  streetName?:string
+}
+
+export type ActiveRouteManeuver=RouteManeuver&{
+  distanceToManeuverMeters:number
+}
 
 export type NavigationDestination={
   address?:string|null

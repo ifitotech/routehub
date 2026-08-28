@@ -3,22 +3,54 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
-import {Compass,LocateFixed,Route as RouteIcon} from 'lucide-react'
+import {ArrowUp,Compass,CornerUpLeft,CornerUpRight,Flag,LocateFixed,Navigation2,RotateCcw,Route as RouteIcon,Satellite,WifiOff} from 'lucide-react'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {calculateRoute,nextRouteManeuver} from '../lib/maps/routing'
+import {calculateRoute,distanceMeters,nextRouteManeuver,remainingRouteDistance} from '../lib/maps/routing'
+import type {ActiveRouteManeuver} from '../lib/maps/types'
 
 type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 export type PlannedStop={id:string;address?:string|null;label?:string|null}
 
-type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string}
+type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean}
 
-const marker=(number:number)=>L.divIcon({
+const marker=(number:number,active=false)=>L.divIcon({
  className:'route-plan-marker-wrap',
- html:`<span class="route-plan-marker">${number}</span>`,
+ html:`<span class="route-plan-marker${active?' is-active':''}">${number}</span>`,
  iconSize:[36,36],iconAnchor:[18,18]
 })
+
+function formatDistance(meters:number|undefined){
+ if(!Number.isFinite(meters))return ''
+ if(meters!<160)return `${Math.max(50,Math.round(meters!*3.28084/50)*50)} ft`
+ return `${Math.max(.1,Math.round(meters!/1609.344*10)/10)} mi`
+}
+
+function maneuverInstruction(maneuver:ActiveRouteManeuver|undefined,locale:string){
+ if(!maneuver)return locale==='es'?'Continúa por la ruta':'Continue on route'
+ const street=maneuver.streetName?.trim()
+ const modifier=maneuver.modifier||''
+ const type=maneuver.type||''
+ if(locale!=='es')return maneuver.instruction
+ if(type==='arrive')return street?`Llegarás a ${street}`:'Llegarás al destino'
+ if(type.includes('roundabout')||type==='rotary')return street?`En la rotonda, toma la salida hacia ${street}`:'Entra en la rotonda'
+ if(modifier.includes('u-turn'))return street?`Haz un retorno hacia ${street}`:'Haz un retorno'
+ if(modifier.includes('left'))return street?`Gira a la izquierda en ${street}`:'Gira a la izquierda'
+ if(modifier.includes('right'))return street?`Gira a la derecha en ${street}`:'Gira a la derecha'
+ if(type==='depart')return street?`Continúa por ${street}`:'Inicia el recorrido'
+ return street?`Continúa por ${street}`:'Continúa recto'
+}
+
+function ManeuverIcon({maneuver}:{maneuver:ActiveRouteManeuver|undefined}){
+ const modifier=maneuver?.modifier||''
+ const type=maneuver?.type||''
+ if(type==='arrive')return <Flag aria-hidden="true"/>
+ if(type.includes('roundabout')||type==='rotary'||modifier.includes('u-turn'))return <RotateCcw aria-hidden="true"/>
+ if(modifier.includes('left'))return <CornerUpLeft aria-hidden="true"/>
+ if(modifier.includes('right'))return <CornerUpRight aria-hidden="true"/>
+ return <ArrowUp aria-hidden="true"/>
+}
 
 function Fit({points}:{points:Coordinate[]}){
  const map=useMap()
@@ -44,7 +76,8 @@ const driverMarker=(heading:number|null)=>L.divIcon({
  iconSize:[34,34],iconAnchor:[17,17]
 })
 
-export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
+export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false}:Props){
+ const driverMode=navigationOnly||(typeof window!=='undefined'&&window.location.pathname==='/driver')
  const [points,setPoints]=useState<Coordinate[]>([])
  const [line,setLine]=useState<Coordinate[]>([])
  const [deviceLocation,setDeviceLocation]=useState<GpsFix|null>(null)
@@ -54,6 +87,9 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  const [map,setMap]=useState<L.Map|null>(null)
  const [view,setView]=useState<'navigate'|'plan'>('navigate')
  const [navigationActive,setNavigationActive]=useState(false)
+ const [offRoute,setOffRoute]=useState(false)
+ const [rerouting,setRerouting]=useState(false)
+ const [online,setOnline]=useState(()=>typeof navigator==='undefined'||navigator.onLine)
  const wakeLock=useRef<any>(null)
  const lastReroute=useRef(0)
  const navigationTarget=useRef('')
@@ -96,6 +132,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
  useEffect(()=>{const timer=window.setInterval(()=>setGpsClock(Date.now()),5000);return()=>window.clearInterval(timer)},[])
+ useEffect(()=>{const update=()=>setOnline(navigator.onLine);window.addEventListener('online',update);window.addEventListener('offline',update);return()=>{window.removeEventListener('online',update);window.removeEventListener('offline',update)}},[])
 
  useEffect(()=>{
   if(view!=='navigate'||!deviceLocation||points.length<2)return
@@ -109,21 +146,31 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
  },[view,deviceLocation?.lat,deviceLocation?.lng,points])
 
  useEffect(()=>()=>{void wakeLock.current?.release?.()},[])
+ useEffect(()=>{
+  const restore=async()=>{
+   if(!navigationActive||document.visibilityState!=='visible'||(wakeLock.current&&!wakeLock.current.released))return
+   try{wakeLock.current=await (navigator as any).wakeLock?.request?.('screen')}catch{}
+  }
+  document.addEventListener('visibilitychange',restore)
+  return()=>document.removeEventListener('visibilitychange',restore)
+ },[navigationActive])
  const toggleNavigation=async()=>{
   if(navigationActive){await wakeLock.current?.release?.();wakeLock.current=null;setNavigationActive(false);return}
   try{wakeLock.current=await (navigator as any).wakeLock?.request?.('screen')}catch{}
   setNavigationActive(true)
+  window.setTimeout(()=>{map?.invalidateSize();if(deviceLocation)map?.setView([deviceLocation.lat,deviceLocation.lng],17,{animate:false})},60)
  }
 
  useEffect(()=>{
   if(view!=='navigate'||!deviceLocation||line.length<2||!points.length)return
-  const toMeters=(a:Coordinate,b:Coordinate)=>{const r=6371000,rad=Math.PI/180;const dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;const x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;return 2*r*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
-  const nearest=Math.min(...line.map(point=>toMeters(deviceLocation,point)))
-  if(nearest<150||Date.now()-lastReroute.current<30000)return
+  const nearest=remainingRouteDistance(line,deviceLocation).distanceFromRouteMeters
+  setOffRoute(nearest>=150)
+  if(nearest<150||Date.now()-lastReroute.current<30000||!online)return
   const nextStop=points[1]||points[0]
   lastReroute.current=Date.now()
-  void calculateRoute([deviceLocation,nextStop]).then(next=>{if(next.coordinates.length>1){setLine(next.coordinates);setEstimate(next)}})
- },[view,deviceLocation?.lat,deviceLocation?.lng,line,points])
+  setRerouting(true)
+  void calculateRoute([deviceLocation,nextStop]).then(next=>{if(next.coordinates.length>1){setLine(next.coordinates);setEstimate(next);setOffRoute(false)}}).finally(()=>setRerouting(false))
+ },[view,deviceLocation?.lat,deviceLocation?.lng,line,points,online])
 
  useEffect(()=>{
   if(!deviceLocation||!points.length)return
@@ -138,22 +185,29 @@ export default function RoutePlanMap({originAddress,stops,locale='en'}:Props){
 
  const center=points[0]||{lat:39.8283,lng:-98.5795}
  const maneuver=useMemo(()=>nextRouteManeuver(estimate?.maneuvers,line,deviceLocation),[deviceLocation?.lat,deviceLocation?.lng,estimate?.maneuvers,line])
+ const routeProgress=useMemo(()=>remainingRouteDistance(line,deviceLocation),[line,deviceLocation?.lat,deviceLocation?.lng])
+ const destination=points[1]||points[0]
+ const destinationDistance=deviceLocation&&destination?distanceMeters(deviceLocation,destination):undefined
+ const nearDestination=Number.isFinite(destinationDistance)&&destinationDistance!<75
+ const remainingDistance=deviceLocation&&line.length>1?routeProgress.distanceMeters:estimate?.distanceMeters
+ const remainingDuration=remainingDistance!=null&&estimate?.distanceMeters&&estimate.durationSeconds?Math.max(30,estimate.durationSeconds*(remainingDistance/estimate.distanceMeters)):estimate?.durationSeconds
  const gpsWeak=Boolean(gpsError||!deviceLocation||deviceLocation.accuracy>75||gpsClock-deviceLocation.updatedAt>20_000)
  const gpsMeta=deviceLocation?`${Math.round(deviceLocation.accuracy)} m · ${Math.max(0,Math.round((gpsClock-deviceLocation.updatedAt)/1000))} s`:''
- const copy=locale==='es'?{label:'Mapa de navegación',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Navegación',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa',next:'Próxima parada',gps:'GPS activo',gpsWeak:'Señal GPS débil',gpsLost:'Sin señal GPS',recenter:'Mi ubicación',exit:'Salir'}:{label:'Navigation map',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Navigation',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view',next:'Next stop',gps:'GPS active',gpsWeak:'Weak GPS signal',gpsLost:'GPS signal unavailable',recenter:'My location',exit:'Exit'}
- return <section className={`route-plan-map route-plan-${view}${navigationActive?' is-driving':''}`} aria-label={copy.label}>
+ const copy=locale==='es'?{label:'Mapa de navegación',loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',map:'Navegación',stop:'Parada',single:'parada programada',plural:'paradas programadas',complete:'Vista completa',next:'Próxima parada',gps:'GPS activo',gpsWeak:'Señal GPS débil',gpsLost:'Sin señal GPS',recenter:'Recentrar',exit:'Salir',arrived:'Llegué',rerouting:'Recalculando ruta…',offRoute:'Fuera de ruta',offline:'Sin conexión · usando la última ruta'}:{label:'Navigation map',loading:'Preparing route…',unavailable:'We could not locate these stops yet.',map:'Navigation',stop:'Stop',single:'scheduled stop',plural:'scheduled stops',complete:'Full route view',next:'Next stop',gps:'GPS active',gpsWeak:'Weak GPS signal',gpsLost:'GPS signal unavailable',recenter:'Re-center',exit:'Exit',arrived:'Arrived',rerouting:'Rerouting…',offRoute:'Off route',offline:'Offline · using last route'}
+ return <section className={`route-plan-map route-plan-${view}${driverMode?' route-plan-driver':''}${navigationActive?' is-driving':''}`} aria-label={copy.label}>
   <header className="route-plan-nav"><div><small>{view==='navigate'?copy.next:copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation&&!gpsWeak?'is-live':''}>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}{deviceLocation&&<small> · {gpsMeta}</small>}</span></header>
-  <div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>
-  {view==='navigate'&&<div className="route-plan-actions"><button onClick={()=>void toggleNavigation()}>{navigationActive?(locale==='es'?'Detener navegación':'Stop navigation'):(locale==='es'?'Iniciar navegación':'Start navigation')}</button>{deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75&&<button className="arrived" onClick={()=>window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true}}))}>{locale==='es'?'Llegué':'I arrived'}</button>}</div>}
-  {view==='navigate'&&maneuver&&<div className="route-plan-guide"><b>{maneuver.distanceMeters!=null?`${Math.max(0,Math.round(maneuver.distanceMeters/1609.344*10)/10)} mi`:''}</b><span>{maneuver.instruction}</span></div>}
+  {!driverMode&&<div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>}
+  {view==='navigate'&&!navigationActive&&<div className="route-plan-actions"><button onClick={()=>void toggleNavigation()}><Navigation2 size={19}/>{locale==='es'?'Iniciar navegación':'Start navigation'}</button></div>}
+  {view==='navigate'&&navigationActive&&<div className="route-plan-guide" aria-live="polite"><ManeuverIcon maneuver={maneuver}/><div><b>{formatDistance(maneuver?.distanceToManeuverMeters)}</b><span>{maneuverInstruction(maneuver,locale)}</span></div></div>}
+  {view==='navigate'&&navigationActive&&(rerouting||offRoute||!online||gpsWeak)&&<div className={`route-plan-driving-alert${rerouting||offRoute?' is-warning':''}`}>{!online?<WifiOff size={16}/>:gpsWeak?<Satellite size={16}/>:<RouteIcon size={16}/>}<span>{!online?copy.offline:rerouting?copy.rerouting:offRoute?copy.offRoute:(deviceLocation?copy.gpsWeak:copy.gpsLost)}</span></div>}
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
    <Fit points={points}/>
    <FollowDriver location={deviceLocation} enabled={view==='navigate'&&navigationActive}/>
    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
-   {points.slice(1).map((point,index)=><Marker key={displayedStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1)}><Tooltip direction="top" offset={[0,-18]}>{displayedStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
+   {points.slice(1).map((point,index)=><Marker key={displayedStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1,index===0)}><Tooltip direction="top" offset={[0,-18]}>{displayedStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverMarker(deviceLocation.heading)}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
-  </MapContainer>} {deviceLocation&&<><button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}><LocateFixed size={18}/>{copy.recenter}</button><div className="route-plan-float-controls"><button type="button" aria-label="Compass" onClick={()=>{if(map)map.setView(map.getCenter(),map.getZoom())}}><Compass size={21}/></button><button type="button" aria-label="Route overview" onClick={()=>{if(map&&points.length>1)map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})}}><RouteIcon size={21}/></button></div></>}</div>
-  <footer className="route-plan-bottom"><div><strong>{deviceLocation&&estimate?.durationSeconds!=null?`${Math.max(1,Math.round(estimate.durationSeconds/60))} min`:`${validStops.length}`}</strong><span>{deviceLocation&&estimate?.distanceMeters!=null?`${Math.max(0,Math.round(estimate.distanceMeters/1609.344*10)/10)} mi · ${new Date(Date.now()+(estimate.durationSeconds||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive?<button type="button" onClick={()=>void toggleNavigation()}>{copy.exit}</button>:<small>{estimate?.maneuvers?.[1]?.instruction|| (deviceLocation&&estimate?.distanceMeters!=null&&estimate.distanceMeters<75?(locale==='es'?'Llegaste a la próxima parada': 'Arrived at next stop'):copy.complete)}</small>}</footer>
+  </MapContainer>} {deviceLocation&&<><button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],navigationActive?17:15)}><LocateFixed size={20}/><span>{copy.recenter}</span></button><div className="route-plan-float-controls"><button type="button" aria-label="Compass" onClick={()=>{if(map)map.setView(map.getCenter(),map.getZoom())}}><Compass size={21}/></button><button type="button" aria-label="Route overview" onClick={()=>{if(map&&points.length>1)map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})}}><RouteIcon size={21}/></button></div></>}</div>
+  <footer className="route-plan-bottom"><i aria-hidden="true"/><div className="route-plan-summary"><strong>{remainingDuration!=null?`${Math.max(1,Math.round(remainingDuration/60))} min`:`${validStops.length}`}</strong><span>{remainingDistance!=null?`${formatDistance(remainingDistance)} · ${new Date(Date.now()+(remainingDuration||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive?<div className="route-plan-driving-buttons"><button type="button" onClick={()=>void toggleNavigation()}>{copy.exit}</button><button type="button" className={`arrived${nearDestination?' is-near':''}`} onClick={()=>window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true,distance:destinationDistance}}))}><Flag size={19}/>{copy.arrived}</button></div>:<small>{maneuverInstruction(maneuver,locale)}</small>}</footer>
  </section>
 }

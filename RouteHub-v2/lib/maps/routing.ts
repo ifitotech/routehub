@@ -1,5 +1,5 @@
 import {mapProviderLimits,routingConfig} from './map-config'
-import type {MapCoordinate,RouteEstimate,RouteManeuver} from './types'
+import type {ActiveRouteManeuver,MapCoordinate,RouteEstimate,RouteManeuver} from './types'
 
 type OsrmRoute={
   distance?:number
@@ -18,7 +18,14 @@ export function normalizeOsrmRoute(payload:OsrmResponse,fallback:MapCoordinate[]
     if(!location)return []
     const action=[step.maneuver?.type,step.maneuver?.modifier].filter(Boolean).join(' ')||'continue'
     const street=step.name?.trim()
-    return [{instruction:street?`${action} onto ${street}`:action,distanceMeters:step.distance,coordinate:{lat:location[1],lng:location[0]}}]
+    return [{
+      instruction:street?`${action} onto ${street}`:action,
+      distanceMeters:step.distance,
+      coordinate:{lat:location[1],lng:location[0]},
+      type:step.maneuver?.type,
+      modifier:step.maneuver?.modifier,
+      streetName:street
+    }]
   }))
   return {
     coordinates:coordinates.length?coordinates:fallback,
@@ -29,7 +36,7 @@ export function normalizeOsrmRoute(payload:OsrmResponse,fallback:MapCoordinate[]
   }
 }
 
-function distanceMeters(a:MapCoordinate,b:MapCoordinate){
+export function distanceMeters(a:MapCoordinate,b:MapCoordinate){
   const radians=Math.PI/180
   const dLat=(b.lat-a.lat)*radians,dLng=(b.lng-a.lng)*radians
   const value=Math.sin(dLat/2)**2+Math.cos(a.lat*radians)*Math.cos(b.lat*radians)*Math.sin(dLng/2)**2
@@ -41,13 +48,24 @@ function distanceMeters(a:MapCoordinate,b:MapCoordinate){
  * Selecting by raw geographic distance is incorrect after passing a turn: the
  * previous turn is then the closest point and would remain on screen.
  */
-export function nextRouteManeuver(maneuvers:RouteManeuver[]|undefined,route:MapCoordinate[],location:MapCoordinate|null){
+export function remainingRouteDistance(route:MapCoordinate[],location:MapCoordinate|null){
+  if(!route.length)return {distanceMeters:0,nearestIndex:0,distanceFromRouteMeters:0}
+  const nearestIndex=!location?0:route.reduce((best,point,index)=>distanceMeters(location,point)<distanceMeters(location,route[best])?index:best,0)
+  let remaining=location?distanceMeters(location,route[nearestIndex]):0
+  for(let index=nearestIndex;index<route.length-1;index+=1)remaining+=distanceMeters(route[index],route[index+1])
+  return {distanceMeters:remaining,nearestIndex,distanceFromRouteMeters:location?distanceMeters(location,route[nearestIndex]):0}
+}
+
+export function nextRouteManeuver(maneuvers:RouteManeuver[]|undefined,route:MapCoordinate[],location:MapCoordinate|null):ActiveRouteManeuver|undefined{
   if(!maneuvers?.length)return undefined
-  if(!location||!route.length)return maneuvers[0]
-  const currentIndex=route.reduce((best,point,index)=>distanceMeters(location,point)<distanceMeters(location,route[best])?index:best,0)
+  if(!location||!route.length)return {...maneuvers[0],distanceToManeuverMeters:maneuvers[0].distanceMeters||0}
+  const currentIndex=remainingRouteDistance(route,location).nearestIndex
   const withProgress=maneuvers.map(maneuver=>({maneuver,index:route.reduce((best,point,index)=>distanceMeters(maneuver.coordinate,point)<distanceMeters(maneuver.coordinate,route[best])?index:best,0)}))
-  // A small tolerance avoids jumping ahead because GPS can be a few meters off.
-  return withProgress.find(item=>item.index>=currentIndex-2)?.maneuver||withProgress[withProgress.length-1]?.maneuver
+  // Never retain a maneuver whose route point is already behind the driver.
+  const active=withProgress.find(item=>item.index>=currentIndex)||withProgress[withProgress.length-1]
+  let distanceToManeuver=distanceMeters(location,route[currentIndex])
+  for(let index=currentIndex;index<active.index;index+=1)distanceToManeuver+=distanceMeters(route[index],route[index+1])
+  return {...active.maneuver,distanceToManeuverMeters:Math.max(0,distanceToManeuver)}
 }
 
 export function routeRequestUrl(points:MapCoordinate[]):string|null{

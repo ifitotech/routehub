@@ -23,6 +23,9 @@ test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>
   assert.match(source,/source:coordinates\.length\?'osrm':'fallback'/)
   assert.match(source,/if\(!response\.ok\)return fallback/)
   assert.match(source,/catch\{return fallback\}/)
+  assert.match(source,/remainingRouteDistance/)
+  assert.match(source,/distanceToManeuverMeters/)
+  assert.match(source,/item\.index>=currentIndex/)
 })
 
 test('geocoding adapter rejects incomplete queries and invalid coordinates',async()=>{
