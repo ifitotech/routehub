@@ -15,6 +15,15 @@ test('driver next stop keeps progress visible and opens the in-app navigation ma
   assert.match(source,/currentStopIndex\+1/)
   assert.match(source,/setRouteView\('map'\)/)
   assert.match(source,/RoutePlanMap/)
+  assert.match(source,/routeFocusDate/)
+  assert.match(source,/pastDue:routeFocusDate<today/)
+})
+
+test('driver navigation identifies unfinished overdue work as pending',async()=>{
+  const source=await readFile(new URL('../app/route-plan-map.tsx',import.meta.url),'utf8')
+  assert.match(source,/pastDue\?:boolean/)
+  assert.match(source,/route-plan-overdue/)
+  assert.match(source,/Past due · Pending/)
 })
 
 test('driver navigation sheet expands without stopping or remounting the map',async()=>{

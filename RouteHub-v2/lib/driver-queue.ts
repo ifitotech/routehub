@@ -30,7 +30,11 @@ export type DriverTodayQueue<T extends DriverQueueRoute> = {
 const upcomingStatuses: MissionStatus[] = ['pending', 'published']
 
 function ordered<T extends DriverQueueRoute>(routes: T[]) {
-  return [...routes].sort((left, right) => left.position - right.position || left.id.localeCompare(right.id))
+  return [...routes].sort((left, right) =>
+    (left.route_date || '').localeCompare(right.route_date || '') ||
+    left.position - right.position ||
+    left.id.localeCompare(right.id),
+  )
 }
 
 /**
