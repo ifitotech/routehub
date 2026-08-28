@@ -24,6 +24,7 @@ type Props={
  showLocationUpdated?:boolean
   interactive?:boolean
   onActivate?:()=>void
+  useDriverAsOrigin?:boolean
  locale?:string
 }
 
@@ -51,7 +52,7 @@ async function resolveCoordinate(address:string|null|undefined,known:RouteCoordi
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,locale='en'}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en'}:Props){
  const [routePoints,setRoutePoints]=useState<RouteCoordinate[]>([])
  const [line,setLine]=useState<RouteCoordinate[]>([])
  const [loading,setLoading]=useState(true)
@@ -63,7 +64,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
   setLoading(true)
   setUnavailable(false)
   const locations=[
-    {address:originAddress,coordinate:originCoordinate},
+    ...(useDriverAsOrigin&&driverLocation?[{address:null,coordinate:driverLocation}]:[{address:originAddress,coordinate:originCoordinate}]),
     ...waypoints,
     {address:destinationAddress,coordinate:destinationCoordinate},
   ]
@@ -80,7 +81,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
    if(!cancelled)setLoading(false)
   }).catch(()=>{if(!cancelled){setUnavailable(true);setLoading(false)}})
   return()=>{cancelled=true}
- },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey])
+ },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey,useDriverAsOrigin,driverLocation?.lat,driverLocation?.lng])
 
  const visiblePoints=useMemo(()=>[...routePoints,...(driverLocation?[driverLocation]:[])],[routePoints,driverLocation])
  const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}
@@ -100,12 +101,12 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={visiblePoints}/>
     {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
-    {origin&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
+    {origin&&(!useDriverAsOrigin||!driverLocation)&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
     {intermediate.map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+2)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`${copy.next} ${index+2}`}</Tooltip></Marker>)}
     {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination',1)} zIndexOffset={300}><Tooltip direction="top" offset={[0,-18]}>{destinationAddress||copy.next}</Tooltip></Marker>}
     {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
   </div>
-  <footer><span><b>S</b>{originAddress||copy.start}</span><span><b>1</b>{destinationAddress||copy.next}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
+  <footer><span><b>S</b>{useDriverAsOrigin&&driverLocation?(locale==='es'?'Mi ubicación':locale==='fr'?'Ma position': 'My location'):(originAddress||copy.start)}</span><span><b>1</b>{destinationAddress||copy.next}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
  </section>
 }
