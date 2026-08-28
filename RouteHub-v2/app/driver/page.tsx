@@ -392,15 +392,16 @@ const [recipientError,setRecipientError]=useState('')
     setMapReturning(true)
     window.setTimeout(()=>{setRouteView(null);setMapReturning(false)},340)
   }
-  const beginTodayDrag=(event:ReactPointerEvent<HTMLButtonElement>)=>{
+  const beginTodayDrag=(event:ReactPointerEvent<HTMLElement>)=>{
+    if(event.target instanceof Element&&event.target.closest('button,a,input,textarea,select')&&!event.target.closest(`.${styles.todayMapHandle},.${styles.routeSwipeHandle}`))return
     todayDragStart.current=event.clientY
     event.currentTarget.setPointerCapture(event.pointerId)
   }
-  const moveTodayDrag=(event:ReactPointerEvent<HTMLButtonElement>)=>{
+  const moveTodayDrag=(event:ReactPointerEvent<HTMLElement>)=>{
     if(todayDragStart.current==null)return
     setTodayDragY(Math.max(0,Math.min(150,event.clientY-todayDragStart.current)))
   }
-  const finishTodayDrag=(event:ReactPointerEvent<HTMLButtonElement>)=>{
+  const finishTodayDrag=(event:ReactPointerEvent<HTMLElement>)=>{
     if(todayDragStart.current==null)return
     const distance=event.clientY-todayDragStart.current
     todayDragStart.current=null
@@ -534,7 +535,7 @@ const [recipientError,setRecipientError]=useState('')
   const closeModal=()=>{if(busy)return;setModal(false);setIssueNote('');setIssuePhoto(null)}
   const beginSignature=(event:React.PointerEvent<HTMLCanvasElement>)=>{const canvas=signatureCanvas.current;if(!canvas)return;canvas.setPointerCapture(event.pointerId);const rect=canvas.getBoundingClientRect();const context=canvas.getContext('2d');if(!context)return;context.lineWidth=3;context.lineCap='round';context.strokeStyle='#14233b';context.beginPath();context.moveTo((event.clientX-rect.left)*(canvas.width/rect.width),(event.clientY-rect.top)*(canvas.height/rect.height));const move=(moveEvent:PointerEvent)=>{context.lineTo((moveEvent.clientX-rect.left)*(canvas.width/rect.width),(moveEvent.clientY-rect.top)*(canvas.height/rect.height));context.stroke()};const stop=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',stop);canvas.removeEventListener('pointercancel',stop)};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop)}
 
-  return <main className={`app ${styles.page}`}>
+  return <main className={`app ${styles.page}`} onPointerDown={routeView===null?beginTodayDrag:undefined} onPointerMove={routeView===null?moveTodayDrag:undefined} onPointerUp={routeView===null?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView===null){todayDragStart.current=null;setTodayDragY(0)}}}>
     <header className={styles.header}><div className={styles.brand}><Image src="/routehub-driver-new.jpg" alt="RouteHub Driver" width={48} height={48} priority/><strong>RouteHub</strong></div>{routeView!=='map'&&<NotificationBell />}</header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
     {membershipRole==='driver'&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
     {temporaryExecution&&drivingSession&&<div className={styles.drivingBar}><span className={styles.locationLive}><i/>{temporaryLabel}</span></div>}
