@@ -71,6 +71,12 @@ function FollowDriver({location,enabled}:{location:GpsFix|null;enabled:boolean})
  return null
 }
 
+function CompactMapAttribution(){
+ const map=useMap()
+ useEffect(()=>{map.attributionControl.setPrefix(false)},[map])
+ return null
+}
+
 const driverMarker=(heading:number|null)=>L.divIcon({
  className:'route-plan-driver-location',
  html:`<span class="route-plan-driver-arrow" style="--driver-heading:${Number.isFinite(heading)?heading:0}deg"><i></i></span>`,
@@ -227,6 +233,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   {view==='navigate'&&navigationActive&&<div className="route-plan-guide" aria-live="polite"><ManeuverIcon maneuver={maneuver}/><div><b>{formatDistance(maneuver?.distanceToManeuverMeters)}</b><span>{maneuverInstruction(maneuver,locale)}</span></div></div>}
   {view==='navigate'&&navigationActive&&(rerouting||offRoute||!online)&&<div className={`route-plan-driving-alert${rerouting||offRoute?' is-warning':''}`}>{!online?<WifiOff size={16}/>:<RouteIcon size={16}/>}<span>{!online?copy.offline:rerouting?copy.rerouting:copy.offRoute}</span></div>}
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
+   <CompactMapAttribution/>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
    <Fit points={points}/>
    <FollowDriver location={deviceLocation} enabled={view==='navigate'&&navigationActive}/>
