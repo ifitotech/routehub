@@ -17,6 +17,15 @@ test('driver next stop keeps progress visible and opens the in-app navigation ma
   assert.match(source,/RoutePlanMap/)
 })
 
+test('driver navigation sheet expands without stopping or remounting the map',async()=>{
+  const source=await readFile(new URL('../app/route-plan-map.tsx',import.meta.url),'utf8')
+  assert.match(source,/route-plan-sheet-handle/)
+  assert.match(source,/onPointerMove=\{moveSheet\}/)
+  assert.match(source,/setSheetExpanded\(true\)/)
+  assert.match(source,/setSheetExpanded\(false\)/)
+  assert.match(source,/activeStop\?\.orderNumber/)
+})
+
 test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>{
   const source=await readFile(new URL('../lib/maps/routing.ts',import.meta.url),'utf8')
   assert.match(source,/coordinates:coordinates\.length\?coordinates:fallback/)

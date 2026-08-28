@@ -185,7 +185,7 @@ const [recipientError,setRecipientError]=useState('')
     return rank(left.status)-rank(right.status)||left.position-right.position||(left.completed_at||'').localeCompare(right.completed_at||'')
   })
   const dayMapOrigin=dayRoutes[0]?.origin_address||current?.origin_address
-  const dayMapStops=dayRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||route.destination_address}))
+  const dayMapStops=dayRoutes.map(route=>({id:route.id,address:route.destination_address,label:route.destination_name||route.destination_address,kind:stopKind(route.mission_type),orderNumber:route.order_number,notes:route.notes,position:route.position}))
   const currentKind=stopKind(current?.mission_type)
   const currentRouteStops=current
     ? dayRoutes.filter(route=>route.company_id===current.company_id&&route.branch_id===current.branch_id&&route.route_date===current.route_date).sort((left,right)=>left.position-right.position||left.id.localeCompare(right.id))
