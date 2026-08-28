@@ -46,6 +46,14 @@ test('GPS arrival requires a driver confirmation and next-stop routing rejects s
   assert.match(driver,/if\(!detail\?\.manual\)/)
 })
 
+test('navigation GPS prefers a newer precise fix over a coarse position',async()=>{
+  const map=await readFile(new URL('../app/route-plan-map.tsx',import.meta.url),'utf8')
+  assert.match(map,/materiallyMorePrecise/)
+  assert.match(map,/candidate\.accuracy\+15<previous\.accuracy/)
+  assert.match(map,/maximumAge:0/)
+  assert.match(map,/timeout:12_000/)
+})
+
 test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>{
   const source=await readFile(new URL('../lib/maps/routing.ts',import.meta.url),'utf8')
   assert.match(source,/coordinates:coordinates\.length\?coordinates:fallback/)

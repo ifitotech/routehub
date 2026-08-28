@@ -172,13 +172,16 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
    // false reroute. A normal driving movement is still always accepted.
    const elapsedSeconds=previous?Math.max(1,(updatedAt-previous.updatedAt)/1000):0
    const distance=previous?distanceMeters(previous,candidate):0
-   const allowedTravel=Math.max(60,elapsedSeconds*55+(candidate.accuracy+(previous?.accuracy||0))*2)
+   // A new position with a much smaller accuracy circle is allowed to correct
+   // an earlier coarse fix, even if that correction is several streets away.
+   const materiallyMorePrecise=Boolean(previous&&candidate.accuracy+15<previous.accuracy)
+   const allowedTravel=Math.max(40,elapsedSeconds*45+(candidate.accuracy+(previous?.accuracy||0))*1.5)
    const muchWorseThanPrevious=Boolean(previous&&candidate.accuracy>Math.max(75,previous.accuracy*1.8))
-   if(previous&&(muchWorseThanPrevious||distance>allowedTravel))return
+   if(previous&&((muchWorseThanPrevious&&!materiallyMorePrecise)||(distance>allowedTravel&&!materiallyMorePrecise)))return
    acceptedGpsFix.current=candidate
    setGpsError(false)
    setDeviceLocation(candidate)
-  },()=>setGpsError(true),{enableHighAccuracy:true,maximumAge:5000,timeout:20000})
+  },()=>setGpsError(true),{enableHighAccuracy:true,maximumAge:0,timeout:12_000})
   return()=>navigator.geolocation.clearWatch(watch)
  },[])
  useEffect(()=>{const timer=window.setInterval(()=>setGpsClock(Date.now()),5000);return()=>window.clearInterval(timer)},[])
