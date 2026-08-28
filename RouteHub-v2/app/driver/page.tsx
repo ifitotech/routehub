@@ -388,6 +388,12 @@ const [recipientError,setRecipientError]=useState('')
   }
   const openRouteQueue=()=>{setMapReturning(false);setTodayDragY(0);setRouteView('queue')}
   const returnToToday=()=>{
+    if(routeView==='queue'){
+      if(typeof document!=='undefined'&&(document as any).startViewTransition){runMapTransition(()=>{setMapReturning(false);setRouteView(null)});return}
+      setMapReturning(true)
+      window.setTimeout(()=>{setRouteView(null);setMapReturning(false)},340)
+      return
+    }
     if(routeView!=='map'){setRouteView(null);return}
     if(typeof document!=='undefined'&&(document as any).startViewTransition){runMapTransition(()=>{setMapReturning(false);setRouteView(null)});return}
     setMapReturning(true)
@@ -400,7 +406,7 @@ const [recipientError,setRecipientError]=useState('')
   }
   const moveTodayDrag=(event:ReactPointerEvent<HTMLElement>)=>{
     if(todayDragStart.current==null)return
-    setTodayDragY(Math.max(0,Math.min(150,event.clientY-todayDragStart.current)))
+    setTodayDragY(Math.max(-150,Math.min(150,event.clientY-todayDragStart.current)))
   }
   const finishTodayDrag=(event:ReactPointerEvent<HTMLElement>)=>{
     if(todayDragStart.current==null)return
@@ -416,12 +422,17 @@ const [recipientError,setRecipientError]=useState('')
     const touch=event.touches[0]
     if(touch)routeTouchStart.current={x:touch.clientX,y:touch.clientY}
   }
+  const moveRouteSwipe=(event:React.TouchEvent<HTMLElement>)=>{
+    const start=routeTouchStart.current,touch=event.touches[0]
+    if(start&&touch)setTodayDragY(Math.max(0,Math.min(150,touch.clientY-start.y)))
+  }
   const finishRouteSwipe=(event:React.TouchEvent<HTMLElement>)=>{
     const start=routeTouchStart.current
     routeTouchStart.current=null
     const touch=event.changedTouches[0]
     if(!start||!touch)return
     const dx=touch.clientX-start.x,dy=touch.clientY-start.y
+    setTodayDragY(0)
     if(dy>70&&dy>Math.abs(dx)*1.25)returnToToday()
   }
   const beginTodaySwipe=(event:React.TouchEvent<HTMLElement>)=>{
@@ -429,12 +440,17 @@ const [recipientError,setRecipientError]=useState('')
     const touch=event.touches[0]
     if(touch)routeTouchStart.current={x:touch.clientX,y:touch.clientY}
   }
+  const moveTodaySwipe=(event:React.TouchEvent<HTMLElement>)=>{
+    const start=routeTouchStart.current,touch=event.touches[0]
+    if(start&&touch)setTodayDragY(Math.max(-150,Math.min(150,touch.clientY-start.y)))
+  }
   const finishTodaySwipe=(event:React.TouchEvent<HTMLElement>)=>{
     const start=routeTouchStart.current
     routeTouchStart.current=null
     const touch=event.changedTouches[0]
-    if(!start||!touch)return
+    if(!start||!touch){setTodayDragY(0);return}
     const dx=touch.clientX-start.x,dy=touch.clientY-start.y
+    setTodayDragY(0)
     if(Math.abs(dy)<70||Math.abs(dy)<=Math.abs(dx)*1.25)return
     if(dy<0)openRouteQueue()
     else openRouteMap()
@@ -564,7 +580,7 @@ const [recipientError,setRecipientError]=useState('')
   const closeModal=()=>{if(busy)return;setModal(false);setIssueNote('');setIssuePhoto(null)}
   const beginSignature=(event:React.PointerEvent<HTMLCanvasElement>)=>{const canvas=signatureCanvas.current;if(!canvas)return;canvas.setPointerCapture(event.pointerId);const rect=canvas.getBoundingClientRect();const context=canvas.getContext('2d');if(!context)return;context.lineWidth=3;context.lineCap='round';context.strokeStyle='#14233b';context.beginPath();context.moveTo((event.clientX-rect.left)*(canvas.width/rect.width),(event.clientY-rect.top)*(canvas.height/rect.height));const move=(moveEvent:PointerEvent)=>{context.lineTo((moveEvent.clientX-rect.left)*(canvas.width/rect.width),(moveEvent.clientY-rect.top)*(canvas.height/rect.height));context.stroke()};const stop=()=>{canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',stop);canvas.removeEventListener('pointercancel',stop)};canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop)}
 
-  return <main className={`app ${styles.page}`} onPointerDown={routeView===null?beginTodayDrag:undefined} onPointerMove={routeView===null?moveTodayDrag:undefined} onPointerUp={routeView===null?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView===null){todayDragStart.current=null;setTodayDragY(0)}}} onTouchStart={routeView===null?beginTodaySwipe:undefined} onTouchEnd={routeView===null?finishTodaySwipe:undefined}>
+  return <main className={`app ${styles.page}`} onPointerDown={routeView===null?beginTodayDrag:undefined} onPointerMove={routeView===null?moveTodayDrag:undefined} onPointerUp={routeView===null?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView===null){todayDragStart.current=null;setTodayDragY(0)}}} onTouchStart={routeView===null?beginTodaySwipe:undefined} onTouchMove={routeView===null?moveTodaySwipe:undefined} onTouchEnd={routeView===null?finishTodaySwipe:undefined}>
     <header className={styles.header}><div className={styles.brand}><Image src="/routehub-driver-new.jpg" alt="RouteHub Driver" width={48} height={48} priority/><strong>RouteHub</strong></div>{routeView!=='map'&&<NotificationBell />}</header><div className={styles.workspaceHeading}><span className={styles.workspace}>{t.driverWorkspace}</span><h1>{t.routes}</h1></div>
     {membershipRole==='driver'&&<div className={styles.drivingBar}>{drivingSession?<><span className={styles.locationLive}><i/>{t.locationSharing}</span><button className={styles.endDay} disabled={busy} onClick={()=>void finishDrivingDay()}>{t.endDrivingDay}</button></>:<button className={styles.startDay} disabled={busy} onClick={()=>void beginDrivingDay()}><Play size={16}/>{t.startDrivingDay}</button>}</div>}
     {temporaryExecution&&drivingSession&&<div className={styles.drivingBar}><span className={styles.locationLive}><i/>{temporaryLabel}</span></div>}
@@ -597,7 +613,7 @@ const [recipientError,setRecipientError]=useState('')
       </div>
       <input ref={fileInput} hidden type="file" accept="image/*" capture="environment" onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value='';if(file)void attachStopPhoto(file)}}/>
     </>:current&&completionCandidate&&finalStop?<section className={`card ${styles.finishRoute}`}><ClipboardCheck/><h2>{stopCopy.completeRoute}</h2><p>{locale==='es'?'Todos los stops requeridos están completados. Revisa y confirma cómo deseas cerrar la ruta.':locale==='fr'?'Tous les arrêts requis sont terminés. Vérifiez et confirmez la fin de l’itinéraire.':'All required stops are complete. Review and confirm how you want to finish the route.'}</p><button className={styles.complete} disabled={busy} onClick={()=>setFinalizeOpen(true)}><Check size={19}/>{stopCopy.completeRoute}</button></section>:<section className={`card ${styles.empty}`}><MapPin/><h2>{t.noRoute}</h2><p>{t.noRoutesAssignedToday || t.noRouteHelp}</p>{temporaryExecution&&<Link className="primary" href={homeHref}>{locale==='es'?'Volver al espacio de trabajo':locale==='fr'?`Retour à l'espace de travail`:'Return to workspace'}</Link>}</section>}
-      {routeView&&<section className={`${styles.routeOverlay}${routeView==='map'?` ${styles.routeOverlayMap}${mapReturning?` ${styles.routeOverlayReturning}`:''}`:routeView==='queue'?` ${styles.routeOverlayQueue}`:''}`} aria-label="Route details" onPointerDown={routeView==='queue'?beginTodayDrag:undefined} onPointerMove={routeView==='queue'?moveTodayDrag:undefined} onPointerUp={routeView==='queue'?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView==='queue'){todayDragStart.current=null;setTodayDragY(0)}}} onTouchStart={routeView==='queue'?beginRouteSwipe:undefined} onTouchEnd={routeView==='queue'?finishRouteSwipe:undefined}>
+      {routeView&&<section className={`${styles.routeOverlay}${routeView==='map'?` ${styles.routeOverlayMap}${mapReturning?` ${styles.routeOverlayReturning}`:''}`:routeView==='queue'?` ${styles.routeOverlayQueue}${mapReturning?` ${styles.routeOverlayReturning}`:''}`:''}`} style={routeView==='queue'?{'--route-drag':`${todayDragY}px`} as CSSProperties:undefined} aria-label="Route details" onPointerDown={routeView==='queue'?beginTodayDrag:undefined} onPointerMove={routeView==='queue'?moveTodayDrag:undefined} onPointerUp={routeView==='queue'?finishTodayDrag:undefined} onPointerCancel={()=>{if(routeView==='queue'){todayDragStart.current=null;setTodayDragY(0)}}} onTouchStart={routeView==='queue'?beginRouteSwipe:undefined} onTouchMove={routeView==='queue'?moveRouteSwipe:undefined} onTouchEnd={routeView==='queue'?finishRouteSwipe:undefined}>
       <header className={styles.routeOverlayHeader}><button type="button" onClick={()=>routeView==='details'?setRouteView('queue'):routeView==='map'?returnToToday():setRouteView(null)} aria-label="Back"><ArrowLeft size={20}/></button><strong>{routeView==='details'?detailCopy.stopDetails:routeView==='map'?'Map':'Route'}</strong>{routeView==='queue'&&<button type="button" className={styles.routeSwipeHandle} aria-label="Swipe down to Today" onPointerDown={beginTodayDrag} onPointerMove={moveTodayDrag} onPointerUp={finishTodayDrag} onPointerCancel={()=>{todayDragStart.current=null;setTodayDragY(0)}}><i/></button>}<span /></header>
       {routeView==='queue'||routeView==='map'?<><div className={styles.routeTabs}><button className={routeView==='queue'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('queue')}>Stops</button><button className={routeView==='map'?styles.routeTabActive:''} type="button" onClick={()=>setRouteView('map')}>Map</button></div>{routeView==='queue'?<div className={styles.stopList}>{!dayRoutes.length?<div className={styles.empty}><List size={24}/><h2>{t.noRoutesToday}</h2><p>{t.createRouteWhenReady}</p></div>:dayRoutes.map((route,index)=>{const kind=stopKind(route.mission_type);const status=route.status==='completed'||route.status==='issue'?detailCopy.completed:route.status==='active'||route.status==='paused'?detailCopy.current:route.scheduled_at?new Date(route.scheduled_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'}):detailCopy.upcoming;return <button type="button" className={styles.stopRow} key={route.id} onClick={()=>{setSelectedRouteId(route.id);setRouteView('details')}}><span className={styles.stopNumber}>{route.position||index+1}</span><span><strong>{routeLabel(route)}</strong><small>{kind==='branch'?stopCopy.branch:kind.toUpperCase()} · {status}{route.status==='active'&&elapsedLabel(route)?` · ${elapsedLabel(route)}`:''}</small></span><ChevronRight size={18}/></button>})}</div>:<RoutePlanMap locale={locale} originAddress={dayMapOrigin} stops={dayMapStops} autoStartNavigation={routeView==='map'} onReturnToday={returnToToday} transitioningOut={mapReturning}/>}</>:selectedRoute&&<div className={styles.stopDetails}><span className={styles.stopNumber}>{selectedRoute.position}</span><h2>{routeLabel(selectedRoute)}</h2><p><MapPin size={17}/>{selectedRoute.destination_address||t.destination}</p><div className={styles.detailDivider}/><small>{stopKind(selectedRoute.mission_type)==='branch'?stopCopy.branch:stopKind(selectedRoute.mission_type).toUpperCase()}</small><strong>{selectedRoute.status==='active'?detailCopy.current:selectedRoute.status==='completed'||selectedRoute.status==='issue'?detailCopy.completed:detailCopy.upcoming}</strong>{selectedRoute.scheduled_at&&<p><Clock3 size={17}/>{new Date(selectedRoute.scheduled_at).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'})}</p>}{selectedRoute.arrived_at&&<p><Clock3 size={17}/>{detailCopy.arrivedAt}: {new Date(selectedRoute.arrived_at).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'})}</p>}{selectedRoute.status==='active'&&<button type="button" className={styles.viewRoute} onClick={()=>setRouteView('map')}>{detailCopy.openMap}{elapsedLabel(selectedRoute)?` · ${elapsedLabel(selectedRoute)}`:''}</button>}{selectedRoute.destination_address&&<button type="button" className={styles.viewRoute} onClick={()=>openGoogleMaps(selectedRoute)}><MapPin size={18}/>{stopCopy.openMaps}</button>}{selectedRoute.order_number&&<div className={styles.detailNotes}><b>{detailCopy.po}</b><span>{selectedRoute.order_number}</span></div>}{receivedBy(selectedRoute)&&<div className={styles.detailNotes}><b>{detailCopy.receivedBy}</b><span>{receivedBy(selectedRoute)}</span></div>}{selectedRoute.destination_phone&&<p><Phone size={17}/>{selectedRoute.destination_phone}</p>}{selectedRoute.notes&&<div className={styles.detailNotes}><b>{detailCopy.instructions}</b><span>{selectedRoute.notes}</span></div>}{selectedRoute.status==='completed'||selectedRoute.status==='issue'?<div className={styles.detailNotes}><b>{detailCopy.completion}</b>{selectedRoute.completed_at&&<span><Clock3 size={15}/> {detailCopy.completedAt}: {new Date(selectedRoute.completed_at).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'})}</span>}{selectedRoute.arrived_at&&selectedRoute.completed_at&&<span><Clock3 size={15}/> {detailCopy.time}: {elapsedLabel(selectedRoute)}</span>}{selectedRoute.finalization_method==='issue'&&<span>{detailCopy.issue}{selectedRoute.finalization_issue?`: ${selectedRoute.finalization_issue}`:''}</span>}{evidencePreview.photo&&<img src={evidencePreview.photo} alt={detailCopy.photo} style={{width:'100%',maxHeight:220,objectFit:'cover',borderRadius:12,marginTop:10}}/>}{evidencePreview.signature&&<img src={evidencePreview.signature} alt={detailCopy.signature} style={{width:'100%',maxHeight:140,objectFit:'contain',background:'#fff',borderRadius:12,marginTop:10}}/>}{selectedEvidence.map((evidence,index)=><span key={`${evidence.kind}-${index}`}>✓ {evidence.kind==='signature'?detailCopy.signature:evidence.kind==='photo'?detailCopy.photo:detailCopy.packing}</span>)}{selectedRoute.driver_note&&!receivedBy(selectedRoute)&&<span><FileText size={15}/> {selectedRoute.driver_note}</span>}{selectedRoute.finalization_note&&<span><FileText size={15}/> {selectedRoute.finalization_note}</span>}</div>:null}</div>}</section>}
     {modal&&<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeModal()}}><section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="issue-title"><button className={styles.close} aria-label={t.close} onClick={closeModal}><X/></button><div className={styles.modalDanger}><TriangleAlert/></div><h2 id="issue-title">{stopCopy.report}</h2><p>{locale==='es'?'Describe el problema de esta parada.':locale==='fr'?'Décrivez le problème pour cet arrêt.':'Describe the issue for this stop.'}</p><textarea autoFocus value={issueNote} onChange={event=>setIssueNote(event.target.value)} placeholder={t.reason}/><label className={styles.evidencePicker}><Camera size={17}/><span>{locale==='es'?'Foto opcional':locale==='fr'?'Photo facultative':'Optional photo'}</span><input type="file" accept="image/*" capture="environment" onChange={event=>setIssuePhoto(event.target.files?.[0]||null)}/></label>{issuePhoto&&<small className={styles.fileName}>{issuePhoto.name}</small>}<button className={styles.issueButton} disabled={!issueNote.trim()||busy} onClick={()=>void update('issue',issuePhoto||undefined)}>{t.saveIssue}</button></section></div>}
