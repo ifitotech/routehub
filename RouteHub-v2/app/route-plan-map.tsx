@@ -3,7 +3,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
-import {ArrowUp,Compass,CornerUpLeft,CornerUpRight,Flag,LocateFixed,Navigation2,RotateCcw,Route as RouteIcon,Satellite,WifiOff} from 'lucide-react'
+import {ArrowUp,Compass,CornerUpLeft,CornerUpRight,Crosshair,Flag,LocateFixed,Navigation2,RotateCcw,Route as RouteIcon,Satellite,WifiOff} from 'lucide-react'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters,nextRouteManeuver,remainingRouteDistance} from '../lib/maps/routing'
@@ -72,8 +72,8 @@ function FollowDriver({location,enabled}:{location:GpsFix|null;enabled:boolean})
 
 const driverMarker=(heading:number|null)=>L.divIcon({
  className:'route-plan-driver-location',
- html:`<span class="route-plan-driver-arrow" style="transform:rotate(${Number.isFinite(heading)?heading:0}deg)"></span>`,
- iconSize:[34,34],iconAnchor:[17,17]
+ html:`<span class="route-plan-driver-arrow" style="--driver-heading:${Number.isFinite(heading)?heading:0}deg"><i></i></span>`,
+ iconSize:[48,48],iconAnchor:[24,24]
 })
 
 export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false}:Props){
@@ -199,15 +199,15 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   {!driverMode&&<div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>}
   {view==='navigate'&&!navigationActive&&<div className="route-plan-actions"><button onClick={()=>void toggleNavigation()}><Navigation2 size={19}/>{locale==='es'?'Iniciar navegación':'Start navigation'}</button></div>}
   {view==='navigate'&&navigationActive&&<div className="route-plan-guide" aria-live="polite"><ManeuverIcon maneuver={maneuver}/><div><b>{formatDistance(maneuver?.distanceToManeuverMeters)}</b><span>{maneuverInstruction(maneuver,locale)}</span></div></div>}
-  {view==='navigate'&&navigationActive&&(rerouting||offRoute||!online||gpsWeak)&&<div className={`route-plan-driving-alert${rerouting||offRoute?' is-warning':''}`}>{!online?<WifiOff size={16}/>:gpsWeak?<Satellite size={16}/>:<RouteIcon size={16}/>}<span>{!online?copy.offline:rerouting?copy.rerouting:offRoute?copy.offRoute:(deviceLocation?copy.gpsWeak:copy.gpsLost)}</span></div>}
+  {view==='navigate'&&navigationActive&&(rerouting||offRoute||!online)&&<div className={`route-plan-driving-alert${rerouting||offRoute?' is-warning':''}`}>{!online?<WifiOff size={16}/>:<RouteIcon size={16}/>}<span>{!online?copy.offline:rerouting?copy.rerouting:copy.offRoute}</span></div>}
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
    <Fit points={points}/>
    <FollowDriver location={deviceLocation} enabled={view==='navigate'&&navigationActive}/>
-   {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.9}}/>}
+   {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#176bf2',weight:navigationActive?7:5,opacity:.96,lineCap:'round',lineJoin:'round'}}/>}
    {points.slice(1).map((point,index)=><Marker key={displayedStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1,index===0)}><Tooltip direction="top" offset={[0,-18]}>{displayedStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverMarker(deviceLocation.heading)}><Tooltip direction="top">{locale==='es'?'Tu ubicación':'Your location'}</Tooltip></Marker>}
-  </MapContainer>} {deviceLocation&&<><button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],navigationActive?17:15)}><LocateFixed size={20}/><span>{copy.recenter}</span></button><div className="route-plan-float-controls"><button type="button" aria-label="Compass" onClick={()=>{if(map)map.setView(map.getCenter(),map.getZoom())}}><Compass size={21}/></button><button type="button" aria-label="Route overview" onClick={()=>{if(map&&points.length>1)map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})}}><RouteIcon size={21}/></button></div></>}</div>
+  </MapContainer>} {deviceLocation&&<>{!navigationActive&&<button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}><LocateFixed size={20}/><span>{copy.recenter}</span></button>}{navigationActive&&<div className={`route-plan-gps-pill${gpsWeak?' is-weak':''}`}><Satellite size={16}/><span>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}</span></div>}<div className="route-plan-float-controls"><button type="button" className="route-plan-compass" aria-label="Compass" onClick={()=>{if(map)map.setView(map.getCenter(),map.getZoom())}}><Compass size={21}/></button><button type="button" aria-label={copy.recenter} onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],navigationActive?17:15)}><Crosshair size={23}/></button></div></>}</div>
   <footer className="route-plan-bottom"><i aria-hidden="true"/><div className="route-plan-summary"><strong>{remainingDuration!=null?`${Math.max(1,Math.round(remainingDuration/60))} min`:`${validStops.length}`}</strong><span>{remainingDistance!=null?`${formatDistance(remainingDistance)} · ${new Date(Date.now()+(remainingDuration||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive?<div className="route-plan-driving-buttons"><button type="button" onClick={()=>void toggleNavigation()}>{copy.exit}</button><button type="button" className={`arrived${nearDestination?' is-near':''}`} onClick={()=>window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true,distance:destinationDistance}}))}><Flag size={19}/>{copy.arrived}</button></div>:<small>{maneuverInstruction(maneuver,locale)}</small>}</footer>
  </section>
 }
