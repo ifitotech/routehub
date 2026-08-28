@@ -19,8 +19,8 @@ import {routeProgress, stopAction, stopKind} from '../../lib/stop-workflow'
 import {saveCustomerSignature} from '../../lib/signature'
 import {workspaceForStrictRole} from '../auth-access'
 import {createRealtimeRefresh} from '../../lib/realtime-sync'
-import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
 import {googleMapsNavigationUrl} from '../../lib/maps/external-navigation'
+import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
 import {reportAppError} from '../../lib/error-reporting'
 import type {Role} from '../../lib/types'
 import NotificationBell from '../notification-bell'
@@ -70,6 +70,7 @@ const [recipientError,setRecipientError]=useState('')
   const [drivingSession,setDrivingSession]=useState<DrivingSession|null>(null)
   const [autoCloseTime,setAutoCloseTime]=useState('18:00')
   const [clockNow,setClockNow]=useState(()=>Date.now())
+  const [routeEstimate,setRouteEstimate]=useState<string|null>(null)
   const [evidencePreview,setEvidencePreview]=useState<{photo?:string;signature?:string}>({})
   const [selectedEvidence,setSelectedEvidence]=useState<StopEvidence[]>([])
   const [locationStatus,setLocationStatus]=useState('')
@@ -80,7 +81,6 @@ const [recipientError,setRecipientError]=useState('')
   const [gestureActive,setGestureActive]=useState(false)
   const todayDragStart=useRef<number|null>(null)
   const routeTouchStart=useRef<{x:number;y:number}|null>(null)
-  const [routeEstimate,setRouteEstimate]=useState<string|null>(null)
   const [selectedRouteId,setSelectedRouteId]=useState<string | null>(null)
   const [dayPromptOpen,setDayPromptOpen]=useState(false)
   const [locationConsentAccepted,setLocationConsentAccepted]=useState(false)
@@ -627,7 +627,6 @@ const [recipientError,setRecipientError]=useState('')
         <p className={styles.address}><MapPin size={18}/>{current.destination_address||t.destination}</p>
         <div className={styles.routeMeta} aria-live="polite">
           {currentStopIndex>=0&&currentRouteStops.length>0&&<span>{locale==='es'?`Parada ${currentStopIndex+1} de ${currentRouteStops.length}`:locale==='fr'?`Arrêt ${currentStopIndex+1} sur ${currentRouteStops.length}`:`Stop ${currentStopIndex+1} of ${currentRouteStops.length}`}</span>}
-          {routeEstimate&&<span>{routeEstimate}</span>}
           {current.status==='active'&&current.route_started_at&&<span className={styles.routeTimer}>{locale==='es'?`Ruta iniciada ${new Date(current.route_started_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})} · ${routeDurationLabel(current)} transcurridos`:locale==='fr'?`Itinéraire démarré à ${new Date(current.route_started_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})} · ${routeDurationLabel(current)} écoulées`:`Route started ${new Date(current.route_started_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})} · ${routeDurationLabel(current)} elapsed`}</span>}
         </div>
         {currentKind==='pickup'&&<div className={`${styles.details} ${styles.singleDetail}`}><div><small>{routeMetaCopy.po}</small><strong>{current.order_number||'—'}</strong></div></div>}
