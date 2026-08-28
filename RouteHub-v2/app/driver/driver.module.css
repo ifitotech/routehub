@@ -205,6 +205,10 @@
 .todayMapHandle:active i{width:50px;background:#1768ee;transition:width 150ms ease,background-color 150ms ease}
 .routeOverlayMap{transform-origin:center 56%;animation:mapFromToday 440ms cubic-bezier(.2,.82,.25,1) both}
 .routeOverlayReturning{pointer-events:none;animation:mapToToday 360ms cubic-bezier(.4,0,.2,1) both}
+.routeOverlayQueue{animation:routeFromToday 360ms cubic-bezier(.2,.82,.25,1) both}
+.routeSwipeHandle{position:absolute;left:50%;top:4px;width:72px;height:28px;border:0!important;background:transparent!important;transform:translateX(-50%);cursor:ns-resize}
+.routeSwipeHandle i{display:block;width:42px;height:5px;margin:auto;border-radius:999px;background:#c9d1dc}
+@keyframes routeFromToday{from{opacity:.35;transform:translateY(-18%) scale(.94)}to{opacity:1;transform:none}}
 @keyframes mapFromToday{from{opacity:.35;transform:translateY(22%) scale(.84);border-radius:28px}to{opacity:1;transform:none;border-radius:0}}
 @keyframes mapToToday{from{opacity:1;transform:none;border-radius:0}to{opacity:.2;transform:translateY(22%) scale(.84);border-radius:28px}}
-@media(prefers-reduced-motion:reduce){.page:has(.routeHero) .routeHero,.routeOverlayMap,.routeOverlayReturning{transition:none;animation:none}}
+@media(prefers-reduced-motion:reduce){.page:has(.routeHero) .routeHero,.routeOverlayMap,.routeOverlayReturning,.routeOverlayQueue{transition:none;animation:none}}
