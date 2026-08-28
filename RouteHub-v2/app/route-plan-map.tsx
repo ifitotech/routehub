@@ -23,6 +23,14 @@ function bearingBetween(from:Coordinate,to:Coordinate){
  return (Math.atan2(y,x)/radians+360)%360
 }
 
+function smoothHeading(previous:number|null,next:number|null){
+ if(next==null)return previous
+ if(previous==null)return next
+ // Interpolate on a circle so a change from 359° to 1° remains a small turn.
+ const delta=((next-previous+540)%360)-180
+ return (previous+delta*.42+360)%360
+}
+
 const marker=(number:number,active=false)=>L.divIcon({
  className:'route-plan-marker-wrap',
  html:`<span class="route-plan-marker${active?' is-active':''}">${number}</span>`,
@@ -87,13 +95,13 @@ function FollowDriver({location,enabled}:{location:GpsFix|null;enabled:boolean})
   // Leaflet instance and its tiles remain mounted.
   const heading=location.heading
   const radians=Math.PI/180
-  const aheadMeters=70
+  const aheadMeters=115
   const latOffset=heading==null?0:(Math.cos(heading*radians)*aheadMeters)/111_320
   const lngScale=Math.max(.2,Math.cos(location.lat*radians))
   const lngOffset=heading==null?0:(Math.sin(heading*radians)*aheadMeters)/(111_320*lngScale)
-  map.panTo([location.lat+latOffset*.35,location.lng+lngOffset*.35],{animate:true,duration:.3})
-  if(map.getZoom()<17)map.setZoom(17,{animate:false})
- },[map,location?.lat,location?.lng,enabled])
+  map.panTo([location.lat+latOffset*.68,location.lng+lngOffset*.68],{animate:true,duration:.24})
+  if(map.getZoom()<18)map.setZoom(18,{animate:false})
+ },[map,location?.lat,location?.lng,location?.heading,enabled])
  return null
 }
 
@@ -189,7 +197,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
    // the last accepted movement as a conservative fallback so the camera can
    // still face forward while driving.
    const movementHeading=previous&&distanceMeters(previous,raw)>=4?bearingBetween(previous,raw):previous?.heading??null
-   const candidate={...raw,accuracy:position.coords.accuracy,heading:reportedHeading??movementHeading,updatedAt}
+   const candidate={...raw,accuracy:position.coords.accuracy,heading:smoothHeading(previous?.heading??null,reportedHeading??movementHeading),updatedAt}
    // Do not let a weak fix pull the marker across parallel roads or cause a
    // false reroute. A normal driving movement is still always accepted.
    const elapsedSeconds=previous?Math.max(1,(updatedAt-previous.updatedAt)/1000):0
@@ -314,7 +322,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   if(view!=='navigate'||!deviceLocation||line.length<2||!points.length)return
   const nearest=remainingRouteDistance(line,deviceLocation).distanceFromRouteMeters
   setOffRoute(nearest>=150)
-  if(nearest<150||Date.now()-lastReroute.current<30000||!online)return
+  if(nearest<85||Date.now()-lastReroute.current<8_000||!online)return
   const nextStop=points[1]||points[0]
   lastReroute.current=Date.now()
   setRerouting(true)
