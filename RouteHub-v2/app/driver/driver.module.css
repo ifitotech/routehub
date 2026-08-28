@@ -243,3 +243,28 @@
  .page:has(.routeHero) .routeHero + .primaryActions{margin-top:10px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
  .page:has(.routeHero) .routeHero + .primaryActions:before{margin:0 2px 4px}
 }
+
+/* Atomic Google Maps action: shared by Today and route details. */
+.page:has(.routeHero) .googleMapsButton{
+ width:100%;
+ min-height:56px!important;
+ height:56px;
+ padding:16px 20px!important;
+ display:flex;
+ align-items:center;
+ gap:12px;
+ border:1px solid #DDE5EE!important;
+ border-radius:14px!important;
+ background:#FFFFFF!important;
+ color:#0F1D35!important;
+ font-size:16px!important;
+ font-weight:700!important;
+ transition:transform 140ms ease,background-color 140ms ease,border-color 140ms ease;
+}
+.page:has(.routeHero) .googleMapsButton span{flex:1;text-align:left}
+.page:has(.routeHero) .googleMapsButton .googleMapsChevron{flex:0 0 auto;color:#1667F2}
+.page:has(.routeHero) .googleMapsButton:not(:disabled):active{
+ transform:scale(.99);
+ background:#F1F6FF!important;
+ border-color:#C9D8FF!important;
+}
