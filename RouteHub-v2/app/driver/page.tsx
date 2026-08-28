@@ -375,10 +375,10 @@ const [recipientError,setRecipientError]=useState('')
     return match?.[1]?.trim()||''
   }
   const detailCopy=locale==='es'
-    ? {stopDetails:'Detalles de la parada',current:'Parada actual',upcoming:'Próxima parada',completed:'Completada',completion:'Detalles de finalización',completedAt:'Completada',arrivedAt:'Llegada',time:'Tiempo en ruta',contact:'Contacto',instructions:'Instrucciones',po:'PO / ORDER',photo:'Foto disponible',signature:'Firma disponible',packing:'Packing list disponible',issue:'Incidencia reportada',receivedBy:'Recibido por',openMap:'Abrir mapa',close:'Cerrar'}
+    ? {stopDetails:'Detalles de la parada',current:'Parada actual',upcoming:'Próxima parada',completed:'Completada',completion:'Detalles de finalización',completedAt:'Completada',arrivedAt:'Llegada',time:'Tiempo en ruta',contact:'Contacto',instructions:'Instrucciones',po:'PO / ORDER',photo:'Foto disponible',signature:'Firma disponible',packing:'Packing list disponible',issue:'Incidencia reportada',receivedBy:'Recibido por',openMap:'Navegar',close:'Cerrar'}
     : locale==='fr'
       ? {stopDetails:'Détails de l’arrêt',current:'Arrêt actuel',upcoming:'Prochain arrêt',completed:'Terminé',completion:'Détails de fin',completedAt:'Terminé le',arrivedAt:'Arrivée',time:'Temps sur l’itinéraire',contact:'Contact',instructions:'Instructions',po:'PO / COMMANDE',photo:'Photo disponible',signature:'Signature disponible',packing:'Liste de colisage disponible',issue:'Incident signalé',receivedBy:'Reçu par',openMap:'Ouvrir la carte',close:'Fermer'}
-      : {stopDetails:'Stop details',current:'Current stop',upcoming:'Upcoming stop',completed:'Completed',completion:'Completion details',completedAt:'Completed',arrivedAt:'Arrival',time:'Time on route',contact:'Contact',instructions:'Instructions',po:'PO / ORDER',photo:'Photo available',signature:'Signature available',packing:'Packing list available',issue:'Issue reported',receivedBy:'Received by',openMap:'Open map',close:'Close'}
+      : {stopDetails:'Stop details',current:'Current stop',upcoming:'Upcoming stop',completed:'Completed',completion:'Completion details',completedAt:'Completed',arrivedAt:'Arrival',time:'Time on route',contact:'Contact',instructions:'Instructions',po:'PO / ORDER',photo:'Photo available',signature:'Signature available',packing:'Packing list available',issue:'Issue reported',receivedBy:'Received by',openMap:'Navigate',close:'Close'}
   const startTrackingForActiveRoute=async()=>{
     if(!driverId||!current)return false
     if(!locationConsentAccepted){
