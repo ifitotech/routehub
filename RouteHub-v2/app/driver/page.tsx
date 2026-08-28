@@ -27,7 +27,7 @@ import NotificationBell from '../notification-bell'
 import styles from './driver.module.css'
 const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
 
-type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;origin_lat?:number|null;origin_lng?:number|null;destination_lat?:number|null;destination_lng?:number|null;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
+type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;origin_lat?:number|null;origin_lng?:number|null;destination_lat?:number|null;destination_lng?:number|null;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;route_started_at?:string|null;route_completed_at?:string|null;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
 type SavedContact = {company_name?:string|null;contact_name?:string|null;address?:string|null;phone?:string|null}
 type StopEvidence = {kind:string;path?:string;url?:string}
 
@@ -121,7 +121,7 @@ const [recipientError,setRecipientError]=useState('')
       // route_date is the operational date. Never use created_at or a UTC
       // conversion here: tomorrow's position 1 must not become today's route.
       const {data,error}=await client.from('routes')
-        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,origin_lat,origin_lng,destination_lat,destination_lng,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
+        .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,origin_lat,origin_lng,destination_lat,destination_lng,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,route_started_at,route_completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
         .eq('driver_id',userData.user.id)
         .in('status',['published','pending','active','paused','completed','cancelled'])
         .order('position')
@@ -234,6 +234,12 @@ const [recipientError,setRecipientError]=useState('')
     if(!route.arrived_at)return ''
     const end=route.completed_at?new Date(route.completed_at).getTime():clockNow
     const minutes=Math.max(0,Math.round((end-new Date(route.arrived_at).getTime())/60000))
+    return minutes<60?`${minutes} min`:`${Math.floor(minutes/60)}h ${minutes%60}m`
+  }
+  const routeDurationLabel=(route:Mission)=>{
+    if(!route.route_started_at)return ''
+    const end=route.route_completed_at?new Date(route.route_completed_at).getTime():clockNow
+    const minutes=Math.max(0,Math.round((end-new Date(route.route_started_at).getTime())/60000))
     return minutes<60?`${minutes} min`:`${Math.floor(minutes/60)}h ${minutes%60}m`
   }
   const currentContact=contacts.find(contact=>addressKey(contact.address)===addressKey(current?.destination_address))
@@ -544,6 +550,7 @@ const [recipientError,setRecipientError]=useState('')
         }
       }
       const payload:Record<string,unknown>={status,updated_version:Date.now()}
+      if(status==='active'&&!current.route_started_at)payload.route_started_at=new Date().toISOString()
       if(status==='issue'){
         if(evidenceFile)await uploadMissionEvidence(evidenceFile,current.id,{kind:'issue',attachAsCompletionPhoto:false})
         payload.driver_note=issueNote.trim()||current.driver_note||null
@@ -578,11 +585,20 @@ const [recipientError,setRecipientError]=useState('')
   }
   const saveStopNote=async()=>{if(!current||busy||!stopNote.trim())return;setBusy(true);try{const {error}=await getSupabase().from('routes').update({driver_note:stopNote.trim(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId);if(error)throw error;setStopNote('');setStopNoteOpen(false);setMessage(locale==='es'?'Nota guardada.':locale==='fr'?'Note enregistrée.':'Note saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
   const saveCustomerSignatureProof=async()=>{if(!current||busy||!signatureCanvas.current)return;setBusy(true);try{await saveCustomerSignature(signatureCanvas.current,{companyId:current.company_id,userId:driverId,missionId:current.id});setSignatureOpen(false);setDeliveryToolsOpen(true);setMessage(locale==='es'?'Firma guardada.':locale==='fr'?'Signature enregistrée.':'Signature saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
-  const finalizeRoute=async(method:'normal'|'photo'|'issue',file?:File)=>{if(!finalStop||busy)return;setBusy(true);try{let photoPath:string|undefined;if(file){const evidence=await uploadMissionEvidence(file,finalStop.id,{kind:method==='issue'?'issue':'finalization',attachAsCompletionPhoto:false});photoPath=evidence.path}const {data,error}=await getSupabase().from('routes').update({finalized_at:new Date().toISOString(),finalization_method:method,finalization_note:finalizeNote.trim()||null,finalization_issue:method==='issue'?finalizeIssue||'Other':null,finalization_photo_path:photoPath||null,updated_version:Date.now()}).eq('id',finalStop.id).eq('driver_id',driverId).is('finalized_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('This route was already completed.');setFinalizeOpen(false);setFinalizeIssueOpen(false);setFinalizeIssue('');setFinalizeNote('');setFinalizeIssuePhoto(null);setMessage(locale==='es'?'Ruta completada.':locale==='fr'?'Itinéraire terminé.':'Route completed.');await load()}catch(error){void reportAppError({action:'finalize_route',error,companyId:finalStop?.company_id,branchId:finalStop?.branch_id,routeId:finalStop?.id,context:{method}});setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const finalizeRoute=async(method:'normal'|'photo'|'issue',file?:File)=>{if(!finalStop||busy)return;setBusy(true);try{let photoPath:string|undefined;if(file){const evidence=await uploadMissionEvidence(file,finalStop.id,{kind:method==='issue'?'issue':'finalization',attachAsCompletionPhoto:false});photoPath=evidence.path}const {data,error}=await getSupabase().from('routes').update({finalized_at:new Date().toISOString(),route_completed_at:finalStop.route_completed_at||new Date().toISOString(),finalization_method:method,finalization_note:finalizeNote.trim()||null,finalization_issue:method==='issue'?finalizeIssue||'Other':null,finalization_photo_path:photoPath||null,updated_version:Date.now()}).eq('id',finalStop.id).eq('driver_id',driverId).is('finalized_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('This route was already completed.');setFinalizeOpen(false);setFinalizeIssueOpen(false);setFinalizeIssue('');setFinalizeNote('');setFinalizeIssuePhoto(null);setMessage(locale==='es'?'Ruta completada.':locale==='fr'?'Itinéraire terminé.':'Route completed.');await load()}catch(error){void reportAppError({action:'finalize_route',error,companyId:finalStop?.company_id,branchId:finalStop?.branch_id,routeId:finalStop?.id,context:{method}});setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const ensureRouteStarted=async()=>{
+    if(!current||current.status!=='active'||current.route_started_at)return true
+    const timestamp=new Date().toISOString()
+    const {data,error}=await getSupabase().from('routes').update({route_started_at:timestamp,updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('route_started_at',null).select('id,route_started_at').maybeSingle()
+    if(error){setMessage(errorMessage(error,t.unableUpdateRoute));return false}
+    if(data)setMissions(previous=>previous.map(route=>route.id===current.id?{...route,route_started_at:data.route_started_at}:route))
+    return true
+  }
   const startRoute=async()=>{
     // Do not use window.open here: Safari and installed PWAs can treat it as
     // a pop-up and ignore the driver's tap. A same-tab navigation is reliable
     // and lets the device hand the URL to Google Maps when it is installed.
+    if(!await ensureRouteStarted())return
     const saved=current?.status==='active'
       ? (drivingSession ? true : await startTrackingForActiveRoute())
       : await update('active')
@@ -612,6 +628,7 @@ const [recipientError,setRecipientError]=useState('')
         <div className={styles.routeMeta} aria-live="polite">
           {currentStopIndex>=0&&currentRouteStops.length>0&&<span>{locale==='es'?`Parada ${currentStopIndex+1} de ${currentRouteStops.length}`:locale==='fr'?`Arrêt ${currentStopIndex+1} sur ${currentRouteStops.length}`:`Stop ${currentStopIndex+1} of ${currentRouteStops.length}`}</span>}
           {routeEstimate&&<span>{routeEstimate}</span>}
+          {current.status==='active'&&current.route_started_at&&<span className={styles.routeTimer}>{locale==='es'?`Ruta iniciada ${new Date(current.route_started_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})} · ${routeDurationLabel(current)} transcurridos`:locale==='fr'?`Itinéraire démarré à ${new Date(current.route_started_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})} · ${routeDurationLabel(current)} écoulées`:`Route started ${new Date(current.route_started_at).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})} · ${routeDurationLabel(current)} elapsed`}</span>}
         </div>
         {currentKind==='pickup'&&<div className={`${styles.details} ${styles.singleDetail}`}><div><small>{routeMetaCopy.po}</small><strong>{current.order_number||'—'}</strong></div></div>}
         {currentKind==='delivery'&&currentPhone&&<div className={`${styles.details} ${styles.singleDetail}`}><a className={styles.contactCall} href={`tel:${currentPhone}`}><Phone size={17}/><span><small>{routeMetaCopy.call}</small><strong>{currentContact?.contact_name||currentContact?.company_name||routeLabel(current)}</strong></span></a></div>}

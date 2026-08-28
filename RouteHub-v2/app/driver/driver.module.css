@@ -179,6 +179,7 @@
 .page:has(.routeHero) .routeHero .missionTop .pastDueLabel{color:#9a6400}.page:has(.routeHero) .routeHero .missionTop .pastDuePending{border:1px solid #f0ca68;background:#fff2c8;color:#895800}.stopRowPastDue{border-color:#e8c66c!important;background:#fff9e9}.stopRowPastDue .stopNumber{background:#d99a18!important}.stopRowPastDue small{color:#98670a!important}
 .stopRowIssue{border-color:#f3b2b0!important;background:#fff4f4}.stopRowIssue .stopNumber{background:#e54845!important}.stopRowIssue small{color:#b42320!important}.stopDetailsIssue{border-color:#f3b2b0!important}.stopDetailsIssue>small{background:#fff0f0!important;color:#b42320!important}.stopDetailsIssue>strong{color:#b42320!important}
 .stopRow .stopPo{color:var(--driver-navy);font-weight:800;letter-spacing:.02em}
+.routeMeta .routeTimer{padding:0;min-height:0;background:transparent;color:var(--driver-secondary);font-size:12px;font-weight:600}
 .issueStatus{color:#b42320!important}
 .pendingStatus{color:#98670a!important;font-weight:850}
 .completedStatus{color:#168447!important;font-weight:850}.stopNumberCompleted{background:#10a85f!important}.stopNumberIssue{background:#e54845!important}
