@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 
 const migration=await readFile(new URL('../supabase/migrations/023_atomic_route_queue_reordering.sql',import.meta.url),'utf8')
+const startingPointMigration=await readFile(new URL('../supabase/migrations/036_relink_queue_starting_point.sql',import.meta.url),'utf8')
 const client=await readFile(new URL('../app/routes/manage/page.tsx',import.meta.url),'utf8')
 
 test('atomic reorder derives and validates one complete queue server-side',()=>{
@@ -25,6 +26,15 @@ test('atomic reorder locks the queue, preserves locked routes, and relinks origi
   assert.match(migration,/origin_name = case/)
   assert.match(migration,/updated_version = coalesce\(r\.updated_version, 0\) \+ 1/)
   assert.match(migration,/route_queue_reordered/)
+})
+
+test('reordering rebuilds the first starting point and coordinate chain',()=>{
+  assert.match(startingPointMigration,/r\.position < \(select min\(slot\) from unnest\(v_position_slots\)/)
+  assert.match(startingPointMigration,/r\.status in \('active', 'completed', 'issue'\)/)
+  assert.match(startingPointMigration,/from public\.branches b/)
+  assert.match(startingPointMigration,/lag\(r\.destination_lat\)/)
+  assert.match(startingPointMigration,/origin_lat = case/)
+  assert.match(startingPointMigration,/origin_lng = case/)
 })
 
 test('reassignment normalizes only source and target queues',()=>{
