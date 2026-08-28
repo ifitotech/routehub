@@ -5,6 +5,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import type {CSSProperties, PointerEvent as ReactPointerEvent} from 'react'
+import {flushSync} from 'react-dom'
 import {useSearchParams} from 'next/navigation'
 import {ArrowLeft, Camera, Check, ChevronRight, CircleUserRound, ClipboardCheck, Clock3, FileText, History as HistoryIcon, Home, List, Map as MapIcon, MapPin, MessageSquare, MoreHorizontal, Pause, Phone, Play, RotateCcw, Signature, TriangleAlert, X} from 'lucide-react'
 import {completeMission, currentMembership} from '../../lib/data'
@@ -374,9 +375,19 @@ const [recipientError,setRecipientError]=useState('')
     return()=>window.clearInterval(timer)
   },[autoCloseTime,current,driverId,drivingSession,locale,missions,t.unableUpdateRoute])
 
-  const openRouteMap=()=>{setMapReturning(false);setTodayDragY(0);setRouteView('map')}
+  const runMapTransition=(update:()=>void)=>{
+    const startViewTransition=typeof document!=='undefined'&&(document as any).startViewTransition
+    if(startViewTransition){startViewTransition.call(document,()=>flushSync(update));return true}
+    update()
+    return false
+  }
+  const openRouteMap=()=>{
+    if(routeView==='map')return
+    runMapTransition(()=>{setMapReturning(false);setTodayDragY(0);setRouteView('map')})
+  }
   const returnToToday=()=>{
     if(routeView!=='map'){setRouteView(null);return}
+    if(typeof document!=='undefined'&&(document as any).startViewTransition){runMapTransition(()=>{setMapReturning(false);setRouteView(null)});return}
     setMapReturning(true)
     window.setTimeout(()=>{setRouteView(null);setMapReturning(false)},340)
   }
@@ -392,7 +403,7 @@ const [recipientError,setRecipientError]=useState('')
     if(todayDragStart.current==null)return
     const distance=event.clientY-todayDragStart.current
     todayDragStart.current=null
-    if(distance>55){setTodayDragY(150);window.setTimeout(openRouteMap,120);return}
+    if(distance>55){setTodayDragY(0);openRouteMap();return}
     setTodayDragY(0)
   }
   const openGoogleMaps=(route:Mission|null|undefined=current)=>{
@@ -528,7 +539,7 @@ const [recipientError,setRecipientError]=useState('')
     {message&&<div className={styles.toast} role="status">{message}</div>}
     {loadError&&<div className={styles.loadError} role="status"><span>{loadError}</span><button disabled={loading} onClick={()=>void load()}>{t.retry || 'Retry'}</button></div>}
     {loading&&!missions.length?<section className={`${styles.loading} card`} aria-busy="true"><span/><span/><span/></section>:current?<>
-      <section className={styles.routeHero} style={{'--today-drag':`${todayDragY}px`} as CSSProperties}>
+      <section className={`${styles.routeHero}${routeView==='map'?` ${styles.routeHeroMapOpen}`:''}`} style={{'--today-drag':`${todayDragY}px`} as CSSProperties}>
       <section className={styles.mission}>
         <div className={styles.missionTop}><span>{isPastRoute?'PAST DUE':t.currentRoute}</span><button type="button" className={styles.todayMapHandle} aria-label={locale==='es'?'Desliza hacia abajo para abrir el mapa':'Drag down to open map'} onPointerDown={beginTodayDrag} onPointerMove={moveTodayDrag} onPointerUp={finishTodayDrag} onPointerCancel={()=>{todayDragStart.current=null;setTodayDragY(0)}}><i/></button><span className={current.priority==='urgent'?styles.urgent:styles.priority}>{isPastRoute?'PENDING':current.priority==='urgent'?`⚠ ${t.urgent}`:current.priority||t.normal}</span></div>
         <div className={styles.type}>{currentStopLabel}</div>
