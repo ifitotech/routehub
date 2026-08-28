@@ -7,7 +7,6 @@ import {useCallback, useEffect, useState} from 'react'
 import {resolveDriverIssue} from '../../../lib/issue-resolution'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
-import NotificationBell from '../../notification-bell'
 import DriverBottomNav from '../driver-bottom-nav'
 import styles from './history.module.css'
 
@@ -80,7 +79,6 @@ export default function DriverHistory() {
   return <main className={`app driver-dashboard ${styles.page}`}>
     <header className={styles.header}>
       <Link className={styles.brand} href="/driver"><Image src="/routehub-driver-new.jpg" alt="" width={42} height={42}/><span>RouteHub<small>{t.driverWorkspace}</small></span></Link>
-      <NotificationBell />
     </header>
     <p className={styles.eyebrow}>{t.driverWorkspace}</p>
     <h1 className={styles.title}>{copy.title}</h1>
