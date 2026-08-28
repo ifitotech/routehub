@@ -39,8 +39,8 @@ function ordered<T extends DriverQueueRoute>(routes: T[]) {
 
 /**
  * Selects one driver's authoritative work queue for the local operational
- * date. Active work always wins; a paused route remains the current context
- * for today; only then can an upcoming route become current.
+ * date. Work from an earlier day is escalated to the manager and must never
+ * keep the driver trapped in yesterday's queue while today's route exists.
  */
 export function selectDriverTodayQueue<T extends DriverQueueRoute>(
   routes: T[],
@@ -48,9 +48,9 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
   today: string,
 ): DriverTodayQueue<T> {
   const driverRoutes = routes.filter(route => route.driver_id === driverId)
-  const active = ordered(driverRoutes.filter(route => route.status === 'active' && (route.route_date || '') <= today))
-  const paused = ordered(driverRoutes.filter(route => route.status === 'paused' && (route.route_date || '') <= today))
-  const eligibleUpcoming = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') <= today))
+  const active = ordered(driverRoutes.filter(route => route.status === 'active' && (route.route_date || '') === today))
+  const paused = ordered(driverRoutes.filter(route => route.status === 'paused' && (route.route_date || '') === today))
+  const eligibleUpcoming = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') === today))
   const current = active[0] ?? paused[0] ?? eligibleUpcoming[0]
 
   return {
@@ -64,5 +64,5 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
 
 export function canDriverStartRoute(route: DriverQueueRoute | undefined, today: string) {
   const routeDate = route?.route_date?.slice(0, 10) || ''
-  return Boolean(route && routeDate <= today && [...upcomingStatuses, 'paused'].includes(route.status))
+  return Boolean(route && routeDate === today && [...upcomingStatuses, 'paused'].includes(route.status))
 }

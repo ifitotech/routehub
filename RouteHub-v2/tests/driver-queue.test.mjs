@@ -26,13 +26,13 @@ test('today queue never promotes tomorrow route to current mission', () => {
   assert.deepEqual(queue.upcoming.map(item => item.id), ['today-b'])
 })
 
-test('an unfinished past-due route stays ahead of today work until it is completed', () => {
+test('an unfinished past-due route never blocks the current operational day', () => {
   const queue = selectDriverTodayQueue([
     route('today-first', 'published', 1, '2026-08-13'),
     route('past-due', 'pending', 4, '2026-08-12'),
   ], 'driver-a', '2026-08-13')
-  assert.equal(queue.current?.id, 'past-due')
-  assert.deepEqual(queue.upcoming.map(item => item.id), ['today-first'])
+  assert.equal(queue.current?.id, 'today-first')
+  assert.deepEqual(queue.upcoming.map(item => item.id), [])
 })
 
 test('a future active record cannot override today work', () => {
@@ -101,4 +101,13 @@ test('database migration protects the one-active-route driver invariant', () => 
   assert.match(sql, /pg_advisory_xact_lock/)
   assert.match(sql, /A driver can have only one active route at a time/)
   assert.match(sql, /before insert or update of status, driver_id, company_id/i)
+})
+
+test('expired assigned routes are escalated to a manager issue every day', () => {
+  const sql = readFileSync(new URL('../supabase/migrations/037_escalate_expired_driver_routes.sql', import.meta.url), 'utf8')
+  assert.match(sql, /route_date < v_cutoff_date/)
+  assert.match(sql, /status = 'issue'/)
+  assert.match(sql, /status in \('draft', 'pending', 'published', 'active', 'paused'\)/)
+  assert.match(sql, /routehub-escalate-expired-driver-routes/)
+  assert.match(sql, /cron\.schedule/)
 })

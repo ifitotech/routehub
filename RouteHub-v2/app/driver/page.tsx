@@ -125,7 +125,7 @@ const [recipientError,setRecipientError]=useState('')
       const {data,error}=await client.from('routes')
         .select('id,company_id,branch_id,driver_id,route_date,status,origin_address,destination_address,destination_name,destination_phone,origin_lat,origin_lng,destination_lat,destination_lng,priority,notes,driver_note,position,mission_type,order_number,scheduled_at,completed_at,arrived_at,customer_signature_path,completion_photo_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path')
         .eq('driver_id',userData.user.id)
-        .in('status',['published','pending','active','paused','completed','issue','cancelled'])
+        .in('status',['published','pending','active','paused','completed','cancelled'])
         .order('position')
       if(error)throw error
       setMissions((data||[]) as Mission[])
@@ -196,7 +196,7 @@ const [recipientError,setRecipientError]=useState('')
     if(route.driver_id!==driverId||route.status==='cancelled')return false
     if(current&&(route.company_id!==current.company_id||route.branch_id!==current.branch_id))return false
     const routeDate=(route.route_date||'').slice(0,10)
-    return routeDate===today||(routeDate<today&&['published','pending','active','paused','issue'].includes(route.status))
+    return routeDate===today
   }).slice().sort((left,right)=>{
     const dateOrder=(left.route_date||'').localeCompare(right.route_date||'')
     if(dateOrder!==0)return dateOrder
