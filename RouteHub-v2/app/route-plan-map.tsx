@@ -14,7 +14,7 @@ type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?:'pickup'|'delivery'|'branch';orderNumber?:string|null;notes?:string|null;position?:number}
 
-type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean}
+type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean;onReturnToday?:()=>void;transitioningOut?:boolean}
 
 const marker=(number:number,active=false)=>L.divIcon({
  className:'route-plan-marker-wrap',
@@ -83,7 +83,7 @@ const driverMarker=(heading:number|null)=>L.divIcon({
  iconSize:[48,48],iconAnchor:[24,24]
 })
 
-export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false,autoStartNavigation=false}:Props){
+export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false,autoStartNavigation=false,onReturnToday,transitioningOut=false}:Props){
  const driverMode=navigationOnly||(typeof window!=='undefined'&&window.location.pathname==='/driver')
  const [points,setPoints]=useState<Coordinate[]>([])
  const [line,setLine]=useState<Coordinate[]>([])
@@ -233,6 +233,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   const delta=event.clientY-sheetDragStart.current
   sheetDragStart.current=null
   setSheetDragY(0)
+  if(delta<-45&&onReturnToday){onReturnToday();return}
   if(delta<-30)setSheetExpanded(true)
   else if(delta>30)setSheetExpanded(false)
   else setSheetExpanded(value=>!value)
@@ -275,7 +276,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
  const activeStop=navigationStops[0]
  const followingStop=navigationStops[1]
  const stopKindLabel=(kind:PlannedStop['kind'])=>kind==='pickup'?(locale==='es'?'Recogida':'Pickup'):kind==='branch'?(locale==='es'?'Regresar a sucursal':'Return to branch'):(locale==='es'?'Entrega':'Delivery')
- return <section className={`route-plan-map route-plan-${view}${driverMode?' route-plan-driver':''}${navigationActive?' is-driving':''}${sheetExpanded?' is-sheet-expanded':''}`} aria-label={copy.label}>
+ return <section className={`route-plan-map route-plan-${view}${driverMode?' route-plan-driver':''}${navigationActive?' is-driving':''}${sheetExpanded?' is-sheet-expanded':''}${transitioningOut?' is-returning-today':''}`} aria-label={copy.label}>
   <header className="route-plan-nav"><div><small>{view==='navigate'?copy.next:copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation&&!gpsWeak?'is-live':''}>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}{deviceLocation&&<small> · {gpsMeta}</small>}</span></header>
   {!driverMode&&<div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>}
   {view==='navigate'&&navigationActive&&<div className="route-plan-guide" aria-live="polite"><ManeuverIcon maneuver={maneuver}/><div><b>{formatDistance(maneuver?.distanceToManeuverMeters)}</b><span>{maneuverInstruction(maneuver,locale)}</span></div></div>}
