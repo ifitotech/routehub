@@ -14,7 +14,7 @@ type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?:'pickup'|'delivery'|'branch';orderNumber?:string|null;notes?:string|null;position?:number;pastDue?:boolean;pending?:boolean}
 
-type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean;onReturnToday?:()=>void;transitioningOut?:boolean}
+type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean;onReturnToday?:()=>void;onExitNavigation?:()=>void;onArrive?:()=>void|Promise<void>;transitioningOut?:boolean}
 
 const marker=(number:number,active=false)=>L.divIcon({
  className:'route-plan-marker-wrap',
@@ -94,7 +94,7 @@ const driverMarker=(heading:number|null)=>L.divIcon({
  iconSize:[48,48],iconAnchor:[24,24]
 })
 
-export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false,autoStartNavigation=false,onReturnToday,transitioningOut=false}:Props){
+export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false,autoStartNavigation=false,onReturnToday,onExitNavigation,onArrive,transitioningOut=false}:Props){
  const driverMode=navigationOnly||(typeof window!=='undefined'&&window.location.pathname==='/driver')
  const [points,setPoints]=useState<Coordinate[]>([])
  const [line,setLine]=useState<Coordinate[]>([])
@@ -121,6 +121,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
  const [loading,setLoading]=useState(true)
  const [arrivalReady,setArrivalReady]=useState(false)
  const [arrivalConfirmed,setArrivalConfirmed]=useState(false)
+ const didAutoStart=useRef(false)
  const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label)),[stops])
  // Driver navigation shows the active stop and only one upcoming reference.
  // The driver page sorts active work first before passing these stops.
@@ -228,9 +229,26 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   if(navigationActive){await stopNavigation();return}
   await startNavigation()
  }
+ const exitNavigation=async()=>{
+  await stopNavigation()
+  if(onExitNavigation){onExitNavigation();return}
+  onReturnToday?.()
+ }
+ const confirmArrival=async()=>{
+  if(!nearDestination||arrivalConfirmed)return
+  setArrivalConfirmed(true)
+  try{
+   if(onArrive){await onArrive();return}
+   window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true,distance:destinationDistance}}))
+   onReturnToday?.()
+  }catch{
+   setArrivalConfirmed(false)
+  }
+ }
 
  useEffect(()=>{
-  if(!autoStartNavigation||navigationActive)return
+  if(!autoStartNavigation||navigationActive||didAutoStart.current)return
+  didAutoStart.current=true
   void startNavigation()
  },[autoStartNavigation,navigationActive])
 
@@ -322,6 +340,6 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
    {points.slice(1).map((point,index)=><Marker key={displayedStops[index]?.id||index} position={[point.lat,point.lng]} icon={marker(index+1,index===0)}><Tooltip direction="top" offset={[0,-18]}>{displayedStops[index]?.label||`${copy.stop} ${index+1}`}</Tooltip></Marker>)}
    {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverMarker(deviceLocation.heading)}><Tooltip direction="top">{locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location'}</Tooltip></Marker>}
   </MapContainer>} {deviceLocation&&<>{!navigationActive&&<button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],15)}><LocateFixed size={20}/><span>{copy.recenter}</span></button>}{navigationActive&&<><div className={`route-plan-gps-pill${gpsWeak?' is-weak':''}`}><Satellite size={16}/><span>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}</span></div><div className="route-plan-float-controls"><button type="button" aria-label={copy.recenter} onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],17)}><Crosshair size={23}/></button></div></>}</>}</div>
-  <footer className="route-plan-bottom" style={{'--route-sheet-drag':`${sheetDragY}px`} as CSSProperties} onTouchStart={navigationActive?beginSheetTouch:undefined} onTouchMove={navigationActive?moveSheetTouch:undefined} onTouchEnd={navigationActive?finishSheetTouch:undefined}>{navigationActive&&<button type="button" className="route-plan-sheet-handle" aria-label={sheetExpanded?(locale==='es'?'Bajar detalles':locale==='fr'?'Réduire les détails':'Collapse details'):(locale==='es'?'Subir detalles':locale==='fr'?'Afficher les détails':'Expand details')} onPointerDown={beginSheetDrag} onPointerMove={moveSheet} onPointerUp={finishSheetDrag} onPointerCancel={()=>{sheetDragStart.current=null;setSheetDragY(0)}}><span/></button>}<div className="route-plan-summary"><strong>{remainingDuration!=null?`${Math.max(1,Math.round(remainingDuration/60))} min`:`${navigationActive?'' : validStops.length}`}</strong><span>{remainingDistance!=null?`${formatDistance(remainingDistance)} · ${new Date(Date.now()+(remainingDuration||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive&&sheetExpanded&&<div className="route-plan-sheet-details"><small>{locale==='es'?'Parada actual':locale==='fr'?'Arrêt actuel':'Current stop'}</small><div className="route-plan-sheet-stop"><b>{activeStop?.position||1}</b><span><strong>{activeStop?.label||activeStop?.address||copy.stop}</strong><em>{activeStop?.address}</em></span><i>{stopKindLabel(activeStop?.kind)}</i></div>{activeStop?.orderNumber&&<p><b>PO / ORDER</b><span>{activeStop.orderNumber}</span></p>}{activeStop?.notes&&<p><b>{locale==='es'?'Instrucciones':locale==='fr'?'Instructions':'Instructions'}</b><span>{activeStop.notes}</span></p>}{followingStop&&<><small>{locale==='es'?'Siguiente parada':locale==='fr'?'Prochain arrêt':'Next stop'}</small><div className="route-plan-sheet-stop is-next"><b>{followingStop.position||2}</b><span><strong>{followingStop.label||followingStop.address}</strong><em>{followingStop.address}</em></span><i>{stopKindLabel(followingStop.kind)}</i></div></>}</div>}{navigationActive?<div className="route-plan-driving-buttons"><button type="button" onClick={()=>void toggleNavigation()}>{copy.exit}</button><button type="button" disabled={!nearDestination||arrivalConfirmed} className={`arrived${nearDestination?' is-near':''}`} onClick={()=>{setArrivalConfirmed(true);window.dispatchEvent(new CustomEvent('routehub:arrival',{detail:{manual:true,distance:destinationDistance}}))}}><Flag size={19}/>{arrivalConfirmed?copy.arrivalConfirmed:copy.arrived}</button></div>:<small>{maneuverInstruction(maneuver,locale)}</small>}</footer>
+  <footer className="route-plan-bottom" style={{'--route-sheet-drag':`${sheetDragY}px`} as CSSProperties} onTouchStart={navigationActive?beginSheetTouch:undefined} onTouchMove={navigationActive?moveSheetTouch:undefined} onTouchEnd={navigationActive?finishSheetTouch:undefined}>{navigationActive&&<button type="button" className="route-plan-sheet-handle" aria-label={sheetExpanded?(locale==='es'?'Bajar detalles':locale==='fr'?'Réduire les détails':'Collapse details'):(locale==='es'?'Subir detalles':locale==='fr'?'Afficher les détails':'Expand details')} onPointerDown={beginSheetDrag} onPointerMove={moveSheet} onPointerUp={finishSheetDrag} onPointerCancel={()=>{sheetDragStart.current=null;setSheetDragY(0)}}><span/></button>}<div className="route-plan-summary"><strong>{remainingDuration!=null?`${Math.max(1,Math.round(remainingDuration/60))} min`:`${navigationActive?'' : validStops.length}`}</strong><span>{remainingDistance!=null?`${formatDistance(remainingDistance)} · ${new Date(Date.now()+(remainingDuration||0)*1000).toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'})}`:`${validStops.length===1?copy.single:copy.plural}`}</span></div>{navigationActive&&sheetExpanded&&<div className="route-plan-sheet-details"><small>{locale==='es'?'Parada actual':locale==='fr'?'Arrêt actuel':'Current stop'}</small><div className="route-plan-sheet-stop"><b>{activeStop?.position||1}</b><span><strong>{activeStop?.label||activeStop?.address||copy.stop}</strong><em>{activeStop?.address}</em></span><i>{stopKindLabel(activeStop?.kind)}</i></div>{activeStop?.orderNumber&&<p><b>PO / ORDER</b><span>{activeStop.orderNumber}</span></p>}{activeStop?.notes&&<p><b>{locale==='es'?'Instrucciones':locale==='fr'?'Instructions':'Instructions'}</b><span>{activeStop.notes}</span></p>}{followingStop&&<><small>{locale==='es'?'Siguiente parada':locale==='fr'?'Prochain arrêt':'Next stop'}</small><div className="route-plan-sheet-stop is-next"><b>{followingStop.position||2}</b><span><strong>{followingStop.label||followingStop.address}</strong><em>{followingStop.address}</em></span><i>{stopKindLabel(followingStop.kind)}</i></div></>}</div>}{navigationActive?<div className="route-plan-driving-buttons"><button type="button" onClick={()=>void exitNavigation()}>{copy.exit}</button><button type="button" disabled={!nearDestination||arrivalConfirmed} className={`arrived${nearDestination?' is-near':''}`} onClick={()=>void confirmArrival()}><Flag size={19}/>{arrivalConfirmed?copy.arrivalConfirmed:copy.arrived}</button></div>:<small>{maneuverInstruction(maneuver,locale)}</small>}</footer>
  </section>
 }

@@ -46,6 +46,15 @@ test('GPS arrival requires a driver confirmation and next-stop routing rejects s
   assert.match(driver,/if\(!detail\?\.manual\)/)
 })
 
+test('navigation exit and arrival return to the driver workflow instead of restarting the map',async()=>{
+  const map=await readFile(new URL('../app/route-plan-map.tsx',import.meta.url),'utf8')
+  assert.match(map,/const exitNavigation=async\(\)=>/)
+  assert.match(map,/if\(onExitNavigation\)\{onExitNavigation\(\);return\}/)
+  assert.match(map,/onReturnToday\?\.\(\)/)
+  assert.match(map,/const didAutoStart=useRef\(false\)/)
+  assert.match(map,/!autoStartNavigation\|\|navigationActive\|\|didAutoStart\.current/)
+})
+
 test('navigation GPS prefers a newer precise fix over a coarse position',async()=>{
   const map=await readFile(new URL('../app/route-plan-map.tsx',import.meta.url),'utf8')
   assert.match(map,/materiallyMorePrecise/)
