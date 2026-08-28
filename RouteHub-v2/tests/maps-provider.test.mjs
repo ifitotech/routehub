@@ -26,6 +26,17 @@ test('driver navigation sheet expands without stopping or remounting the map',as
   assert.match(source,/activeStop\?\.orderNumber/)
 })
 
+test('GPS arrival requires a driver confirmation and next-stop routing rejects stale responses',async()=>{
+  const map=await readFile(new URL('../app/route-plan-map.tsx',import.meta.url),'utf8')
+  const driver=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
+  assert.match(map,/setArrivalReady\(true\)/)
+  assert.match(map,/detail:\{manual:true,distance:destinationDistance\}/)
+  assert.match(map,/disabled=\{!nearDestination\|\|arrivalConfirmed\}/)
+  assert.match(map,/navigationRequest\.current/)
+  assert.match(map,/acceptedGpsFix\.current/)
+  assert.match(driver,/if\(!detail\?\.manual\)/)
+})
+
 test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>{
   const source=await readFile(new URL('../lib/maps/routing.ts',import.meta.url),'utf8')
   assert.match(source,/coordinates:coordinates\.length\?coordinates:fallback/)

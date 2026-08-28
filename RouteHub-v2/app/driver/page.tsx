@@ -328,7 +328,11 @@ const [recipientError,setRecipientError]=useState('')
   },[driverId,drivingSession,t.locationPermissionDenied])
 
   useEffect(()=>{
-    const onArrival=()=>{
+    const onArrival=(event:Event)=>{
+      const detail=(event as CustomEvent<{manual?:boolean}>).detail
+      // GPS proximity only enables the on-screen arrival action. The database
+      // changes after the driver explicitly confirms by pressing "Llegué".
+      if(!detail?.manual){setMessage(locale==='es'?'Estás cerca de la parada. Confirma "Llegué" cuando estés listo.':locale==='fr'?'Vous êtes près de l’arrêt. Confirmez « Arrivé » lorsque vous êtes prêt.':'You are near the stop. Confirm "Arrived" when you are ready.');return}
       if(!current||current.arrived_at||!driverId)return
       void (async()=>{
         const {data,error}=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null).select('id').maybeSingle()
