@@ -109,7 +109,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
  const [loading,setLoading]=useState(true)
  const [arrivalReady,setArrivalReady]=useState(false)
  const [arrivalConfirmed,setArrivalConfirmed]=useState(false)
- const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.address)),[stops])
+ const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label)),[stops])
  // Driver navigation shows the active stop and only one upcoming reference.
  // The driver page sorts active work first before passing these stops.
  const navigationStops=useMemo(()=>validStops.slice(0,2),[validStops])
