@@ -4,7 +4,7 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import type {CSSProperties,PointerEvent as ReactPointerEvent} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
-import {ArrowUp,CornerUpLeft,CornerUpRight,Crosshair,Flag,LocateFixed,Navigation2,RotateCcw,Route as RouteIcon,Satellite,WifiOff} from 'lucide-react'
+import {ArrowUp,CornerUpLeft,CornerUpRight,Crosshair,Flag,LocateFixed,RotateCcw,Route as RouteIcon,Satellite,WifiOff} from 'lucide-react'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters,nextRouteManeuver,remainingRouteDistance} from '../lib/maps/routing'
@@ -14,7 +14,7 @@ type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?:'pickup'|'delivery'|'branch';orderNumber?:string|null;notes?:string|null;position?:number}
 
-type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean}
+type Props={originAddress?:string|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean}
 
 const marker=(number:number,active=false)=>L.divIcon({
  className:'route-plan-marker-wrap',
@@ -83,7 +83,7 @@ const driverMarker=(heading:number|null)=>L.divIcon({
  iconSize:[48,48],iconAnchor:[24,24]
 })
 
-export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false}:Props){
+export default function RoutePlanMap({originAddress,stops,locale='en',navigationOnly=false,autoStartNavigation=false}:Props){
  const driverMode=navigationOnly||(typeof window!=='undefined'&&window.location.pathname==='/driver')
  const [points,setPoints]=useState<Coordinate[]>([])
  const [line,setLine]=useState<Coordinate[]>([])
@@ -193,12 +193,31 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
   document.addEventListener('visibilitychange',restore)
   return()=>document.removeEventListener('visibilitychange',restore)
  },[navigationActive])
- const toggleNavigation=async()=>{
-  if(navigationActive){await wakeLock.current?.release?.();wakeLock.current=null;setNavigationActive(false);setSheetExpanded(false);setSheetDragY(0);return}
+ const startNavigation=async()=>{
+  if(navigationActive)return
   try{wakeLock.current=await (navigator as any).wakeLock?.request?.('screen')}catch{}
   setNavigationActive(true)
+  setSheetExpanded(false)
+  setSheetDragY(0)
   window.setTimeout(()=>{map?.invalidateSize();if(deviceLocation)map?.setView([deviceLocation.lat,deviceLocation.lng],17,{animate:false})},60)
  }
+ const stopNavigation=async()=>{
+  if(!navigationActive)return
+  await wakeLock.current?.release?.()
+  wakeLock.current=null
+  setNavigationActive(false)
+  setSheetExpanded(false)
+  setSheetDragY(0)
+ }
+ const toggleNavigation=async()=>{
+  if(navigationActive){await stopNavigation();return}
+  await startNavigation()
+ }
+
+ useEffect(()=>{
+  if(!autoStartNavigation||navigationActive)return
+  void startNavigation()
+ },[autoStartNavigation,navigationActive])
 
  const beginSheetDrag=(event:ReactPointerEvent<HTMLButtonElement>)=>{
   sheetDragStart.current=event.clientY
@@ -259,7 +278,6 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
  return <section className={`route-plan-map route-plan-${view}${driverMode?' route-plan-driver':''}${navigationActive?' is-driving':''}${sheetExpanded?' is-sheet-expanded':''}`} aria-label={copy.label}>
   <header className="route-plan-nav"><div><small>{view==='navigate'?copy.next:copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation&&!gpsWeak?'is-live':''}>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}{deviceLocation&&<small> · {gpsMeta}</small>}</span></header>
   {!driverMode&&<div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':'Plan'}</button></div>}
-  {view==='navigate'&&!navigationActive&&<div className="route-plan-actions"><button onClick={()=>void toggleNavigation()}><Navigation2 size={19}/>{locale==='es'?'Iniciar navegación':'Start navigation'}</button></div>}
   {view==='navigate'&&navigationActive&&<div className="route-plan-guide" aria-live="polite"><ManeuverIcon maneuver={maneuver}/><div><b>{formatDistance(maneuver?.distanceToManeuverMeters)}</b><span>{maneuverInstruction(maneuver,locale)}</span></div></div>}
   {view==='navigate'&&navigationActive&&(rerouting||offRoute||!online)&&<div className={`route-plan-driving-alert${rerouting||offRoute?' is-warning':''}`}>{!online?<WifiOff size={16}/>:<RouteIcon size={16}/>}<span>{!online?copy.offline:rerouting?copy.rerouting:copy.offRoute}</span></div>}
   <div className="route-plan-canvas">{loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} aria-label={copy.map}>
