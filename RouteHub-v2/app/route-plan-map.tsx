@@ -75,9 +75,17 @@ function FollowDriver({location,enabled}:{location:GpsFix|null;enabled:boolean})
  const map=useMap()
  useEffect(()=>{
   if(!enabled||!location)return
-  // panTo keeps the map and its tiles mounted; only the camera follows GPS.
-  map.panTo([location.lat,location.lng],{animate:true,duration:.45})
-  if(map.getZoom()<15)map.setZoom(16)
+  // Keep the camera slightly ahead of the vehicle so the active route stays
+  // in front, like a driving GPS. This only moves the existing camera; the
+  // Leaflet instance and its tiles remain mounted.
+  const heading=location.heading
+  const radians=Math.PI/180
+  const aheadMeters=70
+  const latOffset=heading==null?0:(Math.cos(heading*radians)*aheadMeters)/111_320
+  const lngScale=Math.max(.2,Math.cos(location.lat*radians))
+  const lngOffset=heading==null?0:(Math.sin(heading*radians)*aheadMeters)/(111_320*lngScale)
+  map.panTo([location.lat+latOffset*.35,location.lng+lngOffset*.35],{animate:true,duration:.3})
+  if(map.getZoom()<17)map.setZoom(17,{animate:false})
  },[map,location?.lat,location?.lng,enabled])
  return null
 }
