@@ -440,6 +440,9 @@ html[data-theme='light'] .notification-bell__panel { box-shadow: 0 18px 46px rgb
 
 /* Match the approved Driver navigation composition. */
 @media(max-width:719px){
+ .route-plan-driver .leaflet-control-zoom{display:none!important}
+ .route-plan-driver:not(.is-driving) .route-plan-bottom{z-index:850;left:12px;right:12px;bottom:12px}
+ .route-plan-driver:not(.is-driving) .leaflet-control-attribution{right:12px;bottom:132px;z-index:820;max-width:calc(100% - 24px);padding:2px 7px!important;border-radius:8px;background:rgb(255 255 255 / 78%)!important;font-size:9px!important;line-height:14px!important;white-space:nowrap;opacity:.7}
  .route-plan-driver.is-driving .leaflet-control-zoom{display:none!important}
  .route-plan-driver.is-driving .leaflet-tile-pane{filter:saturate(.62) brightness(1.06) contrast(.92)}
  .route-plan-driver.is-driving .leaflet-control-attribution{bottom:226px;max-width:58%;overflow:hidden;white-space:nowrap;opacity:.72}
