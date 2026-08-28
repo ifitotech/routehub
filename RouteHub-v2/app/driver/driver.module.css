@@ -185,4 +185,5 @@
 .page:has(.routeHero) .workspaceHeading{display:none}.page:has(.routeHero) .header{padding-top:2px}.page:has(.routeHero) .brand strong{font-size:20px;letter-spacing:-.02em}.page:has(.routeHero) .routeHero .missionTop span:first-child{font-size:10px}.page:has(.routeHero) .routeHero .missionTop span:last-child{background:#ffffff18;border-radius:999px;padding:6px 10px}
 /* Keep Today mini-map compact and keep completion actions below it. */
 .page:has(.routeHero) .routeHero :global(.live-route-map.is-activatable) :global(.live-route-canvas){height:190px!important;min-height:190px!important;max-height:190px!important}
+.routeOverlay .routeTabs{display:none!important}
 .page:has(.routeHero) .routeHero + .primaryActions{margin:10px 0 0!important;padding:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
