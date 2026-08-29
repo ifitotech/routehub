@@ -61,7 +61,7 @@ Deno.serve(async request => {
     const label = route.destination_name || route.destination_address || 'your next stop'
     const assigned = event === 'assigned'
     const payload = JSON.stringify({
-      title: assigned ? 'New route assigned' : 'Route updated',
+      title: 'RouteHub',
       body: assigned ? `${String(route.mission_type || 'Delivery').toUpperCase()} · ${label}` : `Your route to ${label} was updated.`,
       href: '/driver',
       tag: `route:${route.id}`,

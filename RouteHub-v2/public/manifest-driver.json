@@ -1,7 +1,7 @@
 {
   "id": "/driver",
   "name": "RouteHub Driver",
-  "short_name": "RH Driver",
+  "short_name": "RouteHub",
   "description": "Driver routes, navigation and proof of delivery.",
   "start_url": "/driver?source=pwa",
   "scope": "/",

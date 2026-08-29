@@ -98,3 +98,92 @@
 @media (prefers-reduced-motion: reduce) {
   .summaryCard, .quickGrid a { transition: none; }
 }
+
+/* Desktop refresh: the operational state is the hero, not another dense
+   dashboard. Kept scoped to Today so mobile and shared live data stay intact. */
+@media (min-width: 1024px) {
+  .summary {
+    gap: 16px;
+    margin: 12px 0 30px;
+  }
+
+  .summaryCard {
+    position: relative;
+    min-height: 112px;
+    padding: 21px 22px;
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 10px 28px rgb(33 56 90 / 5%);
+  }
+
+  .summaryCard::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 22px;
+    height: 3px;
+    border-radius: 999px 999px 0 0;
+    background: currentColor;
+    content: '';
+    opacity: .74;
+  }
+
+  .summaryCard strong { font-size: 36px; }
+  .summaryCard span { font-size: 13px; }
+  .summaryPending { color: #6c7c94; }
+
+  .todayLayout {
+    grid-template-columns: minmax(0, 1.72fr) minmax(300px, .58fr);
+    gap: 28px;
+    padding-bottom: 34px;
+  }
+
+  .todayMain {
+    gap: 16px;
+  }
+
+  .sectionHeading {
+    margin: 0 3px 4px;
+  }
+
+  .sectionHeading h2 { font-size: 20px; }
+  .scope { border: 0; background: #eef4fc; color: #607492; }
+
+  .todayMain :global([class*='compactSection']) {
+    min-height: 365px;
+    padding: 27px;
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 15px 38px rgb(28 53 88 / 7%);
+  }
+
+  .todayMain :global([class*='compactHeader']) {
+    padding-bottom: 18px;
+  }
+
+  .todayMain :global([class*='compactHeader'] h2) { font-size: 24px; }
+  .todayMain :global([class*='compactRoute']) { padding: 10px 0; }
+  .todayMain :global([class*='compactRouteTitle'] strong) { font-size: 20px; }
+  .todayMain :global([class*='compactActions']) { margin-top: 8px; }
+  .todayMain :global([class*='compactActions'] a) { min-height: 46px; padding-inline: 17px; }
+
+  .todaySide { gap: 20px; }
+
+  .sideCard {
+    gap: 17px;
+    padding: 22px;
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 10px 28px rgb(33 56 90 / 5%);
+  }
+
+  .sideHeading h2 { font-size: 17px; }
+  .sideHeading a { font-size: 12px; }
+  .quickGrid { gap: 9px; }
+  .quickGrid a { min-height: 51px; padding: 0 13px; border-radius: 13px; font-size: 13px; }
+  .upcomingRow { min-height: 54px; padding-block: 12px; }
+  .order { width: 32px; height: 32px; border-radius: 10px; }
+  .routeInfo strong { font-size: 14px; }
+
+  .attention { margin-bottom: 0; padding: 17px 20px; border-radius: 18px; }
+}

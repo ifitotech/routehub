@@ -322,6 +322,20 @@ main.app, .premium-shell, .page { max-width: 100%; }
   box-shadow: 0 18px 46px rgba(2, 8, 23, .26);
   pointer-events: auto !important;
 }
+
+/* Desktop Manager pages own their application frame. The floating global
+   brand/back control is retained for non-Manager mobile surfaces, but would
+   duplicate the single sidebar brand on desktop. */
+@media (min-width: 1024px) {
+  .global-chrome {
+    display: none !important;
+  }
+
+  .global-chrome ~ main,
+  .global-chrome ~ main.app {
+    padding-top: 0 !important;
+  }
+}
 .notification-bell__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 16px 13px; border-bottom: 1px solid var(--rh-border); }
 .notification-bell__heading strong, .notification-bell__heading span { display: block; }
 .notification-bell__heading strong { font-size: 16px; }

@@ -3,7 +3,6 @@ import {usePathname,useRouter} from 'next/navigation'
 import {useEffect,useState} from 'react'
 import {ArrowLeft} from 'lucide-react'
 import Image from 'next/image'
-import NotificationBell from './notification-bell'
 
 export default function GlobalChrome(){
   const pathname=usePathname(),router=useRouter()
@@ -36,6 +35,5 @@ export default function GlobalChrome(){
   return <div className={`global-chrome${scrolled ? ' is-scrolled' : ''}`}>
     {showBack&&<button className="global-back" aria-label="Go back" onClick={()=>window.history.length>1?router.back():router.push('/')}><ArrowLeft size={20}/></button>}
     <button className="global-logo" aria-label="Open my dashboard" onClick={()=>router.push(dashboardHref)}><Image src="/routehub-regular-new.jpg" alt="" width={774} height={774} priority/><span>Route<em>Hub</em></span></button>
-    <NotificationBell />
   </div>
 }

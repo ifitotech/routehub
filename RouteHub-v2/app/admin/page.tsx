@@ -4,7 +4,6 @@ import Link from 'next/link'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
 import styles from './admin.module.css'
-import NotificationBell from '../notification-bell'
 
 const quickLinks = [
   {href: '/admin/approvals', title: 'Access requests', description: 'Approve or reject manager accounts.', icon: UserCheck},
@@ -30,7 +29,7 @@ export default function Admin() {
     void load()
   }, [])
   return <main className="app"><div className={styles.page}>
-    <header className={styles.header}><div><p className={styles.eyebrow}>CEO / Admin</p><h1 className={styles.title}>Admin access</h1><p className={styles.subtitle}>Approve accounts and keep RouteHub secure.</p></div><NotificationBell /></header>
+    <header className={styles.header}><div><p className={styles.eyebrow}>CEO / Admin</p><h1 className={styles.title}>Admin access</h1><p className={styles.subtitle}>Approve accounts and keep RouteHub secure.</p></div></header>
     <section className={styles.adminStats} aria-label="Platform summary"><article><span>Pending approvals</span><strong>{counts.pending}</strong><small>Needs review</small></article><article><span>Active companies</span><strong>{counts.companies}</strong><small>Registered workspaces</small></article><article className={styles.alertStat}><span>System alerts</span><strong>{counts.alerts}</strong><small>Needs attention</small></article></section>
     <section className={styles.panel}><header className={styles.panelHeader}><div><h2>Access requests</h2><p>Review real email accounts before granting access.</p></div><span className={styles.panelIcon}><ShieldCheck size={21}/></span></header><div className={styles.empty}><span><UserCheck size={24}/></span><h2>{counts.pending ? `${counts.pending} pending request${counts.pending === 1 ? '' : 's'}` : 'No pending requests'}</h2><p>{counts.pending ? 'Review them before the trial ends.' : 'New manager requests will appear here.'}</p><Link className={styles.primaryButton} href="/admin/approvals">Open requests <ChevronRight size={17}/></Link></div></section>
     <h2 className={styles.sectionLabel}>Quick access</h2><section className={styles.grid} aria-label="Admin quick access">{quickLinks.map(({href, title, description, icon: Icon}) => <Link className={styles.actionCard} href={href} key={href}><span className={styles.actionIcon}><Icon size={20}/></span><h3>{title}</h3><p>{description}</p><ChevronRight className={styles.arrow} size={18}/></Link>)}</section>

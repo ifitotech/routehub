@@ -18,3 +18,53 @@
 .page.page.managerMapPage{padding-top:24px!important;max-width:none}
 .managerMapPage .hero{padding-top:0}
 @media(min-width:1024px){.managerMapPage{min-height:calc(100dvh - 48px)}.managerMapPage .hero{padding-bottom:18px}}
+
+/* Desktop refresh: the map owns the workspace and the route controls float
+   beside it. OperationsMap, location polling and all existing actions are
+   intentionally left as they are. */
+@media (min-width: 1024px) {
+  .page.page.managerMapPage {
+    min-height: calc(100dvh - 56px);
+    padding: 2px 0 0 !important;
+  }
+
+  .managerMapPage .hero {
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding-bottom: 0;
+  }
+
+  .managerMapPage .hero h1 { font-size: clamp(40px, 3.5vw, 54px); }
+  .managerMapPage .hero p { font-size: 11px; }
+  .managerMapPage .heroActions > a { min-height: 46px; border-radius: 13px; padding-inline: 15px; }
+
+  .managerMapPage :global([class*='expanded']) { min-height: calc(100dvh - 188px); }
+  .managerMapPage :global([class*='operationsConsole']) {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+    min-height: calc(100dvh - 188px);
+  }
+
+  .managerMapPage :global([class*='mapCard']) {
+    border: 0;
+    border-radius: 26px;
+    box-shadow: 0 16px 42px rgb(33 56 90 / 10%);
+  }
+
+  .managerMapPage :global([class*='operationsSide']) {
+    border: 0;
+    border-radius: 22px;
+    box-shadow: 0 14px 36px rgb(33 56 90 / 8%);
+  }
+
+  .managerMapPage :global([class*='operationsSide'] > header) {
+    padding: 22px;
+    border-radius: 22px 22px 0 0;
+    background: linear-gradient(145deg, #113c9d, #1667f2);
+  }
+
+  .managerMapPage :global([class*='operationSummary']) { padding: 22px; }
+  .managerMapPage :global([class*='operationStatus']) { padding: 16px; background: #f6f9fd; }
+  .managerMapPage :global([class*='operationFacts']) { gap: 12px; }
+  .managerMapPage :global([class*='operationActions'] a) { min-height: 44px; padding: 0 13px; border-radius: 12px; background: #eaf2ff; }
+}

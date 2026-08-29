@@ -223,3 +223,132 @@
     transition: none;
   }
 }
+
+/* Desktop refresh: a bright, composed workspace rather than a dark admin
+   rail. Page modules keep their own data and handlers; this only establishes
+   the shared Manager presentation. */
+@media (min-width: 1024px) {
+  .shell {
+    --rh-page-bg: #f5f8fc;
+    --rh-card: #fff;
+    --rh-text: #10213d;
+    --rh-muted: #6c7c94;
+    --rh-border: #e5ebf3;
+    --rh-divider: #edf1f6;
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 86% -8%, rgb(22 103 242 / 8%), transparent 31rem),
+      var(--rh-page-bg) !important;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .shell .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    width: 232px;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 26px 14px 18px;
+    background: rgb(255 255 255 / 96%) !important;
+    border-right: 1px solid var(--rh-border);
+    box-shadow: none;
+    color: var(--rh-text) !important;
+  }
+
+  .shell .brand {
+    gap: 10px;
+    padding: 0 10px 20px;
+    color: var(--rh-text) !important;
+    font-size: 22px;
+    letter-spacing: -.045em;
+  }
+
+  .shell .brand img {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .shell .newRoute {
+    min-height: 46px;
+    margin: 4px 0 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    letter-spacing: -.01em;
+    box-shadow: 0 12px 24px rgb(22 103 242 / 20%);
+  }
+
+  .shell .nav {
+    gap: 7px;
+  }
+
+  .shell .nav a {
+    position: relative;
+    min-height: 48px;
+    padding: 0 13px;
+    border-radius: 13px;
+    color: #687992 !important;
+    font-size: 14px;
+    font-weight: 720;
+  }
+
+  .shell .nav a svg { width: 19px; height: 19px; }
+
+  .shell .nav a:hover {
+    background: #f5f8fd;
+    color: var(--rh-blue) !important;
+  }
+
+  .shell .nav a[data-active="true"] {
+    background: var(--rh-soft-blue) !important;
+    color: var(--rh-blue) !important;
+    box-shadow: none;
+  }
+
+  /* manager-dashboard.css historically highlighted the first item by
+     position. Active state must come only from ManagerShell's data-active. */
+  .shell .nav a:first-child:not([data-active="true"]) {
+    background: transparent !important;
+    color: #687992 !important;
+    box-shadow: none !important;
+  }
+
+  .shell .nav a[data-active="true"]::before {
+    position: absolute;
+    left: -16px;
+    width: 4px;
+    height: 24px;
+    border-radius: 0 6px 6px 0;
+    background: var(--rh-blue);
+    content: '';
+  }
+
+  .shell .workspaceMeta {
+    margin: auto 8px 8px;
+    padding: 16px 0 12px;
+  }
+
+  .shell .profile {
+    margin: 0 2px;
+    padding: 10px 8px;
+    border-radius: 14px;
+  }
+
+  .shell .profile:hover { background: #f7f9fc; }
+  .shell .profile strong { font-size: 12px; }
+  .shell .profile small { font-size: 11px; }
+
+  .shell .content {
+    min-width: 0;
+    min-height: 100dvh;
+    padding: 30px clamp(34px, 4vw, 76px) 52px !important;
+    background: transparent !important;
+  }
+}

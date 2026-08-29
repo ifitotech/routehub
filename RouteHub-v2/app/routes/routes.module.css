@@ -211,6 +211,114 @@
 :global(html[data-theme="dark"]) .builderSectionHeader h3,:global(html[data-theme="dark"]) .previewCardHeader h3,:global(html[data-theme="dark"]) .summaryHeader h3,:global(html[data-theme="dark"]) .summaryGrid dd,:global(html[data-theme="dark"]) .summaryLocations strong{color:var(--rh-text)}
 :global(html[data-theme="dark"]) .builderSectionHeader p,:global(html[data-theme="dark"]) .summaryGrid dt,:global(html[data-theme="dark"]) .summaryLocations span{color:var(--rh-text-secondary)}
 .previewCard{--operations-map-height:min(48vh,470px)}
+
+/* Desktop refresh: Routes behaves like an operational queue and New Route
+   becomes a wide form workspace. The route data, modal actions and handlers
+   remain unchanged. */
+@media (min-width: 1024px) {
+  .page {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0;
+    padding: 4px 0 64px;
+  }
+
+  .header {
+    align-items: center;
+    margin-bottom: 42px;
+  }
+
+  .header h1 { font-size: clamp(40px, 3.6vw, 56px); }
+  .header p:not(.eyebrow) { max-width: 570px; font-size: 16px; }
+  .headerActions { justify-content: flex-end; }
+  .primaryButton, .secondaryButton, .publishButton { min-height: 52px; border-radius: 14px; }
+  .headerActions .secondaryButton { border-color: transparent; background: transparent; box-shadow: none; }
+  .headerActions .secondaryButton:hover { background: #eaf2ff; border-color: transparent; }
+
+  .listHeading {
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 22px 24px;
+    border: 1px solid #e8eef5;
+    border-radius: 20px;
+    background: rgb(255 255 255 / 72%);
+  }
+
+  .listHeading h2 { font-size: 24px; }
+  .listHeading p { font-size: 14px; }
+
+  .routeSection { margin-top: 34px; }
+  .sectionHeading { margin-bottom: 15px; }
+  .sectionHeading h2 { font-size: 19px; }
+  .routeGrid { grid-template-columns: 1fr; gap: 11px; }
+
+  .routeCard {
+    display: grid;
+    grid-template-columns: minmax(230px, 1.16fr) minmax(225px, 1fr) minmax(260px, 1.05fr) auto;
+    align-items: center;
+    gap: 24px;
+    min-height: 116px;
+    padding: 18px 22px 18px 26px;
+    border: 1px solid #e3eaf2;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgb(33 56 90 / 4%);
+  }
+
+  .routeCard::before { width: 5px; }
+  .routeCard:hover { transform: translateY(-1px); box-shadow: 0 15px 32px rgb(33 56 90 / 8%); }
+  .cardTop, .routePath, .routeDetails, .cardFooter { margin: 0; padding: 0; border: 0; }
+  .cardTop { grid-column: 1; }
+  .routePath { grid-column: 2; min-width: 0; background: transparent; }
+  .routeDetails { grid-column: 3; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .routeDetails > div:first-child { grid-column: 1 / -1; }
+  .cardFooter { grid-column: 4; flex-direction: column; align-items: flex-end; justify-content: center; gap: 12px; white-space: nowrap; }
+  .routeIdentity strong { font-size: 19px; }
+  .routeNumber { width: 42px; height: 42px; border-radius: 13px; }
+  .routePath { padding: 0; font-size: 13px; }
+  .routeDetails strong { font-size: 12px; }
+  .routeDetails small { font-size: 10px; }
+  .priorityBadge { padding: 5px 8px; }
+  .cardFooter a { font-size: 13px; }
+
+  .backdrop { padding: 28px; }
+  .builder {
+    width: min(1420px, calc(100vw - 80px));
+    max-height: calc(100dvh - 56px);
+    border-radius: 28px;
+    background: #f6f9fd;
+  }
+
+  .builderHeader { padding: 24px 30px; background: rgb(255 255 255 / 94%); }
+  .builderHeader h2 { font-size: 30px; }
+  .builderSubtitle { font-size: 14px; }
+  .builderBody {
+    grid-template-columns: minmax(500px, 1.16fr) minmax(390px, .84fr);
+    gap: 28px;
+    padding: 28px 30px 32px;
+  }
+
+  .formColumn { order: 1; gap: 0; padding: 8px 28px 26px; border: 0; border-radius: 20px; box-shadow: 0 12px 32px rgb(33 56 90 / 5%); }
+  .mapColumn { order: 2; top: 112px; }
+  .builderSection { gap: 15px; padding: 24px 0; border: 0; border-bottom: 1px solid #e8eef4; border-radius: 0; box-shadow: none; }
+  .builderSection:last-child { padding-bottom: 0; border-bottom: 0; }
+  .builderSectionHeader h3 { font-size: 18px; }
+  .sectionNumber { width: 29px; height: 29px; border-radius: 9px; }
+  .field input, .field select, .field textarea { min-height: 52px; border-radius: 12px; }
+  .segmented button { min-height: 47px; border-radius: 12px; font-size: 12px; }
+  .previewCard, .assignmentSummary { border: 0; border-radius: 20px; box-shadow: 0 12px 32px rgb(33 56 90 / 7%); }
+  .previewCard .route-plan-canvas { height: min(57dvh, 560px); }
+  .previewCardHeader { padding: 20px 21px 16px; }
+  .assignmentSummary { padding: 20px 21px; }
+  .builderFooter { position: sticky; bottom: -26px; z-index: 2; margin: 0 -28px -26px; padding: 16px 28px 20px; border-top: 1px solid #e7edf4; background: rgb(255 255 255 / 96%); backdrop-filter: blur(14px); }
+  .builderFooter .secondaryButton, .builderFooter .publishButton { min-height: 54px; }
+}
+
+@media (min-width: 1024px) and (max-width: 1230px) {
+  .routeCard { grid-template-columns: minmax(210px, 1fr) minmax(210px, 1fr) minmax(205px, .9fr); }
+  .cardFooter { grid-column: 3; flex-direction: row; align-items: center; justify-content: flex-end; }
+  .routeDetails { grid-column: 3; grid-row: 1; }
+  .routePath { grid-column: 2; }
+}
 @media(max-width:640px){.previewCard{--operations-map-height:220px}}
 @media(max-width:640px){.mobileMapButton{order:0}.formColumn{order:1}.mapColumn,.mapColumn.mapColumnOpen{order:2}}
 

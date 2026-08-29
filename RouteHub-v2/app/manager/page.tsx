@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
 import {AlertTriangle, ArrowRight, History, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
@@ -108,7 +107,6 @@ export default function Manager() {
 
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
     <header className={styles.desktopTop}><div><h1>{copy.today}</h1><p className={todayStyles.headerDate}>{dateLabel} · {branchName || t.mainBranch}</p></div><div className={styles.desktopTopMeta}><span>{copy.updated}: {new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())}</span><NotificationBell /><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></header>
-    <header className={styles.header}><Link href="/manager" className={styles.brand} aria-label="RouteHub home"><Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority /><span>Route<em>Hub</em></span></Link><NotificationBell /></header>
     <section className={styles.intro}><h1>{copy.today}</h1><p>{dateLabel} · {branchName || t.mainBranch}</p></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
