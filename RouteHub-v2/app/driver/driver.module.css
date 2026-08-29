@@ -282,3 +282,73 @@
  background:#F1F6FF!important;
  border-color:#C9D8FF!important;
 }
+
+/* Today execution helpers: keep the next stop and the three most useful
+   actions visible without turning the home screen into a dashboard. */
+.todayNextStop{
+ width:100%;
+ margin:14px 0 0;
+ padding:14px 16px;
+ display:block;
+ text-align:left;
+ border:1px solid var(--driver-border);
+ border-radius:16px;
+ background:var(--driver-card);
+ color:var(--driver-navy);
+ box-shadow:0 4px 14px rgba(15,29,53,.05);
+ transition:transform 140ms ease,background-color 140ms ease,border-color 140ms ease;
+}
+.todayNextStop:active{transform:scale(.99);background:var(--driver-soft-blue);border-color:#c9d8ff}
+.todayNextStopLabel{display:block;margin-bottom:9px;color:var(--driver-blue);font-size:11px;font-weight:850;letter-spacing:.09em}
+.todayNextStopBody{display:flex;align-items:center;gap:12px}
+.todayNextStopNumber{flex:0 0 auto;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--driver-blue);color:#fff;font-size:14px;font-weight:800}
+.todayNextStopText{min-width:0;display:grid;gap:3px;flex:1}
+.todayNextStopText strong{font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.todayNextStopText small{font-size:12px;line-height:1.25;color:var(--driver-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.todayNextStopBody>svg{flex:0 0 auto;color:var(--driver-blue)}
+.todayQuickActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+.todayQuickActions button{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 6px;border:1px solid var(--driver-border);border-radius:14px;background:#fff;color:var(--driver-navy);font-size:12px;font-weight:750;transition:transform 140ms ease,background-color 140ms ease,border-color 140ms ease}
+.todayQuickActions button svg{color:var(--driver-blue)}
+.todayQuickActions button:active:not(:disabled){transform:scale(.98);background:var(--driver-soft-blue);border-color:#c9d8ff}
+.todayQuickActions button:disabled{opacity:.5}
+@media(max-width:380px){.todayQuickActions{gap:7px}.todayQuickActions button{font-size:11px;padding-inline:3px}}
+
+/* Route list summary and state hierarchy. */
+.routeListSummary{width:100%;margin:0 0 12px;padding:14px 16px;border:1px solid var(--driver-border);border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(15,29,53,.05);color:var(--driver-navy)}
+.routeListSummary>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.routeListSummary strong{font-size:17px}.routeListSummary span{font-size:12px;color:var(--driver-secondary)}.routeListSummary b{color:var(--driver-blue)}
+.routeListSummary .routeProgressTrack{margin:9px 0 0}
+.stopRowCurrent{border-color:#9dbfff!important;box-shadow:0 5px 16px rgba(22,103,242,.14)!important;background:#f7faff!important}
+.stopRowCurrent .stopNumber{background:var(--driver-blue)!important}
+.stopRowContent{min-width:0;display:grid;gap:3px;flex:1}.currentStopLabel{font-size:10px!important;font-weight:850;letter-spacing:.08em;color:var(--driver-blue)!important}.stopAddress{color:var(--driver-secondary)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.completedTime{color:var(--driver-green)!important;font-weight:750}
+@media(max-width:719px){.routeListSummary{margin:0 0 10px}.stopRow{min-height:82px}.stopRow>svg{width:20px;height:20px}}
+
+/* Stop details use the same calm, field-ready hierarchy as Today while
+   keeping every existing evidence and completion action unchanged. */
+.stopDetails{position:relative;display:grid;gap:14px;width:100%;box-sizing:border-box;padding:20px;border:1px solid var(--driver-border);border-radius:20px;background:#fff;box-shadow:0 6px 20px rgba(15,29,53,.07)}
+.stopDetails>.stopNumber{position:absolute;top:18px;left:18px;width:42px;height:42px;background:var(--driver-blue);font-size:15px}
+.stopDetails>h2{margin:0;padding-left:54px;color:var(--driver-navy);font-size:22px;line-height:1.15;letter-spacing:-.02em}
+.stopDetails>p{display:flex;align-items:flex-start;gap:9px;margin:0;color:var(--driver-secondary);font-size:15px;line-height:1.4}
+.stopDetails>p svg{flex:0 0 auto;margin-top:2px;color:var(--driver-blue)}
+.stopDetails>.detailDivider{height:1px;width:100%;margin:2px 0;background:var(--driver-divider)}
+.stopDetails>small{display:inline-flex;width:max-content;padding:6px 10px;border-radius:999px;background:var(--driver-soft-blue);color:var(--driver-blue);font-size:11px;font-weight:850;letter-spacing:.08em}
+.stopDetails>strong{font-size:14px;color:var(--driver-secondary)}
+.stopDetails .googleMapsButton{margin-top:2px}
+.stopDetails .detailNotes{display:grid;gap:6px;padding:14px 16px;border:1px solid var(--driver-divider);border-radius:14px;background:var(--driver-bg)}
+.stopDetails .detailNotes b{font-size:11px;letter-spacing:.08em;color:var(--driver-secondary);text-transform:uppercase}
+.stopDetails .detailNotes span{display:flex;align-items:flex-start;gap:7px;color:var(--driver-navy);font-size:15px;line-height:1.4}
+@media(max-width:719px){.stopDetails{padding:18px;margin-bottom:8px}.stopDetails>.stopNumber{top:16px;left:16px}.stopDetails>h2{padding-left:52px;font-size:21px}.stopDetails .googleMapsButton{min-height:58px!important}}
+
+.stopCompletedPanel{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:28px 20px calc(28px + env(safe-area-inset-bottom));background:var(--driver-bg);text-align:center;overflow:auto}
+.stopCompletedIcon{width:72px;height:72px;display:grid;place-items:center;border-radius:50%;background:var(--driver-green);color:#fff;box-shadow:0 8px 22px rgba(22,185,107,.24);margin-bottom:16px}
+.stopCompletedEyebrow{margin:0;color:var(--driver-green-dark);font-size:11px;font-weight:850;letter-spacing:.1em}.stopCompletedPanel h2{margin:7px 0 4px;color:var(--driver-navy);font-size:28px;letter-spacing:-.03em}.stopCompletedSub{margin:0;color:var(--driver-navy);font-size:18px;font-weight:750}.stopCompletedAddress{max-width:360px;margin:5px 0;color:var(--driver-secondary);font-size:14px}.stopCompletedPanel>small{color:var(--driver-secondary);font-size:13px;font-weight:650}
+.stopCompletedNext{width:min(100%,390px);display:grid;gap:5px;margin:22px 0 16px;padding:14px 16px;text-align:left;border:1px solid var(--driver-border);border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(15,29,53,.05)}.stopCompletedNext b{color:var(--driver-blue);font-size:10px;letter-spacing:.09em}.stopCompletedNext strong{color:var(--driver-navy);font-size:16px}.stopCompletedNext span{color:var(--driver-secondary);font-size:12px;line-height:1.3}
+.stopCompletedActions{width:min(100%,390px);display:grid;gap:10px;margin-top:auto}.completeContinue,.completeViewRoute{width:100%;min-height:60px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:15px;font-size:16px;font-weight:800;transition:transform 140ms ease,background-color 140ms ease}.completeContinue{border:1px solid var(--driver-blue);background:var(--driver-blue);color:#fff}.completeViewRoute{min-height:50px;border:1px solid var(--driver-border);background:#fff;color:var(--driver-blue)}.completeContinue:active,.completeViewRoute:active{transform:scale(.98)}.stopCompletedFinal{margin:0 0 6px;color:var(--driver-secondary);font-size:14px}
+@media(prefers-reduced-motion:reduce){.completeContinue,.completeViewRoute{transition:none}}
+
+/* Active-route map: geographic context first, operational sheet second. */
+.page:has(.activeMapPage) .routeOverlay{display:none!important}
+.activeMapPage{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;background:#eaf0f5;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+.activeMapCanvas{position:absolute;inset:0;overflow:hidden}.activeMapCanvas :global(.live-route-map){height:100%;border-radius:0;background:#eaf0f5}.activeMapCanvas :global(.live-route-canvas){height:100%;min-height:100dvh}.activeMapCanvas :global(.live-route-map>footer){display:none}.activeMapCanvas :global(.leaflet-container){height:100%;width:100%}
+.activeMapSheet{position:relative;z-index:2;margin-top:auto;display:grid;gap:5px;padding:18px 18px calc(16px + env(safe-area-inset-bottom));border-radius:24px 24px 0 0;background:#fff;box-shadow:0 -8px 28px rgba(15,29,53,.18);color:var(--driver-navy)}.activeMapEyebrow{color:var(--driver-blue);font-size:11px;font-weight:850;letter-spacing:.09em}.activeMapSheet>strong{font-size:13px;color:var(--driver-secondary)}.activeMapSheet h2{margin:0;font-size:21px}.activeMapSheet p{margin:0 0 3px;color:var(--driver-secondary);font-size:14px}.activeMapSheet>small{font-size:13px;color:var(--driver-navy);font-weight:750}.mapPrimaryAction,.mapArrivedAction{width:100%;min-height:58px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:15px;font-size:16px;font-weight:800}.mapPrimaryAction{margin-top:8px;border:1px solid var(--driver-blue);background:var(--driver-blue);color:#fff}.mapArrivedAction{border:1px solid var(--driver-green);background:var(--driver-green);color:#fff}.mapPrimaryAction:active,.mapArrivedAction:active{transform:scale(.98)}
+@media(min-width:720px){.activeMapPage{inset:20px 20px 0 20px;border-radius:22px;overflow:hidden;padding-bottom:0}.activeMapSheet{max-width:430px;margin:0 22px 22px;border-radius:20px;padding-bottom:18px}.activeMapCanvas :global(.live-route-canvas){min-height:calc(100dvh - 20px)}}
+.truckForms{display:grid;gap:12px;margin-top:14px}.truckQuickActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.truckQuickActions button{min-height:56px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--driver-border);border-radius:14px;background:#fff;color:var(--driver-navy);font-weight:800}.truckQuickActions button span{font-size:20px}.truckQuickActions .truckQuickActive{border-color:var(--driver-blue);background:var(--driver-soft-blue);color:var(--driver-blue)}.truckForm{display:grid;gap:12px;padding:16px;border:1px solid var(--driver-border);border-radius:18px;background:#fff;box-shadow:0 4px 14px rgba(15,29,53,.05)}.truckForm h3{margin:0;font-size:20px}.truckForm label{display:grid;gap:6px;color:var(--driver-secondary);font-size:12px;font-weight:750}.truckForm input{width:100%;box-sizing:border-box;min-height:48px;padding:0 12px;border:1px solid var(--driver-border);border-radius:12px;background:#fff;color:var(--driver-navy);font:inherit;font-size:16px}.truckForm button{min-height:58px;border:0;border-radius:14px;background:var(--driver-blue);color:#fff;font-size:16px;font-weight:800}.truckForm button:disabled{opacity:.6}.truckPhotoInput input{padding:10px;height:auto;font-size:13px}.truckFormMessage{margin:0;padding:11px 13px;border-radius:12px;background:var(--driver-soft-blue);color:var(--driver-blue);font-size:13px;font-weight:700}

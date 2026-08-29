@@ -15,7 +15,7 @@ test('driver keeps route progress visible, uses Google Maps for driving, and ret
   assert.match(source,/currentStopIndex\+1/)
   assert.match(source,/setRouteView\('map'\)/)
   assert.match(source,/openGoogleMaps\(current\)/)
-  assert.match(source,/Route reference/)
+  assert.match(source,/Ruta de referencia/)
   assert.match(source,/dayMapWaypoints/)
   assert.doesNotMatch(source,/autoStartNavigation/)
 })

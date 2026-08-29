@@ -12,7 +12,7 @@ import styles from './history.module.css'
 
 type RouteRecord = {
   id:string; status:string; destination_name?:string; destination_address?:string
-  completed_at?:string; created_at?:string; completion_method?:string; notes?:string; mission_type?:string; order_number?:string; arrived_at?:string; driver_note?:string
+  completed_at?:string; route_started_at?:string|null; route_completed_at?:string|null; created_at?:string; completion_method?:string; notes?:string; mission_type?:string; order_number?:string; arrived_at?:string; driver_note?:string
 }
 
 export default function DriverHistory() {
@@ -41,7 +41,7 @@ export default function DriverHistory() {
       const {data: userData} = await client.auth.getUser()
       if (!userData.user) throw Error(t.signIn)
       const {data, error} = await client.from('routes')
-        .select('id,status,destination_name,destination_address,completed_at,created_at,completion_method,notes,mission_type,order_number,arrived_at,driver_note,route_date')
+        .select('id,status,destination_name,destination_address,completed_at,route_started_at,route_completed_at,created_at,completion_method,notes,mission_type,order_number,arrived_at,driver_note,route_date')
         .eq('driver_id', userData.user.id)
         .gte('route_date', fromDate)
         .in('status', ['completed','issue','cancelled'])
@@ -111,7 +111,7 @@ export default function DriverHistory() {
       })}
       {!rows.length && !message && <section className={`card ${styles.empty}`}><HistoryIcon size={38}/><h2>{t.noHistory}</h2><p className="muted">{t.historyHelp}</p></section>}
     </section>
-    {selectedRoute&&<div className={styles.detailBackdrop}><section className={styles.detailModal}><button type="button" className={styles.close} onClick={()=>setSelectedRoute(null)}>×</button><h2>{selectedRoute.destination_name||selectedRoute.destination_address||t.routes}</h2><p><MapPin size={16}/> {selectedRoute.destination_address||t.destination}</p><p><Clock3 size={16}/> {selectedRoute.completed_at?new Date(selectedRoute.completed_at).toLocaleString(locale):t.completionTime}</p><strong>{(selectedRoute.mission_type||'delivery').toUpperCase()}</strong>{selectedRoute.order_number&&<p>PO / Order: <b>{selectedRoute.order_number}</b></p>}{selectedRoute.arrived_at&&selectedRoute.completed_at&&<p>Time on route: {Math.max(0,Math.round((new Date(selectedRoute.completed_at).getTime()-new Date(selectedRoute.arrived_at).getTime())/60000))} min</p>}<p>{selectedRoute.driver_note||selectedRoute.notes||''}</p></section></div>}
+    {selectedRoute&&<div className={styles.detailBackdrop}><section className={styles.detailModal}><button type="button" className={styles.close} onClick={()=>setSelectedRoute(null)}>×</button><h2>{selectedRoute.destination_name||selectedRoute.destination_address||t.routes}</h2><p><MapPin size={16}/> {selectedRoute.destination_address||t.destination}</p><p><Clock3 size={16}/> {selectedRoute.completed_at?new Date(selectedRoute.completed_at).toLocaleString(locale):t.completionTime}</p><strong>{(selectedRoute.mission_type||'delivery').toUpperCase()}</strong>{selectedRoute.order_number&&<p>PO / Order: <b>{selectedRoute.order_number}</b></p>}{selectedRoute.route_started_at&&selectedRoute.route_completed_at&&<p>Route duration: {Math.max(0,Math.round((new Date(selectedRoute.route_completed_at).getTime()-new Date(selectedRoute.route_started_at).getTime())/60000))} min</p>}{(selectedRoute.status==='completed'&&!selectedRoute.route_started_at)|| (selectedRoute.status==='completed'&&!selectedRoute.route_completed_at)?<p>Route duration unavailable</p>:null}<p>{selectedRoute.driver_note||selectedRoute.notes||''}</p></section></div>}
     <DriverBottomNav />
   </main>
 }
