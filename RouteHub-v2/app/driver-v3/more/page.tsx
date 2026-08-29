@@ -1,0 +1,3 @@
+import Link from 'next/link'
+import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+export default function DriverV3More(){return <DriverV3Shell active="more"><p className="eyebrow">WORK</p><h1 className="title">More</h1><section className="card"><div className="row"><Link href="/driver-v3/driving-day">Driving Day</Link></div><div className="row"><Link href="/driver-v3/truck">Truck</Link></div><div className="row"><Link href="/driver-v3/history">Route History</Link></div></section><section className="card"><p className="eyebrow">ACCOUNT</p><div className="row"><Link href="/driver-v3/settings">Settings</Link></div></section></DriverV3Shell>}

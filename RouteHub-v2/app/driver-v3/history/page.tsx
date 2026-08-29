@@ -1,0 +1,5 @@
+'use client'
+import Link from 'next/link'
+import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+export default function History(){const {loading,error,routes}=useDriverData();const completed=routes.filter(r=>r.status==='completed');return <DriverV3Shell active="more"><Link href="/driver-v3/more" className="muted">‹ More</Link><p className="eyebrow">ACTIVITY</p><h1 className="title">Route History</h1>{loading?<section className="card"><p>Loading history…</p></section>:error?<section className="card"><p role="alert">{error}</p></section>:completed.length?<div>{completed.map(r=><article className="card" key={r.id}><p className="eyebrow">{(r.mission_type||'delivery').toUpperCase()} · COMPLETED</p><h2>{r.destination_name||r.destination_address||'Route'}</h2><p className="muted">{r.completed_at?new Date(r.completed_at).toLocaleString():'Completion time unavailable'}{r.order_number?` · ${r.order_number}`:''}</p></article>)}</div>:<section className="card"><h2>No completed routes</h2><p className="muted">Completed work will appear here.</p></section>}</DriverV3Shell>}

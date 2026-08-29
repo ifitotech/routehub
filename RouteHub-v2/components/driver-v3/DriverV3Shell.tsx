@@ -1,0 +1,19 @@
+'use client'
+
+import Link from 'next/link'
+import {Bell, Home, List, Map, MoreHorizontal, Plus} from 'lucide-react'
+import styles from './driver-v3.module.css'
+
+export default function DriverV3Shell({children, active}: {children: React.ReactNode; active: 'today'|'route'|'map'|'more'}) {
+  return <main className={styles.shell}>
+    <header className={styles.header}><Link href="/driver-v3" className={styles.brand}><img src="/routehub-driver-new.jpg" alt=""/><span>RouteHub <small>DRIVER</small></span></Link><button className={styles.iconButton} aria-label="Notifications"><Bell size={19}/></button></header>
+    <section className={styles.content}>{children}</section>
+    <nav className={styles.nav} aria-label="Driver navigation">
+      <Link className={active==='today'?styles.active:''} href="/driver-v3"><Home/><span>Today</span></Link>
+      <Link className={active==='route'?styles.active:''} href="/driver-v3/route"><List/><span>Route</span></Link>
+      <Link className={styles.add} href="/driver-v3/stop"><Plus/></Link>
+      <Link className={active==='map'?styles.active:''} href="/driver-v3/map"><Map/><span>Map</span></Link>
+      <Link className={active==='more'?styles.active:''} href="/driver-v3/more"><MoreHorizontal/><span>More</span></Link>
+    </nav>
+  </main>
+}

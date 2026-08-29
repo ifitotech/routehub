@@ -1,0 +1,22 @@
+/** Driver V3 uses the same operational mutations as the legacy Driver surface. */
+export {
+  driverActions,
+  startRoute,
+  updateRouteStatus,
+  markArrived,
+  completeStop,
+  completePickup,
+  completeDelivery,
+  completeReturn,
+  completePickupWithEvidence,
+  completeDeliveryWithRecipient,
+  uploadStopPhoto,
+  saveFuel,
+  saveMaintenance,
+  reportIssue,
+  saveStopNote,
+  saveStopSignature,
+  finalizeRoute,
+  startDrivingDay,
+  endDrivingDay,
+} from '../driver/driver-actions'
