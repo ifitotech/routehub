@@ -58,7 +58,15 @@ export default function Login() {
     if (window.location.hash.includes('type=invite')) { setCheckingPwaSession(false); setDialog('sign-in'); setMessage('You have been invited to RouteHub. Create a password to accept the invitation.'); return }
     const storedError = sessionStorage.getItem('routehub_auth_error')
     if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setCheckingPwaSession(false); setMessage(accessMessage(storedError)); setDialog('sign-in') }
-    const client = getSupabase()
+    let client: ReturnType<typeof getSupabase>
+    try {
+      client = getSupabase()
+    } catch (error) {
+      setCheckingPwaSession(false)
+      setMessage(error instanceof Error ? error.message : 'Unable to connect to RouteHub.')
+      setDialog('sign-in')
+      return
+    }
     const sessionCheck = Promise.race([
       client.auth.getSession(),
       new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('SESSION_CHECK_TIMEOUT')), 8000)),
