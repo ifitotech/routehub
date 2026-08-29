@@ -66,6 +66,32 @@
 .routeMeta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}.routeMeta span{display:inline-flex;align-items:center;min-height:28px;padding:5px 10px;border-radius:999px;background:#ffffff18;color:#dbeafe;font-size:12px;font-weight:800}.routeMeta span+span{background:#2563eb;color:#fff}
 .truckPage{display:grid;gap:14px}.truckHero{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px;border:1px solid var(--rh-border);border-radius:20px;background:var(--rh-surface);box-shadow:var(--rh-shadow-card)}.truckEyebrow{margin:0 0 6px;color:var(--rh-primary);font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.truckHero h2{margin:0 0 4px;font-size:26px;letter-spacing:-.03em}.truckHero p{margin:0;color:var(--rh-text-secondary)}.truckOdometer{min-width:120px;padding:14px 16px;border-radius:16px;background:var(--rh-primary-soft);display:grid;justify-items:end;gap:4px}.truckOdometer span{color:var(--rh-primary);font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.truckOdometer strong{font-size:24px}.truckGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.truckPanel{padding:16px;border:1px solid var(--rh-border);border-radius:18px;background:var(--rh-surface);box-shadow:var(--rh-shadow-card)}.truckRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--rh-border)}.truckRow:first-of-type{border-top:0;padding-top:0}.truckRow strong{display:block}.truckRow span{color:var(--rh-text-secondary);font-size:12px}.truckMuted{margin:0;color:var(--rh-text-secondary)}.truckPanel .sectionTitle{margin-bottom:10px}
 @media(max-width:560px){.header{margin-bottom:0;height:38px}.brand img{width:32px;height:32px}.brand strong{font-size:17px}.workspaceHeading{margin-top:0;margin-bottom:6px}.workspaceHeading .workspace{font-size:11px}.workspaceHeading h1{margin:2px 0;font-size:25px}.drivingBar{margin:4px 0 8px;min-height:40px;padding:5px 8px}.startDay,.endDay{min-height:30px;padding:5px 9px;font-size:11px}}
+
+/* Driver V2 visual alignment: use the same light RouteHub workspace as the
+   Manager while keeping all existing Driver actions and state unchanged. */
+.page{max-width:none!important;background:var(--rh-page-bg,#f7f9fc);color:var(--rh-text,#0f1d35)}
+.mission,.routeHero{background:var(--rh-card,#fff)!important;color:var(--rh-text,#0f1d35);border:1px solid var(--rh-border,#dde5ee);box-shadow:0 8px 24px rgb(15 29 53 / 7%)!important}
+.routeHero .mission{border-radius:20px 20px 0 0}
+.missionTop,.type{color:var(--rh-blue,#1667f2)}
+.mission h2{color:var(--rh-text,#0f1d35)}
+.address{color:var(--rh-muted,#667892)}
+.routeMeta span{background:var(--rh-soft-blue,#eaf2ff);color:var(--rh-blue,#1667f2)}
+.routeMeta span+span{background:var(--rh-blue,#1667f2);color:#fff}
+.details{background:var(--rh-divider,#e8edf3)}
+.details div{background:var(--rh-card,#fff);color:var(--rh-text,#0f1d35)}
+.details small{color:var(--rh-muted,#667892)}
+.contactCall{background:var(--rh-card,#fff);color:var(--rh-text,#0f1d35);border:1px solid var(--rh-border,#dde5ee)}
+.contactCall small{color:var(--rh-muted,#667892)}
+.notes{background:var(--rh-warning-soft,#fff7e6);color:var(--rh-text,#0f1d35);border:1px solid #f4d28b}
+.notes b{color:var(--rh-warning,#f59e0b)}
+.primaryActions button,.primaryActions a{border-radius:14px}
+.start{background:var(--rh-blue,#1667f2)!important}
+.complete,.photoButton{background:var(--rh-success,#16b96b)!important}
+.googleMapsButton,.viewRoute{background:var(--rh-card,#fff)!important;color:var(--rh-blue,#1667f2)!important;border-color:var(--rh-border,#dde5ee)!important}
+.next,.routePlanSummary,.truckHero,.truckPanel,.stopDetails{background:var(--rh-card,#fff);border-color:var(--rh-border,#dde5ee);box-shadow:0 8px 24px rgb(15 29 53 / 6%)}
+.routeOverlay{background:var(--rh-page-bg,#f7f9fc)!important;color:var(--rh-text,#0f1d35)!important}
+.routeOverlayHeader{border-color:var(--rh-divider,#e8edf3)}
+.driverNav{background:rgb(255 255 255 / 94%);border-color:var(--rh-border,#dde5ee);box-shadow:0 8px 24px rgb(15 29 53 / 14%)}
 .routeHero .mission{padding:14px}.routeHero .type{margin-top:10px}.routeHero .mission h2{font-size:clamp(24px,6.5vw,31px);margin:6px 0}.routeHero .address{font-size:14px}.routeHero .details{margin:12px -14px -14px}.routeHero .details div,.routeHero .details .contactCall{padding:9px 14px;min-height:58px}.contactCall{display:flex;align-items:center;gap:8px;background:#051b42aa;color:#fff;text-decoration:none}.contactCall svg{color:#60a5fa;flex:0 0 auto}.contactCall span{display:grid;gap:5px;min-width:0}.contactCall small{font-size:10px;text-transform:uppercase;color:#93c5fd}.contactCall strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.notes span{display:grid;gap:3px}.notes b{font-size:10px;letter-spacing:.08em;color:#fde68a}.routeHero .singleDetail{grid-template-columns:1fr}.routeHero .singleDetail>div,.routeHero .singleDetail>.contactCall{grid-column:1/-1}
 /* Leaflet panes use z-index values up to the hundreds. Route must sit above
    the active Today map while the driver inspects the complete plan. */
