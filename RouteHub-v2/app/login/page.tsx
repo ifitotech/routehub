@@ -61,7 +61,12 @@ export default function Login() {
     const client = getSupabase()
     client.auth.getSession().then(({data}) => {
       if (!data.session) { setCheckingPwaSession(false); return null }
-      return resolveAccess(client)
+      // A suspended iOS PWA can leave an auth/RPC request pending forever.
+      // Never strand the launch screen; fall back to the sign-in dialog.
+      return Promise.race([
+        resolveAccess(client),
+        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('SESSION_CHECK_TIMEOUT')), 8000)),
+      ])
     }).then(access => {
       if (!access) return
       if (access.user) {
