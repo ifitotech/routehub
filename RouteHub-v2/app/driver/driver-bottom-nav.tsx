@@ -1,5 +1,6 @@
-import Link from 'next/link'
 'use client'
+
+import Link from 'next/link'
 
 import {Home, List, MapPin, MoreHorizontal} from 'lucide-react'
 import {usePathname,useSearchParams} from 'next/navigation'
