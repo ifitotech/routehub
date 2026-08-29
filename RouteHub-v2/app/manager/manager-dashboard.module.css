@@ -179,3 +179,47 @@
   .action{min-height:58px;padding:9px;}
   .actionCopy strong{font-size:11px;}
 }
+
+/* Mobile Manager surfaces stay on the approved light RouteHub palette.  These
+   declarations are scoped to the Manager shell so they cannot alter Driver
+   or public screens, and they also prevent a flash of the legacy dark cards
+   before the theme preference is hydrated. */
+@media (max-width: 1023px){
+  .dashboard{
+    --manager-bg:#f7f9fc;
+    --manager-surface:#fff;
+    --manager-surface-2:#f8fafc;
+    --manager-border:#dde5ee;
+    --manager-text:#0f1d35;
+    --manager-muted:#667892;
+    background:#f7f9fc!important;
+    color:#0f1d35;
+  }
+  .dashboard .header{border-bottom-color:#e8edf3;}
+  .dashboard .brand,
+  .dashboard .brand span{color:#0f1d35;}
+  .dashboard .brand span em{color:#1667f2;}
+  .dashboard .branch,
+  .dashboard .metric,
+  .dashboard .todayCard,
+  .dashboard .action,
+  .dashboard .tool{
+    border-color:#dde5ee;
+    background:#fff;
+    color:#0f1d35;
+    box-shadow:0 6px 18px rgb(15 29 53 / 5%);
+  }
+  .dashboard .metric::after{display:none;}
+  .dashboard .metricNote,
+  .dashboard .branchStatus,
+  .dashboard .actionCopy span{color:#667892;}
+  .dashboard .sectionLabel{color:#667892;}
+}
+
+@media (max-width: 560px){
+  .dashboard .intro{padding-top:8px!important;}
+  .dashboard .intro h1{font-size:24px!important;}
+  .dashboard .metricGrid{gap:9px;}
+  .dashboard .metric{min-height:108px;padding:13px;border-radius:16px;}
+  .dashboard .actions{gap:9px;margin-top:10px;}
+}

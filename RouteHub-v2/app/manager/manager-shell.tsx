@@ -37,7 +37,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
     {id: 'settings' as const, href: '/settings', label: copy.settings, Icon: Settings},
   ]
 
-  return <main className={`app ${dashboardStyles.dashboard} ${styles.shell}`}>
+  return <main className={`app ${dashboardStyles.dashboard} ${styles.shell}`} data-manager-section={active}>
     <aside className={`${dashboardStyles.desktopSidebar} ${styles.sidebar}`} aria-label="Manager navigation">
       <Link href="/manager" className={`${dashboardStyles.sidebarBrand} ${styles.brand}`} aria-label="RouteHub manager dashboard">
         <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
