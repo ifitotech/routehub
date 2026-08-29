@@ -59,13 +59,17 @@ export default function Login() {
     const storedError = sessionStorage.getItem('routehub_auth_error')
     if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setCheckingPwaSession(false); setMessage(accessMessage(storedError)); setDialog('sign-in') }
     const client = getSupabase()
-    client.auth.getSession().then(({data}) => {
+    const sessionCheck = Promise.race([
+      client.auth.getSession(),
+      new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('SESSION_CHECK_TIMEOUT')), 8000)),
+    ])
+    sessionCheck.then(({data}) => {
       if (!data.session) { setCheckingPwaSession(false); return null }
       // A suspended iOS PWA can leave an auth/RPC request pending forever.
       // Never strand the launch screen; fall back to the sign-in dialog.
       return Promise.race([
         resolveAccess(client),
-        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('SESSION_CHECK_TIMEOUT')), 8000)),
+        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('ACCESS_CHECK_TIMEOUT')), 8000)),
       ])
     }).then(access => {
       if (!access) return
