@@ -68,3 +68,20 @@
   .managerMapPage :global([class*='operationFacts']) { gap: 12px; }
   .managerMapPage :global([class*='operationActions'] a) { min-height: 44px; padding: 0 13px; border-radius: 12px; background: #eaf2ff; }
 }
+
+/* Keep the operational map dominant while removing the legacy page spacing
+   that made the Manager workspace feel nested inside another shell. */
+@media (min-width: 1024px) {
+  .page.page.managerMapPage {
+    padding: 8px 0 0 !important;
+  }
+  .managerMapPage .hero {
+    margin-bottom: 14px;
+  }
+  .managerMapPage :global([class*='operationsConsole']) {
+    min-height: calc(100dvh - 156px);
+  }
+  .managerMapPage :global([class*='mapCard']) {
+    min-height: calc(100dvh - 156px);
+  }
+}

@@ -14,315 +14,173 @@
   --rh-error-soft: #fff0f0;
   --rh-border: #dde5ee;
   --rh-divider: #e8edf3;
-  background: var(--rh-page-bg);
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 82% -8%, rgb(22 103 242 / 7%), transparent 30rem),
+    var(--rh-page-bg);
   color: var(--rh-text);
 }
 
-.shell .sidebar {
-  background: var(--rh-card);
-  border-right: 1px solid var(--rh-border);
-  box-shadow: 8px 0 24px rgb(15 29 53 / 4%);
-  color: var(--rh-text);
+.shell {
+  display: grid;
 }
 
-.shell .brand {
-  color: var(--rh-text);
+.sidebar {
+  display: none;
 }
 
-.shell .brand em {
-  color: var(--rh-blue);
+.content {
+  min-width: 0;
+  min-height: 100dvh;
+  padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
 }
 
-.shell .nav {
-  gap: 4px;
+.brand,
+.newRoute,
+.nav a,
+.profile {
+  text-decoration: none;
 }
 
-.shell .nav a {
-  color: var(--rh-muted);
-  border-radius: 10px;
-  transition: background-color 140ms ease, color 140ms ease;
-}
-
-.shell .nav a:hover,
-.shell .nav a[data-active="true"] {
-  background: var(--rh-soft-blue);
-  color: var(--rh-blue);
-  box-shadow: none;
-}
-
-.shell .nav a:focus-visible,
-.shell .newRoute:focus-visible,
-.shell .profile:focus-visible {
+.brand:focus-visible,
+.newRoute:focus-visible,
+.nav a:focus-visible,
+.profile:focus-visible {
   outline: 2px solid var(--rh-blue);
   outline-offset: 2px;
 }
 
-.shell .newRoute {
-  min-height: 46px;
-  margin: 18px 0 22px;
-  border-radius: 12px;
-  background: var(--rh-blue);
-  box-shadow: 0 8px 18px rgb(22 103 242 / 20%);
-  transition: background-color 140ms ease, transform 140ms ease;
+.nav {
+  display: none;
 }
 
-.shell .newRoute:hover {
-  background: var(--rh-blue-pressed);
+.workspaceMeta {
+  display: none;
 }
 
-.shell .newRoute:active {
-  transform: scale(.985);
+.profile {
+  display: none;
 }
 
-.shell .workspaceMeta {
+.mobileNav { display: none; }
+
+.avatar {
   display: grid;
-  gap: 3px;
-  margin-top: auto;
-  padding: 12px 8px 10px;
-  border-top: 1px solid var(--rh-divider);
-}
-
-.shell .workspaceMeta span {
-  color: var(--rh-muted);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-
-.shell .workspaceMeta strong {
-  overflow: hidden;
-  color: var(--rh-text);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shell .profile {
-  margin-top: 0;
-  margin-bottom: 0;
-  color: var(--rh-text);
-}
-
-.shell .profile strong {
-  color: var(--rh-text);
-}
-
-.shell .profile small {
-  color: var(--rh-muted);
-}
-
-.shell .profile > svg {
-  color: var(--rh-muted);
-}
-
-@media (max-width: 1023px) {
-  /* Mobile Manager pages use the document as the scroll surface.  The
-     dashboard stylesheet historically fixed the shell to the viewport and
-     clipped its workspace, which left long pages (Routes, Contacts, History,
-     etc.) with hidden content and inconsistent side gutters. */
-  .shell {
-    width: 100%;
-    max-width: none;
-    min-height: 100dvh;
-    height: auto;
-    margin: 0;
-    padding: max(18px, env(safe-area-inset-top)) 0 !important;
-    overflow: visible;
-    background: var(--rh-page-bg) !important;
-    color: var(--rh-text);
-  }
-
-  .content {
-    width: 100%;
-    max-width: none;
-    min-height: 0;
-    height: auto;
-    padding: 0;
-    overflow: visible;
-  }
-
-  /* Page modules retain ownership of their inner layout.  Normalize their
-     outer mobile gutter/top inset here so GlobalChrome and the shell do not
-     stack multiple large padding bands. */
-  .content > [class*='_page__'] {
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    padding-top: 20px !important;
-    padding-right: 16px !important;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
-    padding-left: 16px !important;
-  }
-
-  .shell .sidebar {
-    display: none;
-  }
-
-  /* Today has no inner page wrapper, so give it the same comfortable gutters
-     as the other Manager surfaces. */
-  .shell[data-manager-section='today'] {
-    padding-inline: 16px !important;
-    padding-bottom: calc(92px + env(safe-area-inset-bottom)) !important;
-  }
-
-  .shell[data-manager-section='today'] .content {
-    padding-inline: 0;
-  }
-
-  /* The shared mobile nav is intentionally light on Manager surfaces and
-     remains fixed above the device safe area. */
-  .shell :global(.nav) {
-    width: min(520px, calc(100vw - 24px));
-    max-width: calc(100vw - 24px);
-    bottom: max(8px, env(safe-area-inset-bottom));
-    border: 1px solid var(--rh-border);
-    border-radius: 20px;
-    background: rgb(255 255 255 / 96%);
-    box-shadow: 0 12px 30px rgb(15 29 53 / 14%);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-  }
-
-  .shell :global(.nav) a {
-    color: var(--rh-muted);
-  }
-
-  .shell :global(.nav) a[aria-current='page'] {
-    background: var(--rh-soft-blue);
-    color: var(--rh-blue);
-  }
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 900;
 }
 
 @media (min-width: 1024px) {
   .shell {
-    background: var(--rh-page-bg) !important;
-  }
-
-  .shell .sidebar {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    height: 100dvh;
-    min-height: 100dvh;
-    padding: 20px 14px 16px;
-  }
-
-  .shell .brand {
-    padding-bottom: 4px;
-  }
-
-  .shell .content {
-    background: var(--rh-page-bg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nav a,
-  .newRoute {
-    transition: none;
-  }
-}
-
-/* Desktop refresh: a bright, composed workspace rather than a dark admin
-   rail. Page modules keep their own data and handlers; this only establishes
-   the shared Manager presentation. */
-@media (min-width: 1024px) {
-  .shell {
-    --rh-page-bg: #f5f8fc;
-    --rh-card: #fff;
-    --rh-text: #10213d;
-    --rh-muted: #6c7c94;
-    --rh-border: #e5ebf3;
-    --rh-divider: #edf1f6;
-    min-height: 100dvh;
-    background:
-      radial-gradient(circle at 86% -8%, rgb(22 103 242 / 8%), transparent 31rem),
-      var(--rh-page-bg) !important;
-    display: grid;
     grid-template-columns: 232px minmax(0, 1fr);
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    padding: 0;
-    overflow: visible;
+    align-items: stretch;
+    overflow: hidden;
   }
 
-  .shell .sidebar {
+  .sidebar {
     position: sticky;
     top: 0;
     z-index: 5;
-    width: 232px;
-    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     min-height: 100dvh;
-    padding: 26px 14px 18px;
-    background: rgb(255 255 255 / 96%) !important;
+    padding: 22px 14px 18px;
+    background: rgb(255 255 255 / 97%);
     border-right: 1px solid var(--rh-border);
-    box-shadow: none;
-    color: var(--rh-text) !important;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0%);
   }
 
-  .shell .brand {
-    gap: 10px;
-    padding: 0 10px 20px;
-    color: var(--rh-text) !important;
-    font-size: 22px;
-    letter-spacing: -.045em;
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 8px 18px;
+    color: var(--rh-text);
+    font-size: 21px;
+    font-weight: 850;
+    letter-spacing: -.04em;
   }
 
-  .shell .brand img {
-    width: 38px;
-    height: 38px;
+  .brand img {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .brand em {
+    color: var(--rh-blue);
+    font-style: normal;
+  }
+
+  .newRoute {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 4px 0 14px;
+    padding: 0 14px;
     border-radius: 12px;
-  }
-
-  .shell .newRoute {
-    min-height: 46px;
-    margin: 4px 0 24px;
-    border-radius: 12px;
-    font-size: 14px;
-    letter-spacing: -.01em;
+    background: var(--rh-blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
     box-shadow: 0 12px 24px rgb(22 103 242 / 20%);
+    transition: background-color 140ms ease, transform 140ms ease;
   }
 
-  .shell .nav {
-    gap: 7px;
+  .newRoute:hover {
+    background: var(--rh-blue-pressed);
   }
 
-  .shell .nav a {
+  .newRoute:active {
+    transform: scale(.985);
+  }
+
+  .nav {
+    display: grid;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .nav a {
     position: relative;
-    min-height: 48px;
-    padding: 0 13px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 0 12px;
     border-radius: 13px;
-    color: #687992 !important;
+    color: #687992;
     font-size: 14px;
     font-weight: 720;
+    transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
   }
 
-  .shell .nav a svg { width: 19px; height: 19px; }
+  .nav a svg {
+    flex: none;
+  }
 
-  .shell .nav a:hover {
+  .nav a:hover {
     background: #f5f8fd;
-    color: var(--rh-blue) !important;
+    color: var(--rh-blue);
   }
 
-  .shell .nav a[data-active="true"] {
-    background: var(--rh-soft-blue) !important;
-    color: var(--rh-blue) !important;
-    box-shadow: none;
+  .nav a[data-active='true'] {
+    background: var(--rh-soft-blue);
+    color: var(--rh-blue);
   }
 
-  /* manager-dashboard.css historically highlighted the first item by
-     position. Active state must come only from ManagerShell's data-active. */
-  .shell .nav a:first-child:not([data-active="true"]) {
-    background: transparent !important;
-    color: #687992 !important;
-    box-shadow: none !important;
-  }
-
-  .shell .nav a[data-active="true"]::before {
+  .nav a[data-active='true']::before {
     position: absolute;
-    left: -16px;
+    left: -14px;
     width: 4px;
     height: 24px;
     border-radius: 0 6px 6px 0;
@@ -330,25 +188,128 @@
     content: '';
   }
 
-  .shell .workspaceMeta {
-    margin: auto 8px 8px;
-    padding: 16px 0 12px;
+  .workspaceMeta {
+    display: grid;
+    gap: 4px;
+    margin-top: auto;
+    padding: 14px 8px 10px;
+    border-top: 1px solid var(--rh-divider);
   }
 
-  .shell .profile {
-    margin: 0 2px;
+  .workspaceMeta span {
+    color: var(--rh-muted);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .workspaceMeta strong {
+    overflow: hidden;
+    color: var(--rh-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
     padding: 10px 8px;
     border-radius: 14px;
+    color: var(--rh-text);
+    transition: background-color 140ms ease;
   }
 
-  .shell .profile:hover { background: #f7f9fc; }
-  .shell .profile strong { font-size: 12px; }
-  .shell .profile small { font-size: 11px; }
+  .profile:hover {
+    background: #f7f9fc;
+  }
 
-  .shell .content {
+  .profile > span:nth-child(2) {
     min-width: 0;
+    display: grid;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .profile strong {
+    overflow: hidden;
+    color: var(--rh-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profile small {
+    overflow: hidden;
+    color: var(--rh-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profile > svg {
+    flex: none;
+    color: var(--rh-muted);
+  }
+
+  .content {
     min-height: 100dvh;
-    padding: 30px clamp(34px, 4vw, 76px) 52px !important;
-    background: transparent !important;
+    padding: 26px clamp(28px, 3.4vw, 72px) 42px;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 1023px) {
+  .shell[data-manager-section='today'] .content {
+    padding-inline: 16px;
+  }
+
+  .content {
+    padding-top: 18px;
+  }
+
+  .mobileNav {
+    position: fixed;
+    z-index: 20;
+    left: 12px;
+    right: 12px;
+    bottom: env(safe-area-inset-bottom);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    gap: 4px;
+    min-height: 72px;
+    padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+    border: 1px solid var(--rh-border);
+    border-radius: 22px;
+    background: rgb(255 255 255 / 94%);
+    box-shadow: 0 12px 30px rgb(15 29 53 / 16%);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobileNav a {
+    display: grid;
+    place-items: center;
+    gap: 3px;
+    min-height: 48px;
+    border-radius: 14px;
+    color: var(--rh-muted);
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .mobileNav a[data-active='true'] { background: var(--rh-soft-blue); color: var(--rh-blue); }
+  .mobileNewRoute { width: 54px; height: 54px; justify-self: center; align-self: start; margin-top: -18px; border: 4px solid var(--rh-page-bg); border-radius: 50% !important; background: var(--rh-blue); color: #fff !important; box-shadow: 0 8px 18px rgb(22 103 242 / 28%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newRoute,
+  .nav a,
+  .profile {
+    transition: none;
   }
 }

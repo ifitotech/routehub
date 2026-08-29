@@ -95,6 +95,19 @@
 :global(html[data-theme="dark"]) .locationConfirmation span,:global(html[data-theme="dark"]) .locationConfirmation>small{color:var(--rh-text-secondary)}
 @media(max-width:640px){.page{padding-bottom:190px}}
 
+/* Shared desktop workspace alignment. The shell owns the navigation; keep
+   Routes focused on the operational queue without a second page frame. */
+@media (min-width: 1024px) {
+  .page {
+    max-width: none;
+    padding: 8px 0 56px;
+  }
+  .header { margin-bottom: 28px; }
+  .header h1 { font-size: clamp(36px, 3.2vw, 48px); }
+  .routeSection { margin-top: 28px; }
+  .routeCard { min-height: 104px; }
+}
+
 @media(max-width:640px){
   .headerActions .primaryButton{grid-column:1/-1}
   .listHeading{margin-top:4px}

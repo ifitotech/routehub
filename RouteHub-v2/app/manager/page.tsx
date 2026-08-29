@@ -7,7 +7,6 @@ import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
 import {useLocale} from '../../lib/use-preferences'
-import NotificationBell from '../notification-bell'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
 import LiveRoute from '../routes/live-route'
 import ManagerShell from './manager-shell'
@@ -106,8 +105,7 @@ export default function Manager() {
   const routeTypeLabel = (value?: string | null) => value === 'pickup' ? t.pickup : value === 'delivery' ? t.delivery : value === 'return' ? t.returnToBranch : value || t.route
 
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
-    <header className={styles.desktopTop}><div><h1>{copy.today}</h1><p className={todayStyles.headerDate}>{dateLabel} · {branchName || t.mainBranch}</p></div><div className={styles.desktopTopMeta}><span>{copy.updated}: {new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())}</span><NotificationBell /><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></header>
-    <section className={styles.intro}><h1>{copy.today}</h1><p>{dateLabel} · {branchName || t.mainBranch}</p></section>
+    <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.updated}: {new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
     <div className={todayStyles.todayLayout}>
@@ -122,6 +120,6 @@ export default function Manager() {
     </div>
     {hasIssue && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{summary.openIssues} {copy.issue}</strong><p>{copy.review}</p></div><Link href="/reports"><ArrowRight size={16}/></Link></section>}
     <div className={styles.desktopOnly}><TemporaryRouteAssignments /></div>
-    <nav className={`nav ${styles.nav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
+    <nav className={`nav ${styles.nav} ${styles.todayNav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </ManagerShell>
 }
