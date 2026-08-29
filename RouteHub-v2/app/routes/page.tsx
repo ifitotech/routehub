@@ -684,9 +684,10 @@ export default function Routes() {
     const destination = route.destination_name || route.destination_address || c.destinationPending
     const priority = route.priority || 'normal'
     const status = route.status || 'pending'
-    return <article className={`${styles.routeCard} ${priority === 'urgent' ? styles.urgentCard : ''}`} key={route.id}>
+    const statusTone = status === 'completed' ? styles.routeToneCompleted : status === 'issue' ? styles.routeToneIssue : status === 'cancelled' ? styles.routeToneCancelled : ['active','paused'].includes(status) ? styles.routeToneActive : styles.routeTonePending
+    return <article className={`${styles.routeCard} ${statusTone} ${priority === 'urgent' ? styles.urgentCard : ''}`} key={route.id}>
       <div className={styles.cardTop}>
-        <div className={styles.routeIdentity}><span className={styles.routeNumber}>{String(route.position || index + 1).padStart(2, '0')}</span><div><small>{typeLabel(route.mission_type,c)}</small><strong>{destination}</strong></div></div>
+        <div className={styles.routeIdentity}><span className={styles.routeNumber}>{String(route.position || index + 1).padStart(2, '0')}</span><div><small className={`${styles.routeTypeLabel} ${styles[`routeType_${route.mission_type}`] || ''}`}>{typeLabel(route.mission_type,c)}</small><strong>{destination}</strong></div></div>
         <div className={`${styles.statusBadge} ${styles[`status_${status}`] || ''}`}><CircleDot size={12}/>{statusLabel(status,c)}</div>
       </div>
       <div className={styles.routePath}><MapPin size={17}/><span>{origin}</span><ArrowRight size={16}/><strong>{destination}</strong></div>
@@ -704,6 +705,8 @@ export default function Routes() {
   })
 
   const priorityRoutes = routes.filter(route => route.driver_id === form.driver_id && route.route_date === form.date && ['draft','pending','published','paused'].includes(route.status || '')).sort(routeSort)
+  const selectedDriver = drivers.find(driver => driver.user_id === form.driver_id)
+  const selectedDriverName = selectedDriver ? driverDetails(selectedDriver, c.teamDriver).name : c.chooseDriver
 
   return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
     <div className={styles.page}>
@@ -770,11 +773,29 @@ export default function Routes() {
         </div> : <div className={styles.builderBody}>
           <button type="button" className={styles.mobileMapButton} onClick={() => setPreviewOpen(value => !value)}><MapPin size={16}/>{previewOpen ? (locale==='es' ? 'Ocultar mapa' : locale==='fr' ? 'Masquer la carte' : 'Hide map') : (locale==='es' ? 'Ver mapa' : locale==='fr' ? 'Voir la carte' : 'View map')}</button>
           <div className={`${styles.mapColumn} ${previewOpen ? styles.mapColumnOpen : ''}`}>
-            <OperationsMap routes={planningMapRoutes} locale={locale} interactive/>
-             <div className={styles.previewSummary}><span><i>S</i>{planningMapRoutes[0]?.origin_address || defaultBranch?.address || c.branch}</span><span><i>1</i>{planningMapRoutes.length ? `${planningMapRoutes.length} ${locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}` : (locale==='es' ? 'Sin rutas configuradas' : locale==='fr' ? 'Aucun itinéraire configuré' : 'No configured routes')}</span></div>
-           </div>
+            <section className={styles.previewCard} aria-label={locale==='es' ? 'Vista previa de la ruta' : locale==='fr' ? 'Aperçu de l’itinéraire' : 'Route preview'}>
+              <div className={styles.previewCardHeader}>
+                <div><span className={styles.previewEyebrow}>{locale==='es' ? 'VISTA PREVIA' : locale==='fr' ? 'APERÇU' : 'ROUTE PREVIEW'}</span><h3>{locale==='es' ? 'Confirma las ubicaciones' : locale==='fr' ? 'Confirmez les emplacements' : 'Confirm locations'}</h3></div>
+                <MapPin size={19}/>
+              </div>
+              <OperationsMap routes={planningMapRoutes} locale={locale} interactive/>
+              <div className={styles.previewSummary}><span><i>S</i>{planningMapRoutes[0]?.origin_address || defaultBranch?.address || c.branch}</span><span><i>1</i>{planningMapRoutes.length ? `${planningMapRoutes.length} ${locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}` : (locale==='es' ? 'Sin rutas configuradas' : locale==='fr' ? 'Aucun itinéraire configuré' : 'No configured routes')}</span></div>
+            </section>
+            <section className={styles.assignmentSummary} aria-label={locale==='es' ? 'Resumen de asignación' : locale==='fr' ? 'Résumé de l’affectation' : 'Assignment summary'}>
+              <div className={styles.summaryHeader}><h3>{locale==='es' ? 'Resumen de asignación' : locale==='fr' ? 'Résumé de l’affectation' : 'Assignment summary'}</h3><RouteIcon size={18}/></div>
+              <dl className={styles.summaryGrid}>
+                <div><dt>{c.routeType}</dt><dd>{typeLabel(form.type,c)}</dd></div>
+                <div><dt>{c.driver}</dt><dd>{selectedDriverName}</dd></div>
+                <div><dt>{locale==='es' ? 'Posición' : locale==='fr' ? 'Position' : 'Position'}</dt><dd>{insertBeforeId ? (locale==='es' ? 'Antes de una parada' : locale==='fr' ? 'Avant un arrêt' : 'Before a stop') : (locale==='es' ? 'Al final' : locale==='fr' ? 'À la fin' : 'At the end')}</dd></div>
+                <div><dt>{c.date} · {c.time}</dt><dd>{form.date || '—'}{form.time ? ` · ${form.time}` : ''}</dd></div>
+              </dl>
+              <div className={styles.summaryLocations}><div><span>{locale==='es' ? 'INICIO' : locale==='fr' ? 'DÉPART' : 'START'}</span><strong>{form.origin || defaultBranch?.address || c.branch}</strong></div><div><span>{locale==='es' ? 'OPERACIÓN' : locale==='fr' ? 'OPÉRATION' : 'OPERATION'}</span><strong>{form.destination_label || form.destination || (form.type==='return' ? c.branch : c.destinationPending)}</strong></div></div>
+            </section>
+          </div>
 
           <div className={`${styles.formColumn} ${contrast.form}`}>
+            <section className={styles.builderSection}>
+            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Asignación' : locale==='fr' ? 'Affectation' : 'Assignment'}</h3><p>{locale==='es' ? 'Elige el tipo de operación y el conductor.' : locale==='fr' ? 'Choisissez le type d’opération et le conducteur.' : 'Choose the operation type and driver.'}</p></div></div>
             <fieldset className={`${styles.fieldset} ${styles.primaryRouteTypes}`}>
               <legend>{c.routeType}</legend>
               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => type.value === 'return' ? {...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''} : {...current, type:type.value})}>{typeLabel(type.value,c)}</button>)}</div>
@@ -790,11 +811,19 @@ export default function Routes() {
 
             {form.driver_id && form.date === todayValue && priorityRoutes.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Posición en la ruta' : locale==='fr' ? 'Position dans l’itinéraire' : 'Position in route'} <em>{c.optional}</em></span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>{priorityRoutes.map(route => <option key={route.id} value={route.id}>{locale==='es' ? `Antes de ${route.destination_name || route.destination_address || 'la próxima parada'}` : locale==='fr' ? `Avant ${route.destination_name || route.destination_address || 'la prochaine étape'}` : `Before ${route.destination_name || route.destination_address || 'next stop'}`}</option>)}</select></div></label>}
 
+            </section>
+
+            <section className={styles.builderSection}>
+            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>2</span><div><h3>{locale==='es' ? 'Programación' : locale==='fr' ? 'Planification' : 'Schedule'}</h3><p>{locale==='es' ? 'Elige cuándo ocurrirá esta asignación.' : locale==='fr' ? 'Choisissez quand cette affectation aura lieu.' : 'Choose when this assignment should happen.'}</p></div></div>
             <div className={styles.splitFields}>
               <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
               <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
             </div>
 
+            </section>
+
+            <section className={styles.builderSection}>
+            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>3</span><div><h3>{locale==='es' ? 'Ubicaciones' : locale==='fr' ? 'Emplacements' : 'Locations'}</h3><p>{locale==='es' ? 'Define el inicio y el destino.' : locale==='fr' ? 'Définissez le départ et la destination.' : 'Set the starting point and destination.'}</p></div></div>
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
               <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
@@ -827,6 +856,10 @@ export default function Routes() {
               {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number:event.target.value}))}/></label>}
               {form.type==='delivery'&&!selectedContact ? <label className={styles.field}><span>{c.contactPhone} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/></label> : null}
             </>}
+            </section>
+
+            <section className={styles.builderSection}>
+            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>4</span><div><h3>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</h3><p>{locale==='es' ? 'Información opcional para el conductor.' : locale==='fr' ? 'Informations facultatives pour le conducteur.' : 'Optional information for the driver.'}</p></div></div>
             {form.type==='return'&&<label className={styles.field}><span>{c.notes} <em>{c.optional}</em></span><textarea rows={2} value={form.notes} placeholder={locale==='es'?'Ejemplo: Recoger material para la próxima entrega':locale==='fr'?'Exemple : récupérer le matériel pour la prochaine livraison':'Example: Pick up material for next delivery'} onChange={event => setForm(current => ({...current, notes:event.target.value}))}/></label>}
 
             {form.type!=='return'&&<button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>}
@@ -836,8 +869,12 @@ export default function Routes() {
               <label className={styles.field}><span>{form.type==='delivery'?(locale==='es'?'Instrucciones de entrega':locale==='fr'?'Instructions de livraison':'Delivery instructions'):c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={form.type==='delivery'?c.notesPlaceholder:c.notes} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
               {form.type==='pickup'&&!selectedContact&&<label className={styles.field}><span>{c.contactPhone} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/></label>}
             </div>}
+            </section>
 
-            <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? <><span className={styles.spinner}/>{c.publishing}</> : <><Truck size={19}/>{c.publish}</>}</button>
+            <div className={styles.builderFooter}>
+              <button className={styles.secondaryButton} type="button" disabled={saving} onClick={() => setOpen(false)}>{locale==='es' ? 'Cancelar' : locale==='fr' ? 'Annuler' : 'Cancel'}</button>
+              <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? <><span className={styles.spinner}/>{c.publishing}</> : <><Truck size={19}/>{c.publish}</>}</button>
+            </div>
           </div>
         </div>}
       </section>
