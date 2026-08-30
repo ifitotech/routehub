@@ -231,7 +231,7 @@ export default function DriverV3Page() {
               showLocationUpdated={false}
               interactive={false}
               useDriverAsOrigin
-            />
+            />}
             </div>
           </button>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
