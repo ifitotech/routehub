@@ -15,3 +15,10 @@
 .shell{height:100dvh;min-height:0;box-sizing:border-box;display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding-bottom:0;overflow:hidden}.content{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;padding-bottom:20px}.nav{position:static;left:auto;right:auto;bottom:auto;transform:none;max-width:none;border-radius:0}.shell .nav{grid-row:3}@media (min-width:700px){.nav{width:100%;left:auto;right:auto;transform:none;border-radius:0}}
 .todayHeader{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) 48px;grid-template-rows:48px 24px;align-items:center;min-height:calc(80px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));box-sizing:border-box}.todayBrand{justify-self:center;color:#fff;font-size:15px;line-height:20px;font-weight:700;white-space:nowrap;text-decoration:none}.todayHeader .headerIcon{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:#fff;text-decoration:none;padding:0}.todayHeader .headerIcon svg{width:22px;height:22px}.todayHeader .headerIcon:last-of-type{justify-self:end}.headerStatus{grid-column:1/-1;justify-self:center;display:inline-flex;align-items:center;height:20px;padding:0 10px;border-radius:999px;background:#0c5f44;color:#77efb2;font-size:9px;line-height:20px;font-weight:800;letter-spacing:.055em;text-transform:uppercase}.todayHeader+.content{padding-top:0}
 .nav{height:calc(64px + env(safe-area-inset-bottom));padding-top:4px}.nav a{min-height:56px;border-radius:0;background:transparent!important}.nav .active{color:var(--blue)}
+
+/* APP HARDENING — full Driver V3 surface */
+.shell{-webkit-overflow-scrolling:touch;overscroll-behavior:none}
+.content{-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.nav{padding-left:max(4px,env(safe-area-inset-left));padding-right:max(4px,env(safe-area-inset-right))}
+.primary,.secondary,.danger{min-height:52px}
+.primary{min-height:60px}

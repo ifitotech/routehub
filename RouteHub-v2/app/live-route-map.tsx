@@ -46,13 +46,24 @@ function FitBounds({points}:{points:RouteCoordinate[]}){
  return null
 }
 
+
+function RecenterOnRequest({points, token}:{points:RouteCoordinate[]; token:number}){
+ const map=useMap()
+ useEffect(()=>{
+  if(!token||!points.length)return
+  if(points.length===1){map.setView([points[0].lat,points[0].lng],14,{animate:true});return}
+  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:16,animate:true})
+ },[map,token])
+ return null
+}
+
 async function resolveCoordinate(address:string|null|undefined,known:RouteCoordinate|null|undefined){
  if(known)return known
  if(!address)return null
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en'}:Props){
+export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en',followToken=0}:Props & {followToken?:number}){
  const [routePoints,setRoutePoints]=useState<RouteCoordinate[]>([])
  const [line,setLine]=useState<RouteCoordinate[]>([])
  const [loading,setLoading]=useState(true)
@@ -81,7 +92,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
    if(!cancelled)setLoading(false)
   }).catch(()=>{if(!cancelled){setUnavailable(true);setLoading(false)}})
   return()=>{cancelled=true}
- },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey,useDriverAsOrigin,driverLocation?.lat,driverLocation?.lng])
+ },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey,useDriverAsOrigin,useDriverAsOrigin?driverLocation?.lat:null,useDriverAsOrigin?driverLocation?.lng:null])
 
  const visiblePoints=useMemo(()=>[...routePoints,...(driverLocation?[driverLocation]:[])],[routePoints,driverLocation])
  const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}
@@ -99,7 +110,8 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
   <div className="live-route-canvas">
    {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label={copy.map}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
-    <FitBounds points={visiblePoints}/>
+    <FitBounds points={routePoints.length?routePoints:visiblePoints}/>
+    <RecenterOnRequest points={visiblePoints} token={followToken||0}/>
     {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
     {origin&&(!useDriverAsOrigin||!driverLocation)&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
     {intermediate.map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+2)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`${copy.next} ${index+2}`}</Tooltip></Marker>)}

@@ -93,7 +93,7 @@ export default function Completed() {
               </h2>
               <Link
                 className="primary"
-                href="/driver/stop"
+                href="/driver-v3/stop"
                 style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none'}}
               >
                 <Play size={18} />
@@ -113,7 +113,7 @@ export default function Completed() {
 
           <Link
             className="secondary"
-            href="/driver/route"
+            href="/driver-v3/route"
             style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', marginTop: 10}}
           >
             <List size={18} />

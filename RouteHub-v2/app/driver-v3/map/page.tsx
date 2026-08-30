@@ -1,7 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
 import {useState} from 'react'
-import {CheckCircle2, Navigation} from 'lucide-react'
+import {CheckCircle2, Crosshair, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {markArrived} from '../../../lib/driver-v3/actions'
@@ -13,6 +13,7 @@ export default function DriverV3Map() {
   const {loading, error, snapshot, driverId, refresh} = useDriverData()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [followToken, setFollowToken] = useState(0)
   const route = snapshot?.currentOperation?.route as any
   const kind = (snapshot?.currentOperation?.kind || 'delivery').toString().toUpperCase()
 
@@ -26,7 +27,11 @@ export default function DriverV3Map() {
           : null,
       label: route.destination_name,
     })
-    if (url) window.location.assign(url)
+    if (url) {
+      // Prefer external handoff so the installed PWA is not replaced by a browser tab.
+      const opened = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!opened) window.location.assign(url)
+    }
   }
 
   const arrived = async () => {
@@ -46,8 +51,24 @@ export default function DriverV3Map() {
 
   return (
     <DriverV3Shell active="map">
-      <p className="eyebrow">ACTIVE ROUTE</p>
-      <h1 className="title">Map</h1>
+      <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12}}>
+        <div>
+          <p className="eyebrow">ACTIVE ROUTE</p>
+          <h1 className="title" style={{marginBottom: 0}}>Map</h1>
+        </div>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => setFollowToken(t => t + 1)}
+          style={{width: 'auto', minHeight: 44, padding: '0 12px', flexShrink: 0}}
+          aria-label="Recenter map"
+        >
+          <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
+            <Crosshair size={16} />
+            Recenter
+          </span>
+        </button>
+      </div>
 
       {loading ? (
         <section className="card"><p>Loading map…</p></section>
@@ -55,7 +76,7 @@ export default function DriverV3Map() {
         <section className="card"><p role="alert">{error}</p></section>
       ) : route ? (
         <>
-          <section className="card" style={{padding: 0, overflow: 'hidden', minHeight: 280}}>
+          <section className="card" style={{padding: 0, overflow: 'hidden', minHeight: 280, marginTop: 12}}>
             <LiveRouteMap
               destinationAddress={route.destination_address}
               destinationCoordinate={
@@ -66,6 +87,7 @@ export default function DriverV3Map() {
               title="Current stop"
               showHeader={false}
               interactive
+              followToken={followToken}
             />
           </section>
 
@@ -87,7 +109,13 @@ export default function DriverV3Map() {
               </p>
             )}
 
-            <div style={{display: 'grid', gridTemplateColumns: route.arrived_at ? '1fr' : '1fr 1fr', gap: 10}}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: route.arrived_at ? '1fr' : '1fr 1fr',
+                gap: 10,
+              }}
+            >
               <button className="secondary" onClick={maps} type="button">
                 <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
                   <Navigation size={16} />
@@ -95,7 +123,12 @@ export default function DriverV3Map() {
                 </span>
               </button>
               {!route.arrived_at && (
-                <button className="primary" disabled={busy} onClick={() => void arrived()} style={{background: '#16B96B'}}>
+                <button
+                  className="primary"
+                  disabled={busy}
+                  onClick={() => void arrived()}
+                  style={{background: '#16B96B'}}
+                >
                   <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
                     <CheckCircle2 size={16} />
                     {busy ? 'Updating…' : 'Arrived'}

@@ -64,12 +64,16 @@ export default function DriverV3Stop() {
           : null,
       label: route?.destination_name,
     })
-    if (url) window.location.assign(url)
+    if (url) {
+      // Prefer external handoff so the installed PWA is not replaced by a browser tab.
+      const opened = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!opened) window.location.assign(url)
+    }
   }
 
   return (
     <DriverV3Shell active="route">
-      <Link href="/driver/route" className="muted">
+      <Link href="/driver-v3/route" className="muted">
         ‹ My Route
       </Link>
 
@@ -125,19 +129,19 @@ export default function DriverV3Stop() {
                 marginTop: 16,
               }}
             >
-              <Link href="/driver/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+              <Link href="/driver-v3/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
                 <Camera size={22} />
                 Photo
               </Link>
-              <Link href="/driver/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+              <Link href="/driver-v3/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
                 <PenLine size={22} />
                 Signature
               </Link>
-              <Link href="/driver/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+              <Link href="/driver-v3/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
                 <FileText size={22} />
                 Notes
               </Link>
-              <Link href="/driver/issue" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12, color: '#EF5350', borderColor: '#f5c2c0'}}>
+              <Link href="/driver-v3/issue" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12, color: '#EF5350', borderColor: '#f5c2c0'}}>
                 <AlertTriangle size={22} />
                 Issue
               </Link>
