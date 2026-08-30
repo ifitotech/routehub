@@ -165,6 +165,13 @@ export default function DriverV3Page() {
   const confirmDelivery=async()=>{
     if(!route||busy||!driverId)return
     const name=recipient.trim()
+    if(!name){
+      setAskName(true)
+      setNameFocus(true)
+      setPodPanel(null)
+      setMessage(t.drvNeedRecipient)
+      return
+    }
     const withIssue=podPanel==='issue'||Boolean(issueNote.trim())
     if(!withIssue && !hasPod){
       setMessage(t.drvNeedPod)
@@ -336,7 +343,7 @@ export default function DriverV3Page() {
             <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={e=>setPhoto(e.target.files?.[0]||null)}/>
             {!nameFocus&&(
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
-              <button type="button" className="secondary" onClick={()=>photoRef.current?.click()} style={{...tileBtn,color:photo?'#16B96B':undefined}}>
+              <button type="button" className="secondary" onClick={()=>{if(!recipient.trim()){setAskName(true);setNameFocus(true);setMessage(t.drvNeedRecipient);return}photoRef.current?.click()}} style={{...tileBtn,color:photo?'#16B96B':undefined}}>
                 <Camera size={20}/>{t.drvPhoto||'Foto'}
               </button>
               <button type="button" className="secondary" onClick={()=>setPodPanel(podPanel==='signature'?null:'signature')} style={{...tileBtn,color:signed?'#16B96B':undefined}}>
