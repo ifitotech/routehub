@@ -314,3 +314,43 @@
 .confirmSheet h2{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.02em}
 .confirmSheet p{margin:0 0 16px;color:#667892;font-size:14px;line-height:1.45}
 .confirmActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.appHeader{
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr) 48px;
+  align-items:center;
+  background:#0F1D35;
+  color:#fff;
+  min-height:calc(56px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 12px 0;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  filter:none !important;
+  text-shadow:none;
+}
+.headerBrand{
+  justify-self:center;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#fff;
+  text-decoration:none;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-.02em;
+}
+.headerBrand img{border-radius:6px;background:#fff}
+.headerIcon{
+  display:grid;place-items:center;width:44px;height:44px;color:#fff;text-decoration:none;
+}
+.headerStatusBar{
+  margin:0;
+  padding:6px 16px;
+  background:#0F1D35;
+  color:#77efb2;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  text-align:center;
+}

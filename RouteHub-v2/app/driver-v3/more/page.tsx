@@ -3,7 +3,6 @@ import {useEffect, useState} from 'react'
 import {LogOut} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
-import DeviceNotificationsSetting from '../../device-notifications-setting'
 import InstallAppCard from '../../install-app-card'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {useLocale} from '../../../lib/use-preferences'
@@ -110,7 +109,6 @@ export default function DriverProfile() {
           ))}
         </div>
       </section>
-      <div style={{marginTop: 12}}><DeviceNotificationsSetting /></div>
       <div style={{marginTop: 12}}><InstallAppCard /></div>
       <section className="card" style={{marginTop: 12}}>
         <p className="eyebrow">RouteHub Driver</p>
