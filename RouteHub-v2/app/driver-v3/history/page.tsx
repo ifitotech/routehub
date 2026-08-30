@@ -37,9 +37,12 @@ export default function History() {
       
 
       {loading ? (
-        <section className="card"><p>Loading history…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>Loading history…</p></section>
       ) : error ? (
-        <section className="card"><p role="alert">{error}</p></section>
+        <section className="card">
+          <h2>Couldn&apos;t load history.</h2>
+          <p className="muted">Try again when your connection is available.</p>
+        </section>
       ) : completed.length === 0 ? (
         <section className="card">
           <h2>No completed routes</h2>

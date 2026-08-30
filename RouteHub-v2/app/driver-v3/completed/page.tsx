@@ -33,9 +33,12 @@ export default function Completed() {
   return (
     <DriverV3Shell active="route" mode="stack" title="Completed" backHref="/driver/route" backLabel="Route">
       {loading ? (
-        <section className="card"><p>Loading confirmation…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>Loading…</p></section>
       ) : error ? (
-        <section className="card"><p role="alert">{error}</p></section>
+        <section className="card">
+          <h2>Couldn&apos;t load this stop.</h2>
+          <p className="muted">{error}</p>
+        </section>
       ) : (
         <section className="card" style={{textAlign: 'center', padding: '28px 20px'}}>
           <div

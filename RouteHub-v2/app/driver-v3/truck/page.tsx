@@ -80,9 +80,12 @@ export default function DriverV3Truck() {
     <DriverV3Shell active="truck" title="Truck">
 
       {loading ? (
-        <section className="card"><p>Loading truck…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>Loading truck…</p></section>
       ) : error ? (
-        <section className="card"><p role="alert">{error}</p></section>
+        <section className="card">
+          <h2>Couldn&apos;t load truck.</h2>
+          <p className="muted">{error}</p>
+        </section>
       ) : (
         <>
           <section className="card">
