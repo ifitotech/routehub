@@ -326,15 +326,15 @@ export default function DriverV3Stop() {
             >
               <button type="button" className="secondary" onClick={() => openSheet('photo')} style={tileStyle}>
                 <Camera size={22} />
-                Photo
+                {t.drvPhoto}
               </button>
               <button type="button" className="secondary" onClick={() => openSheet('signature')} style={tileStyle}>
                 <PenLine size={22} />
-                Signature
+                {t.drvSignature}
               </button>
               <button type="button" className="secondary" onClick={() => openSheet('notes')} style={tileStyle}>
                 <FileText size={22} />
-                Notes
+                {t.drvNotes}
               </button>
               <button
                 type="button"
@@ -343,7 +343,7 @@ export default function DriverV3Stop() {
                 style={{...tileStyle, color: '#EF5350', borderColor: '#f5c2c0'}}
               >
                 <AlertTriangle size={22} />
-                Issue
+                {t.drvIssue}
               </button>
             </div>
 
