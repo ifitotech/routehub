@@ -28,6 +28,11 @@ export function useDriverLiveLocation() {
 
     void send()
     const interval = window.setInterval(() => void send(), 5 * 60 * 1000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void send()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
     const watch = navigator.geolocation.watchPosition(
       position => {
         if (disposed) return
@@ -50,6 +55,8 @@ export function useDriverLiveLocation() {
     return () => {
       disposed = true
       window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
       navigator.geolocation.clearWatch(watch)
     }
   }, [drivingSession, driverId, setLiveFix])
