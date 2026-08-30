@@ -6,7 +6,7 @@ import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {operationalDate} from '../../../lib/driver-queue'
 
 export default function DriverV3Route() {
-  const {loading, error, snapshot} = useDriverData()
+  const {loading, error, snapshot, refresh} = useDriverData()
   const current = snapshot?.currentOperation?.route as any
   const queue = snapshot?.queue
   const completedToday =
@@ -35,11 +35,14 @@ export default function DriverV3Route() {
     <DriverV3Shell active="route" title="My Route">
 
       {loading ? (
-        <section className="card"><p>Loading route…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>Loading your route…</p></section>
       ) : error ? (
         <section className="card">
-          <h2>Unable to load</h2>
-          <p className="muted">{error}</p>
+          <h2>Couldn&apos;t load your route.</h2>
+          <p className="muted">Try again when your connection is available.</p>
+          <button type="button" className="primary" onClick={() => void refresh()}>
+            TRY AGAIN
+          </button>
         </section>
       ) : (
         <>

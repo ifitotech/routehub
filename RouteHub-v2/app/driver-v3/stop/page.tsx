@@ -267,10 +267,7 @@ export default function DriverV3Stop() {
         </section>
       ) : (
         <>
-          <p className="eyebrow" style={{color: '#1667F2'}}>
-            {operationLabel(String(kind))}
-          </p>
-          <h1 className="title" style={{marginBottom: 4, fontSize: 26, lineHeight: '32px'}}>
+          <h1 className="title" style={{marginTop: 4, marginBottom: 4, fontSize: 26, lineHeight: '32px'}}>
             {route.destination_name || route.destination_address || 'Current stop'}
           </h1>
           <p className="muted" style={{marginTop: 0, marginBottom: 12}}>
