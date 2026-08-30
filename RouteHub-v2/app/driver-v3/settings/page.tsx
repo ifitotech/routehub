@@ -5,11 +5,12 @@ import {LogOut} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import DeviceNotificationsSetting from '../../device-notifications-setting'
 
 const LANGS = [
   {id: 'en', label: 'English'},
-  {id: 'es', label: 'Espanol'},
-  {id: 'fr', label: 'Francais'},
+  {id: 'es', label: 'Español'},
+  {id: 'fr', label: 'Français'},
 ] as const
 
 export default function DriverV3Settings() {
@@ -40,6 +41,7 @@ export default function DriverV3Settings() {
         </p>
       </section>
 
+      <div style={{marginTop: 12}}><DeviceNotificationsSetting /></div>
       <section className="card" style={{marginTop: 12}}>
         <p className="eyebrow">{t.drvLanguage}</p>
         <div style={{display: 'grid', gap: 8, marginTop: 8}}>

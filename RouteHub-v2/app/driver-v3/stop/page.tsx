@@ -25,6 +25,7 @@ import {
   reportIssue,
 } from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
+import {getCurrentLocation} from '../../../lib/location'
 
 const operationLabel = (kind: string) =>
   kind === 'branch' ? 'RETURN' : kind === 'pickup' ? 'PICKUP' : 'DELIVERY'
@@ -81,10 +82,12 @@ export default function DriverV3Stop() {
         setMessage(t.drvArrivedOk)
       } else {
         const isDelivery = operationLabel(String(kind)) === 'DELIVERY'
+        let location
+        try { location = await getCurrentLocation({maximumAge: 60_000}) } catch {}
         if (isDelivery) {
-          await completeDeliveryWithRecipient(ctx, recipient, route.driver_note || '')
+          await completeDeliveryWithRecipient(ctx, recipient, route.driver_note || '', location)
         } else {
-          await completeStop(ctx)
+          await completeStop(ctx, {location})
         }
         await refresh()
         router.push('/driver/completed')
