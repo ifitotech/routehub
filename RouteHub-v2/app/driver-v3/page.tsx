@@ -7,7 +7,7 @@ import {useState} from 'react'
 import {useRouter} from 'next/navigation'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
-import {markArrived, startRoute} from '../../lib/driver-v3/actions'
+import {completeReturn, markArrived, startRoute} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
@@ -63,6 +63,24 @@ export default function DriverV3Page() {
     }
   }
 
+  const completeCurrentReturn=async()=>{
+    if(!route||kind!=='return'||busy||!driverId)return
+    setBusy(true)
+    setMessage('')
+    try{
+      let location
+      try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
+      await completeReturn({routeId:route.id,driverId,companyId:route.company_id},{location})
+      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+      await refresh()
+      router.push('/driver/completed')
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
   const openMaps=()=>{
     if(!route)return
     const url=openNavigation({
@@ -106,7 +124,7 @@ export default function DriverV3Page() {
               useDriverAsOrigin
             />
           </div>
-          {route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
+          {route.arrived_at&&kind==='return'?<button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void completeCurrentReturn()}><MapPin/>{busy?t.drvBusy:t.drvCompleteReturn}</button>:route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
           <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link></div>
           {message&&<p className={styles.feedback} role="status">{message}</p>}
         </section>
