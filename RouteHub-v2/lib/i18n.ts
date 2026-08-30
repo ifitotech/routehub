@@ -137,6 +137,11 @@ export const translations: Record<Locale, TranslationDictionary> = {en, es, fr}
 
 export function isLocale(value: unknown): value is Locale { return value === 'en' || value === 'es' || value === 'fr' }
 
+
+Object.assign(en, {drvConfirmPickup:'CONFIRM PICKUP', drvPickUpPo:'Pick up PO', drvNeedRecipient:'Enter who received the material.', drvNeedPod:'Add a photo or a signature to complete delivery.'})
+Object.assign(es, {drvConfirmPickup:'CONFIRMAR RECOGIDA', drvPickUpPo:'Recoge el PO', drvNeedRecipient:'Indica quién recibió el material.', drvNeedPod:'Agrega foto o firma para completar la entrega.'})
+Object.assign(fr, {drvConfirmPickup:'CONFIRMER LE RAMASSAGE', drvPickUpPo:'Récupérer le PO', drvNeedRecipient:'Indiquez qui a reçu le matériel.', drvNeedPod:'Ajoutez une photo ou une signature pour terminer.'})
+
 export function getLocale(): Locale {
   if (typeof window === 'undefined') return 'en'
   const value = window.localStorage.getItem('routehub_language') || window.localStorage.getItem('rh2-language')

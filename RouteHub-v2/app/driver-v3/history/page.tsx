@@ -105,7 +105,7 @@ export default function History() {
                       {r.destination_name || r.destination_address || t.drvRoute}
                     </h2>
                     {r.destination_address ? <p className="muted" style={{margin: 0, fontSize: 13}}>{r.destination_address}</p> : null}
-                    {r.order_number ? <p style={{margin: '6px 0 0', fontSize: 13, fontWeight: 800}}>PO {r.order_number}</p> : null}
+                    {r.order_number ? <p style={{margin: '8px 0 0', fontSize: 22, lineHeight: '26px', fontWeight: 800, letterSpacing: '-0.02em'}}>PO {r.order_number}</p> : null}
                   </div>
                   <ChevronRight size={20} color="#94A3B8" />
                 </Link>

@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import {Map, MapPin, Package, TriangleAlert} from 'lucide-react'
-import {useState} from 'react'
+import {useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
-import {completeDelivery, completePickupWithEvidence, completeReturn, markArrived, startRoute} from '../../lib/driver-v3/actions'
+import {completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
@@ -22,10 +22,19 @@ export default function DriverV3Page() {
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
+  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery'>(null)
+  const [recipient,setRecipient]=useState('')
+  const [photo,setPhoto]=useState<File | null>(null)
+  const [signed,setSigned]=useState(false)
+  const canvas=useRef<HTMLCanvasElement>(null)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
   const started=['active','paused'].includes(String(route?.status||''))
+  const arrived=Boolean(route?.arrived_at)
+  const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
+
+  const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
   const openMaps=()=>{
     if(!route)return
@@ -42,8 +51,7 @@ export default function DriverV3Page() {
     setBusy(true)
     setMessage('')
     try{
-      const context={routeId:route.id,driverId,companyId:route.company_id}
-      await startRoute(context,operationalDate())
+      await startRoute(ctx(),operationalDate())
       if(!drivingSession){
         try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
       }
@@ -62,21 +70,48 @@ export default function DriverV3Page() {
     }
   }
 
-  const completeCurrent=async()=>{
+  const arrivePickup=async()=>{
     if(!route||busy||!driverId)return
     setBusy(true)
     setMessage('')
     try{
-      const context={routeId:route.id,driverId,companyId:route.company_id}
-      if(!['active','paused'].includes(String(route.status||''))){
-        await startRoute(context,operationalDate())
-      }
-      try{await markArrived(context)}catch{}
+      if(!started) await startRoute(ctx(),operationalDate())
+      try{await markArrived(ctx())}catch{}
+      await refresh()
+      setSheet('pickup')
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
+  const confirmPickup=async()=>{
+    if(!route||busy||!driverId)return
+    setBusy(true)
+    setMessage('')
+    try{
+      await completePickupWithEvidence(ctx())
+      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+      setSheet(null)
+      await refresh()
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
+  const completeReturnNow=async()=>{
+    if(!route||busy||!driverId)return
+    setBusy(true)
+    setMessage('')
+    try{
+      if(!started) await startRoute(ctx(),operationalDate())
+      try{await markArrived(ctx())}catch{}
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
-      if(kind==='pickup')await completePickupWithEvidence(context)
-      else if(kind==='return')await completeReturn(context,{location})
-      else await completeDelivery(context)
+      await completeReturn(ctx(),{location})
       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       await refresh()
     }catch(error){
@@ -86,9 +121,75 @@ export default function DriverV3Page() {
     }
   }
 
-  const completeLabel=kind==='pickup'?t.drvCompletePickup:kind==='return'?t.drvCompleteReturn:t.drvCompleteDelivery
+  const openDelivery=()=>{
+    setMessage('')
+    setSheet('delivery')
+  }
 
-  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}>
+  const sign=(e: React.PointerEvent<HTMLCanvasElement>)=>{
+    const c=canvas.current
+    if(!c)return
+    const box=c.getBoundingClientRect()
+    const x=(e.clientX-box.left)*(c.width/box.width)
+    const y=(e.clientY-box.top)*(c.height/box.height)
+    const g=c.getContext('2d')
+    if(!g)return
+    if(e.type==='pointerdown'){
+      g.beginPath()
+      g.moveTo(x,y)
+      c.setPointerCapture(e.pointerId)
+    }else{
+      g.lineTo(x,y)
+      g.strokeStyle='#0f1d35'
+      g.lineWidth=2
+      g.stroke()
+      setSigned(true)
+    }
+  }
+
+  const confirmDelivery=async()=>{
+    if(!route||busy||!driverId)return
+    const name=recipient.trim()
+    if(!name){
+      setMessage(t.drvNeedRecipient)
+      return
+    }
+    if(!hasPod){
+      setMessage(t.drvNeedPod)
+      return
+    }
+    setBusy(true)
+    setMessage('')
+    try{
+      if(!started) await startRoute(ctx(),operationalDate())
+      try{await markArrived(ctx())}catch{}
+      if(photo) await uploadStopPhoto(ctx(), photo)
+      if(signed && canvas.current) await saveStopSignature(ctx(), canvas.current)
+      let location
+      try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
+      await completeDeliveryWithRecipient(ctx(), name, '', location)
+      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+      setSheet(null)
+      setRecipient('')
+      setPhoto(null)
+      setSigned(false)
+      await refresh()
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
+  const primary=()=>{
+    if(!started) return {label:t.drvStartRoute, run:startCurrent}
+    if(kind==='pickup') return {label:arrived?t.drvCompletePickup:t.drvArrived, run:arrivePickup}
+    if(kind==='return') return {label:t.drvCompleteReturn, run:completeReturnNow}
+    return {label:t.drvCompleteDelivery, run:openDelivery}
+  }
+  const action=primary()
+
+  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet)}>
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
       {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
@@ -103,7 +204,7 @@ export default function DriverV3Page() {
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
               {route.destination_address&&<p>{route.destination_address}</p>}
-              {route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}
+              {route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
             </div>
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
@@ -123,24 +224,57 @@ export default function DriverV3Page() {
             />
             </div>
           </button>
-          {started?(
-            <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void completeCurrent()}>
-              <MapPin/>{busy?t.drvBusy:completeLabel}
-            </button>
-          ):(
-            <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void startCurrent()}>
-              <MapPin/>{busy?t.drvBusy:t.drvStartRoute}
-            </button>
-          )}
+          <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
+            <MapPin/>{busy?t.drvBusy:action.label}
+          </button>
           <div className={styles.secondaryActions}>
             <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
             <Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link>
           </div>
-          {message&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
+          {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
+
+      {sheet==='pickup'&&route&&(
+        <div style={overlay}>
+          <section className="card" style={{width:'min(420px,100%)'}}>
+            <p className="eyebrow">{t.drvPickup}</p>
+            <h2 style={{margin:'6px 0 8px'}}>{t.drvPickUpPo} {route.order_number||''}</h2>
+            <p className="muted">{route.destination_name||route.destination_address}</p>
+            <button className="primary" disabled={busy} onClick={()=>void confirmPickup()}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
+            <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:8}}>{t.drvCancel||t.cancel}</button>
+          </section>
+        </div>
+      )}
+
+      {sheet==='delivery'&&route&&(
+        <div style={overlay}>
+          <section className="card" style={{width:'min(420px,100%)'}}>
+            <p className="eyebrow">{t.drvDelivery}</p>
+            <h2 style={{margin:'6px 0 8px'}}>{t.drvCompleteDelivery}</h2>
+            {route.order_number&&<p style={{fontSize:22,fontWeight:800,margin:'0 0 12px'}}>PO {route.order_number}</p>}
+            <label className="muted" style={{display:'block',marginBottom:8}}>
+              {t.drvReceivedBy}
+              <input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit'}}/>
+            </label>
+            <label className="secondary" style={{display:'block',textAlign:'center',margin:'8px 0'}}>
+              {photo?photo.name:t.drvPhoto||'Photo'}
+              <input type="file" accept="image/*" capture="environment" hidden onChange={e=>setPhoto(e.target.files?.[0]||null)}/>
+            </label>
+            <canvas ref={canvas} width={320} height={120} onPointerDown={sign} onPointerMove={e=>e.buttons===1&&sign(e)} style={{width:'100%',height:120,border:'1px dashed #cbd5e1',borderRadius:12,background:'#fff',touchAction:'none'}}/>
+            <p className="muted" style={{fontSize:12}}>{t.drvNeedPod}</p>
+            {message&&<p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
+            <button className="primary" disabled={busy} onClick={()=>void confirmDelivery()}>{busy?t.drvBusy:t.drvCompleteDelivery}</button>
+            <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:8}}>{t.drvCancel||t.cancel}</button>
+          </section>
+        </div>
+      )}
     </div>
   </DriverV3Shell>
+}
+
+const overlay: React.CSSProperties = {
+  position:'fixed', inset:0, background:'rgba(15,29,53,.45)', display:'grid', placeItems:'end center', padding:'16px 16px calc(16px + env(safe-area-inset-bottom))', zIndex:40
 }
 
 function TodayLoading({label}:{label:string}) {
