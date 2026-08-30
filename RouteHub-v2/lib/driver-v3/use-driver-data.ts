@@ -42,24 +42,26 @@ function useDriverDataInternal(): DriverV3Data {
       setDriverId(user.id)
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id ?? null)
-      const cols = 'id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at'
-      const fallback = cols.replace('destination_contact_name,','')
-      let result = await getSupabase()
+      const first = await getSupabase()
         .from('routes')
-        .select(cols)
+        .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
         .eq('company_id', membership.company_id)
         .eq('driver_id', user.id)
         .order('position', {ascending: true})
-      if (result.error && /destination_contact_name|schema cache|column/i.test(result.error.message || '')) {
-        result = await getSupabase()
+      let rows = first.data
+      let loadError = first.error
+      if (loadError && /destination_contact_name|schema cache|column/i.test(loadError.message || '')) {
+        const second = await getSupabase()
           .from('routes')
-          .select(fallback)
+          .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
           .eq('company_id', membership.company_id)
           .eq('driver_id', user.id)
           .order('position', {ascending: true})
+        rows = second.data
+        loadError = second.error
       }
-      if (result.error) throw result.error
-      setRoutes((result.data || []) as DriverV3Route[])
+      if (loadError) throw loadError
+      setRoutes((rows || []) as DriverV3Route[])
       const session = await getActiveDrivingSession(user.id)
       if (session.error) throw session.error
       setDrivingSession(session.data)
