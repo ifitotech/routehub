@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import {useState} from 'react'
 import {CheckCircle2, Crosshair, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {markArrived} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
@@ -28,7 +29,6 @@ export default function DriverV3Map() {
       label: route.destination_name,
     })
     if (url) {
-      // Prefer external handoff so the installed PWA is not replaced by a browser tab.
       const opened = window.open(url, '_blank', 'noopener,noreferrer')
       if (!opened) window.location.assign(url)
     }
@@ -54,7 +54,9 @@ export default function DriverV3Map() {
       <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12}}>
         <div>
           <p className="eyebrow">ACTIVE ROUTE</p>
-          <h1 className="title" style={{marginBottom: 0}}>Map</h1>
+          <h1 className="title" style={{marginBottom: 0}}>
+            Map
+          </h1>
         </div>
         <button
           type="button"
@@ -71,12 +73,19 @@ export default function DriverV3Map() {
       </div>
 
       {loading ? (
-        <section className="card"><p>Loading map…</p></section>
+        <section className="card" style={{marginTop: 12}}>
+          <p>Loading map…</p>
+        </section>
       ) : error ? (
-        <section className="card"><p role="alert">{error}</p></section>
+        <section className="card" style={{marginTop: 12}}>
+          <p role="alert">{error}</p>
+        </section>
       ) : route ? (
         <>
-          <section className="card" style={{padding: 0, overflow: 'hidden', minHeight: 280, marginTop: 12}}>
+          <section
+            className="card"
+            style={{padding: 0, overflow: 'hidden', minHeight: 280, marginTop: 12}}
+          >
             <LiveRouteMap
               destinationAddress={route.destination_address}
               destinationCoordinate={
@@ -104,11 +113,13 @@ export default function DriverV3Map() {
               </p>
             )}
             {route.order_number && (
-              <p className="muted" style={{margin: '4px 0 12px'}}>
+              <p className="muted" style={{margin: '4px 0 0'}}>
                 PO {route.order_number}
               </p>
             )}
+          </section>
 
+          <div className={shellStyles.stickyAction}>
             <div
               style={{
                 display: 'grid',
@@ -137,14 +148,14 @@ export default function DriverV3Map() {
               )}
             </div>
             {message && (
-              <p role="status" className="muted">
+              <p role="status" className="muted" style={{margin: 0, textAlign: 'center'}}>
                 {message}
               </p>
             )}
-          </section>
+          </div>
         </>
       ) : (
-        <section className="card">
+        <section className="card" style={{marginTop: 12}}>
           <h2>No active operation</h2>
           <p className="muted">A current destination will appear here when assigned.</p>
         </section>
