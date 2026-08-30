@@ -10,6 +10,7 @@ export type DriverV3Route = {
   destination_lat?: number | null
   destination_lng?: number | null
   destination_phone?: string | null
+  destination_contact_name?: string | null
   order_number?: string | null
   arrived_at?: string | null
   completed_at?: string | null

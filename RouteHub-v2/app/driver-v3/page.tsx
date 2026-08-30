@@ -249,6 +249,15 @@ export default function DriverV3Page() {
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
               {route.destination_address&&<p>{route.destination_address}</p>}
+              {(route.destination_contact_name||route.destination_phone)?(
+                <p style={{margin:'6px 0 0',fontSize:16,fontWeight:700}}>
+                  {route.destination_contact_name||''}
+                  {route.destination_contact_name&&route.destination_phone?'  ·  ':''}
+                  {route.destination_phone?(
+                    <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} style={{color:'#1667F2',textDecoration:'none'}}>{route.destination_phone}</a>
+                  ):null}
+                </p>
+              ):null}
               {kind!=='return'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
             </div>
             {route.destination_phone?(

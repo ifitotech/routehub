@@ -101,6 +101,7 @@ type FormState = {
   destination: string
   destination_label: string
   destination_phone: string
+  stop_contact_name: string
   contact_id: string
   priority: 'normal' | 'priority' | 'urgent'
   order_number: string
@@ -150,6 +151,7 @@ function initialForm(priority: FormState['priority'] = 'normal'): FormState {
     destination: '',
     destination_label: '',
     destination_phone: '',
+    stop_contact_name: '',
     contact_id: '',
     priority,
     order_number: '',
@@ -343,6 +345,7 @@ export default function Routes() {
         destination: contact?.address || requestedDestination || current.destination,
         destination_label: contact?.company_name || current.destination_label,
         destination_phone: contact?.phone || current.destination_phone,
+        stop_contact_name: contact?.contact_name || current.stop_contact_name,
       }))
       setOpen(true)
     }
@@ -454,6 +457,7 @@ export default function Routes() {
         contact_id: contact?.id || '',
         destination_label: contact ? '' : replacingSavedContact ? '' : current.destination_label,
         destination_phone: contact?.phone || (replacingSavedContact ? '' : current.destination_phone),
+        stop_contact_name: contact?.contact_name || (replacingSavedContact ? '' : current.stop_contact_name),
       }
     })
     if (selectedDestinationLocation && value.trim() !== selectedDestinationLocation.formattedAddress && value.trim() !== selectedDestinationLocation.name) setSelectedDestinationLocation(null)
@@ -470,6 +474,7 @@ export default function Routes() {
       contact_id: contact?.id || '',
       destination_label: branch?.name || '',
       destination_phone: contact?.phone || '',
+      stop_contact_name: contact?.contact_name || '',
     }))
     setSelectedDestinationLocation(suggestion.location || null)
     setPendingLocation(null)
@@ -582,7 +587,8 @@ export default function Routes() {
       const selected = contacts.find(contact => contact.id === form.contact_id)
       const destinationAddress = selected?.address || form.destination.trim()
       const destinationName = selected?.company_name || form.destination_label.trim() || form.destination.trim()
-      const destinationPhone = selected?.phone || form.destination_phone.trim() || null
+      const destinationPhone = form.destination_phone.trim() || selected?.phone || null
+      const destinationContactName = form.stop_contact_name.trim() || selected?.contact_name || null
       const destinationLocation = selectedDestinationLocation
 
       let positionQuery = client
@@ -630,6 +636,7 @@ export default function Routes() {
         destination_location_source: destinationLocation?.source || selected?.location_source || null,
         destination_location_external_id: destinationLocation?.externalId || selected?.location_external_id || null,
         destination_phone: destinationPhone,
+        destination_contact_name: destinationContactName,
         priority: form.priority,
         order_number: form.order_number.trim() || null,
         notes: form.notes.trim() || null,
@@ -854,7 +861,18 @@ export default function Routes() {
               </div>}
               {contactSaveMessage && <small className={styles.contactSaveMessage} role="status">{contactSaveMessage}</small>}
               {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number:event.target.value}))}/></label>}
-              {form.type==='delivery'&&!selectedContact ? <label className={styles.field}><span>{c.contactPhone} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/></label> : null}
+              {form.type!=='return' ? (
+                <div className={styles.splitFields}>
+                  <label className={styles.field}>
+                    <span>{locale==='es'?'Persona en esta parada':locale==='fr'?'Personne à cet arrêt':'Person at this stop'} <em>{c.optional}</em></span>
+                    <input value={form.stop_contact_name} placeholder={selectedContact?.contact_name || (locale==='es'?'Ejemplo: Eduardo':locale==='fr'?'Exemple : Eduardo':'Example: Eduardo')} onChange={event=>setForm(current=>({...current,stop_contact_name:event.target.value}))}/>
+                  </label>
+                  <label className={styles.field}>
+                    <span>{c.contactPhone} <em>{c.optional}</em></span>
+                    <input type="tel" value={form.destination_phone} placeholder={selectedContact?.phone || ''} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/>
+                  </label>
+                </div>
+              ) : null}
             </>}
             </section>
 
@@ -867,7 +885,7 @@ export default function Routes() {
             {detailsOpen && form.type!=='return' && <div className={styles.optionalDetails}>
               {form.type!=='pickup'&&<label className={styles.field}><span>{locale==='es'?'Job / número de orden':locale==='fr'?'Chantier / numéro de commande':'Job / order number'} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>}
               <label className={styles.field}><span>{form.type==='delivery'?(locale==='es'?'Instrucciones de entrega':locale==='fr'?'Instructions de livraison':'Delivery instructions'):c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={form.type==='delivery'?c.notesPlaceholder:c.notes} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
-              {form.type==='pickup'&&!selectedContact&&<label className={styles.field}><span>{c.contactPhone} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/></label>}
+              {null}
             </div>}
             </section>
 
