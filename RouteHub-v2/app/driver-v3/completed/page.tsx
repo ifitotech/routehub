@@ -59,7 +59,7 @@ export default function Completed() {
     kindKey === 'pickup' ? t.drvPickup : kindKey === 'return' || kindKey === 'branch' ? t.drvReturn : t.drvDelivery
 
   return (
-    <DriverV3Shell active="route" mode="stack" title={t.drvCompleted} backHref="/driver/route" backLabel={t.drvRoute}>
+    <DriverV3Shell active="route" mode="stack" title={t.drvCompleted} backHref="/driver" backLabel={t.drvRoute}>
       {loading ? (
         <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoading}</p></section>
       ) : error ? (

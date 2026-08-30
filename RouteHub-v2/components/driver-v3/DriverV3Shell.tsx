@@ -77,13 +77,9 @@ export default function DriverV3Shell({
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
 
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
-        <Link className={active === 'today' ? styles.active : ''} href="/driver">
+        <Link className={active === 'today' || active === 'route' ? styles.active : ''} href="/driver">
           <Home />
           <span>{t.drvToday}</span>
-        </Link>
-        <Link className={active === 'route' ? styles.active : ''} href="/driver/route">
-          <List />
-          <span>{t.drvRoute}</span>
         </Link>
         <Link className={active === 'map' ? styles.active : ''} href="/driver/map">
           <Map />

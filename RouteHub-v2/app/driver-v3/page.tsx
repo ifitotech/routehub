@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import {ChevronRight, Map, MapPin, Package, TriangleAlert} from 'lucide-react'
 import {useState} from 'react'
 import {useRouter} from 'next/navigation'
@@ -15,10 +16,12 @@ import {updateDrivingLocation} from '../../lib/driving-session'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './today.module.css'
 
+const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
+
 export default function DriverV3Page() {
   const {t}=useLocale()
   const router=useRouter()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,routes}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const operation=snapshot?.currentOperation
@@ -91,7 +94,18 @@ export default function DriverV3Page() {
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
           <div className={styles.divider}/>
-          {route.arrived_at?<Link className={styles.primary} href="/driver/stop"><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
+          <div style={{height:160,borderRadius:14,overflow:'hidden',marginBottom:12}}>
+            <LiveRouteMap
+              destinationAddress={route.destination_address}
+              destinationCoordinate={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
+              driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
+              driverUpdatedAt={drivingSession?.last_updated_at||null}
+              title={t.drvCurrentStop}
+              showHeader={false}
+              interactive
+            />
+          </div>
+          {route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
           <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link></div>
           {message&&<p className={styles.feedback} role="status">{message}</p>}
         </section>
@@ -100,7 +114,19 @@ export default function DriverV3Page() {
           {progressNodes?<div className={styles.progressDots}>{progressNodes.map(index=><i key={index} className={index<completed?styles.done:index===completed?styles.current:styles.upcoming}/>)}</div>:<div className={styles.progressTrack}><span style={{width:`${progress}%`}}/><i style={{left:`clamp(8px, ${progress}%, calc(100% - 8px))`}}/></div>}
           <div><strong>{remaining}</strong><span>{t.drvLeftWord}</span></div>
         </section>
-        <Link className={styles.nextCard} href="/driver/route"><div><span>{t.drvMyRoute}</span><strong>{t.drvViewRoute}</strong></div><i><ChevronRight/></i></Link>
+        <Link className={styles.nextCard} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><div><span>{t.drvStopDetails}</span><strong>{route.order_number?`PO ${route.order_number}`:t.drvStopDetails}</strong></div><i><ChevronRight/></i></Link>
+        <section className={styles.progressCard} style={{display:'block',marginTop:12}}>
+          <p className="eyebrow" style={{marginBottom:8}}>{t.drvMyRoute}</p>
+          {routes.filter((item:any)=>(item.route_date||'').slice(0,10)===operationalDate()).sort((a:any,b:any)=>(a.position||0)-(b.position||0)).map((item:any)=>(
+            <Link key={item.id} href={`/driver/stop?id=${encodeURIComponent(item.id)}`} className={styles.nextCard} style={{margin:'0 0 8px',textDecoration:'none'}}>
+              <div>
+                <span>{item.status==='completed'?t.drvCompletedTag:item.id===route.id?t.drvCurrentStop:t.drvNextStop}{item.order_number?` · PO ${item.order_number}`:''}</span>
+                <strong>{item.destination_name||item.destination_address||t.drvCurrentStopName}</strong>
+              </div>
+              <i><ChevronRight/></i>
+            </Link>
+          ))}
+        </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
     </div>
   </DriverV3Shell>
