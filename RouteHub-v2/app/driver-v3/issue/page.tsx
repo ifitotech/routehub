@@ -66,7 +66,7 @@ export default function Issue() {
             </p>
 
             <p className="eyebrow" style={{marginTop: 14}}>
-              CATEGORY
+              {t.drvIssue}
             </p>
             <div style={{display: 'grid', gap: 8, marginTop: 8}}>
               {CATEGORIES.map(c => (
@@ -90,7 +90,7 @@ export default function Issue() {
             </div>
 
             <label style={{marginTop: 14}}>
-              Details (optional)
+              {t.drvDetailsOpt}
               <textarea
                 value={note}
                 onChange={e => setNote(e.target.value)}

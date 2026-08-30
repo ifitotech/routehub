@@ -98,7 +98,7 @@ export default function DriverV3Truck() {
               <>
                 <h2 style={{margin: '4px 0 6px'}}>{t.drvNoTruck}</h2>
                 <p className="muted" style={{margin: 0}}>
-                  When a vehicle is assigned to your branch, it will appear here.
+                  {t.drvVehicleHelp}
                 </p>
               </>
             )}

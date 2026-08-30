@@ -76,6 +76,9 @@ Object.assign(es, {
   drvTakePhoto:'Tomar foto', drvSavePhoto:'GUARDAR FOTO', drvSaveNote:'GUARDAR NOTA', drvSaveSignature:'GUARDAR FIRMA',
   drvReportIssue:'Reportar incidencia', drvSubmitIssue:'ENVIAR INCIDENCIA', drvCancel:'Cancelar', drvClear:'Borrar',
   drvNoCurrentStop:'No hay parada actual', drvStopRecorded:'Parada registrada.', drvContinueNext:'Continuar a la siguiente',
+  drvOpenInMaps:'Abrir Maps', drvArrivedShort:'LLEGUE A LA PARADA', drvInstructions:'Instrucciones', drvPoOrder:'PO / Orden',
+  drvAssignedOrder:'Las paradas asignadas apareceran aqui.', drvVehicleHelp:'Cuando haya un vehiculo en tu sucursal, saldra aqui.',
+  drvDayHelp:'Inicia la jornada antes de las rutas. Terminar el dia es independiente de completar la ruta.', drvEndDayQ:'Terminar la jornada?', drvDetailsOpt:'Detalles (opcional)',
 })
 Object.assign(fr, {
   drvToday:"Aujourd'hui", drvRoute:'Itineraire', drvMap:'Carte', drvTruck:'Camion', drvMore:'Plus',
@@ -101,6 +104,9 @@ Object.assign(fr, {
   drvTakePhoto:'Prendre une photo', drvSavePhoto:'ENREGISTRER PHOTO', drvSaveNote:'ENREGISTRER NOTE', drvSaveSignature:'ENREGISTRER SIGNATURE',
   drvReportIssue:'Signaler un incident', drvSubmitIssue:'ENVOYER', drvCancel:'Annuler', drvClear:'Effacer',
   drvNoCurrentStop:'Aucun arret', drvStopRecorded:'Arret enregistre.', drvContinueNext:'Continuer',
+  drvOpenInMaps:'Ouvrir Maps', drvArrivedShort:'ARRIVE', drvInstructions:'Instructions', drvPoOrder:'PO / Commande',
+  drvAssignedOrder:'Les arrets assignes apparaitront ici.', drvVehicleHelp:'Le camion apparaitra quand il sera assigne.',
+  drvDayHelp:'Demarrez la journee avant les itineraires. La fin de journee est independante.', drvEndDayQ:'Terminer la journee ?', drvDetailsOpt:'Details (optionnel)',
 })
 
 export const translations: Record<Locale, TranslationDictionary> = {en, es, fr}

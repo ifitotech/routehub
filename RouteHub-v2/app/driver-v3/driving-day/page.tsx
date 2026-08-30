@@ -62,8 +62,7 @@ export default function DrivingDayPage() {
             </p>
           ) : (
             <p className="muted" style={{marginBottom: 16}}>
-              Start your Driving Day before beginning routes. Ending the day is separate from
-              completing a route.
+              {t.drvDayHelp}
             </p>
           )}
 
@@ -101,7 +100,7 @@ export default function DrivingDayPage() {
       {confirmEnd && (
         <div className={styles.confirmBackdrop} role="dialog" aria-modal="true">
           <div className={styles.confirmSheet}>
-            <h2>End your Driving Day?</h2>
+            <h2>{t.drvEndDayQ}</h2>
             <p>Your location sharing for the workday will stop according to the existing operational behavior.</p>
             <div className={styles.confirmActions}>
               <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmEnd(false)}>
@@ -116,7 +115,7 @@ export default function DrivingDayPage() {
                   void toggle()
                 }}
               >
-                {busy ? 'Updating…' : 'End Driving Day'}
+                {busy ? 'Updating…' : t.drvEndDrivingDay}
               </button>
             </div>
           </div>

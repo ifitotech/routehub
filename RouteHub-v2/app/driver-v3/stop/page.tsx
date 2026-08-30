@@ -305,12 +305,12 @@ export default function DriverV3Stop() {
             )}
             {route.order_number && (
               <p style={{margin: '0 0 8px'}}>
-                <strong>PO / Order:</strong> {route.order_number}
+                <strong>{t.drvPoOrder}:</strong> {route.order_number}
               </p>
             )}
             {(route.instructions || route.notes) && (
               <p className="muted" style={{margin: '8px 0 0'}}>
-                <strong style={{color: '#0F1D35'}}>Instructions: </strong>
+                <strong style={{color: '#0F1D35'}}>{t.drvInstructions}: </strong>
                 {route.instructions || route.notes}
               </p>
             )}
@@ -350,7 +350,7 @@ export default function DriverV3Stop() {
             <button className="secondary" onClick={maps} type="button" style={{marginTop: 14}}>
               <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
                 <Navigation size={18} />
-                Open in Maps
+                {t.drvOpenInMaps}
               </span>
             </button>
           </section>
@@ -358,7 +358,7 @@ export default function DriverV3Stop() {
           <div className={styles.stickyAction}>
             {!route.arrived_at ? (
               <button className="primary" disabled={busy || !isCurrent} onClick={() => void act('arrive')}>
-                {busy ? 'Updating…' : 'ARRIVED AT STOP'}
+                {busy ? 'Updating…' : t.drvArrivedShort}
               </button>
             ) : (
               <button
@@ -547,7 +547,7 @@ export default function DriverV3Stop() {
                 <textarea
                   value={issueNote}
                   onChange={e => setIssueNote(e.target.value)}
-                  placeholder="Details (optional)"
+                  placeholder={t.drvDetailsOpt}
                   style={{marginBottom: 12}}
                 />
                 </div>

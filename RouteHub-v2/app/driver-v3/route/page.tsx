@@ -75,7 +75,7 @@ export default function DriverV3Route() {
             {queueRoutes.length === 0 && (
               <section className="card">
                 <h2>{t.drvNoStops}</h2>
-                <p className="muted">Assigned stops will appear here in order.</p>
+                <p className="muted">{t.drvAssignedOrder}</p>
               </section>
             )}
             {queueRoutes.map((route: any, index: number) => {

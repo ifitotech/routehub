@@ -126,7 +126,7 @@ export default function DriverV3Map() {
               <button className="secondary" onClick={maps} type="button">
                 <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
                   <Navigation size={16} />
-                  Open in Maps
+                  {t.drvOpenInMaps}
                 </span>
               </button>
               {!route.arrived_at && (
@@ -138,7 +138,7 @@ export default function DriverV3Map() {
                 >
                   <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
                     <CheckCircle2 size={16} />
-                    {busy ? 'Updating…' : 'Arrived'}
+                    {busy ? 'Updating…' : t.drvArrivedShort}
                   </span>
                 </button>
               )}
