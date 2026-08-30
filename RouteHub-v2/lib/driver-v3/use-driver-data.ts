@@ -1,5 +1,5 @@
 'use client'
-import {createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode} from 'react'
+import {createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode} from 'react'
 import {currentMembership, currentUser} from '../data'
 import {getSupabase} from '../supabase'
 import {operationalDate} from '../driver-queue'
@@ -71,7 +71,7 @@ function useDriverDataInternal(): DriverV3Data {
 
 export function DriverV3Provider({children}: {children: ReactNode}) {
   const value = useDriverDataInternal()
-  return <DriverV3Context.Provider value={value}>{children}</DriverV3Context.Provider>
+  return createElement(DriverV3Context.Provider, {value}, children)
 }
 
 export function useDriverData() {

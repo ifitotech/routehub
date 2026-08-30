@@ -15,7 +15,7 @@ export default function Fuel() {
   const {driverId, companyId, branchId} = useDriverData()
   const [truck, setTruck] = useState<any>(null)
   const [odometer, setOdometer] = useState('')
-  const [amount, set{t.drvAmount}] = useState('')
+  const [amount, setAmount] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -51,7 +51,7 @@ export default function Fuel() {
       setMessageType('ok')
       setMessage(t.drvFuelSaved)
       setOdometer('')
-      set{t.drvAmount}('')
+      setAmount('')
       setPhoto(null)
       window.setTimeout(() => router.replace('/driver/truck?saved=fuel'), 900)
     } catch (e) {
@@ -94,7 +94,7 @@ export default function Fuel() {
               <input
                 inputMode="decimal"
                 value={amount}
-                onChange={e => set{t.drvAmount}(e.target.value.replace(/[^\d.]/g, ''))}
+                onChange={e => setAmount(e.target.value.replace(/[^\d.]/g, ''))}
                 placeholder="e.g. 65.00"
                 autoComplete="off"
               />
