@@ -49,7 +49,7 @@ export default function DriverV3Shell({
           <span className={styles.headerIcon} aria-hidden="true" />
         )}
         <Link href="/driver" className={styles.headerBrand}>
-          <img src="/routehub-logo-clean.png" alt="" width={28} height={28} />
+          <img src="/routehub-header-mark.png" alt="" width={32} height={32} />
           <span>RouteHub</span>
         </Link>
         <Link href={profileOpen ? '/driver' : '/driver/more'} className={styles.headerIcon} aria-label={t.drvProfile}>

@@ -352,7 +352,7 @@
   -webkit-font-smoothing:antialiased;
   filter:none;
 }
-.headerBrand img{border-radius:6px;background:transparent;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important}
+ .headerBrand img{width:32px;height:32px;border-radius:8px;background:#fff;object-fit:contain;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important}
 .headerIcon,
 .appHeader button.headerIcon,
 .appHeader a.headerIcon{
