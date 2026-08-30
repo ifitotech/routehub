@@ -93,7 +93,7 @@ export default function History() {
                 className="card"
                 style={{background: look.bg, borderColor: look.border, borderLeftWidth: 6, padding: 14}}
               >
-                <Link href={`/driver/stop?id=${encodeURIComponent(r.id)}`} style={{textDecoration: 'none', color: 'inherit', display: 'grid', gridTemplateColumns: '36px minmax(0,1fr) 28px', gap: 10, alignItems: 'start'}}>
+                <div style={{display: 'grid', gridTemplateColumns: '36px minmax(0,1fr)', gap: 10, alignItems: 'start'}}>
                   <strong style={{width: 36, height: 36, borderRadius: 18, background: look.badge, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 15}}>
                     {r.position || index + 1}
                   </strong>
@@ -107,8 +107,7 @@ export default function History() {
                     {r.destination_address ? <p className="muted" style={{margin: 0, fontSize: 13}}>{r.destination_address}</p> : null}
                     {r.order_number && !['return','branch'].includes(String(r.mission_type||r.route_type||'').toLowerCase()) ? <p style={{margin: '8px 0 0', fontSize: 22, lineHeight: '26px', fontWeight: 800, letterSpacing: '-0.02em'}}>PO {r.order_number}</p> : null}
                   </div>
-                  <ChevronRight size={20} color="#94A3B8" />
-                </Link>
+                </div>
                 <button
                   type="button"
                   className="secondary"

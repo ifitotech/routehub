@@ -271,7 +271,10 @@ export default function DriverV3Page() {
           </button>
           <div className={styles.secondaryActions}>
             <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
-            <Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link>
+            <button type="button" className={styles.issueAction} onClick={()=>{
+              if(kind==='delivery'){setSheet('delivery');setPodPanel('issue')}
+              else {setSheet('pickup');setIssueOpen(true)}
+            }}><TriangleAlert/>{t.drvIssue}</button>
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
