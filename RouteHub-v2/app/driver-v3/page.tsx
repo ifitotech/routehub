@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
+import {Camera, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -48,26 +48,6 @@ export default function DriverV3Page() {
     return()=>{html.style.overflow=prevHtml;body.style.overflow=prevBody}
   },[sheet])
   const started=['active','paused'].includes(String(route?.status||''))
-  const localStart=useRef<number|null>(null)
-  const [clockNonce,setClockNonce]=useState(0)
-  const startedAt=route?.route_started_at||null
-  const [elapsed,setElapsed]=useState('')
-  useEffect(()=>{
-    const origin=startedAt||(localStart.current?new Date(localStart.current).toISOString():null)
-    if((!started&&!localStart.current)||!origin){setElapsed('');return}
-    const tick=()=>{
-      const ms=Date.now()-new Date(origin).getTime()
-      if(!Number.isFinite(ms)||ms<0){setElapsed('');return}
-      const total=Math.floor(ms/1000)
-      const h=Math.floor(total/3600)
-      const m=Math.floor((total%3600)/60)
-      const s=total%60
-      setElapsed(h>0?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`)
-    }
-    tick()
-    const id=window.setInterval(tick,1000)
-    return()=>window.clearInterval(id)
-  },[started,startedAt,clockNonce])
   const arrived=Boolean(route?.arrived_at)
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const todaySummary=useMemo(()=>{
@@ -113,8 +93,6 @@ export default function DriverV3Page() {
     setBusy(true)
     setMessage('')
     try{
-      localStart.current=Date.now()
-      setClockNonce(n=>n+1)
       await startRoute(ctx(),operationalDate())
       if(!drivingSession){
         try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
@@ -292,7 +270,7 @@ export default function DriverV3Page() {
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
           </div>
-          <div className={styles.destination}>
+          <div className={styles.destination} onClick={()=>setSheet('info')} role="button">
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
               {route.destination_address&&<p>{route.destination_address}</p>}
@@ -301,7 +279,7 @@ export default function DriverV3Page() {
                   {route.destination_contact_name||''}
                   {route.destination_contact_name&&route.destination_phone?'  ·  ':''}
                   {route.destination_phone?(
-                    <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} style={{color:'#1667F2',textDecoration:'none'}}>{route.destination_phone}</a>
+                    <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} style={{color:'#1667F2',textDecoration:'none'}} onClick={e=>e.stopPropagation()}>{route.destination_phone}</a>
                   ):null}
                 </p>
               ):null}
@@ -315,14 +293,6 @@ export default function DriverV3Page() {
               <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
             )}
           </div>
-          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'10px 12px',margin:'0 0 12px',textAlign:'left'}}>
-            <span style={{width:28,height:28,borderRadius:14,background:'#16B96B',color:'#fff',display:'grid',placeItems:'center',fontSize:13,fontWeight:800,flexShrink:0}}>1</span>
-            <span style={{flex:1,minWidth:0}}>
-              <strong style={{display:'block',fontSize:15}}>{route.destination_name||t.drvCurrentStopName}</strong>
-              <span className="muted" style={{fontSize:12}}>{t.drvTapDetails||t.drvStopDetails}</span>
-            </span>
-            <ChevronRight size={18} color="#94A3B8"/>
-          </button>
           <div className={styles.divider}/>
           <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
@@ -342,7 +312,6 @@ export default function DriverV3Page() {
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
             <MapPin/>{busy?t.drvBusy:action.label}
           </button>
-          {started&&elapsed?<p style={{margin:'10px 0 0',textAlign:'center',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em',fontVariantNumeric:'tabular-nums'}}>{elapsed}<span style={{display:'block',marginTop:2,fontSize:11,fontWeight:700,letterSpacing:'.12em',color:'#667892'}}>{t.drvOnRouteTime}</span></p>:null}
           <div className={styles.secondaryActions}>
             <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
             <button type="button" className={styles.issueAction} onClick={()=>{
