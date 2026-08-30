@@ -143,8 +143,8 @@ html[data-driver-app='v3'] .header {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
-  background: #000 !important;
-  background-color: #000 !important;
+  background: #0F1D35 !important;
+  background-color: #0F1D35 !important;
   background-image: none !important;
   opacity: 1 !important;
 }
@@ -265,4 +265,11 @@ html[data-driver-app='v3'] header button {
 .driver-v3-root header img {
   filter: none !important;
   image-rendering: auto;
+}
+
+html[data-driver-app='v3'],
+body[data-driver-app='v3'],
+body:has(.driver-v3-root) {
+  background: #0F1D35 !important;
+  background-color: #0F1D35 !important;
 }

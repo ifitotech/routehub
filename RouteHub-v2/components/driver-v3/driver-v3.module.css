@@ -319,7 +319,9 @@
   display:grid;
   grid-template-columns:44px minmax(0,1fr) 44px;
   align-items:center;
-  background:#000;
+  position:sticky;
+  top:0;
+  background:#0F1D35;
   color:#fff;
   min-height:calc(48px + env(safe-area-inset-top));
   padding:env(safe-area-inset-top) 8px 0;
@@ -327,6 +329,7 @@
   -webkit-backdrop-filter:none !important;
   filter:none !important;
   text-shadow:none !important;
+  -webkit-font-smoothing:antialiased;
 }
 .appHeader *{
   filter:none !important;
@@ -345,6 +348,9 @@
   font-size:16px;
   font-weight:800;
   letter-spacing:-.02em;
+  text-shadow:none;
+  -webkit-font-smoothing:antialiased;
+  filter:none;
 }
 .headerBrand img{border-radius:6px;background:transparent;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important}
 .headerIcon,
