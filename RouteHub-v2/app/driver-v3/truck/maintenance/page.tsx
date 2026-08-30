@@ -74,7 +74,7 @@ export default function Maintenance() {
       <section className="card">
         {!truck ? (
           <p className="muted" style={{margin: 0}}>
-            No truck assigned or available for this branch.
+            {t.drvNoTruck}
           </p>
         ) : (
           <>
@@ -127,11 +127,11 @@ export default function Maintenance() {
               />
             </label>
 
-            <label style={{marginBottom: 4}}>Receipt / photo (optional)</label>
+            <label style={{marginBottom: 4}}>{t.drvReceipt}</label>
             <label className="secondary" style={{cursor: 'pointer', marginBottom: 16}}>
               <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
                 <Camera size={18} />
-                {photo ? photo.name : 'Add receipt photo'}
+                {photo ? photo.name : t.drvAddReceipt}
               </span>
               <input
                 type="file"
@@ -148,7 +148,7 @@ export default function Maintenance() {
                 disabled={busy || !type.trim()}
                 onClick={() => void submit()}
               >
-                {busy ? 'Saving…' : 'SAVE MAINTENANCE'}
+                {busy ? 'Saving…' : t.drvSaveMaint}
               </button>
             </div>
 

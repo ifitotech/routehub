@@ -5,6 +5,7 @@ import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {reportIssue} from '../../../lib/driver-v3/actions'
+import {useLocale} from '../../../lib/use-preferences'
 
 const CATEGORIES = [
   'Customer unavailable',
@@ -16,6 +17,7 @@ const CATEGORIES = [
 
 export default function Issue() {
   const router = useRouter()
+  const {t} = useLocale()
   const {driverId, snapshot, refresh} = useDriverData()
   const [category, setCategory] = useState<string>('')
   const [note, setNote] = useState('')
@@ -51,12 +53,12 @@ export default function Issue() {
   }
 
   return (
-    <DriverV3Shell active="route" mode="stack" title="Report issue" backHref="/driver/stop" backLabel="Stop">
+    <DriverV3Shell active="route" mode="stack" title={t.drvReportIssue} backHref="/driver/stop" backLabel="Stop">
       
 
       <section className="card">
         {!route ? (
-          <p className="muted">No current stop.</p>
+          <p className="muted">{t.drvNoCurrentStop}</p>
         ) : (
           <>
             <p className="muted" style={{marginTop: 0}}>
@@ -103,7 +105,7 @@ export default function Issue() {
                 onClick={() => void submit()}
                 style={{background: '#EF5350'}}
               >
-                {busy ? 'Submitting…' : 'SUBMIT ISSUE'}
+                {busy ? 'Submitting…' : '{t.drvSubmitIssue}'}
               </button>
             </div>
 

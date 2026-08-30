@@ -71,6 +71,11 @@ Object.assign(es, {
   drvLanguage:'IDIOMA', drvHelp:'Ayuda', drvStatus:'ESTADO', drvActive:'ACTIVA', drvNotStarted:'SIN INICIAR',
   drvEndDrivingDay:'TERMINAR JORNADA', drvUpNext:'SIGUIENTE', drvViewRoute:'Ver ruta', drvCompleteRoute:'Completar ruta',
   drvStopDetails:'Parada', drvBack:'Atras', drvLoading:'Cargando…', drvNoHistory:'Sin rutas completadas',
+  drvMileage:'Millaje', drvAmount:'Monto', drvReceipt:'Recibo / foto (opcional)', drvAddReceipt:'Agregar recibo',
+  drvSaveFuel:'GUARDAR COMBUSTIBLE', drvSaveMaint:'GUARDAR MANTENIMIENTO', drvPhoto:'Foto', drvSignature:'Firma', drvNotes:'Notas',
+  drvTakePhoto:'Tomar foto', drvSavePhoto:'GUARDAR FOTO', drvSaveNote:'GUARDAR NOTA', drvSaveSignature:'GUARDAR FIRMA',
+  drvReportIssue:'Reportar incidencia', drvSubmitIssue:'ENVIAR INCIDENCIA', drvCancel:'Cancelar', drvClear:'Borrar',
+  drvNoCurrentStop:'No hay parada actual', drvStopRecorded:'Parada registrada.', drvContinueNext:'Continuar a la siguiente',
 })
 Object.assign(fr, {
   drvToday:"Aujourd'hui", drvRoute:'Itineraire', drvMap:'Carte', drvTruck:'Camion', drvMore:'Plus',
@@ -91,6 +96,11 @@ Object.assign(fr, {
   drvLanguage:'LANGUE', drvHelp:'Aide', drvStatus:'STATUT', drvActive:'ACTIVE', drvNotStarted:'NON DEMARREE',
   drvEndDrivingDay:'TERMINER LA JOURNEE', drvUpNext:'SUIVANT', drvViewRoute:'Voir la route', drvCompleteRoute:'Terminer la route',
   drvStopDetails:'Arret', drvBack:'Retour', drvLoading:'Chargement…', drvNoHistory:'Aucun historique',
+  drvMileage:'Kilometrage', drvAmount:'Montant', drvReceipt:'Recu / photo (optionnel)', drvAddReceipt:'Ajouter un recu',
+  drvSaveFuel:'ENREGISTRER CARBURANT', drvSaveMaint:'ENREGISTRER ENTRETIEN', drvPhoto:'Photo', drvSignature:'Signature', drvNotes:'Notes',
+  drvTakePhoto:'Prendre une photo', drvSavePhoto:'ENREGISTRER PHOTO', drvSaveNote:'ENREGISTRER NOTE', drvSaveSignature:'ENREGISTRER SIGNATURE',
+  drvReportIssue:'Signaler un incident', drvSubmitIssue:'ENVOYER', drvCancel:'Annuler', drvClear:'Effacer',
+  drvNoCurrentStop:'Aucun arret', drvStopRecorded:'Arret enregistre.', drvContinueNext:'Continuer',
 })
 
 export const translations: Record<Locale, TranslationDictionary> = {en, es, fr}

@@ -257,7 +257,7 @@ export default function DriverV3Stop() {
     <DriverV3Shell
       active="route"
       mode="stack"
-      title="Stop Details"
+      title={t.drvStopDetails}
       subtitle={stackSub}
       backHref="/driver/route"
       backLabel="Route"
@@ -387,10 +387,10 @@ export default function DriverV3Stop() {
             <div className={styles.sheetHandle} />
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12}}>
               <h2 className={styles.sheetTitle}>
-                {sheet === 'photo' && 'Photo'}
-                {sheet === 'signature' && 'Signature'}
-                {sheet === 'notes' && 'Notes'}
-                {sheet === 'issue' && 'Report issue'}
+                {sheet === 'photo' && t.drvPhoto}
+                {sheet === 'signature' && t.drvSignature}
+                {sheet === 'notes' && t.drvNotes}
+                {sheet === 'issue' && t.drvReportIssue}
               </h2>
               <button
                 type="button"
@@ -419,7 +419,7 @@ export default function DriverV3Stop() {
                     }}
                   >
                     <Camera size={28} />
-                    {photoName || 'Take photo'}
+                    {photoName || t.drvTakePhoto}
                     <input
                       ref={fileRef}
                       type="file"
@@ -432,7 +432,7 @@ export default function DriverV3Stop() {
                 </div>
                 <div className={styles.sheetFooter}>
                   <button className="primary" disabled={sheetBusy} onClick={() => void savePhoto()}>
-                    {sheetBusy ? 'Saving…' : 'SAVE PHOTO'}
+                    {sheetBusy ? 'Saving…' : t.drvSavePhoto}
                   </button>
                 </div>
               </>
@@ -450,7 +450,7 @@ export default function DriverV3Stop() {
                 </div>
                 <div className={styles.sheetFooter}>
                   <button className="primary" disabled={sheetBusy} onClick={() => void saveNotes()}>
-                    {sheetBusy ? 'Saving…' : 'SAVE NOTE'}
+                    {sheetBusy ? 'Saving…' : t.drvSaveNote}
                   </button>
                 </div>
               </>
@@ -466,7 +466,7 @@ export default function DriverV3Stop() {
                     style={{width: 'auto', minHeight: 40, padding: '0 12px', fontSize: 13}}
                     onClick={clearSignature}
                   >
-                    Clear
+                    {t.drvClear}
                   </button>
                 </div>
                 <canvas
@@ -499,7 +499,7 @@ export default function DriverV3Stop() {
                   onPointerUp={() => {
                     drawing.current = false
                   }}
-                  onPointerCancel={() => {
+                  onPointer{t.drvCancel}={() => {
                     drawing.current = false
                   }}
                   style={{
@@ -515,7 +515,7 @@ export default function DriverV3Stop() {
                 </div>
                 <div className={styles.sheetFooter}>
                   <button className="primary" disabled={sheetBusy} onClick={() => void saveSignature()}>
-                    {sheetBusy ? 'Saving…' : 'SAVE SIGNATURE'}
+                    {sheetBusy ? 'Saving…' : t.drvSaveSignature}
                   </button>
                 </div>
               </>
@@ -558,7 +558,7 @@ export default function DriverV3Stop() {
                   onClick={() => void saveIssue()}
                   style={{background: '#EF5350'}}
                 >
-                  {sheetBusy ? 'Submitting…' : 'SUBMIT ISSUE'}
+                  {sheetBusy ? 'Submitting…' : t.drvSubmitIssue}
                 </button>
                 </div>
               </>
@@ -596,7 +596,7 @@ export default function DriverV3Stop() {
             )}
             <div className={styles.confirmActions}>
               <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmComplete(false)}>
-                Cancel
+                {t.drvCancel}
               </button>
               <button
                 type="button"

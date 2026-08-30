@@ -58,7 +58,7 @@ export default function Completed() {
             <CheckCircle2 size={48} strokeWidth={2.2} />
           </div>
           <h1 className="title" style={{margin: '0 0 6px'}}>{kind} completed</h1>
-          <p className="muted" style={{marginBottom: 20}}>Stop recorded.</p>
+          <p className="muted" style={{marginBottom: 20}}>{t.drvStopRecorded}</p>
 
           {last && (
             <div
@@ -102,7 +102,7 @@ export default function Completed() {
                 style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none'}}
               >
                 <Play size={18} />
-                Continue to Next Stop
+                {t.drvContinueNext}
               </Link>
             </>
           ) : (
