@@ -1,46 +1,30 @@
 # RouteHub Handoff
 
 ## Current State
-Driver official URL `/driver` rewrites to `app/driver-v3` (middleware on GitHub main).
-Latest published commit on GitHub at last push: `ad3828b` (Pickup/Delivery/Return badges i18n).
-Local extra vs that commit: Map `title={t.drvCurrentStop}` only.
-Tabs: Today | Route | Map | Truck | More.
-Stop POD is in-app sheets. Delivery requires recipient name.
-Open Maps uses external navigation handler.
-Manager untouched.
+`/driver` rewrites to Driver V3; `/driver-v3` remains the code path. Driver V2 source stays intact as fallback.
+Driver V3 uses four tabs: Today, Map, Truck, More; Today contains the route queue.
 
 ## Last Work Completed
-Continuous Driver V3 polish + EN/ES/FR copy across screens, toasts, badges, issue category *display* (IDs stored in English).
-No commit/push in this work block (founder continuous-mode: no automatic git write).
+External Maps now uses same-window system handoff from Today, Map, and Stop Details. It no longer opens a secondary browser tab that can remain blank after returning from Maps.
 
 ## Files Changed
-This block (local only):
-- `app/driver-v3/map/page.tsx` (Current stop title uses i18n)
-- `ROUTEHUB_HANDOFF.md`
-
-Already on GitHub main from prior authorized pushes:
-- `app/driver-v3/**`
-- `components/driver-v3/**`
-- `lib/i18n.ts` (`drv*` keys)
-- `middleware.ts` rewrite `/driver` → `/driver-v3`
+- `app/driver-v3/page.tsx`
+- `app/driver-v3/map/page.tsx`
+- `app/driver-v3/stop/page.tsx`
 
 ## Validation
-`ROUTEHUB_MASTER_CONTEXT.md` does not exist.
-`npm run typecheck` / `test` / `build` not run here: `RouteHub-v2/node_modules` missing in this environment.
-`git diff --check` not run against GitHub clone (no auto clone/push this block).
+- `npm test`: 116/116 pass
+- `npm run typecheck`: pass
+- `git diff --check`: pass
 
 ## Current Task
-Driver V3 as premium mobile app with full EN/ES/FR. Code complete for operational loop.
+Founder physical QA of Driver V3.
 
 ## Next Step
-Founder physical QA on https://routehub-wisu.vercel.app/driver after Vercel Ready `ad3828b`+.
-Then founder-authorized commit of any local delta (map title) if still unpushed.
+Apply only founder-approved bug fixes while preserving Grok's V3 design.
 
 ## Known Problems
-- Protocol docs conflicted with live middleware cutover (`/driver` already serves V3).
-- Some long English sentences may remain if not keyed; operational UI is translated.
-- Issue/maintenance stored values remain English by design.
+- Driver Map header blur must be rechecked after the newest Vercel deployment/PWA refresh; source explicitly disables header blur.
 
 ## Do Not Touch
-Manager, schema, RLS, Storage, Auth, Push/VAPID, SW, GPS architecture, Driver V2 source rewrite.
-No parallel Driver versions. No automatic commit/push.
+Manager, Driver V2 source, schema, RLS, Storage, Auth, Push/VAPID, service worker, GPS architecture, tenancy, and route business rules.
