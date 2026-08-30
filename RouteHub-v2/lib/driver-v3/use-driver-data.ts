@@ -58,6 +58,11 @@ function useDriverDataInternal(): DriverV3Data {
           .eq('driver_id', user.id)
           .order('position', {ascending: true})
         rows = second.data
+          ? second.data.map(row => ({
+              ...row,
+              destination_contact_name: null,
+            }))
+          : null
         loadError = second.error
       }
       if (loadError) throw loadError
