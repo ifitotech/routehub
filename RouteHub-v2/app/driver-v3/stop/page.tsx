@@ -305,8 +305,8 @@ export default function DriverV3Stop() {
       mode="stack"
       title={t.drvStopDetails}
       subtitle={stackSub}
-      backHref="/driver/route"
-      backLabel="Route"
+      backHref="/driver"
+      backLabel={t.drvBack}
       hideNav={Boolean(sheet || confirmComplete)}
     >
 
@@ -696,4 +696,7 @@ const tileStyle = {
   gap: 4,
   padding: 8,
   fontSize: 12,
+  lineHeight: '14px',
+  textAlign: 'center' as const,
+  whiteSpace: 'normal' as const,
 }
