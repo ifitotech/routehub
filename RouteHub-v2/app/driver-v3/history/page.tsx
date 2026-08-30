@@ -39,17 +39,22 @@ export default function History() {
     }
     const when = (r: {completed_at?: string | null; route_completed_at?: string | null; route_started_at?: string | null; scheduled_at?: string | null}) =>
       r.completed_at || r.route_completed_at || r.route_started_at || r.scheduled_at || ''
-    return routes
+    const dayRoutes = routes
       .filter(r => String(r.route_date || '').slice(0, 10) === day)
       .filter(r => String(r.status || '') !== 'cancelled')
+    const pending = dayRoutes
+      .filter(r => String(r.status || '') !== 'completed')
       .slice()
       .sort((a, b) => {
-        const ta = when(b).localeCompare(when(a))
-        if (ta) return ta
         const ka = kindRank(a) - kindRank(b)
         if (ka) return ka
-        return String(b.id).localeCompare(String(a.id))
+        return String(a.id).localeCompare(String(b.id))
       })
+    const done = dayRoutes
+      .filter(r => String(r.status || '') === 'completed')
+      .slice()
+      .sort((a, b) => when(b).localeCompare(when(a)))
+    return {pending, done, total: dayRoutes.length}
   }, [routes, day])
 
   const openMaps = (route: {destination_address?: string; destination_lat?: number; destination_lng?: number; destination_name?: string}) => {
@@ -85,14 +90,18 @@ export default function History() {
           <h2>{t.drvNoHistory}</h2>
           <p className="muted">{t.drvConnRetry}</p>
         </section>
-      ) : rows.length === 0 ? (
+      ) : rows.total === 0 ? (
         <section className="card">
           <h2>{t.drvNoHistory}</h2>
           <p className="muted">{t.drvHistoryEmpty}</p>
         </section>
       ) : (
-        <div style={{display: 'grid', gap: 10}}>
-          {rows.map((r: any, index: number) => {
+        <div style={{display: 'grid', gap: 16}}>
+          {[{title: t.drvPendingStops, list: rows.pending}, {title: t.drvCompletedTag, list: rows.done}].map(group => (
+          <section key={group.title}>
+            <p className="eyebrow" style={{margin:'0 0 8px'}}>{group.title} · {group.list.length}</p>
+            <div style={{display: 'grid', gap: 10}}>
+          {group.list.map((r: any, index: number) => {
             const isCurrent = r.id === currentId
             const look = tone(String(r.status || ''), isCurrent)
             const statusText =
@@ -139,6 +148,9 @@ export default function History() {
               </article>
             )
           })}
+            </div>
+          </section>
+          ))}
         </div>
       )}
     </DriverV3Shell>
