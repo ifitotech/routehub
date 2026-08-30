@@ -861,18 +861,16 @@ export default function Routes() {
               </div>}
               {contactSaveMessage && <small className={styles.contactSaveMessage} role="status">{contactSaveMessage}</small>}
               {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number:event.target.value}))}/></label>}
-              {form.type!=='return' ? (
-                <div className={styles.splitFields}>
-                  <label className={styles.field}>
-                    <span>{locale==='es'?'Persona en esta parada':locale==='fr'?'Personne à cet arrêt':'Person at this stop'} <em>{c.optional}</em></span>
-                    <input value={form.stop_contact_name} placeholder={selectedContact?.contact_name || (locale==='es'?'Ejemplo: Eduardo':locale==='fr'?'Exemple : Eduardo':'Example: Eduardo')} onChange={event=>setForm(current=>({...current,stop_contact_name:event.target.value}))}/>
-                  </label>
-                  <label className={styles.field}>
-                    <span>{c.contactPhone} <em>{c.optional}</em></span>
-                    <input type="tel" value={form.destination_phone} placeholder={selectedContact?.phone || ''} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/>
-                  </label>
-                </div>
-              ) : null}
+              <div className={styles.splitFields}>
+                <label className={styles.field}>
+                  <span>{locale==='es'?'Persona en esta parada':locale==='fr'?'Personne à cet arrêt':'Person at this stop'} <em>{c.optional}</em></span>
+                  <input value={form.stop_contact_name} placeholder={selectedContact?.contact_name || (locale==='es'?'Ejemplo: Eduardo':locale==='fr'?'Exemple : Eduardo':'Example: Eduardo')} onChange={event=>setForm(current=>({...current,stop_contact_name:event.target.value}))}/>
+                </label>
+                <label className={styles.field}>
+                  <span>{c.contactPhone} <em>{c.optional}</em></span>
+                  <input type="tel" value={form.destination_phone} placeholder={selectedContact?.phone || ''} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/>
+                </label>
+              </div>
             </>}
             </section>
 
