@@ -49,8 +49,7 @@ export default function DriverV3Shell({
           <Link href="/driver" className={styles.todayBrand}>
             RouteHub Driver
           </Link>
-<span className={styles.headerIcon} aria-hidden="true" />
-          {headerStatus && <span className={styles.headerStatus}>{headerStatus}</span>}
+          {headerStatus ? <span className={styles.headerStatus}>{headerStatus}</span> : <span className={styles.headerIcon} aria-hidden="true" />}
         </header>
       ) : isStack ? (
         <header className={`${styles.header} ${styles.stackHeader}`}>

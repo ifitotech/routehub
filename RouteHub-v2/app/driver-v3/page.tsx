@@ -111,7 +111,7 @@ export default function DriverV3Page() {
         <section className={styles.hero}>
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup:kind==='delivery'?t.drvDelivery:t.drvReturn}</span>
-            <span className={styles.stopCount}>{t.drvStop} <strong>{route.position||completed+1}</strong> {t.drvOf} {total}</span>
+            <span className={styles.stopCount}><strong>{route.position||completed+1}</strong> / {total||1}</span>
           </div>
           <div className={styles.destination}>
             <div><h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>{route.destination_name&&route.destination_address&&<p>{route.destination_address}</p>}{route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}</div>
@@ -133,7 +133,7 @@ export default function DriverV3Page() {
           </div>
           {route.arrived_at&&kind==='return'?<button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void completeCurrentReturn()}><MapPin/>{busy?t.drvBusy:t.drvCompleteReturn}</button>:route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
           <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link></div>
-          {message&&<p className={styles.feedback} role="status">{message}</p>}
+          {message&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
         <section className={styles.progressCard} aria-label={`${completed} completed, ${remaining} remaining`}>
           <div><strong>{completed}</strong><span>{t.drvDoneWord}</span></div>
