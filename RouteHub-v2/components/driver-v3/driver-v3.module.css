@@ -39,7 +39,7 @@
 .iconButton{border:1px solid #ffffff33;background:#ffffff14;color:#fff;border-radius:50%;width:42px;height:42px;display:grid;place-items:center}
 
 /* ONLY this region scrolls */
-.content{
+ .content{min-height:0;
   min-height:0;
   overflow-x:hidden;
   overflow-y:auto;
@@ -166,7 +166,7 @@
   height:22px;padding:0 8px;border-radius:999px;background:#0c5f44;color:#77efb2;
   font-size:9px;line-height:22px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap
 }
-.todayHeader+.content{padding-top:12px}
+.todayHeader+ .content{min-height:0;padding-top:12px}
 
 /* Sticky operational actions — stick inside the scrolling content region */
 .stickyAction{
@@ -380,3 +380,5 @@
 .appHeader button.headerIcon svg,
 .headerIcon svg{color:#fff;stroke:#fff;width:22px;height:22px}
 
+
+.content > .page, .content > div:first-child{height:100%;min-height:0;}
