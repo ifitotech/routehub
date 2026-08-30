@@ -18,6 +18,7 @@ import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {
   markArrived,
   completeStop,
+  completeDeliveryWithRecipient,
   saveStopNote,
   uploadStopPhoto,
   saveStopSignature,
@@ -52,6 +53,7 @@ export default function DriverV3Stop() {
   const [issueCat, setIssueCat] = useState('')
   const [issueNote, setIssueNote] = useState('')
   const [photoName, setPhotoName] = useState('')
+  const [recipient, setRecipient] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawing = useRef(false)
@@ -77,7 +79,12 @@ export default function DriverV3Stop() {
         await refresh()
         setMessage('Arrival recorded.')
       } else {
-        await completeStop(ctx)
+        const isDelivery = operationLabel(String(kind)) === 'DELIVERY'
+        if (isDelivery) {
+          await completeDeliveryWithRecipient(ctx, recipient, route.driver_note || '')
+        } else {
+          await completeStop(ctx)
+        }
         await refresh()
         router.push('/driver/completed')
         return
@@ -575,6 +582,17 @@ export default function DriverV3Stop() {
               <br />
               Stop {route.position || '—'}
             </p>
+            {operationLabel(String(kind)) === 'DELIVERY' && (
+              <label>
+                Received by
+                <input
+                  value={recipient}
+                  onChange={e => setRecipient(e.target.value)}
+                  placeholder="Recipient name"
+                  autoComplete="name"
+                />
+              </label>
+            )}
             <div className={styles.confirmActions}>
               <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmComplete(false)}>
                 Cancel
@@ -582,7 +600,7 @@ export default function DriverV3Stop() {
               <button
                 type="button"
                 className="primary"
-                disabled={busy}
+                disabled={busy || (operationLabel(String(kind)) === 'DELIVERY' && !recipient.trim())}
                 style={{background: '#16B96B'}}
                 onClick={() => {
                   setConfirmComplete(false)

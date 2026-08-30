@@ -7,6 +7,7 @@ import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {markArrived, startRoute} from '../../lib/driver-v3/actions'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
+import {openNavigation} from '../../lib/maps/external-navigation'
 import styles from './today.module.css'
 
 export default function DriverV3Page() {
@@ -41,6 +42,19 @@ export default function DriverV3Page() {
     }
   }
 
+  const openMaps=()=>{
+    if(!route)return
+    const url=openNavigation({
+      address:route.destination_address,
+      coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,
+      label:route.destination_name,
+    })
+    if(url){
+      const opened=window.open(url,'_blank','noopener,noreferrer')
+      if(!opened)window.location.assign(url)
+    }
+  }
+
   const primaryLabel=route?.status!=='active'?'START ROUTE':!route?.arrived_at?'ARRIVED AT STOP':'CONTINUE ROUTE'
   const nextKind=((nextRoute?.mission_type||'')+'').toLowerCase()
   const nextKindLabel=nextKind==='pickup'?'PICKUP':nextKind==='branch'||nextKind==='return'?'RETURN':nextKind?'DELIVERY':''
@@ -63,7 +77,7 @@ export default function DriverV3Page() {
           </div>
           <div className={styles.divider}/>
           {route.arrived_at?<Link className={styles.primary} href="/driver/stop"><MapPin/>CONTINUE ROUTE</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?'UPDATING…':primaryLabel}</button>}
-          <div className={styles.secondaryActions}><Link className={styles.mapAction} href="/driver/map"><Map/>Open Maps</Link><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>Issue</Link></div>
+          <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>Open Maps</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>Issue</Link></div>
           {message&&<p className={styles.feedback} role="status">{message}</p>}
         </section>
         <section className={styles.progressCard} aria-label={`${completed} completed, ${remaining} remaining`}>
