@@ -15,7 +15,7 @@ function formatDuration(start?: string | null, end?: string | null) {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
-function typeLabel(kind: string | null | undefined, labels: {drvPickup:string;drvReturn:string;drvDelivery:string}) {
+function typeLabel(kind: string | null | undefined, labels: Record<string, string>) {
   const v = (kind || 'delivery').toLowerCase()
   if (v === 'pickup') return labels.drvPickup
   if (v === 'return' || v === 'branch') return labels.drvReturn
