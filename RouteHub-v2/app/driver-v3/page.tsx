@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import {Map, MapPin, Package, TriangleAlert} from 'lucide-react'
+import {Map, MapPin, Package, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
-import {completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
+import {completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
@@ -26,6 +26,8 @@ export default function DriverV3Page() {
   const [recipient,setRecipient]=useState('')
   const [photo,setPhoto]=useState<File | null>(null)
   const [signed,setSigned]=useState(false)
+  const [issueOpen,setIssueOpen]=useState(false)
+  const [issueNote,setIssueNote]=useState('')
   const canvas=useRef<HTMLCanvasElement>(null)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
@@ -189,6 +191,26 @@ export default function DriverV3Page() {
     }
   }
 
+
+  const savePickupNote=async()=>{
+    if(!route||busy||!driverId)return
+    const note=issueNote.trim()
+    if(!note){
+      setMessage(t.drvNeedNote)
+      return
+    }
+    setBusy(true)
+    try{
+      await saveStopNote(ctx(), note)
+      setIssueOpen(false)
+      setMessage(t.drvNoteSaved)
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
   const primary=()=>{
     if(!started) return {label:t.drvStartRoute, run:startCurrent}
     if(kind==='pickup') return {label:arrived?t.drvCompletePickup:t.drvArrived, run:arrivePickup}
@@ -246,15 +268,26 @@ export default function DriverV3Page() {
       {sheet==='pickup'&&route&&(
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
           <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
+            <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>{setSheet(null);setIssueOpen(false)}} style={{position:'absolute',top:10,right:10,width:36,height:36,border:0,borderRadius:18,background:'rgba(15,29,53,.08)',color:'#0f1d35'}}>
+              <X size={18}/>
+            </button>
             <p className="eyebrow">{t.drvPickup}</p>
-            <h2 style={{margin:'8px 0 6px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvPickUpPo}</h2>
-            {route.destination_address&&<p className="muted" style={{margin:'0 0 14px'}}>{route.destination_address}</p>}
+            <h2 style={{margin:'8px 0 6px',fontSize:22,lineHeight:'26px',paddingRight:36}}>{route.destination_name||t.drvPickUpPo}</h2>
+            {route.destination_address&&<p className="muted" style={{margin:'0 0 10px'}}>{route.destination_address}</p>}
+            <p className="muted" style={{margin:'0 0 14px',fontSize:14,lineHeight:'20px'}}>{t.drvPickupHelp}</p>
             <div style={{margin:'0 0 18px',padding:'14px 16px',borderRadius:16,background:'rgba(255,255,255,.55)',border:'1px solid rgba(255,255,255,.7)'}}>
               <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
               <p style={{margin:'6px 0 0',fontSize:30,lineHeight:'34px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
             </div>
-            <button className="primary" disabled={busy} onClick={()=>void confirmPickup()}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
-            <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:10}}>{t.drvCancel||t.cancel}</button>
+            {issueOpen?(
+              <>
+                <textarea value={issueNote} onChange={e=>setIssueNote(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={{width:'100%',border:'1px solid #dde5ee',borderRadius:12,padding:10,font:'inherit',marginBottom:10}}/>
+                <button className="secondary" disabled={busy} onClick={()=>void savePickupNote()}>{busy?t.drvBusy:t.drvSubmitIssue}</button>
+              </>
+            ):null}
+            {message&&<p className={styles.feedback} style={{marginTop:8}}>{message}</p>}
+            <button className="primary" disabled={busy} onClick={()=>void confirmPickup()} style={{background:'#16B96B',width:'100%'}}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
+            <button type="button" disabled={busy} onClick={()=>setIssueOpen(true)} style={{display:'block',width:'100%',marginTop:12,border:0,background:'transparent',color:'#E11D48',font:'inherit',fontSize:13,fontWeight:700}}>{t.drvReportProblem}</button>
           </section>
         </div>
       )}
@@ -302,6 +335,7 @@ const overlay: React.CSSProperties = {
   overscrollBehavior:'none',
 }
 const dialog: React.CSSProperties = {
+  position:'relative',
   width:'min(360px,100%)',
   padding:'22px 20px 18px',
   borderRadius:24,

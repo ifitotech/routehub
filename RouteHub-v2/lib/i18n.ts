@@ -142,6 +142,10 @@ Object.assign(en, {drvConfirmPickup:'CONFIRM PICKUP', drvPickUpPo:'Pick up PO', 
 Object.assign(es, {drvConfirmPickup:'CONFIRMAR RECOGIDA', drvPickUpPo:'Recoge el PO', drvNeedRecipient:'Indica quién recibió el material.', drvNeedPod:'Agrega foto o firma para completar la entrega.'})
 Object.assign(fr, {drvConfirmPickup:'CONFIRMER LE RAMASSAGE', drvPickUpPo:'Récupérer le PO', drvNeedRecipient:'Indiquez qui a reçu le matériel.', drvNeedPod:'Ajoutez une photo ou une signature pour terminer.'})
 
+Object.assign(en, {drvPickupHelp:'Collect this PO at the store. Confirm when you have it. If something is wrong, report it and keep the route.', drvReportProblem:'Report a problem'})
+Object.assign(es, {drvPickupHelp:'Recoge este PO en la tienda. Confirma cuando lo tengas. Si hay un problema, repórtalo y sigue la ruta.', drvReportProblem:'Reportar un problema'})
+Object.assign(fr, {drvPickupHelp:'Récupérez ce PO au magasin. Confirmez quand c’est fait. Un problème ? Signalez-le et continuez.', drvReportProblem:'Signaler un problème'})
+
 export function getLocale(): Locale {
   if (typeof window === 'undefined') return 'en'
   const value = window.localStorage.getItem('routehub_language') || window.localStorage.getItem('rh2-language')
