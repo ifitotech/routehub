@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import {Camera, FileText, Map, MapPin, Package, PenLine, TriangleAlert, X} from 'lucide-react'
+import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -22,7 +22,7 @@ export default function DriverV3Page() {
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
-  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery'>(null)
+  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'info'>(null)
   const [recipient,setRecipient]=useState('')
   const [photo,setPhoto]=useState<File | null>(null)
   const [signed,setSigned]=useState(false)
@@ -251,8 +251,22 @@ export default function DriverV3Page() {
               {route.destination_address&&<p>{route.destination_address}</p>}
               {kind!=='return'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
             </div>
-            <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
+            {route.destination_phone?(
+              <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} className={styles.operationIcon} style={{background:'#EAF2FF',color:'#1667F2',textDecoration:'none'}} aria-label={t.drvCall||'Call'}>
+                <Phone/>
+              </a>
+            ):(
+              <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
+            )}
           </div>
+          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'10px 12px',margin:'0 0 12px',textAlign:'left'}}>
+            <span style={{width:28,height:28,borderRadius:14,background:'#16B96B',color:'#fff',display:'grid',placeItems:'center',fontSize:13,fontWeight:800,flexShrink:0}}>1</span>
+            <span style={{flex:1,minWidth:0}}>
+              <strong style={{display:'block',fontSize:15}}>{route.destination_name||t.drvCurrentStopName}</strong>
+              <span className="muted" style={{fontSize:12}}>{t.drvTapDetails||t.drvStopDetails}</span>
+            </span>
+            <ChevronRight size={18} color="#94A3B8"/>
+          </button>
           <div className={styles.divider}/>
           <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
@@ -282,6 +296,32 @@ export default function DriverV3Page() {
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
+
+      {sheet==='info'&&route&&(
+        <div style={overlay} onTouchMove={e=>e.preventDefault()}>
+          <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <p className="eyebrow" style={{margin:0}}>{kind==='pickup'?t.drvPickup:kind==='delivery'?t.drvDelivery:t.drvReturn}</p>
+              <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>setSheet(null)} style={{width:32,height:32,border:0,borderRadius:16,background:'#e8eef4',color:'#0f1d35',display:'grid',placeItems:'center',padding:0}}>
+                <X size={16}/>
+              </button>
+            </div>
+            <h2 style={{margin:'0 0 4px',fontSize:22}}>{route.destination_name||t.drvCurrentStopName}</h2>
+            {route.destination_address&&<p className="muted" style={{margin:'0 0 10px'}}>{route.destination_address}</p>}
+            {kind!=='return'&&route.order_number?<p style={{margin:'0 0 12px',fontSize:22,fontWeight:800}}>PO {route.order_number}</p>:null}
+            <p style={{margin:'0 0 14px',fontSize:14,lineHeight:1.45,color:'#334155'}}>
+              {kind==='pickup'?t.drvPickupHelp:kind==='delivery'?t.drvDeliveryHelp:(t.drvReturnHelp||t.drvReturn)}
+            </p>
+            {route.notes?<p className="muted" style={{margin:'0 0 14px'}}>{route.notes}</p>:null}
+            {route.destination_phone?(
+              <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} className="primary" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,textDecoration:'none',marginBottom:10}}>
+                <Phone size={18}/>{t.drvCall||'Call'} {route.destination_phone}
+              </a>
+            ):null}
+            <button className="secondary" type="button" onClick={()=>{setSheet(null);openMaps()}}>{t.drvOpenMaps}</button>
+          </section>
+        </div>
+      )}
 
       {sheet==='pickup'&&route&&(
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
