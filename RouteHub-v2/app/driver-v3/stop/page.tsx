@@ -351,7 +351,7 @@ export default function DriverV3Stop() {
             )}
             {route.order_number && (
               <p style={{margin: '0 0 8px'}}>
-                <strong>{t.drvPoOrder}:</strong> {route.order_number}
+                <strong>{t.drvPoOrder || 'PO / Order'}:</strong> {route.order_number}
               </p>
             )}
             {(route.instructions || route.notes) && (
@@ -372,15 +372,15 @@ export default function DriverV3Stop() {
             >
               <button type="button" className="secondary" onClick={() => openSheet('photo')} style={tileStyle}>
                 <Camera size={22} />
-                {t.drvPhoto}
+                {t.drvPhoto || 'Photo'}
               </button>
               <button type="button" className="secondary" onClick={() => openSheet('signature')} style={tileStyle}>
                 <PenLine size={22} />
-                {t.drvSignature}
+                {t.drvSignature || 'Signature'}
               </button>
               <button type="button" className="secondary" onClick={() => openSheet('notes')} style={tileStyle}>
                 <FileText size={22} />
-                {t.drvNotes}
+                {t.drvNotes || 'Notes'}
               </button>
               <button
                 type="button"
@@ -404,7 +404,7 @@ export default function DriverV3Stop() {
             <button className="secondary" onClick={maps} type="button" style={{marginTop: 14}}>
               <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
                 <Navigation size={18} />
-                {t.drvOpenInMaps}
+                {t.drvOpenInMaps || t.drvOpenMaps || 'Open in Maps'}
               </span>
             </button>
           </section>

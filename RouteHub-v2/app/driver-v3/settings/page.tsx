@@ -10,7 +10,7 @@ import InstallAppCard from '../../install-app-card'
 import {getCurrentLocation, getLocationPermission} from '../../../lib/location'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
 
-const DRIVER_APP_VERSION = '0.1b3'
+const DRIVER_APP_VERSION = '0.1b5'
 
 const LANGS = [
   {id: 'en', label: 'English'},
