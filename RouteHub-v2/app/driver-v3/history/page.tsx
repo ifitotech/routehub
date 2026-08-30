@@ -33,12 +33,8 @@ export default function History() {
     })
 
   return (
-    <DriverV3Shell active="more">
-      <Link href="/driver/more" className="muted">
-        ‹ More
-      </Link>
-      <p className="eyebrow">ACTIVITY</p>
-      <h1 className="title">Route History</h1>
+    <DriverV3Shell active="more" mode="stack" title="Route History" backHref="/driver/more" backLabel="More">
+      
 
       {loading ? (
         <section className="card"><p>Loading history…</p></section>

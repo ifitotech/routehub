@@ -123,12 +123,8 @@ export default function Pod() {
   }
 
   return (
-    <DriverV3Shell active="route">
-      <Link href="/driver/stop" className="muted">
-        ‹ Stop details
-      </Link>
-      <p className="eyebrow">EVIDENCE</p>
-      <h1 className="title">Proof of delivery</h1>
+    <DriverV3Shell active="route" mode="stack" title="Proof" backHref="/driver/stop" backLabel="Stop">
+      
 
       {!route ? (
         <section className="card">

@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import {useState} from 'react'
 import {CheckCircle2, Crosshair, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
-import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
+import styles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {markArrived} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
@@ -50,76 +50,70 @@ export default function DriverV3Map() {
   }
 
   return (
-    <DriverV3Shell active="map">
-      <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12}}>
-        <div>
-          <p className="eyebrow">ACTIVE ROUTE</p>
-          <h1 className="title" style={{marginBottom: 0}}>
-            Map
-          </h1>
+    <DriverV3Shell active="map" title="Map" subtitle={route ? 'Live operation' : undefined} flush>
+      <div className={styles.mapScreen}>
+        <div className={styles.mapCanvas}>
+          {loading ? (
+            <p className="muted" style={{padding: 24}}>Loading map…</p>
+          ) : error ? (
+            <p role="alert" style={{padding: 24}}>{error}</p>
+          ) : route ? (
+            <div style={{position: 'absolute', inset: 0}}>
+              <LiveRouteMap
+                destinationAddress={route.destination_address}
+                destinationCoordinate={
+                  route.destination_lat != null && route.destination_lng != null
+                    ? {lat: Number(route.destination_lat), lng: Number(route.destination_lng)}
+                    : null
+                }
+                title="Current stop"
+                showHeader={false}
+                interactive
+                followToken={followToken}
+              />
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => setFollowToken(t => t + 1)}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 'auto',
+                  minHeight: 44,
+                  padding: '0 12px',
+                  zIndex: 10,
+                  boxShadow: '0 4px 14px rgba(15,29,53,.15)',
+                }}
+                aria-label="Recenter map"
+              >
+                <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
+                  <Crosshair size={16} />
+                  Recenter
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div style={{padding: 24}}>
+              <h2 style={{margin: '0 0 6px'}}>No active operation</h2>
+              <p className="muted" style={{margin: 0}}>A destination appears here when assigned.</p>
+            </div>
+          )}
         </div>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => setFollowToken(t => t + 1)}
-          style={{width: 'auto', minHeight: 44, padding: '0 12px', flexShrink: 0}}
-          aria-label="Recenter map"
-        >
-          <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
-            <Crosshair size={16} />
-            Recenter
-          </span>
-        </button>
-      </div>
 
-      {loading ? (
-        <section className="card" style={{marginTop: 12}}>
-          <p>Loading map…</p>
-        </section>
-      ) : error ? (
-        <section className="card" style={{marginTop: 12}}>
-          <p role="alert">{error}</p>
-        </section>
-      ) : route ? (
-        <>
-          <section
-            className="card"
-            style={{padding: 0, overflow: 'hidden', minHeight: 280, marginTop: 12}}
-          >
-            <LiveRouteMap
-              destinationAddress={route.destination_address}
-              destinationCoordinate={
-                route.destination_lat != null && route.destination_lng != null
-                  ? {lat: Number(route.destination_lat), lng: Number(route.destination_lng)}
-                  : null
-              }
-              title="Current stop"
-              showHeader={false}
-              interactive
-              followToken={followToken}
-            />
-          </section>
-
-          <section className="card" style={{marginTop: 12}}>
-            <p className="eyebrow">
+        {route && (
+          <div className={styles.mapSheet}>
+            <p className="eyebrow" style={{margin: 0}}>
               CURRENT STOP · {route.position || '—'} · {kind}
             </p>
-            <h2 style={{margin: '4px 0 6px', fontSize: 20}}>
+            <h2 style={{margin: '6px 0 4px', fontSize: 18}}>
               {route.destination_name || route.destination_address || 'Destination'}
             </h2>
             {route.destination_address && route.destination_name && (
-              <p className="muted" style={{marginTop: 0}}>
+              <p className="muted" style={{margin: '0 0 12px', fontSize: 13}}>
                 {route.destination_address}
               </p>
             )}
-            {route.order_number && (
-              <p className="muted" style={{margin: '4px 0 0'}}>
-                PO {route.order_number}
-              </p>
-            )}
-          </section>
-
-          <div className={shellStyles.stickyAction}>
             <div
               style={{
                 display: 'grid',
@@ -148,18 +142,13 @@ export default function DriverV3Map() {
               )}
             </div>
             {message && (
-              <p role="status" className="muted" style={{margin: 0, textAlign: 'center'}}>
+              <p role="status" className="muted" style={{margin: '10px 0 0', textAlign: 'center'}}>
                 {message}
               </p>
             )}
           </div>
-        </>
-      ) : (
-        <section className="card" style={{marginTop: 12}}>
-          <h2>No active operation</h2>
-          <p className="muted">A current destination will appear here when assigned.</p>
-        </section>
-      )}
+        )}
+      </div>
     </DriverV3Shell>
   )
 }

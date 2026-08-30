@@ -23,12 +23,8 @@ export default function DriverV3Settings() {
   }
 
   return (
-    <DriverV3Shell active="more">
-      <Link href="/driver/more" className="muted">
-        ‹ More
-      </Link>
-      <p className="eyebrow">ACCOUNT</p>
-      <h1 className="title">Settings</h1>
+    <DriverV3Shell active="more" mode="stack" title="Settings" backHref="/driver/more" backLabel="More">
+      
 
       <section className="card">
         <p className="muted" style={{marginTop: 0}}>

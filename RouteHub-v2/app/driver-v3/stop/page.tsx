@@ -1,6 +1,6 @@
 'use client'
 import {useRef, useState} from 'react'
-import Link from 'next/link'
+import {createPortal} from 'react-dom'
 import {useRouter, useSearchParams} from 'next/navigation'
 import {
   AlertTriangle,
@@ -45,6 +45,7 @@ export default function DriverV3Stop() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [sheet, setSheet] = useState<Sheet>(null)
+  const [confirmComplete, setConfirmComplete] = useState(false)
   const [sheetBusy, setSheetBusy] = useState(false)
   const [sheetMsg, setSheetMsg] = useState('')
   const [note, setNote] = useState('')
@@ -240,11 +241,19 @@ export default function DriverV3Stop() {
     }
   }
 
+  const stackSub = route
+    ? `Stop ${route.position || '—'} · ${operationLabel(String(kind))}`
+    : undefined
+
   return (
-    <DriverV3Shell active="route">
-      <Link href="/driver/route" className="muted">
-        ‹ My Route
-      </Link>
+    <DriverV3Shell
+      active="route"
+      mode="stack"
+      title="Stop Details"
+      subtitle={stackSub}
+      backHref="/driver/route"
+      backLabel="Route"
+    >
 
       {loading ? (
         <section className="card"><p>Loading stop…</p></section>
@@ -257,10 +266,10 @@ export default function DriverV3Stop() {
         </section>
       ) : (
         <>
-          <p className="eyebrow">
-            STOP {route.position || '—'} · {operationLabel(String(kind))}
+          <p className="eyebrow" style={{color: '#1667F2'}}>
+            {operationLabel(String(kind))}
           </p>
-          <h1 className="title" style={{marginBottom: 4}}>
+          <h1 className="title" style={{marginBottom: 4, fontSize: 26, lineHeight: '32px'}}>
             {route.destination_name || route.destination_address || 'Current stop'}
           </h1>
           <p className="muted" style={{marginTop: 0, marginBottom: 12}}>
@@ -349,7 +358,7 @@ export default function DriverV3Stop() {
               <button
                 className="primary"
                 disabled={busy || !isCurrent}
-                onClick={() => void act('complete')}
+                onClick={() => setConfirmComplete(true)}
                 style={{background: '#16B96B'}}
               >
                 {busy ? 'Completing…' : `COMPLETE ${operationLabel(String(kind))}`}
@@ -364,7 +373,9 @@ export default function DriverV3Stop() {
         </>
       )}
 
-      {sheet && (
+      {sheet &&
+        typeof document !== 'undefined' &&
+        createPortal(
         <div className={styles.sheetBackdrop} role="dialog" aria-modal="true" onClick={closeSheet}>
           <div className={styles.sheet} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
@@ -388,8 +399,20 @@ export default function DriverV3Stop() {
 
             {sheet === 'photo' && (
               <>
-                <label className="secondary" style={{cursor: 'pointer', marginBottom: 12}}>
-                  {photoName || 'Take or choose photo'}
+                <label
+                  className="secondary"
+                  style={{
+                    cursor: 'pointer',
+                    marginBottom: 16,
+                    minHeight: 84,
+                    display: 'grid',
+                    placeItems: 'center',
+                    gap: 8,
+                    fontSize: 16,
+                  }}
+                >
+                  <Camera size={28} />
+                  {photoName || 'Take photo'}
                   <input
                     ref={fileRef}
                     type="file"
@@ -524,6 +547,37 @@ export default function DriverV3Stop() {
                 {sheetMsg}
               </p>
             )}
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {confirmComplete && route && (
+        <div className={styles.confirmBackdrop} role="dialog" aria-modal="true">
+          <div className={styles.confirmSheet}>
+            <h2>Complete this {operationLabel(String(kind)).toLowerCase()}?</h2>
+            <p>
+              <strong style={{color: '#0f1d35'}}>{route.destination_name || route.destination_address}</strong>
+              <br />
+              Stop {route.position || '—'}
+            </p>
+            <div className={styles.confirmActions}>
+              <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmComplete(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="primary"
+                disabled={busy}
+                style={{background: '#16B96B'}}
+                onClick={() => {
+                  setConfirmComplete(false)
+                  void act('complete')
+                }}
+              >
+                {busy ? 'Completing…' : `Complete ${operationLabel(String(kind))}`}
+              </button>
+            </div>
           </div>
         </div>
       )}

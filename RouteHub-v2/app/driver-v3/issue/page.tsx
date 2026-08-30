@@ -49,12 +49,8 @@ export default function Issue() {
   }
 
   return (
-    <DriverV3Shell active="route">
-      <Link href="/driver/stop" className="muted">
-        ‹ Stop details
-      </Link>
-      <p className="eyebrow">ROUTE ISSUE</p>
-      <h1 className="title">Report an issue</h1>
+    <DriverV3Shell active="route" mode="stack" title="Report issue" backHref="/driver/stop" backLabel="Stop">
+      
 
       <section className="card">
         {!route ? (

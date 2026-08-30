@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useState} from 'react'
+import styles from '../../../components/driver-v3/driver-v3.module.css'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
@@ -10,6 +11,7 @@ export default function DrivingDayPage() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'ok' | 'err'>('ok')
+  const [confirmEnd, setConfirmEnd] = useState(false)
 
   const toggle = async () => {
     if (busy || !driverId || !companyId) return
@@ -35,12 +37,8 @@ export default function DrivingDayPage() {
   }
 
   return (
-    <DriverV3Shell active="more">
-      <Link href="/driver/more" className="muted">
-        ‹ More
-      </Link>
-      <p className="eyebrow">WORK</p>
-      <h1 className="title">Driving Day</h1>
+    <DriverV3Shell active="more" mode="stack" title="Driving Day" backHref="/driver/more" backLabel="More">
+      
 
       {loading ? (
         <section className="card"><p>Loading driving day…</p></section>
@@ -70,7 +68,7 @@ export default function DrivingDayPage() {
           <button
             className={drivingSession ? 'danger' : 'primary'}
             disabled={busy || !driverId || !companyId}
-            onClick={() => void toggle()}
+            onClick={() => { if (drivingSession) setConfirmEnd(true); else void toggle() }}
           >
             {busy
               ? 'Updating…'
@@ -96,6 +94,31 @@ export default function DrivingDayPage() {
             </p>
           )}
         </section>
+      )}
+
+      {confirmEnd && (
+        <div className={styles.confirmBackdrop} role="dialog" aria-modal="true">
+          <div className={styles.confirmSheet}>
+            <h2>End your Driving Day?</h2>
+            <p>Your location sharing for the workday will stop according to the existing operational behavior.</p>
+            <div className={styles.confirmActions}>
+              <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmEnd(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger"
+                disabled={busy}
+                onClick={() => {
+                  setConfirmEnd(false)
+                  void toggle()
+                }}
+              >
+                {busy ? 'Updating…' : 'End Driving Day'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </DriverV3Shell>
   )

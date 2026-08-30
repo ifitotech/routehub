@@ -59,12 +59,8 @@ export default function Fuel() {
   }
 
   return (
-    <DriverV3Shell active="truck">
-      <Link href="/driver/truck" className="muted">
-        ‹ Truck
-      </Link>
-      <p className="eyebrow">TRUCK</p>
-      <h1 className="title">Log Fuel</h1>
+    <DriverV3Shell active="truck" mode="stack" title="Log Fuel" backHref="/driver/truck" backLabel="Truck">
+      
 
       <section className="card">
         {!truck ? (

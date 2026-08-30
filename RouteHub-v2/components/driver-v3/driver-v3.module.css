@@ -194,12 +194,12 @@
 .primary:active,.secondary:active,.danger:active{opacity:.92;transform:scale(.985)}
 .primary:disabled,.secondary:disabled,.danger:disabled{opacity:.45}
 
-/* In-app bottom sheet — stays inside the app, no route change */
+/* In-app bottom sheet — covers tab bar so actions are never clipped */
 .sheetBackdrop{
   position:fixed;
   inset:0;
-  z-index:40;
-  background:rgba(15,29,53,.45);
+  z-index:80;
+  background:rgba(15,29,53,.52);
   display:flex;
   align-items:flex-end;
   justify-content:center;
@@ -209,13 +209,13 @@
 .sheet{
   width:100%;
   max-width:680px;
-  max-height:min(88dvh,720px);
+  max-height:min(78dvh, 640px);
   overflow:auto;
   -webkit-overflow-scrolling:touch;
   background:#fff;
-  border-radius:20px 20px 0 0;
-  padding:12px 18px calc(18px + env(safe-area-inset-bottom));
-  box-shadow:0 -12px 40px rgba(15,29,53,.2);
+  border-radius:22px 22px 0 0;
+  padding:10px 18px calc(20px + env(safe-area-inset-bottom));
+  box-shadow:0 -16px 48px rgba(15,29,53,.28);
   animation:sheetUp .22s ease;
   box-sizing:border-box;
 }
@@ -235,3 +235,69 @@
 }
 @keyframes sheetFade{from{opacity:0}to{opacity:1}}
 @keyframes sheetUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+
+/* Compact app bars for tabs & stack screens (no repeated brand logo) */
+.tabHeader{
+  min-height:calc(56px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 16px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:#0f1d35;
+}
+.tabTitles{min-width:0;display:grid;gap:2px}
+.tabTitles strong{color:#fff;font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:22px}
+.tabTitles small{color:#b9c9e2;font-size:12px;font-weight:600;line-height:16px}
+
+.stackHeader{
+  min-height:calc(56px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 8px 10px 4px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) 44px;
+  align-items:center;
+  gap:4px;
+  background:#0f1d35;
+}
+.backBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  min-height:44px;
+  padding:0 8px 0 4px;
+  color:#fff;
+  text-decoration:none;
+  font-size:15px;
+  font-weight:700;
+  border-radius:10px;
+}
+.backBtn:active{opacity:.7}
+.stackTitles{min-width:0;text-align:center;display:grid;gap:1px}
+.stackTitles strong{color:#fff;font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stackTitles small{color:#b9c9e2;font-size:11px;font-weight:600;line-height:14px}
+.stackSpacer{width:44px;height:44px}
+
+.contentFlush{padding:0!important;max-width:none}
+.mapScreen{display:flex;flex-direction:column;min-height:100%;height:100%}
+.mapCanvas{flex:1;min-height:240px;position:relative;background:#e8edf3}
+.mapSheet{
+  flex-shrink:0;
+  background:#fff;
+  border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 28px rgba(15,29,53,.12);
+  padding:14px 16px 8px;
+  border-top:1px solid #e8edf3;
+}
+
+.confirmBackdrop{
+  position:fixed;inset:0;z-index:90;background:rgba(15,29,53,.52);
+  display:flex;align-items:flex-end;justify-content:center;animation:sheetFade .18s ease;
+}
+.confirmSheet{
+  width:100%;max-width:680px;background:#fff;border-radius:20px 20px 0 0;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:0 -12px 40px rgba(15,29,53,.22);animation:sheetUp .22s ease;
+}
+.confirmSheet h2{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.confirmSheet p{margin:0 0 16px;color:#667892;font-size:14px;line-height:1.45}
+.confirmActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}

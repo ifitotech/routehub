@@ -31,7 +31,7 @@ export default function Completed() {
   const kind = (last?.mission_type || 'delivery').toString().toUpperCase()
 
   return (
-    <DriverV3Shell active="route">
+    <DriverV3Shell active="route" mode="stack" title="Completed" backHref="/driver/route" backLabel="Route">
       {loading ? (
         <section className="card"><p>Loading confirmation…</p></section>
       ) : error ? (

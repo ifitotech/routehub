@@ -77,9 +77,7 @@ export default function DriverV3Truck() {
   }, [companyId, branchId])
 
   return (
-    <DriverV3Shell active="truck">
-      <p className="eyebrow">VEHICLE</p>
-      <h1 className="title">Truck</h1>
+    <DriverV3Shell active="truck" title="Truck">
 
       {loading ? (
         <section className="card"><p>Loading truck…</p></section>

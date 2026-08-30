@@ -32,9 +32,7 @@ export default function DriverV3Route() {
   }
 
   return (
-    <DriverV3Shell active="route">
-      <p className="eyebrow">TODAY</p>
-      <h1 className="title">My Route</h1>
+    <DriverV3Shell active="route" title="My Route">
 
       {loading ? (
         <section className="card"><p>Loading route…</p></section>
