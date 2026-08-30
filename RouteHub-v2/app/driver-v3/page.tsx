@@ -219,7 +219,7 @@ export default function DriverV3Page() {
   }
   const action=primary()
 
-  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={false}>
+  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet)}>
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
       {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
@@ -268,16 +268,18 @@ export default function DriverV3Page() {
       {sheet==='pickup'&&route&&(
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
           <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
-            <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>{setSheet(null);setIssueOpen(false)}} style={{position:'absolute',top:10,right:10,width:36,height:36,border:0,borderRadius:18,background:'rgba(15,29,53,.08)',color:'#0f1d35'}}>
-              <X size={18}/>
-            </button>
-            <p className="eyebrow">{t.drvPickup}</p>
-            <h2 style={{margin:'8px 0 6px',fontSize:22,lineHeight:'26px',paddingRight:36}}>{route.destination_name||t.drvPickUpPo}</h2>
-            {route.destination_address&&<p className="muted" style={{margin:'0 0 10px'}}>{route.destination_address}</p>}
-            <p className="muted" style={{margin:'0 0 14px',fontSize:14,lineHeight:'20px'}}>{t.drvPickupHelp}</p>
-            <div style={{margin:'0 0 18px',padding:'14px 16px',borderRadius:16,background:'rgba(255,255,255,.55)',border:'1px solid rgba(255,255,255,.7)'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <p className="eyebrow" style={{margin:0}}>{t.drvPickup}</p>
+              <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>{setSheet(null);setIssueOpen(false)}} style={{width:32,height:32,border:0,borderRadius:16,background:'#e8eef4',color:'#0f1d35',display:'grid',placeItems:'center',padding:0}}>
+                <X size={16}/>
+              </button>
+            </div>
+            <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvPickUpPo}</h2>
+            {route.destination_address&&<p className="muted" style={{margin:'0 0 8px',fontSize:14}}>{route.destination_address}</p>}
+            <p className="muted" style={{margin:'0 0 12px',fontSize:13,lineHeight:'18px'}}>{t.drvPickupHelp}</p>
+            <div style={{margin:'0 0 16px',padding:'12px 14px',borderRadius:14,background:'#fff',border:'1px solid #e5eaf0'}}>
               <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
-              <p style={{margin:'6px 0 0',fontSize:30,lineHeight:'34px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
+              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
             </div>
             {issueOpen?(
               <>
@@ -336,14 +338,12 @@ const overlay: React.CSSProperties = {
 }
 const dialog: React.CSSProperties = {
   position:'relative',
-  width:'min(360px,100%)',
-  padding:'22px 20px 18px',
-  borderRadius:24,
-  background:'rgba(255,255,255,.82)',
-  backdropFilter:'blur(18px)',
-  WebkitBackdropFilter:'blur(18px)',
-  border:'1px solid rgba(255,255,255,.65)',
-  boxShadow:'0 18px 40px rgba(15,29,53,.28)',
+  width:'min(340px,calc(100% - 32px))',
+  padding:'18px 16px 16px',
+  borderRadius:20,
+  background:'#f7f9fc',
+  border:'1px solid #e5eaf0',
+  boxShadow:'0 16px 36px rgba(15,29,53,.22)',
 }
 
 function TodayLoading({label}:{label:string}) {
