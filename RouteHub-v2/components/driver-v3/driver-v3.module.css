@@ -346,7 +346,7 @@
   font-weight:800;
   letter-spacing:-.02em;
 }
-.headerBrand img{border-radius:6px;background:#fff;image-rendering:crisp-edges;filter:none!important}
+.headerBrand img{border-radius:6px;background:transparent;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important}
 .headerIcon,
 .appHeader button.headerIcon,
 .appHeader a.headerIcon{
