@@ -5,7 +5,7 @@
 Driver V3 uses four tabs: Today, Map, Truck, More; Today contains the route queue.
 
 ## Last Work Completed
-External Maps now uses same-window system handoff from Today, Map, and Stop Details. It no longer opens a secondary browser tab that can remain blank after returning from Maps.
+External Maps now uses same-window system handoff from Today, Map, and Stop Details. It no longer opens a secondary browser tab that can remain blank after returning from Maps. An arrived Return on Today now shows the green backend-confirmed Complete Return action instead of Continue Route.
 
 ## Files Changed
 - `app/driver-v3/page.tsx`
