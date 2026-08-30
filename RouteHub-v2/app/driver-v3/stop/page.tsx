@@ -318,7 +318,7 @@ export default function DriverV3Stop() {
       ) : !route ? (
         <section className="card">
           <h2>{t.drvNoCurrentStop}</h2>
-          <p className="muted">There is no active operation.</p>
+          <p className="muted">{t.drvNoOperation}</p>
         </section>
       ) : (
         <>
@@ -327,7 +327,7 @@ export default function DriverV3Stop() {
           </h1>
           <p className="muted" style={{marginTop: 0, marginBottom: 12}}>
             <MapPin size={14} style={{display: 'inline', verticalAlign: -2, marginRight: 4}} />
-            {route.destination_address || 'Address unavailable'}
+            {route.destination_address || t.drvNoOperation}
           </p>
 
           <section className="card">
@@ -362,7 +362,7 @@ export default function DriverV3Stop() {
               </p>
             )}
 
-            {/* One-tap tiles — open in-app sheets, not new pages */}
+            {!closed && (
             <div
               style={{
                 display: 'grid',
@@ -393,6 +393,7 @@ export default function DriverV3Stop() {
                 {t.drvIssue}
               </button>
             </div>
+            )}
 
             {(evidence.photo || evidence.signature) && (
               <div style={{display: 'flex', gap: 8, marginTop: 14}}>

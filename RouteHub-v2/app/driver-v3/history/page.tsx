@@ -5,9 +5,9 @@ import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 
 function formatDuration(start?: string | null, end?: string | null) {
-  if (!start || !end) return 'Route duration unavailable'
+  if (!start || !end) return ''
   const ms = new Date(end).getTime() - new Date(start).getTime()
-  if (!Number.isFinite(ms) || ms < 0) return 'Route duration unavailable'
+  if (!Number.isFinite(ms) || ms < 0) return ''
   const mins = Math.round(ms / 60000)
   if (mins < 60) return `${mins} min`
   const h = Math.floor(mins / 60)
@@ -58,7 +58,7 @@ export default function History() {
                 {typeLabel(r.mission_type, t)} · {t.drvCompletedTag}
               </p>
               <h2 style={{margin: '4px 0 6px', fontSize: 18}}>
-                {r.destination_name || r.destination_address || 'Route'}
+                {r.destination_name || r.destination_address || t.drvRoute}
               </h2>
               {r.destination_name && r.destination_address && (
                 <p className="muted" style={{margin: '0 0 6px'}}>

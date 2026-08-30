@@ -97,7 +97,7 @@ export default function DriverV3Settings() {
               <input value={fullName} onChange={e => setFullName(e.target.value)} />
             </label>
             <label>
-              Email
+              {locale==='es'?'Correo':locale==='fr'?'E-mail':'Email'}
               <input value={email} readOnly />
             </label>
             <label>
