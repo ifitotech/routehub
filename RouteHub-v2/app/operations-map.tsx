@@ -89,10 +89,16 @@ function FitBounds({points}:{points:Coordinate[]}){
  return null
 }
 
+async function withTimeout<T>(task:Promise<T>,ms:number,fallback:T){
+ try{
+  return await Promise.race([task,new Promise<T>(resolve=>setTimeout(()=>resolve(fallback),ms))])
+ }catch{return fallback}
+}
+
 async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
  if(isCoordinate(lat,lng))return {lat,lng}
  if(!address)return null
- try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
+ try{return (await withTimeout(geocodeAddress(address).then(value=>value?.coordinate||null),3500,null))}catch{return null}
 }
 
 export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
@@ -103,16 +109,31 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
 
  useEffect(()=>{
   let cancelled=false
+  if(!visibleRoutes.length){
+   setResolved([])
+   setLoading(false)
+   return
+  }
   setLoading(true)
-  void Promise.all(visibleRoutes.map(async(route,index)=>{
-   const [origin,destination]=await Promise.all([
-    resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng),
-    resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng),
-   ])
-   const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
-   const estimate=points.length>1?await calculateRoute(points):{coordinates:points}
-   return {...route,points,line:estimate.coordinates.length>1?estimate.coordinates:points,number:index+1}
-  })).then(next=>{if(!cancelled)setResolved(next)}).catch(()=>{if(!cancelled)setResolved([])}).finally(()=>{if(!cancelled)setLoading(false)})
+  void (async()=>{
+   const pins=await Promise.all(visibleRoutes.map(async(route,index)=>{
+    const [origin,destination]=await Promise.all([
+     resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng),
+     resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng),
+    ])
+    const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
+    return {...route,points,line:points,number:index+1}
+   }))
+   if(cancelled)return
+   setResolved(pins)
+   setLoading(false)
+   const lined=await Promise.all(pins.map(async route=>{
+    if(route.points.length<2)return route
+    const estimate=await withTimeout(calculateRoute(route.points),4000,{coordinates:route.points,source:'fallback' as const})
+    return {...route,line:estimate.coordinates.length>1?estimate.coordinates:route.points}
+   }))
+   if(!cancelled)setResolved(lined)
+  })().catch(()=>{if(!cancelled){setResolved([]);setLoading(false)}})
   return()=>{cancelled=true}
  },[routeKey])
 
