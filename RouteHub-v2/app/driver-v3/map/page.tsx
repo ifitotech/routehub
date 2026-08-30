@@ -56,7 +56,7 @@ export default function DriverV3Map() {
           {loading ? (
             <p className="muted" style={{padding: 24}}>Loading map…</p>
           ) : error ? (
-            <p role="alert" style={{padding: 24}}>{error}</p>
+            <div style={{padding: 24}}><h2 style={{margin:'0 0 8px'}}>Couldn’t load the map.</h2><p className="muted" style={{margin:0}}>{error}</p></div>
           ) : route ? (
             <div style={{position: 'absolute', inset: 0}}>
               <LiveRouteMap
@@ -95,8 +95,8 @@ export default function DriverV3Map() {
             </div>
           ) : (
             <div style={{padding: 24}}>
-              <h2 style={{margin: '0 0 6px'}}>No active operation</h2>
-              <p className="muted" style={{margin: 0}}>A destination appears here when assigned.</p>
+              <h2 style={{margin: '0 0 6px'}}>No stops right now.</h2>
+              <p className="muted" style={{margin: 0}}>Your current destination will appear here when assigned.</p>
             </div>
           )}
         </div>
