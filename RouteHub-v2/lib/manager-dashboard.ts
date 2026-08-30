@@ -11,6 +11,9 @@ export type DashboardRoute = {
   route_date: string | null
   mission_type?: string | null
   destination_name?: string | null
+  origin_address?: string | null
+  origin_lat?: number | null
+  origin_lng?: number | null
   destination_address?: string | null
   destination_contact_name?: string | null
   destination_lat?: number | null

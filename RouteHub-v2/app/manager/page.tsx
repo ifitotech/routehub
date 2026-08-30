@@ -51,6 +51,7 @@ export default function Manager() {
   const [companyId, setCompanyId] = useState('')
   const [dashboardBranchId, setDashboardBranchId] = useState<string | null>(null)
   const [branchName, setBranchName] = useState('')
+  const [branchOrigin, setBranchOrigin] = useState<{address: string; lat: number | null; lng: number | null}>({address: '', lat: null, lng: null})
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -63,8 +64,8 @@ export default function Manager() {
         const membership = await currentMembership()
         const client = getSupabase()
         const branchQuery = membership.branch_id
-          ? client.from('branches').select('id,name').eq('id', membership.branch_id).maybeSingle()
-          : client.from('branches').select('id,name').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
+          ? client.from('branches').select('id,name,address,latitude,longitude').eq('id', membership.branch_id).maybeSingle()
+          : client.from('branches').select('id,name,address,latitude,longitude').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
         const [{data: userData, error: userError}, {data: branch, error: branchError}] = await Promise.all([
           client.auth.getUser(),
           branchQuery,
@@ -91,6 +92,11 @@ export default function Manager() {
         const name = String(metadata?.full_name || metadata?.name || userData.user?.email || '')
         setDisplayName(name)
         setBranchName(String(branch?.name || ''))
+        setBranchOrigin({
+          address: String(branch?.address || branch?.name || ''),
+          lat: branch?.latitude == null ? null : Number(branch.latitude),
+          lng: branch?.longitude == null ? null : Number(branch.longitude),
+        })
         const kindRank = (value?: string | null) => {
           const v = String(value || '').toLowerCase()
           if (v === 'pickup') return 1
@@ -163,6 +169,9 @@ export default function Manager() {
           <OperationsMap
             routes={todayRoutes.map(route => ({
               id: route.id,
+              origin_address: route.origin_address || branchOrigin.address,
+              origin_lat: route.origin_lat ?? branchOrigin.lat,
+              origin_lng: route.origin_lng ?? branchOrigin.lng,
               destination_name: route.destination_name,
               destination_address: route.destination_address,
               destination_lat: route.destination_lat,

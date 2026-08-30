@@ -27,7 +27,7 @@ export async function loadManagerDashboard(scope: ManagerDashboardScope): Promis
   const client = getSupabase()
 
   let routeQuery = client.from('routes')
-    .select('id,company_id,branch_id,route_date,mission_type,destination_name,destination_address,destination_lat,destination_lng,order_number,status,driver_id,position')
+    .select('id,company_id,branch_id,route_date,mission_type,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_lat,destination_lng,order_number,status,driver_id,position')
     .eq('company_id', scope.companyId)
     .eq('route_date', scope.routeDate)
   let requestQuery = client.from('requests')
