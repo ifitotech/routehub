@@ -220,8 +220,8 @@ export default function DriverV3Page() {
           </div>
           <div className={styles.divider}/>
           <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
-            <div style={{height:'100%',pointerEvents:'none'}}>
-            <LiveRouteMap
+            <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
+            {!sheet&&<LiveRouteMap
               destinationAddress={route.destination_address}
               destinationCoordinate={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
               driverLocation={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
@@ -292,7 +292,7 @@ const overlay: React.CSSProperties = {
   display:'grid',
   placeItems:'center',
   padding:'20px',
-  zIndex:80,
+  zIndex:5000,
   touchAction:'none',
   overscrollBehavior:'none',
 }
