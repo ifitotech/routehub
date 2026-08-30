@@ -80,20 +80,18 @@ export default function DriverV3Page() {
     }
   }
 
-  const arrivePickup=async()=>{
-    if(!route||busy||!driverId)return
-    setBusy(true)
+  const arrivePickup=()=>{
+    if(!route||!driverId)return
     setMessage('')
-    try{
-      if(!started) await startRoute(ctx(),operationalDate())
-      try{await markArrived(ctx())}catch{}
-      await refresh()
-      setSheet('pickup')
-    }catch(error){
-      setMessage(error instanceof Error?error.message:t.drvOpFailed)
-    }finally{
-      setBusy(false)
-    }
+    setSheet('pickup')
+    void (async()=>{
+      try{
+        if(!started) await startRoute(ctx(),operationalDate())
+        try{await markArrived(ctx())}catch{}
+      }catch(error){
+        setMessage(error instanceof Error?error.message:t.drvOpFailed)
+      }
+    })()
   }
 
   const confirmPickup=async()=>{
@@ -199,7 +197,7 @@ export default function DriverV3Page() {
   }
   const action=primary()
 
-  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet)}>
+  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={false}>
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
       {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
@@ -221,7 +219,7 @@ export default function DriverV3Page() {
           <div className={styles.divider}/>
           <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            {!sheet&&<LiveRouteMap
+            <LiveRouteMap
               destinationAddress={route.destination_address}
               destinationCoordinate={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
               driverLocation={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
@@ -231,7 +229,7 @@ export default function DriverV3Page() {
               showLocationUpdated={false}
               interactive={false}
               useDriverAsOrigin
-            />}
+            />
             </div>
           </button>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
