@@ -283,7 +283,7 @@ export default function DriverV3Page() {
               <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
             )}
           </div>
-          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'10px 12px',margin:'0 0 12px',textAlign:'left'}}>
+          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'8px 10px',margin:'0 0 8px',textAlign:'left'}}>
             <span style={{width:28,height:28,borderRadius:14,background:kind==='delivery'?'#7C5CFF':kind==='pickup'?'#1667F2':'#0F1D35',color:'#fff',display:'grid',placeItems:'center',fontSize:13,fontWeight:800,flexShrink:0}}>1</span>
             <span style={{flex:1,minWidth:0}}>
               <strong style={{display:'block',fontSize:15}}>
@@ -297,7 +297,7 @@ export default function DriverV3Page() {
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
           <div className={styles.divider}/>
-          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
+          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:88,border:0,padding:0,margin:'0 0 8px',borderRadius:12,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
             <LiveRouteMap
               destinationAddress={route.destination_address}
@@ -324,7 +324,7 @@ export default function DriverV3Page() {
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        <section className="card" style={{marginTop:12,padding:'14px 12px'}}>
+        <section className="card" style={{marginTop:0,padding:'10px 12px'}}>
           <p className="eyebrow" style={{margin:'0 0 10px'}}>{t.drvTodaySummary}</p>
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:6,textAlign:'center'}}>
             <div><strong style={{display:'block',fontSize:18}}>{todaySummary.done}/{todaySummary.total}</strong><span className="muted" style={{fontSize:11}}>{t.drvStops}</span></div>

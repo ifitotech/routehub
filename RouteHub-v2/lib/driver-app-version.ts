@@ -1,3 +1,3 @@
 export const DRIVER_DAY = '0.1'
-export const DRIVER_BETA = 40
+export const DRIVER_BETA = 41
 export const DRIVER_APP_VERSION = `${DRIVER_DAY}beta${DRIVER_BETA}`
