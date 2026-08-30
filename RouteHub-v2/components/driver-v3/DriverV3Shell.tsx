@@ -43,7 +43,7 @@ export default function DriverV3Shell({
     <main className={styles.shell}>
       {isToday ? (
         <header className={`${styles.header} ${styles.todayHeader}`}>
-          <Link href="/driver/more" className={styles.headerIcon} aria-label="Open menu">
+          <Link href="/driver/more" className={styles.headerIcon} aria-label={t.drvMore}>
             <Menu />
           </Link>
           <Link href="/driver" className={styles.todayBrand}>
@@ -59,7 +59,7 @@ export default function DriverV3Shell({
             <span>{backLabel}</span>
           </Link>
           <div className={styles.stackTitles}>
-            <strong>{title || 'Details'}</strong>
+            <strong>{title || t.drvStopDetails}</strong>
             {subtitle ? <small>{subtitle}</small> : null}
           </div>
           <span className={styles.stackSpacer} aria-hidden="true" />

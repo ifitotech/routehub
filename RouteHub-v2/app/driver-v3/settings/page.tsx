@@ -182,7 +182,7 @@ export default function DriverV3Settings() {
 
       <section className="card" style={{marginTop: 12}}>
         <p className="eyebrow">RouteHub Driver</p>
-        <p className="muted" style={{margin: 0}}>Version {DRIVER_APP_VERSION}</p>
+        <p className="muted" style={{margin: 0}}>{locale==='es'?'Versión':locale==='fr'?'Version':'Version'} {DRIVER_APP_VERSION}</p>
       </section>
 
       <button

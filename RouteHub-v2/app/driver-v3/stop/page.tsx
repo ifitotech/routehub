@@ -410,7 +410,7 @@ export default function DriverV3Stop() {
             </button>
           </section>
 
-          <div className={styles.stickyAction}>
+          {!closed && (<div className={styles.stickyAction}>
             {!route.arrived_at ? (
               <button className="primary" disabled={busy || !isCurrent || closed} onClick={() => void act('arrive')}>
                 {busy ? t.drvBusy : t.drvArrivedShort}
@@ -435,7 +435,7 @@ export default function DriverV3Stop() {
                 {message}
               </p>
             )}
-          </div>
+          </div>)}
         </>
       )}
 
