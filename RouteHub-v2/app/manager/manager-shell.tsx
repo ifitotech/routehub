@@ -50,7 +50,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
       <div className={styles.workspaceMeta}><span>{copy.workspace}</span><strong>{branchName || t.mainBranch}</strong></div>
       <Link href="/manager/more" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
     </aside>
-    <section className={styles.content}>{children}</section>
+    <section className={styles.content}><div className={styles.workspace}>{children}</div></section>
     <nav className={styles.mobileNav} aria-label="Mobile manager navigation">
       <Link href="/manager" data-active={active === 'today' ? 'true' : 'false'}><Home size={18}/><span>{copy.today}</span></Link>
       <Link href="/routes" data-active={active === 'routes' ? 'true' : 'false'}><RouteIcon size={18}/><span>{t.routes}</span></Link>

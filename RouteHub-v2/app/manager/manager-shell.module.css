@@ -35,6 +35,10 @@
   padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
 }
 
+.workspace {
+  min-width: 0;
+}
+
 .brand,
 .newRoute,
 .nav a,
@@ -256,14 +260,28 @@
   }
 
   .content {
-    min-height: 100dvh;
-    padding: 26px clamp(28px, 3.4vw, 72px) 42px;
+    height: 100dvh;
+    min-height: 0;
+    padding: 20px clamp(24px, 3vw, 56px) 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .workspace {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .shell[data-manager-section='today'] .workspace {
     overflow: hidden;
   }
 
-  .shell[data-manager-section='today'] .content {
-    height: 100dvh;
-    padding-bottom: 16px;
+  .shell[data-manager-section='map'] .workspace {
     overflow: hidden;
   }
 }

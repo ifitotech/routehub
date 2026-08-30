@@ -24,8 +24,10 @@
    intentionally left as they are. */
 @media (min-width: 1024px) {
   .page.page.managerMapPage {
-    min-height: calc(100dvh - 56px);
-    padding: 2px 0 0 !important;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    padding: 0 !important;
   }
 
   .managerMapPage .hero {
