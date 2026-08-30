@@ -173,10 +173,6 @@ export default function DriverV3Page() {
       return
     }
     const withIssue=podPanel==='issue'||Boolean(issueNote.trim())
-    if(!withIssue && !hasPod){
-      setMessage(t.drvNeedPod)
-      return
-    }
     setBusy(true)
     setMessage('')
     try{
