@@ -9,7 +9,13 @@ import {useLocale} from '../../../../lib/use-preferences'
 import {getSupabase} from '../../../../lib/supabase'
 import {saveMaintenance} from '../../../../lib/driver-v3/actions'
 
-const TYPES = ['Oil change', 'Tires', 'Brakes', 'Inspection', 'Other'] as const
+const TYPES = [
+  {id: 'Oil change', key: 'drvOil'},
+  {id: 'Tires', key: 'drvTires'},
+  {id: 'Brakes', key: 'drvBrakes'},
+  {id: 'Inspection', key: 'drvInspect'},
+  {id: 'Other', key: 'drvIssueOther'},
+] as const
 
 export default function Maintenance() {
   const router = useRouter()
@@ -83,24 +89,24 @@ export default function Maintenance() {
               {truck.name || truck.unit_number || 'Current truck'}
             </h2>
 
-            <p className="eyebrow">MAINTENANCE TYPE</p>
+            <p className="eyebrow">{t.drvLogMaintenance}</p>
             <div style={{display: 'grid', gap: 8, margin: '8px 0 14px'}}>
-              {TYPES.map(t => (
+              {TYPES.map(item => (
                 <button
-                  key={t}
+                  key={item.id}
                   type="button"
                   className="secondary"
-                  onClick={() => setType(t)}
+                  onClick={() => setType(item.id)}
                   style={{
                     justifyContent: 'flex-start',
                     paddingLeft: 14,
-                    borderColor: type === t ? '#1667F2' : undefined,
-                    background: type === t ? '#EAF2FF' : undefined,
-                    color: type === t ? '#1667F2' : undefined,
-                    fontWeight: type === t ? 800 : 600,
+                    borderColor: type === item.id ? '#1667F2' : undefined,
+                    background: type === item.id ? '#EAF2FF' : undefined,
+                    color: type === item.id ? '#1667F2' : undefined,
+                    fontWeight: type === item.id ? 800 : 600,
                   }}
                 >
-                  {t}
+                  {t[item.key]}
                 </button>
               ))}
             </div>
