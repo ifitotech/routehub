@@ -1,5 +1,5 @@
 'use client'
-import {useState} from 'react'
+import {useRef, useState} from 'react'
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
 import {
@@ -10,15 +10,33 @@ import {
   Navigation,
   PenLine,
   Phone,
+  X,
 } from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import styles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
-import {markArrived, completeStop} from '../../../lib/driver-v3/actions'
+import {
+  markArrived,
+  completeStop,
+  saveStopNote,
+  uploadStopPhoto,
+  saveStopSignature,
+  reportIssue,
+} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
 
 const operationLabel = (kind: string) =>
   kind === 'branch' ? 'RETURN' : kind === 'pickup' ? 'PICKUP' : 'DELIVERY'
+
+const ISSUE_CATEGORIES = [
+  'Customer unavailable',
+  'Wrong address',
+  'Damaged item',
+  'Access problem',
+  'Other',
+] as const
+
+type Sheet = 'photo' | 'signature' | 'notes' | 'issue' | null
 
 export default function DriverV3Stop() {
   const router = useRouter()
@@ -26,6 +44,17 @@ export default function DriverV3Stop() {
   const {driverId, loading, error, routes, snapshot, refresh} = useDriverData()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [sheet, setSheet] = useState<Sheet>(null)
+  const [sheetBusy, setSheetBusy] = useState(false)
+  const [sheetMsg, setSheetMsg] = useState('')
+  const [note, setNote] = useState('')
+  const [issueCat, setIssueCat] = useState('')
+  const [issueNote, setIssueNote] = useState('')
+  const [photoName, setPhotoName] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const drawing = useRef(false)
+
   const op = snapshot?.currentOperation
   const selectedId = params.get('id')
   const route = ((selectedId ? routes.find((r: any) => r.id === selectedId) : undefined) ||
@@ -33,12 +62,15 @@ export default function DriverV3Stop() {
   const isCurrent = !selectedId || selectedId === op?.route?.id
   const kind = op?.kind || route?.mission_type || 'delivery'
 
+  const ctx = route
+    ? {routeId: route.id, driverId, companyId: route.company_id}
+    : null
+
   const act = async (action: 'arrive' | 'complete') => {
-    if (!op || !isCurrent || busy || !route) return
+    if (!op || !isCurrent || busy || !route || !ctx) return
     setBusy(true)
     setMessage('')
     try {
-      const ctx = {routeId: route.id, driverId, companyId: route.company_id}
       if (action === 'arrive') {
         await markArrived(ctx)
         await refresh()
@@ -46,7 +78,7 @@ export default function DriverV3Stop() {
       } else {
         await completeStop(ctx)
         await refresh()
-        router.push('/driver-v3/completed')
+        router.push('/driver/completed')
         return
       }
     } catch (e) {
@@ -68,6 +100,143 @@ export default function DriverV3Stop() {
     if (url) {
       const opened = window.open(url, '_blank', 'noopener,noreferrer')
       if (!opened) window.location.assign(url)
+    }
+  }
+
+  const openSheet = (s: Sheet) => {
+    setSheetMsg('')
+    setSheet(s)
+  }
+
+  const closeSheet = () => {
+    if (sheetBusy) return
+    setSheet(null)
+    setSheetMsg('')
+  }
+
+  const pointerPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const c = canvasRef.current!
+    const r = c.getBoundingClientRect()
+    return {
+      x: (e.clientX - r.left) * (c.width / r.width),
+      y: (e.clientY - r.top) * (c.height / r.height),
+    }
+  }
+
+  const clearSignature = () => {
+    const c = canvasRef.current
+    if (!c) return
+    c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
+  }
+
+  const savePhoto = async () => {
+    if (!ctx || sheetBusy) return
+    const file = fileRef.current?.files?.[0]
+    if (!file) {
+      setSheetMsg('Choose a photo first.')
+      return
+    }
+    setSheetBusy(true)
+    setSheetMsg('')
+    try {
+      await uploadStopPhoto(ctx, file)
+      await refresh()
+      setSheetMsg('Photo saved.')
+      setPhotoName('')
+      if (fileRef.current) fileRef.current.value = ''
+      setTimeout(() => {
+        setSheet(null)
+        setSheetMsg('')
+      }, 600)
+    } catch (e) {
+      setSheetMsg(e instanceof Error ? e.message : "Couldn't save the photo.")
+    } finally {
+      setSheetBusy(false)
+    }
+  }
+
+  const saveNotes = async () => {
+    if (!ctx || sheetBusy) return
+    if (!note.trim()) {
+      setSheetMsg('Write a note first.')
+      return
+    }
+    setSheetBusy(true)
+    setSheetMsg('')
+    try {
+      await saveStopNote(ctx, note.trim())
+      await refresh()
+      setSheetMsg('Note saved.')
+      setNote('')
+      setTimeout(() => {
+        setSheet(null)
+        setSheetMsg('')
+      }, 600)
+    } catch (e) {
+      setSheetMsg(e instanceof Error ? e.message : 'Unable to save note.')
+    } finally {
+      setSheetBusy(false)
+    }
+  }
+
+  const saveSignature = async () => {
+    if (!ctx || sheetBusy || !canvasRef.current) return
+    const c = canvasRef.current
+    const ctx2d = c.getContext('2d')
+    if (!ctx2d) return
+    const pixels = ctx2d.getImageData(0, 0, c.width, c.height).data
+    let hasInk = false
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] > 0) {
+        hasInk = true
+        break
+      }
+    }
+    if (!hasInk) {
+      setSheetMsg('Customer must sign first.')
+      return
+    }
+    setSheetBusy(true)
+    setSheetMsg('')
+    try {
+      await saveStopSignature(ctx, c)
+      await refresh()
+      setSheetMsg('Signature saved.')
+      clearSignature()
+      setTimeout(() => {
+        setSheet(null)
+        setSheetMsg('')
+      }, 600)
+    } catch (e) {
+      setSheetMsg(e instanceof Error ? e.message : 'Unable to save signature.')
+    } finally {
+      setSheetBusy(false)
+    }
+  }
+
+  const saveIssue = async () => {
+    if (!ctx || sheetBusy) return
+    if (!issueCat) {
+      setSheetMsg('Select a category.')
+      return
+    }
+    setSheetBusy(true)
+    setSheetMsg('')
+    try {
+      const text = issueNote.trim() ? `${issueCat}: ${issueNote.trim()}` : issueCat
+      await reportIssue(ctx, text)
+      await refresh()
+      setSheetMsg('Issue submitted.')
+      setIssueCat('')
+      setIssueNote('')
+      setTimeout(() => {
+        setSheet(null)
+        setSheetMsg('')
+      }, 600)
+    } catch (e) {
+      setSheetMsg(e instanceof Error ? e.message : 'Unable to submit issue.')
+    } finally {
+      setSheetBusy(false)
     }
   }
 
@@ -131,6 +300,7 @@ export default function DriverV3Stop() {
               </p>
             )}
 
+            {/* One-tap tiles — open in-app sheets, not new pages */}
             <div
               style={{
                 display: 'grid',
@@ -139,80 +309,30 @@ export default function DriverV3Stop() {
                 marginTop: 16,
               }}
             >
-              <Link
-                href="/driver/pod"
-                className="secondary"
-                style={{
-                  minHeight: 72,
-                  display: 'grid',
-                  placeItems: 'center',
-                  gap: 4,
-                  textDecoration: 'none',
-                  padding: 8,
-                  fontSize: 12,
-                }}
-              >
+              <button type="button" className="secondary" onClick={() => openSheet('photo')} style={tileStyle}>
                 <Camera size={22} />
                 Photo
-              </Link>
-              <Link
-                href="/driver/pod"
-                className="secondary"
-                style={{
-                  minHeight: 72,
-                  display: 'grid',
-                  placeItems: 'center',
-                  gap: 4,
-                  textDecoration: 'none',
-                  padding: 8,
-                  fontSize: 12,
-                }}
-              >
+              </button>
+              <button type="button" className="secondary" onClick={() => openSheet('signature')} style={tileStyle}>
                 <PenLine size={22} />
                 Signature
-              </Link>
-              <Link
-                href="/driver/pod"
-                className="secondary"
-                style={{
-                  minHeight: 72,
-                  display: 'grid',
-                  placeItems: 'center',
-                  gap: 4,
-                  textDecoration: 'none',
-                  padding: 8,
-                  fontSize: 12,
-                }}
-              >
+              </button>
+              <button type="button" className="secondary" onClick={() => openSheet('notes')} style={tileStyle}>
                 <FileText size={22} />
                 Notes
-              </Link>
-              <Link
-                href="/driver/issue"
+              </button>
+              <button
+                type="button"
                 className="secondary"
-                style={{
-                  minHeight: 72,
-                  display: 'grid',
-                  placeItems: 'center',
-                  gap: 4,
-                  textDecoration: 'none',
-                  padding: 8,
-                  fontSize: 12,
-                  color: '#EF5350',
-                  borderColor: '#f5c2c0',
-                }}
+                onClick={() => openSheet('issue')}
+                style={{...tileStyle, color: '#EF5350', borderColor: '#f5c2c0'}}
               >
                 <AlertTriangle size={22} />
                 Issue
-              </Link>
+              </button>
             </div>
 
-            <button
-              className="secondary"
-              onClick={maps}
-              type="button"
-              style={{marginTop: 14}}
-            >
+            <button className="secondary" onClick={maps} type="button" style={{marginTop: 14}}>
               <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
                 <Navigation size={18} />
                 Open in Maps
@@ -222,11 +342,7 @@ export default function DriverV3Stop() {
 
           <div className={styles.stickyAction}>
             {!route.arrived_at ? (
-              <button
-                className="primary"
-                disabled={busy || !isCurrent}
-                onClick={() => void act('arrive')}
-              >
+              <button className="primary" disabled={busy || !isCurrent} onClick={() => void act('arrive')}>
                 {busy ? 'Updating…' : 'ARRIVED AT STOP'}
               </button>
             ) : (
@@ -247,6 +363,179 @@ export default function DriverV3Stop() {
           </div>
         </>
       )}
+
+      {sheet && (
+        <div className={styles.sheetBackdrop} role="dialog" aria-modal="true" onClick={closeSheet}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.sheetHandle} />
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12}}>
+              <h2 className={styles.sheetTitle}>
+                {sheet === 'photo' && 'Photo'}
+                {sheet === 'signature' && 'Signature'}
+                {sheet === 'notes' && 'Notes'}
+                {sheet === 'issue' && 'Report issue'}
+              </h2>
+              <button
+                type="button"
+                className="secondary"
+                onClick={closeSheet}
+                style={{width: 44, minHeight: 44, padding: 0}}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {sheet === 'photo' && (
+              <>
+                <label className="secondary" style={{cursor: 'pointer', marginBottom: 12}}>
+                  {photoName || 'Take or choose photo'}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    hidden
+                    onChange={e => setPhotoName(e.target.files?.[0]?.name || '')}
+                  />
+                </label>
+                <button className="primary" disabled={sheetBusy} onClick={() => void savePhoto()}>
+                  {sheetBusy ? 'Saving…' : 'SAVE PHOTO'}
+                </button>
+              </>
+            )}
+
+            {sheet === 'notes' && (
+              <>
+                <textarea
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  placeholder="Optional delivery note"
+                  style={{marginBottom: 12}}
+                />
+                <button className="primary" disabled={sheetBusy} onClick={() => void saveNotes()}>
+                  {sheetBusy ? 'Saving…' : 'SAVE NOTE'}
+                </button>
+              </>
+            )}
+
+            {sheet === 'signature' && (
+              <>
+                <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 8}}>
+                  <button
+                    type="button"
+                    className="secondary"
+                    style={{width: 'auto', minHeight: 40, padding: '0 12px', fontSize: 13}}
+                    onClick={clearSignature}
+                  >
+                    Clear
+                  </button>
+                </div>
+                <canvas
+                  ref={canvasRef}
+                  width={700}
+                  height={220}
+                  onPointerDown={e => {
+                    const c = canvasRef.current
+                    if (!c) return
+                    c.setPointerCapture(e.pointerId)
+                    drawing.current = true
+                    const ctx2d = c.getContext('2d')
+                    if (!ctx2d) return
+                    const {x, y} = pointerPos(e)
+                    ctx2d.lineWidth = 3
+                    ctx2d.lineCap = 'round'
+                    ctx2d.lineJoin = 'round'
+                    ctx2d.strokeStyle = '#0F1D35'
+                    ctx2d.beginPath()
+                    ctx2d.moveTo(x, y)
+                  }}
+                  onPointerMove={e => {
+                    if (!drawing.current || !canvasRef.current) return
+                    const ctx2d = canvasRef.current.getContext('2d')
+                    if (!ctx2d) return
+                    const {x, y} = pointerPos(e)
+                    ctx2d.lineTo(x, y)
+                    ctx2d.stroke()
+                  }}
+                  onPointerUp={() => {
+                    drawing.current = false
+                  }}
+                  onPointerCancel={() => {
+                    drawing.current = false
+                  }}
+                  style={{
+                    width: '100%',
+                    height: 180,
+                    background: '#fff',
+                    border: '1px solid #DDE5EE',
+                    borderRadius: 12,
+                    touchAction: 'none',
+                    marginBottom: 12,
+                  }}
+                />
+                <button className="primary" disabled={sheetBusy} onClick={() => void saveSignature()}>
+                  {sheetBusy ? 'Saving…' : 'SAVE SIGNATURE'}
+                </button>
+              </>
+            )}
+
+            {sheet === 'issue' && (
+              <>
+                <div style={{display: 'grid', gap: 8, marginBottom: 12}}>
+                  {ISSUE_CATEGORIES.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      className="secondary"
+                      onClick={() => setIssueCat(c)}
+                      style={{
+                        justifyContent: 'flex-start',
+                        paddingLeft: 14,
+                        borderColor: issueCat === c ? '#1667F2' : undefined,
+                        background: issueCat === c ? '#EAF2FF' : undefined,
+                        color: issueCat === c ? '#1667F2' : undefined,
+                        fontWeight: issueCat === c ? 800 : 600,
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={issueNote}
+                  onChange={e => setIssueNote(e.target.value)}
+                  placeholder="Details (optional)"
+                  style={{marginBottom: 12}}
+                />
+                <button
+                  className="primary"
+                  disabled={sheetBusy || !issueCat}
+                  onClick={() => void saveIssue()}
+                  style={{background: '#EF5350'}}
+                >
+                  {sheetBusy ? 'Submitting…' : 'SUBMIT ISSUE'}
+                </button>
+              </>
+            )}
+
+            {sheetMsg && (
+              <p role="status" className="muted" style={{marginTop: 12, textAlign: 'center'}}>
+                {sheetMsg}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </DriverV3Shell>
   )
+}
+
+const tileStyle = {
+  minHeight: 72,
+  display: 'grid',
+  placeItems: 'center',
+  gap: 4,
+  padding: 8,
+  fontSize: 12,
 }
