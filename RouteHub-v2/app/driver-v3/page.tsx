@@ -70,10 +70,9 @@ export default function DriverV3Page() {
       coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,
       label:route.destination_name,
     })
-    if(url){
-      const opened=window.open(url,'_blank','noopener,noreferrer')
-      if(!opened)window.location.assign(url)
-    }
+    // Keep navigation in the current system handoff. Opening a new browser
+    // tab leaves an empty tab behind when the driver returns from Maps.
+    if(url)window.location.assign(url)
   }
 
   const primaryLabel=route?.status!=='active'?t.drvStartRoute:!route?.arrived_at?t.drvArrived:t.drvContinue
