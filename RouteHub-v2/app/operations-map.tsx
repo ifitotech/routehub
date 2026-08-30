@@ -40,7 +40,12 @@ type ResolvedRoute=OperationsRoute&{points:Coordinate[];line:Coordinate[];number
 type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean}
 
 const fallbackCenter:Coordinate={lat:25.7617,lng:-80.1918}
-const isCoordinate=(lat:number|null|undefined,lng:number|null|undefined):lat is number=>lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
+function isCoordinate(lat:number|null|undefined,lng:number|null|undefined):lat is number{
+ return lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
+}
+function asPoint(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null{
+ return isCoordinate(lat,lng)?{lat,lng:lng as number}:null
+}
 
 function routeColor(status?:string|null){
  if(status==='issue')return '#dc2626'
@@ -134,8 +139,10 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   void (async()=>{
    const known=visibleRoutes.flatMap(route=>{
     const points:Coordinate[]=[]
-    if(isCoordinate(route.origin_lat,route.origin_lng))points.push({lat:route.origin_lat,lng:route.origin_lng})
-    if(isCoordinate(route.destination_lat,route.destination_lng))points.push({lat:route.destination_lat,lng:route.destination_lng})
+    const originPoint=asPoint(route.origin_lat,route.origin_lng)
+    const destPoint=asPoint(route.destination_lat,route.destination_lng)
+    if(originPoint)points.push(originPoint)
+    if(destPoint)points.push(destPoint)
     return points
    })
    const near=known[0]||fallbackCenter
