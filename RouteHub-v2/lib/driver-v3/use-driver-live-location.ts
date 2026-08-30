@@ -6,7 +6,7 @@ import {useDriverData} from './use-driver-data'
 
 /** Reuses V2 GPS architecture while Driving Day is active. Does not change schema. */
 export function useDriverLiveLocation() {
-  const {drivingSession, driverId} = useDriverData()
+  const {drivingSession, driverId, setLiveFix} = useDriverData()
   const last = useRef<{at: number; lat: number; lng: number} | null>(null)
 
   useEffect(() => {
@@ -20,6 +20,7 @@ export function useDriverLiveLocation() {
         const location = await getCurrentLocation({maximumAge: 0})
         if (disposed) return
         await updateDrivingLocation(drivingSession.id, driverId, location)
+        setLiveFix({lat: location.lat, lng: location.lng, at: new Date().toISOString()})
       } catch {
         /* Location optional; driver can keep working. */
       }
@@ -38,7 +39,9 @@ export function useDriverLiveLocation() {
           Math.hypot((next.lat - previous.lat) * 111_000, (next.lng - previous.lng) * 111_000 * Math.cos((next.lat * Math.PI) / 180)) >= 25
         if ((moved && elapsed < 10_000) || (!moved && elapsed < 60_000)) return
         last.current = {at: Date.now(), lat: next.lat, lng: next.lng}
-        void updateDrivingLocation(drivingSession.id, driverId, next)
+        void updateDrivingLocation(drivingSession.id, driverId, next).then(() => {
+          setLiveFix({lat: next.lat, lng: next.lng, at: new Date().toISOString()})
+        })
       },
       () => undefined,
       {enableHighAccuracy: true, maximumAge: 0, timeout: 20000},
@@ -49,5 +52,5 @@ export function useDriverLiveLocation() {
       window.clearInterval(interval)
       navigator.geolocation.clearWatch(watch)
     }
-  }, [drivingSession, driverId])
+  }, [drivingSession, driverId, setLiveFix])
 }

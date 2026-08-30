@@ -21,7 +21,7 @@ const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
 export default function DriverV3Page() {
   const {t}=useLocale()
   const router=useRouter()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,routes}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,routes,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const operation=snapshot?.currentOperation
@@ -98,8 +98,8 @@ export default function DriverV3Page() {
             <LiveRouteMap
               destinationAddress={route.destination_address}
               destinationCoordinate={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
-              driverLocation={drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
-              driverUpdatedAt={drivingSession?.last_updated_at||null}
+              driverLocation={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
+              driverUpdatedAt={liveFix?.at||drivingSession?.last_updated_at||null}
               title={t.drvCurrentStop}
               showHeader={false}
               interactive

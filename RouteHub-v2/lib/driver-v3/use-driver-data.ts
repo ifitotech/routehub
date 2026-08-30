@@ -13,6 +13,8 @@ type DriverV3Data = {
   companyId: string
   branchId: string | null
   drivingSession: DrivingSession | null
+  liveFix: {lat: number; lng: number; at: string} | null
+  setLiveFix: (fix: {lat: number; lng: number; at: string} | null) => void
   loading: boolean
   error: string
   refresh: () => Promise<void>
@@ -27,6 +29,7 @@ function useDriverDataInternal(): DriverV3Data {
   const [companyId, setCompanyId] = useState('')
   const [branchId, setBranchId] = useState<string | null>(null)
   const [drivingSession, setDrivingSession] = useState<DrivingSession | null>(null)
+  const [liveFix, setLiveFix] = useState<{lat: number; lng: number; at: string} | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -50,6 +53,13 @@ function useDriverDataInternal(): DriverV3Data {
       const session = await getActiveDrivingSession(user.id)
       if (session.error) throw session.error
       setDrivingSession(session.data)
+      if (session.data?.last_lat != null && session.data?.last_lng != null) {
+        setLiveFix({
+          lat: Number(session.data.last_lat),
+          lng: Number(session.data.last_lng),
+          at: session.data.last_updated_at || new Date().toISOString(),
+        })
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to load Driver workspace.')
     } finally {
@@ -66,7 +76,7 @@ function useDriverDataInternal(): DriverV3Data {
     [routes, driverId],
   )
 
-  return {routes, driverId, companyId, branchId, drivingSession, loading, error, refresh: load, snapshot}
+  return {routes, driverId, companyId, branchId, drivingSession, liveFix, setLiveFix, loading, error, refresh: load, snapshot}
 }
 
 export function DriverV3Provider({children}: {children: ReactNode}) {
