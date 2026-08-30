@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import {Camera, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
+import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -283,6 +283,19 @@ export default function DriverV3Page() {
               <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
             )}
           </div>
+          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'10px 12px',margin:'0 0 12px',textAlign:'left'}}>
+            <span style={{width:28,height:28,borderRadius:14,background:kind==='delivery'?'#7C5CFF':kind==='pickup'?'#1667F2':'#0F1D35',color:'#fff',display:'grid',placeItems:'center',fontSize:13,fontWeight:800,flexShrink:0}}>1</span>
+            <span style={{flex:1,minWidth:0}}>
+              <strong style={{display:'block',fontSize:15}}>
+                {route.destination_contact_name||route.destination_name||t.drvCurrentStopName}
+                {route.destination_phone?` · ${route.destination_phone}`:''}
+              </strong>
+              <span className="muted" style={{fontSize:12}}>
+                {route.notes||route.driver_note||(kind==='delivery'?t.drvDeliveryHelp:kind==='pickup'?t.drvPickupHelp:t.drvReturnHelp)}
+              </span>
+            </span>
+            <ChevronRight size={18} color="#94A3B8"/>
+          </button>
           <div className={styles.divider}/>
           <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
