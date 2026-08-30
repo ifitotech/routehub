@@ -68,7 +68,7 @@ export default function DriverV3Map() {
                     ? {lat: Number(route.destination_lat), lng: Number(route.destination_lng)}
                     : null
                 }
-                title="Current stop"
+                title={t.drvCurrentStop}
                 showHeader={false}
                 interactive
                 followToken={followToken}
