@@ -1,10 +1,182 @@
 'use client'
 import {useState} from 'react'
 import Link from 'next/link'
+import {useRouter, useSearchParams} from 'next/navigation'
+import {
+  AlertTriangle,
+  Camera,
+  FileText,
+  MapPin,
+  Navigation,
+  PenLine,
+  Phone,
+} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
-import {markArrived,completeStop} from '../../../lib/driver-v3/actions'
+import {markArrived, completeStop} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
-import {useRouter,useSearchParams} from 'next/navigation'
-const operationLabel=(kind:string)=>kind==='branch'?'RETURN TO BRANCH':kind.toUpperCase()
-export default function DriverV3Stop(){const router=useRouter();const params=useSearchParams();const {driverId,loading,error,routes,snapshot,refresh}=useDriverData();const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');const op=snapshot?.currentOperation;const selectedId=params.get('id');const route=((selectedId?routes.find((r:any)=>r.id===selectedId):undefined)||op?.route) as any;const isCurrent=!selectedId||selectedId===op?.route?.id;const act=async(kind:'arrive'|'complete')=>{if(!op||!isCurrent||busy)return;setBusy(true);setMessage('');try{const ctx={routeId:route.id,driverId,companyId:route.company_id};if(kind==='arrive')await markArrived(ctx);else {await completeStop(ctx);await refresh();router.push('/driver-v3/completed');return}await refresh();setMessage('Arrival recorded.')}catch(e){setMessage(e instanceof Error?e.message:'Unable to update stop.')}finally{setBusy(false)}};const maps=()=>{const url=openNavigation({address:route?.destination_address,coordinate:route?.destination_lat!=null&&route?.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,label:route?.destination_name});if(url)window.location.assign(url)};return <DriverV3Shell active="route"><Link href="/driver-v3/route" className="muted">‹ My Route</Link>{loading?<section className="card"><p>Loading stop…</p></section>:error?<section className="card"><p>{error}</p></section>:!op?<section className="card"><h2>No current stop</h2><p className="muted">There is no active operation.</p></section>:<><p className="eyebrow">STOP {route.position} · {operationLabel(op.kind||'delivery')}</p><h1 className="title">{route.destination_name||route.destination_address||'Current stop'}</h1><section className="card"><p>{route.destination_address||'Address unavailable'}</p>{route.destination_phone&&<a href={`tel:${route.destination_phone}`}>{route.destination_phone}</a>}{route.order_number&&<p><strong>PO / Order:</strong> {route.order_number}</p>}{route.notes&&<p><strong>Instructions:</strong> {route.notes}</p>}{route.scheduled_at&&<p><strong>Scheduled:</strong> {new Date(route.scheduled_at).toLocaleString()}</p>}<div style={{display:'grid',gap:10,marginTop:18}}><button className="secondary" onClick={maps}>OPEN IN MAPS</button><Link className="secondary" href="/driver-v3/pod" style={{display:"grid",placeItems:"center",textDecoration:"none"}}>PHOTO / NOTES / SIGNATURE</Link><Link className="secondary" href="/driver-v3/issue" style={{display:"grid",placeItems:"center",textDecoration:"none"}}>REPORT AN ISSUE</Link>{!route.arrived_at?<button className="primary" disabled={busy||!isCurrent} onClick={()=>void act('arrive')}>{busy?'Updating…':'ARRIVED AT STOP'}</button>:<button className="primary" disabled={busy||!isCurrent} onClick={()=>void act('complete')}>{busy?'Completing…':`COMPLETE ${operationLabel(op.kind||'delivery')}`}</button>}</div>{message&&<p role="status" className="muted">{message}</p>}</section></>}</DriverV3Shell>}
+
+const operationLabel = (kind: string) =>
+  kind === 'branch' ? 'RETURN' : kind === 'pickup' ? 'PICKUP' : 'DELIVERY'
+
+export default function DriverV3Stop() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const {driverId, loading, error, routes, snapshot, refresh} = useDriverData()
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const op = snapshot?.currentOperation
+  const selectedId = params.get('id')
+  const route = ((selectedId ? routes.find((r: any) => r.id === selectedId) : undefined) ||
+    op?.route) as any
+  const isCurrent = !selectedId || selectedId === op?.route?.id
+  const kind = op?.kind || route?.mission_type || 'delivery'
+
+  const act = async (action: 'arrive' | 'complete') => {
+    if (!op || !isCurrent || busy || !route) return
+    setBusy(true)
+    setMessage('')
+    try {
+      const ctx = {routeId: route.id, driverId, companyId: route.company_id}
+      if (action === 'arrive') {
+        await markArrived(ctx)
+        await refresh()
+        setMessage('Arrival recorded.')
+      } else {
+        await completeStop(ctx)
+        await refresh()
+        router.push('/driver/completed')
+        return
+      }
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Unable to update stop.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const maps = () => {
+    const url = openNavigation({
+      address: route?.destination_address,
+      coordinate:
+        route?.destination_lat != null && route?.destination_lng != null
+          ? {lat: Number(route.destination_lat), lng: Number(route.destination_lng)}
+          : null,
+      label: route?.destination_name,
+    })
+    if (url) window.location.assign(url)
+  }
+
+  return (
+    <DriverV3Shell active="route">
+      <Link href="/driver/route" className="muted">
+        ‹ My Route
+      </Link>
+
+      {loading ? (
+        <section className="card"><p>Loading stop…</p></section>
+      ) : error ? (
+        <section className="card"><p role="alert">{error}</p></section>
+      ) : !route ? (
+        <section className="card">
+          <h2>No current stop</h2>
+          <p className="muted">There is no active operation.</p>
+        </section>
+      ) : (
+        <>
+          <p className="eyebrow">
+            STOP {route.position || '—'} · {operationLabel(String(kind))}
+          </p>
+          <h1 className="title" style={{marginBottom: 4}}>
+            {route.destination_name || route.destination_address || 'Current stop'}
+          </h1>
+          <p className="muted" style={{marginTop: 0, marginBottom: 12}}>
+            <MapPin size={14} style={{display: 'inline', verticalAlign: -2, marginRight: 4}} />
+            {route.destination_address || 'Address unavailable'}
+          </p>
+
+          <section className="card">
+            {route.destination_phone && (
+              <p style={{margin: '0 0 8px'}}>
+                <a href={`tel:${route.destination_phone}`} style={{display: 'inline-flex', alignItems: 'center', gap: 6, color: '#1667F2', fontWeight: 700, textDecoration: 'none'}}>
+                  <Phone size={16} />
+                  {route.destination_phone}
+                </a>
+              </p>
+            )}
+            {route.order_number && (
+              <p style={{margin: '0 0 8px'}}>
+                <strong>PO / Order:</strong> {route.order_number}
+              </p>
+            )}
+            {route.instructions || route.notes ? (
+              <p className="muted" style={{margin: '8px 0 0'}}>
+                <strong style={{color: '#0F1D35'}}>Instructions: </strong>
+                {route.instructions || route.notes}
+              </p>
+            ) : null}
+
+            {/* POD tiles */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 8,
+                marginTop: 16,
+              }}
+            >
+              <Link href="/driver/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+                <Camera size={22} />
+                Photo
+              </Link>
+              <Link href="/driver/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+                <PenLine size={22} />
+                Signature
+              </Link>
+              <Link href="/driver/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+                <FileText size={22} />
+                Notes
+              </Link>
+              <Link href="/driver/issue" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12, color: '#EF5350', borderColor: '#f5c2c0'}}>
+                <AlertTriangle size={22} />
+                Issue
+              </Link>
+            </div>
+
+            <div style={{display: 'grid', gap: 10, marginTop: 16}}>
+              {!route.arrived_at ? (
+                <button
+                  className="primary"
+                  disabled={busy || !isCurrent}
+                  onClick={() => void act('arrive')}
+                >
+                  {busy ? 'Updating…' : 'ARRIVED AT STOP'}
+                </button>
+              ) : (
+                <button
+                  className="primary"
+                  disabled={busy || !isCurrent}
+                  onClick={() => void act('complete')}
+                  style={{background: '#16B96B'}}
+                >
+                  {busy ? 'Completing…' : `COMPLETE ${operationLabel(String(kind))}`}
+                </button>
+              )}
+              <button className="secondary" onClick={maps} type="button">
+                <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
+                  <Navigation size={18} />
+                  Open in Maps
+                </span>
+              </button>
+            </div>
+            {message && (
+              <p role="status" className="muted">
+                {message}
+              </p>
+            )}
+          </section>
+        </>
+      )}
+    </DriverV3Shell>
+  )
+}
