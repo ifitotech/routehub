@@ -146,6 +146,10 @@ Object.assign(en, {drvPickupHelp:'Collect this PO at the store. Confirm when you
 Object.assign(es, {drvPickupHelp:'Recoge este PO en la tienda. Confirma cuando lo tengas. Si hay un problema, repórtalo y sigue la ruta.', drvReportProblem:'Reportar un problema'})
 Object.assign(fr, {drvPickupHelp:'Récupérez ce PO au magasin. Confirmez quand c’est fait. Un problème ? Signalez-le et continuez.', drvReportProblem:'Signaler un problème'})
 
+Object.assign(en, {drvDeliveryHelp:'Confirm who received the material. Add a photo or signature before completing.'})
+Object.assign(es, {drvDeliveryHelp:'Confirma quién recibió el material. Agrega foto o firma antes de completar.'})
+Object.assign(fr, {drvDeliveryHelp:'Confirmez qui a reçu le matériel. Ajoutez photo ou signature avant de terminer.'})
+
 export function getLocale(): Locale {
   if (typeof window === 'undefined') return 'en'
   const value = window.localStorage.getItem('routehub_language') || window.localStorage.getItem('rh2-language')

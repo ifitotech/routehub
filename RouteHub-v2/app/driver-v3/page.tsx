@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import {Map, MapPin, Package, TriangleAlert, X} from 'lucide-react'
+import {Camera, FileText, Map, MapPin, Package, PenLine, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -28,6 +28,7 @@ export default function DriverV3Page() {
   const [signed,setSigned]=useState(false)
   const [issueOpen,setIssueOpen]=useState(false)
   const [issueNote,setIssueNote]=useState('')
+  const [podPanel,setPodPanel]=useState<null | 'photo' | 'signature' | 'notes' | 'issue'>(null)
   const canvas=useRef<HTMLCanvasElement>(null)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
@@ -297,25 +298,51 @@ export default function DriverV3Page() {
       {sheet==='delivery'&&route&&(
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
           <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
-            <p className="eyebrow">{t.drvDelivery}</p>
-            <h2 style={{margin:'6px 0 10px'}}>{route.destination_name||t.drvCompleteDelivery}</h2>
-            <div style={{margin:'0 0 14px',padding:'12px 14px',borderRadius:14,background:'#f3f6fb'}}>
-              <p className="eyebrow" style={{margin:0}}>PO</p>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <p className="eyebrow" style={{margin:0}}>{t.drvDelivery}</p>
+              <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>{setSheet(null);setPodPanel(null)}} style={{width:32,height:32,border:0,borderRadius:16,background:'#e8eef4',color:'#0f1d35',display:'grid',placeItems:'center',padding:0}}>
+                <X size={16}/>
+              </button>
+            </div>
+            <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvCompleteDelivery}</h2>
+            {route.destination_address&&<p className="muted" style={{margin:'0 0 8px',fontSize:14}}>{route.destination_address}</p>}
+            <p className="muted" style={{margin:'0 0 12px',fontSize:13,lineHeight:'18px'}}>{t.drvDeliveryHelp}</p>
+            <div style={{margin:'0 0 12px',padding:'12px 14px',borderRadius:14,background:'#fff',border:'1px solid #e5eaf0'}}>
+              <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
               <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800}}>{route.order_number||'—'}</p>
             </div>
-            <label className="muted" style={{display:'block',marginBottom:8}}>
+            <label className="muted" style={{display:'block',marginBottom:12}}>
               {t.drvReceivedBy}
-              <input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit'}}/>
+              <input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box'}}/>
             </label>
-            <label className="secondary" style={{display:'block',textAlign:'center',margin:'8px 0'}}>
-              {photo?photo.name:t.drvPhoto||'Photo'}
-              <input type="file" accept="image/*" capture="environment" hidden onChange={e=>setPhoto(e.target.files?.[0]||null)}/>
-            </label>
-            <canvas ref={canvas} width={320} height={120} onPointerDown={sign} onPointerMove={e=>e.buttons===1&&sign(e)} style={{width:'100%',height:120,border:'1px dashed #cbd5e1',borderRadius:12,background:'#fff',touchAction:'none'}}/>
-            <p className="muted" style={{fontSize:12}}>{t.drvNeedPod}</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
+              <button type="button" className="secondary" onClick={()=>setPodPanel('photo')} style={{...tileBtn,color:photo?'#16B96B':undefined}}>
+                <Camera size={20}/>{t.drvPhoto||'Foto'}
+              </button>
+              <button type="button" className="secondary" onClick={()=>setPodPanel('signature')} style={{...tileBtn,color:signed?'#16B96B':undefined}}>
+                <PenLine size={20}/>{t.drvSignature||'Firma'}
+              </button>
+              <button type="button" className="secondary" onClick={()=>setPodPanel('notes')} style={tileBtn}>
+                <FileText size={20}/>{t.drvNotes||'Notas'}
+              </button>
+              <button type="button" className="secondary" onClick={()=>setPodPanel('issue')} style={{...tileBtn,color:'#EF5350',borderColor:'#f5c2c0'}}>
+                <TriangleAlert size={20}/>{t.drvIssue}
+              </button>
+            </div>
+            {podPanel==='photo'&&(
+              <label className="secondary" style={{display:'block',textAlign:'center',marginBottom:10}}>
+                {photo?photo.name:t.drvTakePhoto||t.drvPhoto}
+                <input type="file" accept="image/*" capture="environment" hidden onChange={e=>setPhoto(e.target.files?.[0]||null)}/>
+              </label>
+            )}
+            {podPanel==='signature'&&(
+              <canvas ref={canvas} width={320} height={120} onPointerDown={sign} onPointerMove={e=>e.buttons===1&&sign(e)} style={{width:'100%',height:120,border:'1px dashed #cbd5e1',borderRadius:12,background:'#fff',touchAction:'none',marginBottom:10}}/>
+            )}
+            {(podPanel==='notes'||podPanel==='issue')&&(
+              <textarea value={issueNote} onChange={e=>setIssueNote(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={{width:'100%',border:'1px solid #dde5ee',borderRadius:12,padding:10,font:'inherit',marginBottom:10,boxSizing:'border-box'}}/>
+            )}
             {message&&<p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
-            <button className="primary" disabled={busy} onClick={()=>void confirmDelivery()}>{busy?t.drvBusy:t.drvCompleteDelivery}</button>
-            <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:8}}>{t.drvCancel||t.cancel}</button>
+            <button className="primary" disabled={busy} onClick={()=>void confirmDelivery()} style={{background:'#16B96B',width:'100%'}}>{busy?t.drvBusy:t.drvCompleteDelivery}</button>
           </section>
         </div>
       )}
@@ -344,6 +371,10 @@ const dialog: React.CSSProperties = {
   background:'#f7f9fc',
   border:'1px solid #e5eaf0',
   boxShadow:'0 16px 36px rgba(15,29,53,.22)',
+}
+
+const tileBtn: React.CSSProperties = {
+  minHeight:72,display:'grid',placeItems:'center',gap:4,padding:8,fontSize:12,lineHeight:'14px',textAlign:'center',whiteSpace:'normal'
 }
 
 function TodayLoading({label}:{label:string}) {
