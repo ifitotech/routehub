@@ -15,6 +15,10 @@ export type DriverV3Route = {
   completed_at?: string | null
   route_started_at?: string | null
   route_completed_at?: string | null
+  completion_photo_path?: string | null
+  customer_signature_path?: string | null
+  driver_note?: string | null
+  company_id?: string
 }
 
 export type CurrentOperation = {

@@ -1,5 +1,5 @@
 'use client'
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
 import {useRouter, useSearchParams} from 'next/navigation'
 import {
@@ -19,6 +19,8 @@ import {
   markArrived,
   completeStop,
   completeDeliveryWithRecipient,
+  completePickupWithEvidence,
+  updateRouteStatus,
   saveStopNote,
   uploadStopPhoto,
   saveStopSignature,
@@ -26,6 +28,9 @@ import {
 } from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
 import {getCurrentLocation} from '../../../lib/location'
+import {getSupabase} from '../../../lib/supabase'
+import {operationalDate} from '../../../lib/driver-queue'
+import {useLocale} from '../../../lib/use-preferences'
 
 const operationLabel = (kind: string) =>
   kind === 'branch' ? 'RETURN' : kind === 'pickup' ? 'PICKUP' : 'DELIVERY'
@@ -56,6 +61,9 @@ export default function DriverV3Stop() {
   const [issueNote, setIssueNote] = useState('')
   const [photoName, setPhotoName] = useState('')
   const [recipient, setRecipient] = useState('')
+  const [packingFile, setPackingFile] = useState<File | null>(null)
+  const [issuePhoto, setIssuePhoto] = useState<File | null>(null)
+  const [evidence, setEvidence] = useState<{photo?: string; signature?: string}>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawing = useRef(false)
@@ -70,6 +78,22 @@ export default function DriverV3Stop() {
   const ctx = route
     ? {routeId: route.id, driverId, companyId: route.company_id}
     : null
+
+  useEffect(() => {
+    let cancelled = false
+    const loadEvidence = async () => {
+      setEvidence({})
+      if (!route) return
+      const storage = getSupabase().storage.from('route-evidence')
+      const [photo, signature] = await Promise.all([
+        route.completion_photo_path ? storage.createSignedUrl(route.completion_photo_path, 900) : Promise.resolve({data: null}),
+        route.customer_signature_path ? storage.createSignedUrl(route.customer_signature_path, 900) : Promise.resolve({data: null}),
+      ])
+      if (!cancelled) setEvidence({photo: photo.data?.signedUrl, signature: signature.data?.signedUrl})
+    }
+    void loadEvidence()
+    return () => { cancelled = true }
+  }, [route?.id, route?.completion_photo_path, route?.customer_signature_path])
 
   const act = async (action: 'arrive' | 'complete') => {
     if (!op || !isCurrent || busy || !route || !ctx) return
@@ -87,6 +111,8 @@ export default function DriverV3Stop() {
         try { location = await getCurrentLocation({maximumAge: 60_000}) } catch {}
         if (isDelivery) {
           await completeDeliveryWithRecipient(ctx, recipient, route.driver_note || '', location)
+        } else if (operationLabel(String(kind)) === 'PICKUP') {
+          await completePickupWithEvidence(ctx, packingFile || undefined)
         } else {
           await completeStop(ctx, {location})
         }
@@ -94,6 +120,20 @@ export default function DriverV3Stop() {
         router.push('/driver/completed')
         return
       }
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const pauseRoute = async () => {
+    if (!ctx || busy) return
+    setBusy(true)
+    try {
+      await updateRouteStatus(ctx, 'paused', operationalDate())
+      await refresh()
+      setMessage(t.drvPaused)
     } catch (e) {
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
@@ -237,11 +277,12 @@ export default function DriverV3Stop() {
     setSheetMsg('')
     try {
       const text = issueNote.trim() ? `${issueCat}: ${issueNote.trim()}` : issueCat
-      await reportIssue(ctx, text)
+      await reportIssue(ctx, text, issuePhoto || undefined)
       await refresh()
       setSheetMsg(t.drvIssueSent)
       setIssueCat('')
       setIssueNote('')
+      setIssuePhoto(null)
       setTimeout(() => {
         setSheet(null)
         setSheetMsg('')
@@ -351,6 +392,13 @@ export default function DriverV3Stop() {
               </button>
             </div>
 
+            {(evidence.photo || evidence.signature) && (
+              <div style={{display: 'flex', gap: 8, marginTop: 14}}>
+                {evidence.photo && <img src={evidence.photo} alt="" style={{width: 72, height: 72, objectFit: 'cover', borderRadius: 10}} />}
+                {evidence.signature && <img src={evidence.signature} alt="" style={{width: 72, height: 72, objectFit: 'contain', borderRadius: 10, background: '#fff', border: '1px solid #DDE5EE'}} />}
+              </div>
+            )}
+
             <button className="secondary" onClick={maps} type="button" style={{marginTop: 14}}>
               <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
                 <Navigation size={18} />
@@ -372,6 +420,11 @@ export default function DriverV3Stop() {
                 style={{background: '#16B96B'}}
               >
                 {busy ? t.drvBusy : (operationLabel(String(kind))==='PICKUP'?t.drvCompletePickup:operationLabel(String(kind))==='RETURN'?t.drvCompleteReturn:t.drvCompleteDelivery)}
+              </button>
+            )}
+            {route.status === 'active' && (
+              <button type="button" className="secondary" disabled={busy} onClick={() => void pauseRoute()} style={{marginTop: 8}}>
+                {t.drvPause}
               </button>
             )}
             {message && (
@@ -554,6 +607,11 @@ export default function DriverV3Stop() {
                   placeholder={t.drvDetailsOpt}
                   style={{marginBottom: 12}}
                 />
+                <label className="secondary" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12}}>
+                  <Camera size={18} />
+                  {issuePhoto ? issuePhoto.name : t.drvTakePhoto}
+                  <input type="file" accept="image/*" capture="environment" hidden onChange={e => setIssuePhoto(e.target.files?.[0] || null)} />
+                </label>
                 </div>
                 <div className={styles.sheetFooter}>
                 <button
@@ -587,6 +645,13 @@ export default function DriverV3Stop() {
               <br />
               Stop {route.position || '—'}
             </p>
+            {operationLabel(String(kind)) === 'PICKUP' && (
+              <label>
+                {t.drvPacking}
+                <input type="file" accept="image/*" capture="environment" onChange={e => setPackingFile(e.target.files?.[0] || null)} />
+                {packingFile && <span className="muted">{packingFile.name}</span>}
+              </label>
+            )}
             {operationLabel(String(kind)) === 'DELIVERY' && (
               <label>
                 {t.drvReceivedBy}

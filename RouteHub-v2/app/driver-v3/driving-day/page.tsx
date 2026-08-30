@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import styles from '../../../components/driver-v3/driver-v3.module.css'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -16,6 +16,13 @@ export default function DrivingDayPage() {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'ok' | 'err'>('ok')
   const [confirmEnd, setConfirmEnd] = useState(false)
+  const [consentAccepted, setConsentAccepted] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
+
+  useEffect(() => {
+    if (!driverId) return
+    setConsentAccepted(window.localStorage.getItem(`routehub-location-consent-v1:${driverId}`) === 'accepted')
+  }, [driverId])
 
   const toggle = async () => {
     if (busy || !driverId || !companyId) return
@@ -27,6 +34,16 @@ export default function DrivingDayPage() {
         setMessageType('ok')
         setMessage(t.drvDayEnded)
       } else {
+        if (!consentAccepted) {
+          if (!consentChecked) {
+            setMessageType('err')
+            setMessage(t.drvConsentNeed)
+            setBusy(false)
+            return
+          }
+          window.localStorage.setItem(`routehub-location-consent-v1:${driverId}`, 'accepted')
+          setConsentAccepted(true)
+        }
         const session = await startDrivingDay({driverId, companyId})
         try {
           const location = await getCurrentLocation({maximumAge: 0})
@@ -69,9 +86,21 @@ export default function DrivingDayPage() {
               })}
             </p>
           ) : (
-            <p className="muted" style={{marginBottom: 16}}>
-              {t.drvDayHelp}
-            </p>
+            <>
+              <p className="muted" style={{marginBottom: 16}}>
+                {t.drvDayHelp}
+              </p>
+              {!consentAccepted && (
+                <label style={{display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 16}}>
+                  <input type="checkbox" checked={consentChecked} onChange={e => setConsentChecked(e.target.checked)} />
+                  <span>
+                    <strong style={{display: 'block'}}>{t.drvConsentTitle}</strong>
+                    <span className="muted">{t.drvConsentBody}</span>
+                    <span style={{display: 'block', marginTop: 4, fontWeight: 700}}>{t.drvConsentCheck}</span>
+                  </span>
+                </label>
+              )}
+            </>
           )}
 
           <button
