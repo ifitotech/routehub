@@ -9,8 +9,8 @@ import DeviceNotificationsSetting from '../../device-notifications-setting'
 import InstallAppCard from '../../install-app-card'
 import {getCurrentLocation, getLocationPermission} from '../../../lib/location'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
+import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 
-const DRIVER_APP_VERSION = '0.1b5'
 
 const LANGS = [
   {id: 'en', label: 'English'},
