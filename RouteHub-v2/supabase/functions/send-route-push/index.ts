@@ -37,7 +37,7 @@ Deno.serve(async request => {
 
     const service = createClient(url, serviceKey)
     const {data: route, error: routeError} = await service.from('routes')
-      .select('id,company_id,branch_id,driver_id,mission_type,destination_name,destination_address,status')
+      .select('id,company_id,branch_id,driver_id,mission_type,destination_name,destination_address,order_number,status')
       .eq('id', routeId).maybeSingle()
     if (routeError) throw routeError
     if (!route) return json({error: 'Route not found'}, 404)
@@ -58,11 +58,30 @@ Deno.serve(async request => {
       .select('id,endpoint,p256dh,auth').eq('user_id', route.driver_id)
     if (subscriptionError) throw subscriptionError
 
-    const label = route.destination_name || route.destination_address || 'your next stop'
+    const kind = String(route.mission_type || 'delivery').toLowerCase()
+    const isReturn = kind === 'return' || kind === 'branch'
+    const isPickup = kind === 'pickup'
+    const storeOrClient = String(route.destination_name || '').trim()
+    const address = String(route.destination_address || '').trim()
+    const po = String(route.order_number || '').trim()
     const assigned = event === 'assigned'
+    const title = assigned
+      ? isPickup
+        ? 'New pickup assigned'
+        : isReturn
+          ? 'New return to branch assigned'
+          : 'New delivery assigned'
+      : 'Route updated'
+    const body = assigned
+      ? isPickup
+        ? `${storeOrClient || 'Pickup'}\n${po ? `PO ${po}` : address || 'Pickup assigned'}`
+        : isReturn
+          ? `Return to branch\n${address || storeOrClient || 'Branch'}`
+          : `${storeOrClient || 'Delivery'}\n${address || (po ? `PO ${po}` : 'Delivery assigned')}`
+      : `${storeOrClient || address || 'Your route'} was updated.`
     const payload = JSON.stringify({
-      title: 'RouteHub',
-      body: assigned ? `${String(route.mission_type || 'Delivery').toUpperCase()} · ${label}` : `Your route to ${label} was updated.`,
+      title,
+      body,
       href: '/driver',
       tag: `route:${route.id}`,
     })
