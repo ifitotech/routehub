@@ -1,12 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import {Bell, Home, List, Map, MoreHorizontal, Truck} from 'lucide-react'
+import {Bell, Home, List, Map, Menu, MoreHorizontal, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 
-export default function DriverV3Shell({children, active}: {children: React.ReactNode; active: 'today'|'route'|'map'|'truck'|'more'}) {
+export default function DriverV3Shell({children, active, headerStatus}: {children: React.ReactNode; active: 'today'|'route'|'map'|'truck'|'more'; headerStatus?: string}) {
   return <main className={styles.shell}>
-    <header className={styles.header}><Link href="/driver-v3" className={styles.brand}><img src="/routehub-driver-new.jpg" alt=""/><span>RouteHub <small>DRIVER</small></span></Link><button className={styles.iconButton} aria-label="Notifications"><Bell size={19}/></button></header>
+    {active==='today'?<header className={`${styles.header} ${styles.todayHeader}`}>
+      <Link href="/driver-v3/more" className={styles.headerIcon} aria-label="Open menu"><Menu/></Link>
+      <Link href="/driver-v3" className={styles.todayBrand}>RouteHub Driver</Link>
+      <button className={styles.headerIcon} aria-label="Notifications"><Bell/></button>
+      {headerStatus&&<span className={styles.headerStatus}>{headerStatus}</span>}
+    </header>:<header className={styles.header}><Link href="/driver-v3" className={styles.brand}><img src="/routehub-driver-new.jpg" alt=""/><span>RouteHub <small>DRIVER</small></span></Link><button className={styles.iconButton} aria-label="Notifications"><Bell size={19}/></button></header>}
     <section className={styles.content}>{children}</section>
     <nav className={styles.nav} aria-label="Driver navigation">
       <Link className={active==='today'?styles.active:''} href="/driver-v3"><Home/><span>Today</span></Link>
