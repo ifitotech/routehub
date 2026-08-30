@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {usePathname, useRouter} from 'next/navigation'
+import {usePathname} from 'next/navigation'
 import {ChevronLeft, History, Home, Menu, Settings, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
@@ -35,7 +35,6 @@ export default function DriverV3Shell({
 }: Props) {
   const {t} = useLocale()
   const pathname = usePathname()
-  const router = useRouter()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
 
@@ -53,9 +52,9 @@ export default function DriverV3Shell({
           <img src="/routehub-logo-clean.png" alt="" width={28} height={28} />
           <span>RouteHub</span>
         </Link>
-        <button type="button" className={styles.headerIcon} aria-label={t.drvProfile} onClick={() => router.push(profileOpen ? '/driver' : '/driver/more')}>
-          <Menu />
-        </button>
+        <Link href={profileOpen ? '/driver' : '/driver/more'} className={styles.headerIcon} aria-label={t.drvProfile}>
+          <Menu color="#fff" strokeWidth={2.2} />
+        </Link>
       </header>
 
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>

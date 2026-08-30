@@ -30,10 +30,26 @@ export default function History() {
   const currentId = (snapshot?.currentOperation?.route as {id?: string} | undefined)?.id
 
   const rows = useMemo(() => {
+    const kindRank = (r: {mission_type?: string | null}) => {
+      const v = String(r.mission_type || '').toLowerCase()
+      if (v === 'pickup') return 1
+      if (v === 'delivery') return 2
+      if (v === 'return' || v === 'branch') return 3
+      return 4
+    }
+    const when = (r: {completed_at?: string | null; scheduled_at?: string | null}) =>
+      r.completed_at || r.scheduled_at || ''
     return routes
       .filter(r => String(r.route_date || '').slice(0, 10) === day)
+      .filter(r => String(r.status || '') !== 'cancelled')
       .slice()
-      .sort((a, b) => (a.position || 0) - (b.position || 0))
+      .sort((a, b) => {
+        const ka = kindRank(a) - kindRank(b)
+        if (ka) return ka
+        const ta = when(a).localeCompare(when(b))
+        if (ta) return ta
+        return String(a.id).localeCompare(String(b.id))
+      })
   }, [routes, day])
 
   const openMaps = (route: {destination_address?: string; destination_lat?: number; destination_lng?: number; destination_name?: string}) => {
@@ -95,7 +111,7 @@ export default function History() {
               >
                 <div style={{display: 'grid', gridTemplateColumns: '36px minmax(0,1fr)', gap: 10, alignItems: 'start'}}>
                   <strong style={{width: 36, height: 36, borderRadius: 18, background: look.badge, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 15}}>
-                    {r.position || index + 1}
+                    {index + 1}
                   </strong>
                   <div>
                     <p className="eyebrow" style={{margin: 0, color: look.badge}}>
