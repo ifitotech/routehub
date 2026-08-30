@@ -128,7 +128,7 @@ export default function Maintenance() {
             </label>
 
             <label>
-              Cost (optional)
+              {t.drvAmount}
               <input
                 inputMode="decimal"
                 value={amount}

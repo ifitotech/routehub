@@ -79,7 +79,7 @@ export default function DriverV3Page() {
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
       {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
-        <h1>{t.drvCouldntLoad}</h1><p>Try again when your connection is available.</p>
+        <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>
         <section className={styles.hero}>
@@ -92,7 +92,7 @@ export default function DriverV3Page() {
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
           <div className={styles.divider}/>
-          {route.arrived_at?<Link className={styles.primary} href="/driver/stop"><MapPin/>CONTINUE ROUTE</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?'UPDATING…':primaryLabel}</button>}
+          {route.arrived_at?<Link className={styles.primary} href="/driver/stop"><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
           <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link></div>
           {message&&<p className={styles.feedback} role="status">{message}</p>}
         </section>
