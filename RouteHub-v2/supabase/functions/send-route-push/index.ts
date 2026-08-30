@@ -67,17 +67,17 @@ Deno.serve(async request => {
     const assigned = event === 'assigned'
     const title = assigned
       ? isPickup
-        ? 'New pickup assigned'
+        ? 'New pickup'
         : isReturn
-          ? 'New return to branch assigned'
-          : 'New delivery assigned'
+          ? 'Return to branch'
+          : 'New delivery'
       : 'Route updated'
     const body = assigned
       ? isPickup
-        ? `${storeOrClient || 'Pickup'}\n${po ? `PO ${po}` : address || 'Pickup assigned'}`
+        ? [storeOrClient || 'Pickup', po || address].filter(Boolean).join('\n')
         : isReturn
-          ? `Return to branch\n${address || storeOrClient || 'Branch'}`
-          : `${storeOrClient || 'Delivery'}\n${address || (po ? `PO ${po}` : 'Delivery assigned')}`
+          ? address || storeOrClient || 'Branch'
+          : [storeOrClient || 'Delivery', address || po].filter(Boolean).join('\n')
       : `${storeOrClient || address || 'Your route'} was updated.`
     const payload = JSON.stringify({
       title,
