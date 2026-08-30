@@ -3,14 +3,14 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, reportIssue, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
-import {getCurrentLocation} from '../../lib/location'
+import {distanceMeters, getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './today.module.css'
@@ -19,7 +19,7 @@ const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
 
 export default function DriverV3Page() {
   const {t}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,routes}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'info'>(null)
@@ -70,6 +70,31 @@ export default function DriverV3Page() {
   },[started,startedAt,clockNonce])
   const arrived=Boolean(route?.arrived_at)
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
+  const todaySummary=useMemo(()=>{
+    const day=operationalDate()
+    const today=routes.filter(r=>String(r.route_date||'').slice(0,10)===day&&String(r.status||'')!=='cancelled')
+    const done=today.filter(r=>r.status==='completed')
+    let meters=0
+    const points=today
+      .map(r=>r.destination_lat!=null&&r.destination_lng!=null?{lat:Number(r.destination_lat),lng:Number(r.destination_lng)}:null)
+      .filter((p):p is {lat:number;lng:number}=>Boolean(p))
+    for(let i=1;i<points.length;i++) meters+=distanceMeters(points[i-1],points[i])
+    let seconds=0
+    for(const r of done){
+      const start=r.route_started_at
+      const end=r.completed_at||r.route_completed_at
+      if(start&&end){
+        const ms=new Date(end).getTime()-new Date(start).getTime()
+        if(Number.isFinite(ms)&&ms>0) seconds+=Math.floor(ms/1000)
+      }
+    }
+    return {
+      total:today.length,
+      done:done.length,
+      miles:points.length>=2?Math.round((meters/1609.34)*10)/10:null,
+      minutes:seconds?Math.round(seconds/60):null,
+    }
+  },[routes])
 
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
@@ -326,6 +351,15 @@ export default function DriverV3Page() {
             }}><TriangleAlert/>{t.drvIssue}</button>
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
+        </section>
+        <section className="card" style={{marginTop:12,padding:'14px 12px'}}>
+          <p className="eyebrow" style={{margin:'0 0 10px'}}>{t.drvTodaySummary}</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:6,textAlign:'center'}}>
+            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.done}/{todaySummary.total}</strong><span className="muted" style={{fontSize:11}}>{t.drvStops}</span></div>
+            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.miles==null?'—':`${todaySummary.miles}`}</strong><span className="muted" style={{fontSize:11}}>{t.drvMiles}</span></div>
+            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.minutes==null?'—':`${todaySummary.minutes}m`}</strong><span className="muted" style={{fontSize:11}}>{t.drvTimeLogged}</span></div>
+            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.done}</strong><span className="muted" style={{fontSize:11}}>{t.drvCompletedTag}</span></div>
+          </div>
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 

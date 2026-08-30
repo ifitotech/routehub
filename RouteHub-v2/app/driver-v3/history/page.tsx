@@ -37,18 +37,18 @@ export default function History() {
       if (v === 'return' || v === 'branch') return 3
       return 4
     }
-    const when = (r: {completed_at?: string | null; scheduled_at?: string | null}) =>
-      r.completed_at || r.scheduled_at || ''
+    const when = (r: {completed_at?: string | null; route_completed_at?: string | null; route_started_at?: string | null; scheduled_at?: string | null}) =>
+      r.completed_at || r.route_completed_at || r.route_started_at || r.scheduled_at || ''
     return routes
       .filter(r => String(r.route_date || '').slice(0, 10) === day)
       .filter(r => String(r.status || '') !== 'cancelled')
       .slice()
       .sort((a, b) => {
+        const ta = when(b).localeCompare(when(a))
+        if (ta) return ta
         const ka = kindRank(a) - kindRank(b)
         if (ka) return ka
-        const ta = when(a).localeCompare(when(b))
-        if (ta) return ta
-        return String(a.id).localeCompare(String(b.id))
+        return String(b.id).localeCompare(String(a.id))
       })
   }, [routes, day])
 

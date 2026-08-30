@@ -166,3 +166,7 @@ export function getLocale(): Locale {
 Object.assign(en, {drvOnRouteTime:'On route'})
 Object.assign(es, {drvOnRouteTime:'En ruta'})
 Object.assign(fr, {drvOnRouteTime:'En route'})
+
+Object.assign(en, {drvTodaySummary:'Today at a glance', drvStops:'Stops', drvMiles:'Miles', drvTimeLogged:'Time'})
+Object.assign(es, {drvTodaySummary:'Hoy en resumen', drvStops:'Paradas', drvMiles:'Millas', drvTimeLogged:'Tiempo'})
+Object.assign(fr, {drvTodaySummary:'Aujourd’hui', drvStops:'Arrêts', drvMiles:'Miles', drvTimeLogged:'Temps'})
