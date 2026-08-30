@@ -241,7 +241,7 @@ export default function DriverV3Page() {
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
               {route.destination_address&&<p>{route.destination_address}</p>}
-              {route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
+              {kind!=='return'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
             </div>
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
@@ -281,13 +281,15 @@ export default function DriverV3Page() {
                 <X size={16}/>
               </button>
             </div>
-            <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvPickUpPo}</h2>
+            <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||route.destination_address}</h2>
             {route.destination_address&&<p className="muted" style={{margin:'0 0 8px',fontSize:14}}>{route.destination_address}</p>}
             <p className="muted" style={{margin:'0 0 12px',fontSize:13,lineHeight:'18px'}}>{t.drvPickupHelp}</p>
+            {route.order_number?(
             <div style={{margin:'0 0 16px',padding:'12px 14px',borderRadius:14,background:'#fff',border:'1px solid #e5eaf0'}}>
               <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
-              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
+              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number}</p>
             </div>
+            ):null}
             {issueOpen?(
               <>
                 <textarea value={issueNote} onChange={e=>setIssueNote(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={{width:'100%',border:'1px solid #dde5ee',borderRadius:12,padding:10,font:'inherit',marginBottom:10}}/>
@@ -313,10 +315,12 @@ export default function DriverV3Page() {
             <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvCompleteDelivery}</h2>
             {route.destination_address&&<p className="muted" style={{margin:'0 0 8px',fontSize:14}}>{route.destination_address}</p>}
             <p className="muted" style={{margin:'0 0 12px',fontSize:13,lineHeight:'18px'}}>{t.drvDeliveryHelp}</p>
+            {route.order_number?(
             <div style={{margin:'0 0 12px',padding:'12px 14px',borderRadius:14,background:'#fff',border:'1px solid #e5eaf0'}}>
               <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
-              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800}}>{route.order_number||'—'}</p>
+              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800}}>{route.order_number}</p>
             </div>
+            ):null}
             <label className="muted" style={{display:'block',marginBottom:12,padding:askName?'12px':'0',borderRadius:14,background:askName?'#fff7ed':'transparent',border:askName?'1px solid #fdba74':'0'}}>
               {t.drvReceivedBy}
               <input ref={nameRef} value={recipient} onChange={e=>{setRecipient(e.target.value);if(e.target.value.trim())setAskName(false)}} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box',background:'#fff'}}/>
