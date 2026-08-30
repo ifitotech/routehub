@@ -29,6 +29,8 @@ export default function DriverV3Page() {
   const [issueOpen,setIssueOpen]=useState(false)
   const [issueNote,setIssueNote]=useState('')
   const [podPanel,setPodPanel]=useState<null | 'photo' | 'signature' | 'notes' | 'issue'>(null)
+  const [askName,setAskName]=useState(false)
+  const nameRef=useRef<HTMLInputElement>(null)
   const canvas=useRef<HTMLCanvasElement>(null)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
@@ -162,7 +164,10 @@ export default function DriverV3Page() {
     if(!route||busy||!driverId)return
     const name=recipient.trim()
     if(!name){
+      setAskName(true)
+      setPodPanel(null)
       setMessage(t.drvNeedRecipient)
+      setTimeout(()=>nameRef.current?.focus(),50)
       return
     }
     if(!hasPod){
@@ -184,6 +189,7 @@ export default function DriverV3Page() {
       setRecipient('')
       setPhoto(null)
       setSigned(false)
+      setAskName(false)
       await refresh()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -311,9 +317,9 @@ export default function DriverV3Page() {
               <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
               <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800}}>{route.order_number||'—'}</p>
             </div>
-            <label className="muted" style={{display:'block',marginBottom:12}}>
+            <label className="muted" style={{display:'block',marginBottom:12,padding:askName?'12px':'0',borderRadius:14,background:askName?'#fff7ed':'transparent',border:askName?'1px solid #fdba74':'0'}}>
               {t.drvReceivedBy}
-              <input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box'}}/>
+              <input ref={nameRef} value={recipient} onChange={e=>{setRecipient(e.target.value);if(e.target.value.trim())setAskName(false)}} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box',background:'#fff'}}/>
             </label>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
               <button type="button" className="secondary" onClick={()=>setPodPanel('photo')} style={{...tileBtn,color:photo?'#16B96B':undefined}}>
