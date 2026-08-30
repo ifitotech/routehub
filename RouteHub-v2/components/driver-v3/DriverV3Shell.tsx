@@ -54,7 +54,6 @@ export default function DriverV3Shell({
           <Menu />
         </Link>
       </header>
-      {headerStatus ? <p className={styles.headerStatusBar}>{headerStatus}</p> : null}
 
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
 

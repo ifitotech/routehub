@@ -33,8 +33,8 @@ function useDriverDataInternal(): DriverV3Data {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (quiet=false) => {
+    if(!quiet) setLoading(true)
     setError('')
     try {
       const user = await currentUser()
@@ -71,12 +71,33 @@ function useDriverDataInternal(): DriverV3Data {
     void load()
   }, [load])
 
+  useEffect(() => {
+    if(!driverId) return
+    const client = getSupabase()
+    const channel = client
+      .channel('driver-v3-routes')
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `driver_id=eq.${driverId}`}, () => {
+        void load(true)
+      })
+      .subscribe()
+    const onFocus = () => { void load(true) }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    const tick = window.setInterval(() => { void load(true) }, 20000)
+    return () => {
+      void client.removeChannel(channel)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+      window.clearInterval(tick)
+    }
+  }, [driverId, load])
+
   const snapshot = useMemo(
     () => (driverId ? buildDriverSnapshot(routes as any, driverId, operationalDate()) : null),
     [routes, driverId],
   )
 
-  return {routes, driverId, companyId, branchId, drivingSession, liveFix, setLiveFix, loading, error, refresh: load, snapshot}
+  return {routes, driverId, companyId, branchId, drivingSession, liveFix, setLiveFix, loading, error, refresh: () => load(), snapshot}
 }
 
 export function DriverV3Provider({children}: {children: ReactNode}) {
