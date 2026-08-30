@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import {usePathname, useRouter} from 'next/navigation'
-import Image from 'next/image'
 import {ChevronLeft, History, Home, Menu, Settings, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
@@ -51,7 +50,7 @@ export default function DriverV3Shell({
           <span className={styles.headerIcon} aria-hidden="true" />
         )}
         <Link href="/driver" className={styles.headerBrand}>
-          <Image src="/routehub-logo-clean.png" alt="RouteHub" width={28} height={28} />
+          <img src="/routehub-logo-clean.png" alt="" width={28} height={28} />
           <span>RouteHub</span>
         </Link>
         <button type="button" className={styles.headerIcon} aria-label={t.drvProfile} onClick={() => router.push(profileOpen ? '/driver' : '/driver/more')}>

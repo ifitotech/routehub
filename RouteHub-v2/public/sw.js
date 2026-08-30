@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'routehub-static-v12'
+const STATIC_CACHE = 'routehub-static-v13'
 const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-new.jpg']
 
 self.addEventListener('install', event => {
