@@ -30,10 +30,21 @@ type Props={
 
 const makeMarker=(kind:'origin'|'destination'|'driver'|'stop',number?:number)=>L.divIcon({
  className:'route-map-marker-wrap',
- html:`<span class="route-map-marker route-map-marker-${kind}">${kind==='driver'?'🚚':kind==='origin'?'S':number||1}</span>`,
- iconSize:[42,42],
- iconAnchor:[21,21]
+ html:kind==='driver'
+  ?`<span class="route-map-marker route-map-marker-driver"><i></i></span>`
+  :`<span class="route-map-marker route-map-marker-${kind}">${kind==='origin'?'S':number||1}</span>`,
+ iconSize:kind==='driver'?[28,28]:[42,42],
+ iconAnchor:kind==='driver'?[14,14]:[21,21]
 })
+
+function FollowDriver({location}:{location:RouteCoordinate|null}){
+ const map=useMap()
+ useEffect(()=>{
+  if(!location)return
+  map.panTo([location.lat,location.lng],{animate:true,duration:0.4})
+ },[map,location?.lat,location?.lng])
+ return null
+}
 
 function FitBounds({points}:{points:RouteCoordinate[]}){
  const map=useMap()
@@ -108,11 +119,12 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
  return <section className={`live-route-map ${onActivate?'is-activatable':''}`} onClick={onActivate} onKeyDown={event=>{if(onActivate&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onActivate()}}} role={onActivate?'button':undefined} tabIndex={onActivate?0:undefined}>
   {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?copy.connected:copy.scheduled}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?copy.live:copy.waiting}</span></header>}
   <div className="live-route-canvas">
-   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label={copy.map}>
+   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={15} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label={copy.map}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={routePoints.length?routePoints:visiblePoints}/>
-    <RecenterOnRequest points={visiblePoints} token={followToken||0}/>
-    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1763de',weight:5,opacity:.88}}/>}
+    <RecenterOnRequest points={driverLocation?[driverLocation]:visiblePoints} token={followToken||0}/>
+    {useDriverAsOrigin&&driverLocation&&<FollowDriver location={driverLocation}/>}
+    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1A73E8',weight:6,opacity:0.92,lineJoin:'round',lineCap:'round'}}/>}
     {origin&&(!useDriverAsOrigin||!driverLocation)&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
     {intermediate.map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+2)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`${copy.next} ${index+2}`}</Tooltip></Marker>)}
     {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination',1)} zIndexOffset={300}><Tooltip direction="top" offset={[0,-18]}>{destinationAddress||copy.next}</Tooltip></Marker>}

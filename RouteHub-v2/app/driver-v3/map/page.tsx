@@ -13,7 +13,7 @@ const LiveRouteMap = dynamic(() => import('../../live-route-map'), {ssr: false})
 
 export default function DriverV3Map() {
   const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix} = useDriverData()
-  const {t} = useLocale()
+  const {t, locale} = useLocale()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [followToken, setFollowToken] = useState(0)
@@ -78,8 +78,11 @@ export default function DriverV3Map() {
                 driverUpdatedAt={liveFix?.at || drivingSession?.last_updated_at || null}
                 title={t.drvCurrentStop}
                 showHeader={false}
+                showLocationUpdated={false}
                 interactive
+                useDriverAsOrigin
                 followToken={followToken}
+                locale={locale}
               />
               <button
                 type="button"

@@ -102,7 +102,9 @@ export default function DriverV3Page() {
               driverUpdatedAt={liveFix?.at||drivingSession?.last_updated_at||null}
               title={t.drvCurrentStop}
               showHeader={false}
+              showLocationUpdated={false}
               interactive
+              useDriverAsOrigin
             />
           </div>
           {route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
