@@ -261,8 +261,7 @@ export default function DriverV3Page() {
 
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet)}>
     <div className={styles.page}>
-      {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
-      {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
+            {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>

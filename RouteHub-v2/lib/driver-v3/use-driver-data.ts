@@ -5,7 +5,7 @@ import {getSupabase} from '../supabase'
 import {operationalDate} from '../driver-queue'
 import {buildDriverSnapshot} from '../driver/driver-refresh'
 import type {DriverV3Route} from './types'
-import {getActiveDrivingSession, type DrivingSession} from '../driving-session'
+import {getActiveDrivingSession, startDrivingDay, type DrivingSession} from '../driving-session'
 
 type DriverV3Data = {
   routes: DriverV3Route[]
@@ -67,8 +67,16 @@ function useDriverDataInternal(): DriverV3Data {
       }
       if (loadError) throw loadError
       setRoutes((rows || []) as DriverV3Route[])
-      const session = await getActiveDrivingSession(user.id)
+      let session = await getActiveDrivingSession(user.id)
       if (session.error) throw session.error
+      if (!session.data) {
+        const started = await startDrivingDay({
+          companyId: membership.company_id,
+          branchId: membership.branch_id ?? null,
+          driverId: user.id,
+        })
+        if (!started.error && started.data) session = started
+      }
       setDrivingSession(session.data)
       if (session.data?.last_lat != null && session.data?.last_lng != null) {
         setLiveFix({
