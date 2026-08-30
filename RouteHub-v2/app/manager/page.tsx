@@ -7,9 +7,11 @@ import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
 import {useLocale} from '../../lib/use-preferences'
+import dynamic from 'next/dynamic'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
-import LiveRoute from '../routes/live-route'
 import ManagerShell from './manager-shell'
+
+const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
 import styles from './manager-dashboard.module.css'
 import todayStyles from './manager-today.module.css'
 
@@ -155,6 +157,30 @@ export default function Manager() {
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
     <div className={todayStyles.todayLayout}>
       <main className={todayStyles.todayMain}>
+        <div className={todayStyles.sectionHeading}><div><span>{copy.liveOperations}</span><h2>{copy.liveDescription}</h2></div><Link href="/routes/live">{copy.viewMap}</Link></div>
+        <p className={todayStyles.fixLine}>{fixLabel}</p>
+        <div className={todayStyles.opsMap}>
+          <OperationsMap
+            routes={todayRoutes.map(route => ({
+              id: route.id,
+              destination_name: route.destination_name,
+              destination_address: route.destination_address,
+              destination_lat: route.destination_lat,
+              destination_lng: route.destination_lng,
+              status: route.status,
+              driver_id: route.driver_id,
+              position: route.position,
+            }))}
+            driverLocations={liveFix?.lat != null && liveFix.lng != null ? [{
+              id: liveFix.driverId || 'driver',
+              driver_id: liveFix.driverId,
+              location: {lat: liveFix.lat, lng: liveFix.lng},
+              updatedAt: liveFix.updatedAt,
+              status: 'on_route',
+            }] : []}
+            locale={locale}
+          />
+        </div>
         <div className={todayStyles.sectionHeading}><div><span>{copy.upcoming}</span><h2>{copy.todayOverview}</h2></div><Link href="/routes?new=1" className={todayStyles.newLink}><Plus size={16}/>{copy.newRoute}</Link></div>
         {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (
           <div className={todayStyles.dayList}>
@@ -175,11 +201,6 @@ export default function Manager() {
         )}
       </main>
       <aside className={todayStyles.todaySide}>
-        <section className={todayStyles.sideCard} aria-label={copy.liveOperations}>
-          <div className={todayStyles.sideHeading}><h2>{copy.liveOperations}</h2><Link href="/routes/live">{copy.viewMap}</Link></div>
-          <p className={todayStyles.fixLine}>{fixLabel}</p>
-          <LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false} compact />
-        </section>
         <section className={todayStyles.sideCard} aria-label={copy.quickActions}><div className={todayStyles.sideHeading}><h2>{copy.quickActions}</h2></div><div className={todayStyles.quickGrid}><Link href="/routes?new=1"><Plus size={17}/><span>{copy.newRoute}</span><ArrowRight size={14}/></Link><Link href="/routes/manage"><RouteIcon size={17}/><span>{copy.reorder}</span><ArrowRight size={14}/></Link><Link href="/contacts"><Users size={17}/><span>{copy.addContact}</span><ArrowRight size={14}/></Link></div></section>
       </aside>
     </div>

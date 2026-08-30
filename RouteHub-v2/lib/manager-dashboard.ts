@@ -13,6 +13,8 @@ export type DashboardRoute = {
   destination_name?: string | null
   destination_address?: string | null
   destination_contact_name?: string | null
+  destination_lat?: number | null
+  destination_lng?: number | null
   order_number?: string | null
   status: string
   driver_id?: string | null
