@@ -117,7 +117,7 @@ export default function Maintenance() {
             </div>
 
             <label>
-              Mileage
+              {t.drvMileage}
               <input
                 inputMode="numeric"
                 value={odometer}

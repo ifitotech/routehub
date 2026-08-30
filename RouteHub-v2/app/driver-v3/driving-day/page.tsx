@@ -141,7 +141,7 @@ export default function DrivingDayPage() {
             <p>{t.drvEndShare}</p>
             <div className={styles.confirmActions}>
               <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmEnd(false)}>
-                Cancel
+                {t.drvCancel}
               </button>
               <button
                 type="button"

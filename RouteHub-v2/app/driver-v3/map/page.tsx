@@ -93,11 +93,11 @@ export default function DriverV3Map() {
                   zIndex: 10,
                   boxShadow: '0 4px 14px rgba(15,29,53,.15)',
                 }}
-                aria-label="Recenter map"
+                aria-label={t.drvRecenter}
               >
                 <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
                   <Crosshair size={16} />
-                  Recenter
+                  {t.drvRecenter}
                 </span>
               </button>
             </div>
@@ -115,7 +115,7 @@ export default function DriverV3Map() {
               {t.drvCurrentStop} · {route.position || '—'} · {kind}
             </p>
             <h2 style={{margin: '6px 0 4px', fontSize: 18}}>
-              {route.destination_name || route.destination_address || 'Destination'}
+              {route.destination_name || route.destination_address || t.drvCurrentStopName}
             </h2>
             {route.destination_address && route.destination_name && (
               <p className="muted" style={{margin: '0 0 12px', fontSize: 13}}>

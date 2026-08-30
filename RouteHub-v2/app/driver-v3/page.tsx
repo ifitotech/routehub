@@ -97,9 +97,9 @@ export default function DriverV3Page() {
           {message&&<p className={styles.feedback} role="status">{message}</p>}
         </section>
         <section className={styles.progressCard} aria-label={`${completed} completed, ${remaining} remaining`}>
-          <div><strong>{completed}</strong><span>Completed</span></div>
+          <div><strong>{completed}</strong><span>{t.drvDoneWord}</span></div>
           {progressNodes?<div className={styles.progressDots}>{progressNodes.map(index=><i key={index} className={index<completed?styles.done:index===completed?styles.current:styles.upcoming}/>)}</div>:<div className={styles.progressTrack}><span style={{width:`${progress}%`}}/><i style={{left:`clamp(8px, ${progress}%, calc(100% - 8px))`}}/></div>}
-          <div><strong>{remaining}</strong><span>Remaining</span></div>
+          <div><strong>{remaining}</strong><span>{t.drvLeftWord}</span></div>
         </section>
         {nextRoute?<Link className={styles.nextCard} href={`/driver/stop?id=${encodeURIComponent(nextRoute.id)}`}><div><span>{t.drvNextStop}{nextKindLabel?` · ${nextKindLabel}`:''}</span><strong>{nextRoute.destination_name||nextRoute.destination_address||'Next stop'}</strong>{nextRoute.destination_name&&nextRoute.destination_address&&<p>{nextRoute.destination_address}</p>}{nextRoute.order_number?<p>PO {nextRoute.order_number}</p>:null}</div><i><ChevronRight/></i></Link>:<section className={styles.nextCard}><div><span>{t.drvNextStop}</span><strong>{t.drvNoMoreStops}</strong></div></section>}
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}

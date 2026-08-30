@@ -53,21 +53,21 @@ export default function DriverV3Route() {
             <div>
               <strong style={{fontSize: 20}}>{queueRoutes.length}</strong>
               <span className="muted" style={{display: 'block', fontSize: 12}}>
-                stops
+                {t.drvStopsWord}
               </span>
             </div>
             <div style={{width: 1, height: 28, background: '#E8EDF3'}} />
             <div>
               <strong style={{fontSize: 20, color: '#16B96B'}}>{doneCount}</strong>
               <span className="muted" style={{display: 'block', fontSize: 12}}>
-                completed
+                {t.drvDoneWord}
               </span>
             </div>
             <div style={{width: 1, height: 28, background: '#E8EDF3'}} />
             <div>
               <strong style={{fontSize: 20}}>{remaining}</strong>
               <span className="muted" style={{display: 'block', fontSize: 12}}>
-                remaining
+                {t.drvLeftWord}
               </span>
             </div>
           </section>
@@ -133,7 +133,7 @@ export default function DriverV3Route() {
                         {typeLabel(route)}
                       </span>
                       <h2 style={{margin: '4px 0 2px', fontSize: 17, lineHeight: 1.25}}>
-                        {route.destination_name || route.destination_address || 'Destination'}
+                        {route.destination_name || route.destination_address || t.drvCurrentStopName}
                       </h2>
                       <p className="muted" style={{margin: 0, fontSize: 13}}>
                         {route.destination_address || route.status}
