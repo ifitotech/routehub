@@ -290,14 +290,14 @@ export default function DriverV3Page() {
                 {route.destination_contact_name||route.destination_name||t.drvCurrentStopName}
                 {route.destination_phone?` · ${route.destination_phone}`:''}
               </strong>
-              <span className="muted" style={{fontSize:12}}>
+              <span className="muted" style={{fontSize:12,display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                 {route.notes||route.driver_note||(kind==='delivery'?t.drvDeliveryHelp:kind==='pickup'?t.drvPickupHelp:t.drvReturnHelp)}
               </span>
             </span>
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
           <div className={styles.divider}/>
-          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:88,border:0,padding:0,margin:'0 0 8px',borderRadius:12,overflow:'hidden',background:'#e8eef4'}}>
+          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:72,border:0,padding:0,margin:'0 0 8px',borderRadius:12,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
             <LiveRouteMap
               destinationAddress={route.destination_address}
@@ -323,14 +323,13 @@ export default function DriverV3Page() {
             }}><TriangleAlert/>{t.drvIssue}</button>
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
-        </section>
-        <section className="card" style={{marginTop:0,padding:'10px 12px'}}>
-          <p className="eyebrow" style={{margin:'0 0 10px'}}>{t.drvTodaySummary}</p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:6,textAlign:'center'}}>
-            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.done}/{todaySummary.total}</strong><span className="muted" style={{fontSize:11}}>{t.drvStops}</span></div>
-            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.miles==null?'—':`${todaySummary.miles}`}</strong><span className="muted" style={{fontSize:11}}>{t.drvMiles}</span></div>
-            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.minutes==null?'—':`${todaySummary.minutes}m`}</strong><span className="muted" style={{fontSize:11}}>{t.drvTimeLogged}</span></div>
-            <div><strong style={{display:'block',fontSize:18}}>{todaySummary.done}</strong><span className="muted" style={{fontSize:11}}>{t.drvCompletedTag}</span></div>
+          <div className={styles.divider}/>
+          <p className="eyebrow" style={{margin:'0 0 8px'}}>{t.drvTodaySummary}</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:4,textAlign:'center'}}>
+            <div><strong style={{display:'block',fontSize:16}}>{todaySummary.done}/{todaySummary.total}</strong><span className="muted" style={{fontSize:10}}>{t.drvStops}</span></div>
+            <div><strong style={{display:'block',fontSize:16}}>{todaySummary.miles==null?'—':`${todaySummary.miles}`}</strong><span className="muted" style={{fontSize:10}}>{t.drvMiles}</span></div>
+            <div><strong style={{display:'block',fontSize:16}}>{todaySummary.minutes==null?'—':`${todaySummary.minutes}m`}</strong><span className="muted" style={{fontSize:10}}>{t.drvTimeLogged}</span></div>
+            <div><strong style={{display:'block',fontSize:16}}>{todaySummary.done}</strong><span className="muted" style={{fontSize:10}}>{t.drvCompletedTag}</span></div>
           </div>
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
