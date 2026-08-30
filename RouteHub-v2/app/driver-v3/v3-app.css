@@ -1,43 +1,58 @@
-/* =========================================================
-   RouteHub Driver V3 — full installed-app surface
-   Goal: feel like an Android/iOS app, not a mobile website.
-   ========================================================= */
+/* Driver V3 installed-app surface */
 
 .driver-v3-root {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100%;
+  width: 100%;
+  min-height: 100%;
   background: #f7f9fc;
-  color: #0f172a;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  overscroll-behavior-y: none;
   touch-action: manipulation;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.driver-v3-root > main,
+.driver-v3-root > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
 }
 
-/* Kill marketing / shared web chrome on every Driver V3 route */
 body:has(.driver-v3-root) .global-chrome,
 body:has(.driver-v3-root) .app-bottom-nav,
 body:has(.driver-v3-root) .theme-switch,
 body:has(.driver-v3-root) .quick-nav,
 body:has(.driver-v3-splash) .global-chrome,
-body:has(.driver-v3-splash) .app-bottom-nav {
+body:has(.driver-v3-splash) .app-bottom-nav,
+html[data-driver-app='v3'] .global-chrome,
+html[data-driver-app='v3'] .app-bottom-nav,
+html[data-driver-app='v3'] .theme-switch,
+html[data-driver-app='v3'] .quick-nav {
   display: none !important;
 }
 
+html:has(.driver-v3-root),
+html:has(.driver-v3-splash),
+html[data-driver-app='v3'],
 body:has(.driver-v3-root),
-body:has(.driver-v3-splash) {
+body:has(.driver-v3-splash),
+body[data-driver-app='v3'] {
   background: #0f1d35;
   overscroll-behavior: none;
-  /* Prevent rubber-band revealing browser chrome behind the app */
+  height: 100%;
+  /* Allow the shell's internal scroll; do not use overflow:hidden on html
+     in a way that breaks iOS touch scrolling inside .content */
+}
+
+body:has(.driver-v3-root),
+body[data-driver-app='v3'] {
   overflow: hidden;
+  position: fixed;
+  inset: 0;
+  width: 100%;
 }
 
-html:has(.driver-v3-root),
-html:has(.driver-v3-splash) {
-  overscroll-behavior: none;
-}
-
-/* App splash (auth / first paint) */
 .driver-v3-splash {
   min-height: 100dvh;
   min-height: 100svh;
@@ -54,7 +69,6 @@ html:has(.driver-v3-splash) {
   text-align: center;
   box-sizing: border-box;
 }
-
 .driver-v3-splash img {
   width: 72px;
   height: 72px;
@@ -62,20 +76,17 @@ html:has(.driver-v3-splash) {
   object-fit: cover;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
-
 .driver-v3-splash strong {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
-
 .driver-v3-splash p {
   margin: 0;
   font-size: 14px;
   color: #b9c9e2;
   font-weight: 500;
 }
-
 .driver-v3-splash .spin {
   width: 22px;
   height: 22px;
@@ -85,48 +96,17 @@ html:has(.driver-v3-splash) {
   animation: drv3-spin 0.7s linear infinite;
   margin-top: 8px;
 }
-
 @keyframes drv3-spin {
   to { transform: rotate(360deg); }
 }
 
-/* Inputs & controls: app-like, full width, large targets */
 .driver-v3-root input,
 .driver-v3-root select,
 .driver-v3-root textarea {
-  font-size: 16px; /* prevents iOS zoom-on-focus */
+  font-size: 16px;
   max-width: 100%;
 }
-
 .driver-v3-root a,
 .driver-v3-root button {
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Native file pickers stay usable but don't look like desktop web forms */
-.driver-v3-root input[type='file'] {
-  max-width: 100%;
-}
-
-/* When keyboard is open, keep shell usable */
-@supports (height: 100dvh) {
-  .driver-v3-root {
-    min-height: 100dvh;
-  }
-}
-
-/* Fallback without :has() — set by DriverV3AppMode */
-html[data-driver-app='v3'] .global-chrome,
-html[data-driver-app='v3'] .app-bottom-nav,
-html[data-driver-app='v3'] .theme-switch,
-html[data-driver-app='v3'] .quick-nav,
-body[data-driver-app='v3'] .global-chrome,
-body[data-driver-app='v3'] .app-bottom-nav {
-  display: none !important;
-}
-
-html[data-driver-app='v3'],
-body[data-driver-app='v3'] {
-  background: #0f1d35;
-  overscroll-behavior: none;
 }
