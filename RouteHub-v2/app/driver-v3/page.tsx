@@ -71,7 +71,7 @@ export default function DriverV3Page() {
         <section className={styles.hero}>
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup:kind==='delivery'?t.drvDelivery:t.drvReturn}</span>
-            <span className={styles.stopCount}>STOP <strong>{route.position||completed+1}</strong> OF {total}</span>
+            <span className={styles.stopCount}>{t.drvStop} <strong>{route.position||completed+1}</strong> {t.drvOf} {total}</span>
           </div>
           <div className={styles.destination}>
             <div><h1>{route.destination_name||route.destination_address||'Current stop'}</h1>{route.destination_name&&route.destination_address&&<p>{route.destination_address}</p>}{route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}</div>
