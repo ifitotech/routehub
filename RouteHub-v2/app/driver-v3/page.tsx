@@ -78,7 +78,7 @@ export default function DriverV3Page() {
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}>
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
-      {loading?<TodayLoading/>:error?<section className={styles.stateCard}>
+      {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
         <h1>{t.drvCouldntLoad}</h1><p>Try again when your connection is available.</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>
@@ -107,4 +107,12 @@ export default function DriverV3Page() {
   </DriverV3Shell>
 }
 
-function TodayLoading(){return <div className={styles.loading} aria-label={t.drvLoadingRoute}><div className={styles.loadingHero}/><div className={styles.loadingProgress}/><div className={styles.loadingNext}/></div>}
+function TodayLoading({label}:{label:string}) {
+  return (
+    <div className={styles.loading} aria-label={label}>
+      <div className={styles.loadingHero}/>
+      <div className={styles.loadingProgress}/>
+      <div className={styles.loadingNext}/>
+    </div>
+  )
+}
