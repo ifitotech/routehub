@@ -319,7 +319,7 @@
   display:grid;
   grid-template-columns:44px minmax(0,1fr) 44px;
   align-items:center;
-  background:#0F1D35;
+  background:#000;
   color:#fff;
   min-height:calc(48px + env(safe-area-inset-top));
   padding:env(safe-area-inset-top) 8px 0;
