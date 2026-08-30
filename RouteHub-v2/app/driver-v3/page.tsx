@@ -247,8 +247,12 @@ export default function DriverV3Page() {
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
           <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
             <p className="eyebrow">{t.drvPickup}</p>
-            <h2 style={{margin:'8px 0 6px',fontSize:26,lineHeight:'30px'}}>{t.drvPickUpPo} {route.order_number||''}</h2>
-            <p className="muted" style={{margin:'0 0 18px'}}>{route.destination_name||route.destination_address}</p>
+            <h2 style={{margin:'8px 0 6px',fontSize:24,lineHeight:'28px'}}>{route.destination_name||t.drvPickUpPo}</h2>
+            {route.destination_address&&<p className="muted" style={{margin:'0 0 14px'}}>{route.destination_address}</p>}
+            <div style={{margin:'0 0 18px',padding:'12px 14px',borderRadius:14,background:'#f3f6fb'}}>
+              <p className="eyebrow" style={{margin:0}}>PO</p>
+              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
+            </div>
             <button className="primary" disabled={busy} onClick={()=>void confirmPickup()}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
             <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:10}}>{t.drvCancel||t.cancel}</button>
           </section>
@@ -259,8 +263,11 @@ export default function DriverV3Page() {
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
           <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
             <p className="eyebrow">{t.drvDelivery}</p>
-            <h2 style={{margin:'6px 0 8px'}}>{t.drvCompleteDelivery}</h2>
-            {route.order_number&&<p style={{fontSize:22,fontWeight:800,margin:'0 0 12px'}}>PO {route.order_number}</p>}
+            <h2 style={{margin:'6px 0 10px'}}>{route.destination_name||t.drvCompleteDelivery}</h2>
+            <div style={{margin:'0 0 14px',padding:'12px 14px',borderRadius:14,background:'#f3f6fb'}}>
+              <p className="eyebrow" style={{margin:0}}>PO</p>
+              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800}}>{route.order_number||'—'}</p>
+            </div>
             <label className="muted" style={{display:'block',marginBottom:8}}>
               {t.drvReceivedBy}
               <input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit'}}/>
