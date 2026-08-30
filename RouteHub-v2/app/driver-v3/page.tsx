@@ -247,11 +247,11 @@ export default function DriverV3Page() {
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
           <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
             <p className="eyebrow">{t.drvPickup}</p>
-            <h2 style={{margin:'8px 0 6px',fontSize:24,lineHeight:'28px'}}>{route.destination_name||t.drvPickUpPo}</h2>
+            <h2 style={{margin:'8px 0 6px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvPickUpPo}</h2>
             {route.destination_address&&<p className="muted" style={{margin:'0 0 14px'}}>{route.destination_address}</p>}
-            <div style={{margin:'0 0 18px',padding:'12px 14px',borderRadius:14,background:'#f3f6fb'}}>
-              <p className="eyebrow" style={{margin:0}}>PO</p>
-              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
+            <div style={{margin:'0 0 18px',padding:'14px 16px',borderRadius:16,background:'rgba(255,255,255,.55)',border:'1px solid rgba(255,255,255,.7)'}}>
+              <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
+              <p style={{margin:'6px 0 0',fontSize:30,lineHeight:'34px',fontWeight:800,letterSpacing:'-0.03em'}}>{route.order_number||'—'}</p>
             </div>
             <button className="primary" disabled={busy} onClick={()=>void confirmPickup()}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
             <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:10}}>{t.drvCancel||t.cancel}</button>
@@ -304,7 +304,11 @@ const overlay: React.CSSProperties = {
 const dialog: React.CSSProperties = {
   width:'min(360px,100%)',
   padding:'22px 20px 18px',
-  borderRadius:22,
+  borderRadius:24,
+  background:'rgba(255,255,255,.82)',
+  backdropFilter:'blur(18px)',
+  WebkitBackdropFilter:'blur(18px)',
+  border:'1px solid rgba(255,255,255,.65)',
   boxShadow:'0 18px 40px rgba(15,29,53,.28)',
 }
 
