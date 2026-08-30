@@ -8,11 +8,11 @@ import {reportIssue} from '../../../lib/driver-v3/actions'
 import {useLocale} from '../../../lib/use-preferences'
 
 const CATEGORIES = [
-  'Customer unavailable',
-  'Wrong address',
-  'Damaged item',
-  'Access problem',
-  'Other',
+  {id: 'Customer unavailable', labelKey: 'drvIssueCust'},
+  {id: 'Wrong address', labelKey: 'drvIssueAddr'},
+  {id: 'Damaged item', labelKey: 'drvIssueDmg'},
+  {id: 'Access problem', labelKey: 'drvIssueAccess'},
+  {id: 'Other', labelKey: 'drvIssueOther'},
 ] as const
 
 export default function Issue() {
@@ -71,20 +71,20 @@ export default function Issue() {
             <div style={{display: 'grid', gap: 8, marginTop: 8}}>
               {CATEGORIES.map(c => (
                 <button
-                  key={c}
+                  key={c.id}
                   type="button"
                   className="secondary"
-                  onClick={() => setCategory(c)}
+                  onClick={() => setCategory(c.id)}
                   style={{
                     justifyContent: 'flex-start',
                     paddingLeft: 14,
-                    borderColor: category === c ? '#1667F2' : undefined,
-                    background: category === c ? '#EAF2FF' : undefined,
-                    color: category === c ? '#1667F2' : undefined,
-                    fontWeight: category === c ? 800 : 600,
+                    borderColor: category === c.id ? '#1667F2' : undefined,
+                    background: category === c.id ? '#EAF2FF' : undefined,
+                    color: category === c.id ? '#1667F2' : undefined,
+                    fontWeight: category === c.id ? 800 : 600,
                   }}
                 >
-                  {c}
+                  {t[c.labelKey]}
                 </button>
               ))}
             </div>

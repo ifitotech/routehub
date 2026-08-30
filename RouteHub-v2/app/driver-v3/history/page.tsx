@@ -68,7 +68,7 @@ export default function History() {
               <p className="muted" style={{margin: 0, fontSize: 13}}>
                 {r.completed_at || r.route_completed_at
                   ? new Date(r.completed_at || r.route_completed_at).toLocaleString()
-                  : 'Completion time unavailable'}
+                  : t.drvNoCompleteTime}
                 {r.order_number ? ` · PO ${r.order_number}` : ''}
               </p>
               <p className="muted" style={{margin: '6px 0 0', fontSize: 13, fontWeight: 600}}>

@@ -36,7 +36,7 @@ export default function DriverV3Settings() {
         <p className="eyebrow">{t.drvAccount}</p>
         <h2 style={{margin: '4px 0 8px', fontSize: 18}}>RouteHub Driver</h2>
         <p className="muted" style={{margin: 0}}>
-          Session and workspace access are managed by your company.
+          {t.drvAccountHelp}
         </p>
       </section>
 

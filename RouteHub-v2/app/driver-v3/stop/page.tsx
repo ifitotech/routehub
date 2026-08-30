@@ -30,11 +30,11 @@ const operationLabel = (kind: string) =>
   kind === 'branch' ? 'RETURN' : kind === 'pickup' ? 'PICKUP' : 'DELIVERY'
 
 const ISSUE_CATEGORIES = [
-  'Customer unavailable',
-  'Wrong address',
-  'Damaged item',
-  'Access problem',
-  'Other',
+  {id: 'Customer unavailable', labelKey: 'drvIssueCust'},
+  {id: 'Wrong address', labelKey: 'drvIssueAddr'},
+  {id: 'Damaged item', labelKey: 'drvIssueDmg'},
+  {id: 'Access problem', labelKey: 'drvIssueAccess'},
+  {id: 'Other', labelKey: 'drvIssueOther'},
 ] as const
 
 type Sheet = 'photo' | 'signature' | 'notes' | 'issue' | null
@@ -527,20 +527,20 @@ export default function DriverV3Stop() {
                 <div style={{display: 'grid', gap: 8, marginBottom: 12}}>
                   {ISSUE_CATEGORIES.map(c => (
                     <button
-                      key={c}
+                      key={c.id}
                       type="button"
                       className="secondary"
-                      onClick={() => setIssueCat(c)}
+                      onClick={() => setIssueCat(c.id)}
                       style={{
                         justifyContent: 'flex-start',
                         paddingLeft: 14,
-                        borderColor: issueCat === c ? '#1667F2' : undefined,
-                        background: issueCat === c ? '#EAF2FF' : undefined,
-                        color: issueCat === c ? '#1667F2' : undefined,
-                        fontWeight: issueCat === c ? 800 : 600,
+                        borderColor: issueCat === c.id ? '#1667F2' : undefined,
+                        background: issueCat === c.id ? '#EAF2FF' : undefined,
+                        color: issueCat === c.id ? '#1667F2' : undefined,
+                        fontWeight: issueCat === c.id ? 800 : 600,
                       }}
                     >
-                      {c}
+                      {t[c.labelKey]}
                     </button>
                   ))}
                 </div>
