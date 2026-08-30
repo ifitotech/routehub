@@ -6,7 +6,7 @@ import {MapContainer,Marker,Polyline,TileLayer,Tooltip,Popup,useMap} from 'react
 import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {mapTileConfig} from '../lib/maps/map-config'
-import {calculateRoute} from '../lib/maps/routing'
+import {calculateRoute,formatRouteEstimate} from '../lib/maps/routing'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -125,6 +125,7 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
 export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [loading,setLoading]=useState(true)
+ const [totals,setTotals]=useState<{distanceMeters:number;durationSeconds:number}|null>(null)
  const visibleRoutes=useMemo(()=>routes.filter(route=>route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng)),[routes])
  const routeKey=visibleRoutes.map(route=>[route.id,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.position].join(':')).join('|')
 
@@ -132,6 +133,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   let cancelled=false
   if(!visibleRoutes.length){
    setResolved([])
+   setTotals(null)
    setLoading(false)
    return
   }
@@ -163,7 +165,17 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const estimate=await withTimeout(calculateRoute(route.points),4000,{coordinates:route.points,source:'fallback' as const})
     return {...route,line:estimate.coordinates.length>1?estimate.coordinates:route.points}
    }))
-   if(!cancelled)setResolved(lined)
+   if(cancelled)return
+   setResolved(lined)
+   const chain=lined.flatMap(route=>route.points.slice(-1))
+   const start=lined.find(route=>route.points.length>1)?.points[0]
+   const path=start?[start,...chain.filter(point=>point!==start)]:chain
+   if(path.length>1){
+    const total=await withTimeout(calculateRoute(path.slice(0,12)),5000,{coordinates:path,source:'fallback' as const})
+    if(!cancelled&&Number.isFinite(total.distanceMeters)&&Number.isFinite(total.durationSeconds)){
+     setTotals({distanceMeters:total.distanceMeters!,durationSeconds:total.durationSeconds!})
+    }
+   }
   })().catch(()=>{if(!cancelled){setResolved([]);setLoading(false)}})
   return()=>{cancelled=true}
  },[routeKey])
@@ -200,6 +212,6 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    </MapContainer>}
    <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{driverLocations.length} {copy.driver.toLowerCase()}{driverLocations.length===1?'':'s'}</span></div>
   </div>
-  <footer><span>{routes.length} {locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'} · ${locale==='es'?'ubicación actualizada':locale==='fr'?'position actualisée':'location updated'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>
+  <footer><span>{routes.length} {locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}{totals?` · ${formatRouteEstimate(totals,locale)}`:''}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'} · ${locale==='es'?'ubicación actualizada':locale==='fr'?'position actualisée':'location updated'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>
  </section>
 }
