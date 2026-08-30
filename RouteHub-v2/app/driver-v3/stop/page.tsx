@@ -78,6 +78,7 @@ export default function DriverV3Stop() {
     try {
       if (action === 'arrive') {
         await markArrived(ctx)
+        try { await getCurrentLocation({maximumAge: 0}) } catch {}
         await refresh()
         setMessage(t.drvArrivedOk)
       } else {

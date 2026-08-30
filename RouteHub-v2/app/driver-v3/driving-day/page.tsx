@@ -6,6 +6,8 @@ import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
+import {getCurrentLocation} from '../../../lib/location'
+import {updateDrivingLocation} from '../../../lib/driving-session'
 
 export default function DrivingDayPage() {
   const {loading, error, drivingSession, driverId, companyId, refresh} = useDriverData()
@@ -25,7 +27,13 @@ export default function DrivingDayPage() {
         setMessageType('ok')
         setMessage(t.drvDayEnded)
       } else {
-        await startDrivingDay({driverId, companyId})
+        const session = await startDrivingDay({driverId, companyId})
+        try {
+          const location = await getCurrentLocation({maximumAge: 0})
+          if (session?.id) await updateDrivingLocation(session.id, driverId, location)
+        } catch {
+          /* GPS optional; Driving Day still starts. */
+        }
         setMessageType('ok')
         setMessage(t.drvDayStarted)
       }

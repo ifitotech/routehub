@@ -8,6 +8,8 @@ import {operationalDate} from '../../lib/driver-queue'
 import {markArrived, startRoute} from '../../lib/driver-v3/actions'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
+import {getCurrentLocation} from '../../lib/location'
+import {updateDrivingLocation} from '../../lib/driving-session'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './today.module.css'
 
@@ -35,6 +37,12 @@ export default function DriverV3Page() {
       const context={routeId:route.id,driverId,companyId:route.company_id}
       if(starting)await startRoute(context,operationalDate())
       else if(!route.arrived_at)await markArrived(context)
+      if(drivingSession){
+        try{
+          const location=await getCurrentLocation({maximumAge:0})
+          await updateDrivingLocation(drivingSession.id,driverId,location)
+        }catch{}
+      }
       await refresh()
       setMessage(starting?t.drvStartRoute:t.drvArrivedOk)
     }catch(error){
