@@ -444,7 +444,7 @@ export default function DriverV3Stop() {
                   <textarea
                     value={note}
                     onChange={e => setNote(e.target.value)}
-                    placeholder="Optional delivery note"
+                    placeholder={t.drvOptionalNote}
                     style={{marginBottom: 12}}
                   />
                 </div>

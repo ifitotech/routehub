@@ -6,9 +6,11 @@ import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {saveStopNote, uploadStopPhoto, saveStopSignature} from '../../../lib/driver-v3/actions'
+import {useLocale} from '../../../lib/use-preferences'
 
 export default function Pod() {
   const router = useRouter()
+  const {t} = useLocale()
   const {driverId, snapshot, refresh} = useDriverData()
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -125,17 +127,17 @@ export default function Pod() {
   }
 
   return (
-    <DriverV3Shell active="route" mode="stack" title="Proof" backHref="/driver/stop" backLabel="Stop">
+    <DriverV3Shell active="route" mode="stack" title={t.drvNotes} backHref="/driver/stop" backLabel={t.drvRoute}>
       
 
       {!route ? (
         <section className="card">
-          <p className="muted">No current stop.</p>
+          <p className="muted">{t.drvNoCurrentStop}</p>
         </section>
       ) : (
         <>
           <section className="card">
-            <p className="eyebrow">CURRENT STOP</p>
+            <p className="eyebrow">{t.drvCurrentStop}</p>
             <h2 style={{margin: '4px 0 0', fontSize: 18}}>
               {route.destination_name || route.destination_address || 'Stop'}
             </h2>
@@ -151,7 +153,7 @@ export default function Pod() {
               <Camera size={14} /> PHOTO
             </p>
             <label className="secondary" style={{cursor: 'pointer', marginTop: 8}}>
-              {photoName || 'Take or choose photo'}
+              {photoName || t.drvTakePhoto}
               <input
                 ref={file}
                 type="file"
@@ -170,7 +172,7 @@ export default function Pod() {
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="Optional delivery note"
+              placeholder={t.drvOptionalNote}
               style={{marginTop: 8}}
             />
           </section>
@@ -211,7 +213,7 @@ export default function Pod() {
 
           <div className={shellStyles.stickyAction}>
             <button className="primary" disabled={busy} onClick={() => void submit()}>
-              {busy ? 'Saving…' : 'SAVE EVIDENCE'}
+              {busy ? t.drvSaving : t.drvSaveEvidence}
             </button>
             {message && (
               <p

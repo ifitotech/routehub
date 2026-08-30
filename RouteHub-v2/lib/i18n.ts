@@ -80,7 +80,7 @@ Object.assign(es, {
   drvAssignedOrder:'Las paradas asignadas apareceran aqui.', drvVehicleHelp:'Cuando haya un vehiculo en tu sucursal, saldra aqui.',
   drvDayHelp:'Inicia la jornada antes de las rutas. Terminar el dia es independiente de completar la ruta.', drvEndDayQ:'Terminar la jornada?', drvDetailsOpt:'Detalles (opcional)', drvBusy:'Actualizando…', drvSaving:'Guardando…', drvSigningOut:'Cerrando sesion…',
   drvDayActive:'Jornada · Activa', drvDayInactive:'Jornada · Inactiva',
-  drvDurationNA:'Duracion no disponible',
+  drvDurationNA:'Duracion no disponible', drvCurrentStop:'PARADA ACTUAL', drvOptionalNote:'Nota opcional', drvSaveEvidence:'GUARDAR EVIDENCIA', drvLiveOp:'Operacion en vivo',
 })
 Object.assign(fr, {
   drvToday:"Aujourd'hui", drvRoute:'Itineraire', drvMap:'Carte', drvTruck:'Camion', drvMore:'Plus',
@@ -110,7 +110,7 @@ Object.assign(fr, {
   drvAssignedOrder:'Les arrets assignes apparaitront ici.', drvVehicleHelp:'Le camion apparaitra quand il sera assigne.',
   drvDayHelp:'Demarrez la journee avant les itineraires. La fin de journee est independante.', drvEndDayQ:'Terminer la journee ?', drvDetailsOpt:'Details (optionnel)', drvBusy:'Mise a jour…', drvSaving:'Enregistrement…', drvSigningOut:'Deconnexion…',
   drvDayActive:'Journee · Active', drvDayInactive:'Journee · Inactive',
-  drvDurationNA:'Duree indisponible',
+  drvDurationNA:'Duree indisponible', drvCurrentStop:'ARRET ACTUEL', drvOptionalNote:'Note optionnelle', drvSaveEvidence:'ENREGISTRER PREUVE', drvLiveOp:'Operation en direct',
 })
 
 export const translations: Record<Locale, TranslationDictionary> = {en, es, fr}

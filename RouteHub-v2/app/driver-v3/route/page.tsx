@@ -140,7 +140,7 @@ export default function DriverV3Route() {
                       </p>
                       {isCurrent && (
                         <span className="tag" style={{marginTop: 6}}>
-                          CURRENT STOP
+                          {t.drvCurrentStop}
                         </span>
                       )}
                     </div>

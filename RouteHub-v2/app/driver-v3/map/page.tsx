@@ -52,7 +52,7 @@ export default function DriverV3Map() {
   }
 
   return (
-    <DriverV3Shell active="map" title={t.drvMap} subtitle={route ? 'Live operation' : undefined} flush>
+    <DriverV3Shell active="map" title={t.drvMap} subtitle={route ? t.drvLiveOp : undefined} flush>
       <div className={styles.mapScreen}>
         <div className={styles.mapCanvas}>
           {loading ? (
@@ -106,7 +106,7 @@ export default function DriverV3Map() {
         {route && (
           <div className={styles.mapSheet}>
             <p className="eyebrow" style={{margin: 0}}>
-              CURRENT STOP · {route.position || '—'} · {kind}
+              {t.drvCurrentStop} · {route.position || '—'} · {kind}
             </p>
             <h2 style={{margin: '6px 0 4px', fontSize: 18}}>
               {route.destination_name || route.destination_address || 'Destination'}
