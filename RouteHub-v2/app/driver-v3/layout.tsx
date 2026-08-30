@@ -6,7 +6,7 @@ import './v3-app.css'
 export const metadata: Metadata = {
   title: 'RouteHub Driver',
   applicationName: 'RouteHub Driver',
-  manifest: '/manifest-driver-v3.json',
+  manifest: '/manifest-driver.json',
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',

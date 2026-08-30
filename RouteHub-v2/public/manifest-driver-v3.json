@@ -1,25 +1,80 @@
 {
-  "id": "/driver-v3",
+  "id": "/driver",
   "name": "RouteHub Driver",
   "short_name": "RouteHub",
   "description": "Driver routes, proof of delivery and truck tools.",
-  "start_url": "/driver-v3?source=pwa",
+  "start_url": "/driver?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#0F1D35",
   "theme_color": "#0F1D35",
   "lang": "en",
-  "categories": ["business", "productivity", "navigation"],
+  "categories": [
+    "business",
+    "productivity",
+    "navigation"
+  ],
   "icons": [
-    {"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg", "purpose": "any"},
-    {"src": "/routehub-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "/routehub-driver-new.jpg",
+      "sizes": "774x774",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/routehub-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/routehub-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
   "shortcuts": [
-    {"name": "Today", "short_name": "Today", "url": "/driver-v3", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]},
-    {"name": "Map", "short_name": "Map", "url": "/driver-v3/map", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]},
-    {"name": "Route", "short_name": "Route", "url": "/driver-v3/route", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]}
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "url": "/driver",
+      "icons": [
+        {
+          "src": "/routehub-driver-new.jpg",
+          "sizes": "774x774",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Map",
+      "short_name": "Map",
+      "url": "/driver/map",
+      "icons": [
+        {
+          "src": "/routehub-driver-new.jpg",
+          "sizes": "774x774",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Route",
+      "short_name": "Route",
+      "url": "/driver/route",
+      "icons": [
+        {
+          "src": "/routehub-driver-new.jpg",
+          "sizes": "774x774",
+          "type": "image/jpeg"
+        }
+      ]
+    }
   ]
 }

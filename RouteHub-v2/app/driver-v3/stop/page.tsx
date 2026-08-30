@@ -73,7 +73,7 @@ export default function DriverV3Stop() {
 
   return (
     <DriverV3Shell active="route">
-      <Link href="/driver-v3/route" className="muted">
+      <Link href="/driver/route" className="muted">
         ‹ My Route
       </Link>
 
@@ -140,7 +140,7 @@ export default function DriverV3Stop() {
               }}
             >
               <Link
-                href="/driver-v3/pod"
+                href="/driver/pod"
                 className="secondary"
                 style={{
                   minHeight: 72,
@@ -156,7 +156,7 @@ export default function DriverV3Stop() {
                 Photo
               </Link>
               <Link
-                href="/driver-v3/pod"
+                href="/driver/pod"
                 className="secondary"
                 style={{
                   minHeight: 72,
@@ -172,7 +172,7 @@ export default function DriverV3Stop() {
                 Signature
               </Link>
               <Link
-                href="/driver-v3/pod"
+                href="/driver/pod"
                 className="secondary"
                 style={{
                   minHeight: 72,
@@ -188,7 +188,7 @@ export default function DriverV3Stop() {
                 Notes
               </Link>
               <Link
-                href="/driver-v3/issue"
+                href="/driver/issue"
                 className="secondary"
                 style={{
                   minHeight: 72,

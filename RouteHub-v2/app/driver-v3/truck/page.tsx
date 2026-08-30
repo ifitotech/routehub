@@ -106,7 +106,7 @@ export default function DriverV3Truck() {
             <div style={{display: 'grid', gap: 10, marginTop: 8}}>
               <Link
                 className="primary"
-                href="/driver-v3/truck/fuel"
+                href="/driver/truck/fuel"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -122,7 +122,7 @@ export default function DriverV3Truck() {
               </Link>
               <Link
                 className="secondary"
-                href="/driver-v3/truck/maintenance"
+                href="/driver/truck/maintenance"
                 style={{
                   display: 'flex',
                   alignItems: 'center',

@@ -50,7 +50,7 @@ export default function Issue() {
 
   return (
     <DriverV3Shell active="route">
-      <Link href="/driver-v3/stop" className="muted">
+      <Link href="/driver/stop" className="muted">
         ‹ Stop details
       </Link>
       <p className="eyebrow">ROUTE ISSUE</p>

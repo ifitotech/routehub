@@ -30,31 +30,31 @@ export default function DriverV3More() {
 
       <section className="card">
         <div className="row">
-          <Link href="/driver-v3/history" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
+          <Link href="/driver/history" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
             <History size={20} color="#667892" />
             <span>Route History</span>
           </Link>
         </div>
         <div className="row">
-          <Link href="/driver-v3/driving-day" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
+          <Link href="/driver/driving-day" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
             <CalendarDays size={20} color="#667892" />
             <span>Driving Day</span>
           </Link>
         </div>
         <div className="row">
-          <Link href="/driver-v3/truck/fuel" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
+          <Link href="/driver/truck/fuel" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
             <Fuel size={20} color="#667892" />
             <span>Truck Fuel</span>
           </Link>
         </div>
         <div className="row">
-          <Link href="/driver-v3/truck/maintenance" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
+          <Link href="/driver/truck/maintenance" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
             <Wrench size={20} color="#667892" />
             <span>Truck Maintenance</span>
           </Link>
         </div>
         <div className="row">
-          <Link href="/driver-v3/settings" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
+          <Link href="/driver/settings" style={{display: 'flex', alignItems: 'center', gap: 12, flex: 1, textDecoration: 'none', color: 'inherit'}}>
             <Settings size={20} color="#667892" />
             <span>Settings</span>
           </Link>

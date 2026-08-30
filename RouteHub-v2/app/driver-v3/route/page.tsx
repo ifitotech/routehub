@@ -82,7 +82,7 @@ export default function DriverV3Route() {
               return (
                 <Link
                   key={route.id}
-                  href={`/driver-v3/stop?id=${encodeURIComponent(route.id)}`}
+                  href={`/driver/stop?id=${encodeURIComponent(route.id)}`}
                   style={{textDecoration: 'none', color: 'inherit'}}
                 >
                   <article

@@ -60,7 +60,7 @@ export default function Fuel() {
 
   return (
     <DriverV3Shell active="truck">
-      <Link href="/driver-v3/truck" className="muted">
+      <Link href="/driver/truck" className="muted">
         ‹ Truck
       </Link>
       <p className="eyebrow">TRUCK</p>

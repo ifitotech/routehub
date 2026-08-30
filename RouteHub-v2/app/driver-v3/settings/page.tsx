@@ -24,7 +24,7 @@ export default function DriverV3Settings() {
 
   return (
     <DriverV3Shell active="more">
-      <Link href="/driver-v3/more" className="muted">
+      <Link href="/driver/more" className="muted">
         ‹ More
       </Link>
       <p className="eyebrow">ACCOUNT</p>

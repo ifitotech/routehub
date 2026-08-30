@@ -6,17 +6,51 @@
   "start_url": "/driver?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "any",
   "background_color": "#f8fafc",
   "theme_color": "#2563eb",
   "lang": "en",
-  "categories": ["business", "productivity", "navigation"],
+  "categories": [
+    "business",
+    "productivity",
+    "navigation"
+  ],
   "icons": [
-    {"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg", "purpose": "any"}
+    {
+      "src": "/routehub-driver-new.jpg",
+      "sizes": "774x774",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
   ],
   "shortcuts": [
-    {"name": "Current routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]},
-    {"name": "History", "short_name": "History", "url": "/driver/history", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "774x774", "type": "image/jpeg"}]}
+    {
+      "name": "Current routes",
+      "short_name": "Routes",
+      "url": "/driver",
+      "icons": [
+        {
+          "src": "/routehub-driver-new.jpg",
+          "sizes": "774x774",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "short_name": "History",
+      "url": "/driver/history",
+      "icons": [
+        {
+          "src": "/routehub-driver-new.jpg",
+          "sizes": "774x774",
+          "type": "image/jpeg"
+        }
+      ]
+    }
   ]
 }
