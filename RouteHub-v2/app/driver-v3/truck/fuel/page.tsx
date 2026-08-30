@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react'
 import Link from 'next/link'
 import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
+import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../../lib/driver-v3/use-driver-data'
 import {getSupabase} from '../../../../lib/supabase'
 import {saveFuel} from '../../../../lib/driver-v3/actions'
@@ -117,13 +118,15 @@ export default function Fuel() {
               />
             </label>
 
-            <button
-              className="primary"
-              disabled={busy || !odometer || !amount}
-              onClick={() => void submit()}
-            >
-              {busy ? 'Saving…' : 'SAVE FUEL'}
-            </button>
+            <div className={shellStyles.stickyAction}>
+              <button
+                className="primary"
+                disabled={busy || !odometer || !amount}
+                onClick={() => void submit()}
+              >
+                {busy ? 'Saving…' : 'SAVE FUEL'}
+              </button>
+            </div>
 
             {message && (
               <p

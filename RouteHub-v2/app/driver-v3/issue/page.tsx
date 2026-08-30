@@ -2,6 +2,7 @@
 import {useState} from 'react'
 import Link from 'next/link'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {reportIssue} from '../../../lib/driver-v3/actions'
 
@@ -97,14 +98,16 @@ export default function Issue() {
               />
             </label>
 
-            <button
-              className="primary"
-              disabled={busy || !category}
-              onClick={() => void submit()}
-              style={{marginTop: 8, background: '#EF5350'}}
-            >
-              {busy ? 'Submitting…' : 'SUBMIT ISSUE'}
-            </button>
+            <div className={shellStyles.stickyAction}>
+              <button
+                className="primary"
+                disabled={busy || !category}
+                onClick={() => void submit()}
+                style={{background: '#EF5350'}}
+              >
+                {busy ? 'Submitting…' : 'SUBMIT ISSUE'}
+              </button>
+            </div>
 
             {message && (
               <p

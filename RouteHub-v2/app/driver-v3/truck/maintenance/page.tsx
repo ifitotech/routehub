@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react'
 import Link from 'next/link'
 import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
+import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../../lib/driver-v3/use-driver-data'
 import {getSupabase} from '../../../../lib/supabase'
 import {saveMaintenance} from '../../../../lib/driver-v3/actions'
@@ -141,13 +142,15 @@ export default function Maintenance() {
               />
             </label>
 
-            <button
-              className="primary"
-              disabled={busy || !type.trim()}
-              onClick={() => void submit()}
-            >
-              {busy ? 'Saving…' : 'SAVE MAINTENANCE'}
-            </button>
+            <div className={shellStyles.stickyAction}>
+              <button
+                className="primary"
+                disabled={busy || !type.trim()}
+                onClick={() => void submit()}
+              >
+                {busy ? 'Saving…' : 'SAVE MAINTENANCE'}
+              </button>
+            </div>
 
             {message && (
               <p
