@@ -1,13 +1,17 @@
 'use client'
 import Link from 'next/link'
-import {CheckCircle2, ChevronRight} from 'lucide-react'
+import dynamic from 'next/dynamic'
+import {CheckCircle2, ChevronRight, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {operationalDate} from '../../../lib/driver-queue'
+import {openNavigation} from '../../../lib/maps/external-navigation'
+
+const LiveRouteMap = dynamic(() => import('../../live-route-map'), {ssr: false})
 
 export default function DriverV3Route() {
-  const {loading, error, snapshot, refresh, routes} = useDriverData()
+  const {loading, error, snapshot, refresh, routes, drivingSession} = useDriverData()
   const {t} = useLocale()
   const today = operationalDate()
   const current = snapshot?.currentOperation?.route as any
@@ -72,6 +76,65 @@ export default function DriverV3Route() {
             </div>
           </section>
 
+          {current && (
+            <section className="card" style={{marginTop: 12, overflow: 'hidden'}}>
+              <p className="eyebrow">{t.drvCurrentStop}</p>
+              <h2 style={{margin: '4px 0 2px', fontSize: 18}}>
+                {current.destination_name || current.destination_address || t.drvCurrentStopName}
+              </h2>
+              {current.destination_address && current.destination_name && (
+                <p className="muted" style={{margin: '0 0 10px', fontSize: 13}}>{current.destination_address}</p>
+              )}
+              <div style={{height: 180, borderRadius: 14, overflow: 'hidden', marginBottom: 12, position: 'relative'}}>
+                <LiveRouteMap
+                  destinationAddress={current.destination_address}
+                  destinationCoordinate={
+                    current.destination_lat != null && current.destination_lng != null
+                      ? {lat: Number(current.destination_lat), lng: Number(current.destination_lng)}
+                      : null
+                  }
+                  driverLocation={
+                    drivingSession?.last_lat != null && drivingSession?.last_lng != null
+                      ? {lat: Number(drivingSession.last_lat), lng: Number(drivingSession.last_lng)}
+                      : null
+                  }
+                  driverUpdatedAt={drivingSession?.last_updated_at || null}
+                  title={t.drvCurrentStop}
+                  showHeader={false}
+                  interactive
+                />
+              </div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10}}>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => {
+                    const url = openNavigation({
+                      address: current.destination_address,
+                      coordinate:
+                        current.destination_lat != null && current.destination_lng != null
+                          ? {lat: Number(current.destination_lat), lng: Number(current.destination_lng)}
+                          : null,
+                      label: current.destination_name,
+                    })
+                    if (url) {
+                      const opened = window.open(url, '_blank', 'noopener,noreferrer')
+                      if (!opened) window.location.assign(url)
+                    }
+                  }}
+                >
+                  <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
+                    <Navigation size={16} />
+                    {t.drvOpenInMaps}
+                  </span>
+                </button>
+                <Link className="primary" href={`/driver/stop?id=${encodeURIComponent(current.id)}`} style={{textDecoration: 'none', display: 'grid', placeItems: 'center'}}>
+                  {t.drvStopDetails}
+                </Link>
+              </div>
+            </section>
+          )}
+
           <div style={{marginTop: 14, display: 'grid', gap: 10}}>
             {queueRoutes.length === 0 && (
               <section className="card">
@@ -79,7 +142,7 @@ export default function DriverV3Route() {
                 <p className="muted">{t.drvAssignedOrder}</p>
               </section>
             )}
-            {queueRoutes.map((route: any, index: number) => {
+            {queueRoutes.filter((route: any) => route.id !== current?.id).map((route: any, index: number) => {
               const isCurrent = route.id === current?.id
               const isDone = route.status === 'completed'
               const colors = typeColor(route)
