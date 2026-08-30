@@ -23,7 +23,7 @@ export default function DriverV3Settings() {
     setError('')
     const {error} = await getSupabase().auth.signOut()
     if (error) {
-      setError('Unable to sign out. Please try again.')
+      setError(t.drvOpFailed)
       setBusy(false)
       return
     }

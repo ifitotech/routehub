@@ -22,9 +22,9 @@ export default function Completed() {
     try {
       await finalizeRoute({routeId: last.id, driverId, companyId: last.company_id}, 'normal')
       await refresh()
-      setMessage('Route completed.')
+      setMessage(t.drvRouteDone)
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Unable to complete route.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }

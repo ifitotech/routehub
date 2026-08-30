@@ -30,7 +30,7 @@ export default function Issue() {
     if (!route || busy) return
     if (!category) {
       setMessageType('err')
-      setMessage('Select an issue category.')
+      setMessage(t.drvPickCat)
       return
     }
     setBusy(true)

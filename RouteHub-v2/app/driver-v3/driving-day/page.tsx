@@ -23,16 +23,16 @@ export default function DrivingDayPage() {
       if (drivingSession) {
         await endDrivingDay({driverId, sessionId: drivingSession.id})
         setMessageType('ok')
-        setMessage('Driving Day ended.')
+        setMessage(t.drvDayEnded)
       } else {
         await startDrivingDay({driverId, companyId})
         setMessageType('ok')
-        setMessage('Driving Day started.')
+        setMessage(t.drvDayStarted)
       }
       await refresh()
     } catch (e) {
       setMessageType('err')
-      setMessage(e instanceof Error ? e.message : 'Unable to update Driving Day.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }

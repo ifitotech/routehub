@@ -142,7 +142,7 @@ export default function DriverV3Stop() {
     if (!ctx || sheetBusy) return
     const file = fileRef.current?.files?.[0]
     if (!file) {
-      setSheetMsg('Choose a photo first.')
+      setSheetMsg(t.drvNeedPhoto)
       return
     }
     setSheetBusy(true)
@@ -167,7 +167,7 @@ export default function DriverV3Stop() {
   const saveNotes = async () => {
     if (!ctx || sheetBusy) return
     if (!note.trim()) {
-      setSheetMsg('Write a note first.')
+      setSheetMsg(t.drvNeedNote)
       return
     }
     setSheetBusy(true)
@@ -175,14 +175,14 @@ export default function DriverV3Stop() {
     try {
       await saveStopNote(ctx, note.trim())
       await refresh()
-      setSheetMsg('Note saved.')
+      setSheetMsg(t.drvNoteSaved)
       setNote('')
       setTimeout(() => {
         setSheet(null)
         setSheetMsg('')
       }, 600)
     } catch (e) {
-      setSheetMsg(e instanceof Error ? e.message : 'Unable to save note.')
+      setSheetMsg(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setSheetBusy(false)
     }
@@ -202,7 +202,7 @@ export default function DriverV3Stop() {
       }
     }
     if (!hasInk) {
-      setSheetMsg('Customer must sign first.')
+      setSheetMsg(t.drvNeedSign)
       return
     }
     setSheetBusy(true)
