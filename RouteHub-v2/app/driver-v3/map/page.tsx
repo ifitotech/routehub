@@ -138,7 +138,7 @@ export default function DriverV3Map() {
                 >
                   <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
                     <CheckCircle2 size={16} />
-                    {busy ? 'Updating…' : t.drvArrivedShort}
+                    {busy ? t.drvBusy : t.drvArrivedShort}
                   </span>
                 </button>
               )}

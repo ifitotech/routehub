@@ -72,7 +72,7 @@ export default function DrivingDayPage() {
             onClick={() => { if (drivingSession) setConfirmEnd(true); else void toggle() }}
           >
             {busy
-              ? 'Updating…'
+              ? t.drvBusy
               : drivingSession
                 ? t.drvEndDrivingDay
                 : t.drvStartDrivingDay}
@@ -115,7 +115,7 @@ export default function DrivingDayPage() {
                   void toggle()
                 }}
               >
-                {busy ? 'Updating…' : t.drvEndDrivingDay}
+                {busy ? t.drvBusy : t.drvEndDrivingDay}
               </button>
             </div>
           </div>

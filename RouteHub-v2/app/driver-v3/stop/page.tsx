@@ -358,7 +358,7 @@ export default function DriverV3Stop() {
           <div className={styles.stickyAction}>
             {!route.arrived_at ? (
               <button className="primary" disabled={busy || !isCurrent} onClick={() => void act('arrive')}>
-                {busy ? 'Updating…' : t.drvArrivedShort}
+                {busy ? t.drvBusy : t.drvArrivedShort}
               </button>
             ) : (
               <button
@@ -367,7 +367,7 @@ export default function DriverV3Stop() {
                 onClick={() => setConfirmComplete(true)}
                 style={{background: '#16B96B'}}
               >
-                {busy ? 'Completing…' : (operationLabel(String(kind))==='PICKUP'?t.drvCompletePickup:operationLabel(String(kind))==='RETURN'?t.drvCompleteReturn:t.drvCompleteDelivery)}
+                {busy ? t.drvBusy : (operationLabel(String(kind))==='PICKUP'?t.drvCompletePickup:operationLabel(String(kind))==='RETURN'?t.drvCompleteReturn:t.drvCompleteDelivery)}
               </button>
             )}
             {message && (
@@ -432,7 +432,7 @@ export default function DriverV3Stop() {
                 </div>
                 <div className={styles.sheetFooter}>
                   <button className="primary" disabled={sheetBusy} onClick={() => void savePhoto()}>
-                    {sheetBusy ? 'Saving…' : t.drvSavePhoto}
+                    {sheetBusy ? t.drvSaving : t.drvSavePhoto}
                   </button>
                 </div>
               </>
@@ -450,7 +450,7 @@ export default function DriverV3Stop() {
                 </div>
                 <div className={styles.sheetFooter}>
                   <button className="primary" disabled={sheetBusy} onClick={() => void saveNotes()}>
-                    {sheetBusy ? 'Saving…' : t.drvSaveNote}
+                    {sheetBusy ? t.drvSaving : t.drvSaveNote}
                   </button>
                 </div>
               </>
@@ -515,7 +515,7 @@ export default function DriverV3Stop() {
                 </div>
                 <div className={styles.sheetFooter}>
                   <button className="primary" disabled={sheetBusy} onClick={() => void saveSignature()}>
-                    {sheetBusy ? 'Saving…' : t.drvSaveSignature}
+                    {sheetBusy ? t.drvSaving : t.drvSaveSignature}
                   </button>
                 </div>
               </>

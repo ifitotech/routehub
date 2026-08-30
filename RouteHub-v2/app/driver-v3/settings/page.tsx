@@ -76,7 +76,7 @@ export default function DriverV3Settings() {
         style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 12}}
       >
         <LogOut size={18} />
-        {busy ? 'Signing out…' : t.drvSignOut}
+        {busy ? t.drvSigningOut : t.drvSignOut}
       </button>
       {error && (
         <p role="alert" className="muted" style={{marginTop: 10, color: '#b42318'}}>

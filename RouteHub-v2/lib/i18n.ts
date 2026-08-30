@@ -53,7 +53,7 @@ Object.assign(en, {
   drvStopDetails:'Stop Details', drvBack:'Back', drvLoading:'Loading…', drvNoHistory:'No completed routes',
 })
 Object.assign(es, {
-  drvToday:'Hoy', drvRoute:'Ruta', drvMap:'Mapa', drvTruck:'Camion', drvMore:'Mas',
+  drvToday:'Hoy', drvRoute:'Ruta', drvMap:'Mapa', drvTruck:'Camión', drvMore:'Mas',
   drvStartRoute:'INICIAR RUTA', drvArrived:'LLEGUÉ A LA PARADA', drvContinue:'CONTINUAR RUTA',
   drvOpenMaps:'Abrir Maps', drvIssue:'Incidencia', drvStartDrivingDay:'INICIAR JORNADA',
   drvNoStops:'No hay paradas ahora.', drvAssignedWork:'Tu trabajo asignado aparecerá aquí.',
@@ -77,7 +77,7 @@ Object.assign(es, {
   drvReportIssue:'Reportar incidencia', drvSubmitIssue:'ENVIAR INCIDENCIA', drvCancel:'Cancelar', drvClear:'Borrar',
   drvNoCurrentStop:'No hay parada actual', drvStopRecorded:'Parada registrada.', drvContinueNext:'Continuar a la siguiente',
   drvOpenInMaps:'Abrir Maps', drvArrivedShort:'LLEGUÉ A LA PARADA', drvInstructions:'Instrucciones', drvPoOrder:'PO / Orden',
-  drvAssignedOrder:'Las paradas asignadas apareceran aqui.', drvVehicleHelp:'Cuando haya un vehiculo en tu sucursal, saldra aqui.',
+  drvAssignedOrder:'Las paradas asignadas aparecerán aqui.', drvVehicleHelp:'Cuando haya un vehiculo en tu sucursal, saldra aqui.',
   drvDayHelp:'Inicia la jornada antes de las rutas. Terminar el dia es independiente de completar la ruta.', drvEndDayQ:'Terminar la jornada?', drvDetailsOpt:'Detalles (opcional)', drvBusy:'Actualizando…', drvSaving:'Guardando…', drvSigningOut:'Cerrando sesión…',
   drvDayActive:'Jornada · Activa', drvDayInactive:'Jornada · Inactiva',
   drvDurationNA:'Duración no disponible', drvCurrentStop:'PARADA ACTUAL', drvOptionalNote:'Nota opcional', drvSaveEvidence:'GUARDAR EVIDENCIA', drvLiveOp:'Operacion en vivo', drvIssueCust:'Cliente no disponible', drvIssueAddr:'Dirección incorrecta', drvIssueDmg:'Artículo dañado', drvIssueAccess:'Problema de acceso', drvIssueOther:'Otro', drvAccountHelp:'La sesión y el acceso los administra tu empresa.', drvNoCompleteTime:'Hora de cierre no disponible', drvSavedPhoto:'Foto guardada.', drvIssueSent:'Incidencia enviada.', drvFuelSaved:'Combustible guardado.', drvMaintSaved:'Mantenimiento guardado.', drvArrivedOk:'Llegada registrada.', drvOpFailed:'No se pudo actualizar.', drvDayEnded:'Jornada terminada.', drvDayStarted:'Jornada iniciada.', drvPickCat:'Elige una categoría.', drvNeedPhoto:'Elige una foto primero.', drvNeedNote:'Escribe una nota primero.', drvNoteSaved:'Nota guardada.', drvNeedSign:'El cliente debe firmar.', drvRouteDone:'Ruta completada.', drvSigSaved:'Firma guardada.', drvProofSaved:'Evidencia guardada.', drvNeedEvidence:'Agrega foto, nota o firma primero.', drvPickup:'RECOGIDA', drvDelivery:'ENTREGA', drvReturn:'RETORNO', drvCompletedTag:'COMPLETADA', drvOil:'Cambio de aceite', drvTires:'Llantas', drvBrakes:'Frenos', drvInspect:'Inspección', drvStop:'PARADA', drvOf:'DE', drvCurrentTruckName:'Camión actual',
@@ -107,7 +107,7 @@ Object.assign(fr, {
   drvReportIssue:'Signaler un incident', drvSubmitIssue:'ENVOYER', drvCancel:'Annuler', drvClear:'Effacer',
   drvNoCurrentStop:'Aucun arret', drvStopRecorded:'Arrêt enregistre.', drvContinueNext:'Continuer',
   drvOpenInMaps:'Ouvrir Maps', drvArrivedShort:'ARRIVE', drvInstructions:'Instructions', drvPoOrder:'PO / Commande',
-  drvAssignedOrder:'Les arrêts assignes apparaitront ici.', drvVehicleHelp:'Le camion apparaitra quand il sera assigne.',
+  drvAssignedOrder:'Les arrêts assignes apparaitront ici.', drvVehicleHelp:'Le camion apparaîtra quand il sera assigne.',
   drvDayHelp:'Demarrez la journée avant les itineraires. La fin de journée est independante.', drvEndDayQ:'Terminer la journée ?', drvDetailsOpt:'Details (optionnel)', drvBusy:'Mise à jour…', drvSaving:'Enregistrement…', drvSigningOut:'Déconnexion…',
   drvDayActive:'Journée · Active', drvDayInactive:'Journée · Inactive',
   drvDurationNA:'Durée indisponible', drvCurrentStop:'ARRÊT ACTUEL', drvOptionalNote:'Note optionnelle', drvSaveEvidence:'ENREGISTRER PREUVE', drvLiveOp:'Operation en direct', drvIssueCust:'Client indisponible', drvIssueAddr:'Mauvaise adresse', drvIssueDmg:'Article endommagé', drvIssueAccess:'Problème d'accès', drvIssueOther:'Autre', drvAccountHelp:'La session et l acces sont gérés par votre entreprise.', drvNoCompleteTime:'Heure de fin indisponible', drvSavedPhoto:'Photo enregistrée.', drvIssueSent:'Incident envoye.', drvFuelSaved:'Carburant enregistre.', drvMaintSaved:'Entretien enregistre.', drvArrivedOk:'Arrivee enregistrée.', drvOpFailed:'Mise à jour impossible.', drvDayEnded:'Journée terminée.', drvDayStarted:'Journée demarree.', drvPickCat:'Choisissez une catégorie.', drvNeedPhoto:'Choisissez une photo.', drvNeedNote:'Écrivez une note.', drvNoteSaved:'Note enregistrée.', drvNeedSign:'Le client doit signer.', drvRouteDone:'Itinéraire termine.', drvSigSaved:'Signature enregistrée.', drvProofSaved:'Preuve enregistrée.', drvNeedEvidence:'Ajoutez photo, note ou signature.', drvPickup:'RAMASSAGE', drvDelivery:'LIVRAISON', drvReturn:'RETOUR', drvCompletedTag:'TERMINE', drvOil:'Vidange', drvTires:'Pneus', drvBrakes:'Freins', drvInspect:'Inspection', drvStop:'ARRÊT', drvOf:'SUR', drvCurrentTruckName:'Camion actuel',
