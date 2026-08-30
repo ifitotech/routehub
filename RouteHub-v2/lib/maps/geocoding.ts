@@ -20,10 +20,15 @@ export function isSearchQueryValid(query:string){
   return normalized.length>=mapProviderLimits.minimumSearchCharacters&&normalized.length<=mapProviderLimits.maximumSearchCharacters
 }
 
-export async function geocodeAddress(address:string,signal?:AbortSignal):Promise<GeocodedLocation|null>{
+export async function geocodeAddress(address:string,signal?:AbortSignal,near?:MapCoordinate|null):Promise<GeocodedLocation|null>{
   if(!isSearchQueryValid(address))return null
   try{
-    const response=await fetch(`/api/geocode?address=${encodeURIComponent(address)}`,{signal})
+    const params=new URLSearchParams({address})
+    if(near&&Number.isFinite(near.lat)&&Number.isFinite(near.lng)){
+      params.set('nearLat',String(near.lat))
+      params.set('nearLng',String(near.lng))
+    }
+    const response=await fetch(`/api/geocode?${params.toString()}`,{signal})
     if(!response.ok)return null
     return normalizeLocationPayload(await response.json() as LocationPayload,address)
   }catch{return null}

@@ -39,7 +39,7 @@ export type OperationsDriverLocation={
 type ResolvedRoute=OperationsRoute&{points:Coordinate[];line:Coordinate[];number:number}
 type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean}
 
-const fallbackCenter:Coordinate={lat:39.8283,lng:-98.5795}
+const fallbackCenter:Coordinate={lat:25.7617,lng:-80.1918}
 const isCoordinate=(lat:number|null|undefined,lng:number|null|undefined):lat is number=>lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
 
 function routeColor(status?:string|null){
@@ -95,10 +95,26 @@ async function withTimeout<T>(task:Promise<T>,ms:number,fallback:T){
  }catch{return fallback}
 }
 
-async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
+function kmBetween(a:Coordinate,b:Coordinate){
+ const radians=Math.PI/180
+ const dLat=(b.lat-a.lat)*radians,dLng=(b.lng-a.lng)*radians
+ const value=Math.sin(dLat/2)**2+Math.cos(a.lat*radians)*Math.cos(b.lat*radians)*Math.sin(dLng/2)**2
+ return 2*6371*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
+}
+
+function canGeocode(address:string){
+ if(/\d/.test(address))return true
+ return /miami|florida|\bfl\b|kendale|doral|hialeah|homestead|kendall/i.test(address)
+}
+
+async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined,near?:Coordinate|null){
  if(isCoordinate(lat,lng))return {lat,lng}
- if(!address)return null
- try{return (await withTimeout(geocodeAddress(address).then(value=>value?.coordinate||null),3500,null))}catch{return null}
+ if(!address||!canGeocode(address))return null
+ try{
+  const coordinate=await withTimeout(geocodeAddress(address,undefined,near).then(value=>value?.coordinate||null),3500,null)
+  if(!coordinate||(near&&kmBetween(near,coordinate)>220))return null
+  return coordinate
+ }catch{return null}
 }
 
 export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
@@ -116,13 +132,21 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   }
   setLoading(true)
   void (async()=>{
+   const known=visibleRoutes.flatMap(route=>{
+    const points:Coordinate[]=[]
+    if(isCoordinate(route.origin_lat,route.origin_lng))points.push({lat:route.origin_lat,lng:route.origin_lng})
+    if(isCoordinate(route.destination_lat,route.destination_lng))points.push({lat:route.destination_lat,lng:route.destination_lng})
+    return points
+   })
+   const near=known[0]||fallbackCenter
    const pins=await Promise.all(visibleRoutes.map(async(route,index)=>{
     const [origin,destination]=await Promise.all([
-     resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng),
-     resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng),
+     resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng,near),
+     resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng,near),
     ])
     const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
-    return {...route,points,line:points,number:index+1}
+    const line=points.length===2&&kmBetween(points[0],points[1])>220?[points[points.length-1]]:points
+    return {...route,points:line.length===1?line:points,line,number:index+1}
    }))
    if(cancelled)return
    setResolved(pins)
