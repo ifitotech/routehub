@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {AlertTriangle, ArrowRight, History, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
@@ -15,29 +15,34 @@ import todayStyles from './manager-today.module.css'
 
 const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRoutes: 0, completedRoutes: 0, openIssues: 0}
 
+type LiveFix = {driverId: string; updatedAt: string | null; lat: number | null; lng: number | null}
+
 export default function Manager() {
   const {locale,t} = useLocale()
   const copy = locale === 'es' ? {
-    today: 'Hoy', todayOverview: 'Operación de hoy', liveOperations: 'Operación en vivo', active: 'Activas', pending: 'Pendientes', completed: 'Completadas', issues: 'Incidencias',
-    liveDescription: 'Lo que está ocurriendo en tu sucursal ahora.', quickActions: 'Acciones rápidas',
-    upcoming: 'Próximas rutas', attention: 'Atención necesaria', viewAll: 'Ver todas', viewRoute: 'Ver ruta', viewMap: 'Ver en mapa',
-    newRoute: 'Nueva ruta', reorder: 'Reordenar rutas', addContact: 'Agregar contacto', noPending: 'No hay rutas pendientes.',
-    assignment: 'Asignado', waiting: 'Pendiente', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
+    today: 'Hoy', todayOverview: 'Operación de hoy', liveOperations: 'En curso', active: 'Activas', pending: 'Pendientes', completed: 'Completadas', issues: 'Incidencias',
+    liveDescription: 'Parada que el Driver está ejecutando ahora.', quickActions: 'Acciones',
+    upcoming: 'Rutas de hoy', attention: 'Atención necesaria', viewAll: 'Ver todas', viewRoute: 'Ver ruta', viewMap: 'Ver en mapa',
+    newRoute: 'Nueva ruta', reorder: 'Reordenar rutas', addContact: 'Agregar contacto', noPending: 'No hay rutas hoy.',
+    assignment: 'Asignado', waiting: 'Sin asignar', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
     branchManager: 'Manager de sucursal', currentBranch: 'Sucursal actual', updated: 'Actualizado',
+    lastSeen: 'Última ubicación', noFix: 'El Driver no está compartiendo ubicación (app cerrada).', ago: 'hace',
   } : locale === 'fr' ? {
-    today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'Opération en direct', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
-    liveDescription: 'Ce qui se passe dans votre succursale maintenant.', quickActions: 'Actions rapides',
-    upcoming: 'Prochains itinéraires', attention: 'Attention requise', viewAll: 'Voir tout', viewRoute: 'Voir l’itinéraire', viewMap: 'Voir sur la carte',
-    newRoute: 'Nouvel itinéraire', reorder: 'Réordonner', addContact: 'Ajouter un contact', noPending: 'Aucun itinéraire en attente.',
-    assignment: 'Assigné', waiting: 'En attente', issue: 'incident ouvert', review: 'Consultez les rapports.',
+    today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'En cours', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
+    liveDescription: 'Arrêt en cours chez le chauffeur.', quickActions: 'Actions',
+    upcoming: 'Itinéraires du jour', attention: 'Attention requise', viewAll: 'Voir tout', viewRoute: 'Voir l’itinéraire', viewMap: 'Voir sur la carte',
+    newRoute: 'Nouvel itinéraire', reorder: 'Réordonner', addContact: 'Ajouter un contact', noPending: 'Aucun itinéraire aujourd’hui.',
+    assignment: 'Assigné', waiting: 'Non assigné', issue: 'incident ouvert', review: 'Consultez les rapports.',
     branchManager: 'Manager de succursale', currentBranch: 'Succursale actuelle', updated: 'Mis à jour',
+    lastSeen: 'Dernière position', noFix: 'Le chauffeur ne partage pas sa position (app fermée).', ago: 'il y a',
   } : {
-    today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'Live operation', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
-    liveDescription: 'What is happening in your branch right now.', quickActions: 'Quick actions',
-    upcoming: 'Upcoming routes', attention: 'Attention needed', viewAll: 'View all', viewRoute: 'View route', viewMap: 'View on map',
-    newRoute: 'New route', reorder: 'Reorder routes', addContact: 'Add contact', noPending: 'No pending routes.',
-    assignment: 'Assigned', waiting: 'Pending', issue: 'open issue', review: 'Review route reports.',
+    today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'In progress', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
+    liveDescription: 'The stop the driver is running now.', quickActions: 'Actions',
+    upcoming: 'Today’s routes', attention: 'Attention needed', viewAll: 'View all', viewRoute: 'View route', viewMap: 'View on map',
+    newRoute: 'New route', reorder: 'Reorder routes', addContact: 'Add contact', noPending: 'No routes today.',
+    assignment: 'Assigned', waiting: 'Unassigned', issue: 'open issue', review: 'Review route reports.',
     branchManager: 'Branch Manager', currentBranch: 'Current branch', updated: 'Updated',
+    lastSeen: 'Last location', noFix: 'Driver is not sharing location (app closed).', ago: 'ago',
   }
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
@@ -47,6 +52,7 @@ export default function Manager() {
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -62,9 +68,6 @@ export default function Manager() {
           branchQuery,
         ])
         if (userError || branchError) throw userError || branchError
-        // /manager is a branch workspace. A branch-bound membership uses its
-        // exact branch; a legacy unbound Manager is anchored to the first
-        // authorized branch returned by RLS rather than mixing all branches.
         const branchId = String(branch?.id || membership.branch_id || '') || null
         setCompanyId(membership.company_id)
         setDashboardBranchId(branchId)
@@ -73,15 +76,35 @@ export default function Manager() {
           branchId,
           routeDate: managerOperationalDate(),
         })
+        let sessionQuery = client.from('driving_sessions')
+          .select('driver_id,last_lat,last_lng,last_updated_at,status')
+          .eq('company_id', membership.company_id)
+          .in('status', ['active', 'paused'])
+          .order('last_updated_at', {ascending: false})
+          .limit(8)
+        if (branchId) sessionQuery = sessionQuery.eq('branch_id', branchId)
+        const {data: sessions} = await sessionQuery
         if (cancelled) return
         const metadata = userData.user?.user_metadata as Record<string, unknown> | undefined
         const name = String(metadata?.full_name || metadata?.name || userData.user?.email || '')
         setDisplayName(name)
         setBranchName(String(branch?.name || ''))
-        // The dashboard list is a dispatch reference: active/completed routes
-        // have their own Live Operations and History surfaces.
-        setTodayRoutes(dashboard.todayRoutes.filter(route => ['published', 'pending', 'draft'].includes(route.status)).slice(0, 5))
+        const kindRank = (value?: string | null) => {
+          const v = String(value || '').toLowerCase()
+          if (v === 'pickup') return 1
+          if (v === 'delivery') return 2
+          if (v === 'return' || v === 'branch') return 3
+          return 4
+        }
+        setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => kindRank(a.mission_type) - kindRank(b.mission_type) || Number(a.position || 0) - Number(b.position || 0)))
         setSummary(dashboard.summary)
+        const session = (sessions || []).find(row => row.last_lat != null && row.last_lng != null) || sessions?.[0] || null
+        setLiveFix(session ? {
+          driverId: String(session.driver_id || ''),
+          updatedAt: session.last_updated_at || null,
+          lat: session.last_lat == null ? null : Number(session.last_lat),
+          lng: session.last_lng == null ? null : Number(session.last_lng),
+        } : null)
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : t.unableLoadReports)
       } finally {
@@ -102,7 +125,29 @@ export default function Manager() {
   const greetingName = displayName ? displayName.split('@')[0] : t.managerRole
   const operationalDate = managerOperationalDate()
   const dateLabel = new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : locale === 'fr' ? 'fr-FR' : 'en-US', {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'}).format(new Date(`${operationalDate}T12:00:00`))
-  const routeTypeLabel = (value?: string | null) => value === 'pickup' ? t.pickup : value === 'delivery' ? t.delivery : value === 'return' ? t.returnToBranch : value || t.route
+  const routeTypeLabel = (value?: string | null) => {
+    const v = String(value || '').toLowerCase()
+    if (v === 'pickup') return t.pickup
+    if (v === 'delivery') return t.delivery
+    if (v === 'return' || v === 'branch') return t.returnToBranch
+    return value || t.route
+  }
+  const statusLabel = (value?: string | null) => {
+    const v = String(value || '')
+    if (v === 'completed') return copy.completed
+    if (v === 'active' || v === 'paused') return copy.active
+    if (v === 'issue') return copy.issues
+    if (v === 'published' || v === 'pending' || v === 'draft') return copy.pending
+    return v
+  }
+  const fixLabel = useMemo(() => {
+    if (!liveFix?.updatedAt || liveFix.lat == null) return copy.noFix
+    const ms = Date.now() - new Date(liveFix.updatedAt).getTime()
+    if (!Number.isFinite(ms) || ms < 0) return copy.lastSeen
+    const minutes = Math.floor(ms / 60000)
+    if (minutes < 1) return `${copy.lastSeen} · ${locale === 'es' ? 'ahora' : locale === 'fr' ? 'maintenant' : 'now'}`
+    return `${copy.lastSeen} · ${copy.ago} ${minutes}m`
+  }, [liveFix, copy.lastSeen, copy.noFix, copy.ago, locale])
 
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.updated}: {new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
@@ -110,12 +155,32 @@ export default function Manager() {
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
     <div className={todayStyles.todayLayout}>
       <main className={todayStyles.todayMain}>
-        <div className={todayStyles.sectionHeading}><div><span>{copy.liveOperations}</span><h2>{copy.liveDescription}</h2></div><span className={todayStyles.scope}>{branchName || t.mainBranch}</span></div>
-        <LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false} compact />
+        <div className={todayStyles.sectionHeading}><div><span>{copy.upcoming}</span><h2>{copy.todayOverview}</h2></div><Link href="/routes?new=1" className={todayStyles.newLink}><Plus size={16}/>{copy.newRoute}</Link></div>
+        {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (
+          <div className={todayStyles.dayList}>
+            {todayRoutes.map((route, index) => {
+              const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
+              return (
+                <Link href="/routes/manage" className={todayStyles.dayRow} data-status={route.status} key={route.id}>
+                  <span className={todayStyles.order}>{index + 1}</span>
+                  <span className={todayStyles.routeInfo}>
+                    <strong>{route.destination_name || t.destination}</strong>
+                    <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''} · {route.driver_id ? copy.assignment : copy.waiting}</span>
+                  </span>
+                  <em className={todayStyles.status}>{statusLabel(route.status)}</em>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </main>
       <aside className={todayStyles.todaySide}>
+        <section className={todayStyles.sideCard} aria-label={copy.liveOperations}>
+          <div className={todayStyles.sideHeading}><h2>{copy.liveOperations}</h2><Link href="/routes/live">{copy.viewMap}</Link></div>
+          <p className={todayStyles.fixLine}>{fixLabel}</p>
+          <LiveRoute companyId={companyId} branchId={dashboardBranchId} showToday={false} compact />
+        </section>
         <section className={todayStyles.sideCard} aria-label={copy.quickActions}><div className={todayStyles.sideHeading}><h2>{copy.quickActions}</h2></div><div className={todayStyles.quickGrid}><Link href="/routes?new=1"><Plus size={17}/><span>{copy.newRoute}</span><ArrowRight size={14}/></Link><Link href="/routes/manage"><RouteIcon size={17}/><span>{copy.reorder}</span><ArrowRight size={14}/></Link><Link href="/contacts"><Users size={17}/><span>{copy.addContact}</span><ArrowRight size={14}/></Link></div></section>
-        <section className={todayStyles.sideCard} aria-label={copy.upcoming}><div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>{loading?<div className={todayStyles.loading}>{t.loading}</div>:todayRoutes.length===0?<p className={todayStyles.emptyText}>{copy.noPending}</p>:<div className={todayStyles.upcomingList}>{todayRoutes.map((route,index)=><Link href="/routes/manage" className={todayStyles.upcomingRow} key={route.id}><span className={todayStyles.order}>{route.position || index+1}</span><span className={todayStyles.routeInfo}><strong>{route.destination_name || t.destination}</strong><span>{routeTypeLabel(route.mission_type)} · {route.driver_id ? copy.assignment : copy.waiting}</span></span><ArrowRight size={16}/></Link>)}</div>}</section>
       </aside>
     </div>
     {hasIssue && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{summary.openIssues} {copy.issue}</strong><p>{copy.review}</p></div><Link href="/reports"><ArrowRight size={16}/></Link></section>}

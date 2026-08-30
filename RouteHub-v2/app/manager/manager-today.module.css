@@ -62,6 +62,15 @@
 .quickGrid a:hover { border-color: color-mix(in srgb, var(--rh-blue, #1667f2) 35%, var(--rh-border, #dde5ee)); background: var(--rh-soft-blue, #eaf2ff); }
 .quickGrid a svg:first-child { color: var(--rh-blue, #1667f2); }
 .quickGrid a svg:last-child { margin-left: auto; color: var(--rh-muted, #667892); }
+.newLink { display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 12px;border-radius:999px;background:#1667f2;color:#fff;font-size:13px;font-weight:800;text-decoration:none }
+.fixLine { margin:0;color:#667892;font-size:12px;font-weight:650 }
+.dayList { display:grid;gap:0;padding:6px 4px 2px;border:1px solid var(--rh-border, #dde5ee);border-radius:17px;background:#fff }
+.dayRow { display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;border-top:1px solid #e8edf3;color:#0f1d35;text-decoration:none }
+.dayRow:first-child { border-top:0 }
+.dayRow[data-status='completed'] .order { background:#e9f9f0;color:#16b96b }
+.dayRow[data-status='active'] .order, .dayRow[data-status='paused'] .order { background:#fff6e5;color:#d97706 }
+.dayRow[data-status='issue'] .order { background:#fff0f0;color:#e11d48 }
+.status { flex:none;color:#667892;font-size:11px;font-style:normal;font-weight:800 }
 .upcomingList { display: grid; gap: 7px; }
 .upcomingRow { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 2px; border-top: 1px solid var(--rh-divider, #e8edf3); color: var(--rh-text, #0f1d35); text-decoration: none; }
 .upcomingRow:first-child { border-top: 0; padding-top: 2px; }
