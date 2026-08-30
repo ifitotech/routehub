@@ -170,6 +170,7 @@ export default function Manager() {
               status: route.status,
               driver_id: route.driver_id,
               position: route.position,
+              order_number: route.order_number,
             }))}
             driverLocations={liveFix?.lat != null && liveFix.lng != null ? [{
               id: liveFix.driverId || 'driver',
@@ -181,26 +182,28 @@ export default function Manager() {
             locale={locale}
           />
         </div>
-        <div className={todayStyles.sectionHeading}><div><span>{copy.upcoming}</span><h2>{copy.todayOverview}</h2></div><Link href="/routes?new=1" className={todayStyles.newLink}><Plus size={16}/>{copy.newRoute}</Link></div>
-        {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (
-          <div className={todayStyles.dayList}>
-            {todayRoutes.map((route, index) => {
-              const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
-              return (
-                <Link href="/routes/manage" className={todayStyles.dayRow} data-status={route.status} key={route.id}>
-                  <span className={todayStyles.order}>{index + 1}</span>
-                  <span className={todayStyles.routeInfo}>
-                    <strong>{route.destination_name || t.destination}</strong>
-                    <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''} · {route.driver_id ? copy.assignment : copy.waiting}</span>
-                  </span>
-                  <em className={todayStyles.status}>{statusLabel(route.status)}</em>
-                </Link>
-              )
-            })}
-          </div>
-        )}
       </main>
       <aside className={todayStyles.todaySide}>
+        <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
+          <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes?new=1">{copy.newRoute}</Link></div>
+          {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (
+            <div className={todayStyles.dayList}>
+              {todayRoutes.map((route, index) => {
+                const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
+                return (
+                  <Link href="/routes/manage" className={todayStyles.dayRow} data-status={route.status} key={route.id}>
+                    <span className={todayStyles.order}>{index + 1}</span>
+                    <span className={todayStyles.routeInfo}>
+                      <strong>{route.destination_name || t.destination}</strong>
+                      <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''} · {route.driver_id ? copy.assignment : copy.waiting}</span>
+                    </span>
+                    <em className={todayStyles.status}>{statusLabel(route.status)}</em>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </section>
         <section className={todayStyles.sideCard} aria-label={copy.quickActions}><div className={todayStyles.sideHeading}><h2>{copy.quickActions}</h2></div><div className={todayStyles.quickGrid}><Link href="/routes?new=1"><Plus size={17}/><span>{copy.newRoute}</span><ArrowRight size={14}/></Link><Link href="/routes/manage"><RouteIcon size={17}/><span>{copy.reorder}</span><ArrowRight size={14}/></Link><Link href="/contacts"><Users size={17}/><span>{copy.addContact}</span><ArrowRight size={14}/></Link></div></section>
       </aside>
     </div>

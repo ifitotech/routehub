@@ -23,6 +23,7 @@ export type OperationsRoute={
  status?:string|null
  driver_id?:string|null
  position?:number|null
+ order_number?:string|null
 }
 
 export type OperationsDriverLocation={
@@ -63,7 +64,7 @@ function originMarker(color:string){
 }
 
 function driverMarker(){
- return L.divIcon({className:'operations-driver-marker-wrap',html:'<span class="operations-driver-marker">🚚</span>',iconSize:[48,48],iconAnchor:[24,24]})
+ return L.divIcon({className:'operations-driver-marker-wrap',html:'<span class="operations-driver-marker"></span>',iconSize:[44,44],iconAnchor:[22,22]})
 }
 
 function ageLabel(updatedAt:string|null|undefined,locale:string){
@@ -129,13 +130,13 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
 
  return <section className={styles.map} aria-label={copy.label}>
   <div className={styles.canvas}>
-   {loading?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
+   {loading?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={allPoints}/>
     {resolved.map(route=><Fragment key={`route-${route.id}`}>
      {route.line.length>1&&<Polyline positions={route.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:routeColor(route.status),weight:5,opacity:.9}}/>}
      {route.points[0]&&<Marker position={[route.points[0].lat,route.points[0].lng]} icon={originMarker(routeColor(route.status))}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
-     {route.points[route.points.length-1]&&<Marker position={[route.points[route.points.length-1].lat,route.points[route.points.length-1].lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={200}><Tooltip direction="top" offset={[0,-16]}>{`${statusLabel(route.status,locale)} · ${route.destination_name||route.destination_address||copy.driver}`}</Tooltip></Marker>}
+     {route.points[route.points.length-1]&&<Marker position={[route.points[route.points.length-1].lat,route.points[route.points.length-1].lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={200}><Tooltip direction="top" offset={[0,-16]}>{`${route.number}. ${route.destination_name||route.destination_address||copy.driver}`}</Tooltip><Popup><strong>{route.destination_name||copy.driver}</strong><br/>{statusLabel(route.status,locale)}{route.order_number?` · ${route.order_number}`:''}{route.destination_address?<><br/><small>{route.destination_address}</small></>:null}</Popup></Marker>}
     </Fragment>)}
     {driverLocations.map(driver=>{const destination=driverDestinations.get(driver.id);return <Fragment key={driver.id}>
       {destination&&<Polyline positions={[[driver.location.lat,driver.location.lng],[destination.lat,destination.lng]]} pathOptions={{color:'#2563eb',weight:3,dashArray:'7 8',opacity:.8}}/>}
