@@ -43,7 +43,7 @@ export async function GET(request:NextRequest){
   const result=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(geocodingConfig.requestTimeoutMs),headers:{Accept:'application/json','User-Agent':geocodingConfig.userAgent}})
   if(!result.ok)return NextResponse.json({coordinate:null})
   const match=(await result.json() as NominatimMatch[])[0]
-  const lat=Number(match?.lat),lng=Number(match?.lng ?? match?.lon)
+  const lat=Number(match?.lat),lng=Number(match?.lon)
   if(Number.isFinite(lat)&&Number.isFinite(lng)&&isInFlorida(lat,lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng)))return response(lat,lng,match?.display_name||address,'nominatim')
  }catch{}
  return NextResponse.json({coordinate:null})
