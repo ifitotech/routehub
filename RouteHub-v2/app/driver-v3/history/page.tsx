@@ -31,9 +31,9 @@ export default function History() {
 
   const rows = useMemo(() => {
     return routes
-      .filter((r: {route_date?: string}) => (r.route_date || '').slice(0, 10) === day)
+      .filter(r => String(r.route_date || '').slice(0, 10) === day)
       .slice()
-      .sort((a: {position?: number}, b: {position?: number}) => (a.position || 0) - (b.position || 0))
+      .sort((a, b) => (a.position || 0) - (b.position || 0))
   }, [routes, day])
 
   const openMaps = (route: {destination_address?: string; destination_lat?: number; destination_lng?: number; destination_name?: string}) => {
