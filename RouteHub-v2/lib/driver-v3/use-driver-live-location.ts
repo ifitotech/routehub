@@ -12,6 +12,7 @@ export function useDriverLiveLocation() {
   useEffect(() => {
     if (!drivingSession || !driverId || typeof navigator === 'undefined' || !navigator.geolocation) return
     let disposed = false
+    let wake: WakeLockSentinel | null = null
 
     const send = async () => {
       try {
@@ -26,13 +27,27 @@ export function useDriverLiveLocation() {
       }
     }
 
+    const holdScreen = async () => {
+      try {
+        if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return
+        wake = await navigator.wakeLock.request('screen')
+      } catch {
+        /* Some browsers block wake lock without a gesture. */
+      }
+    }
+
     void send()
+    void holdScreen()
     const interval = window.setInterval(() => void send(), 5 * 60 * 1000)
     const onVisible = () => {
-      if (document.visibilityState === 'visible') void send()
+      if (document.visibilityState === 'visible') {
+        void send()
+        void holdScreen()
+      }
     }
     document.addEventListener('visibilitychange', onVisible)
     window.addEventListener('focus', onVisible)
+    window.addEventListener('pageshow', onVisible)
     const watch = navigator.geolocation.watchPosition(
       position => {
         if (disposed) return
@@ -57,7 +72,9 @@ export function useDriverLiveLocation() {
       window.clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('focus', onVisible)
+      window.removeEventListener('pageshow', onVisible)
       navigator.geolocation.clearWatch(watch)
+      void wake?.release()
     }
   }, [drivingSession, driverId, setLiveFix])
 }
