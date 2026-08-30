@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {ChevronLeft, History, Home, Menu, MoreHorizontal, Truck} from 'lucide-react'
+import {ChevronLeft, History, Home, Menu, Settings, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
 
@@ -43,7 +43,7 @@ export default function DriverV3Shell({
     <main className={styles.shell}>
       {isToday ? (
         <header className={`${styles.header} ${styles.todayHeader}`}>
-          <Link href="/driver/more" className={styles.headerIcon} aria-label={t.drvMore}>
+          <Link href="/driver/more" className={styles.headerIcon} aria-label={t.drvProfile}>
             <Menu />
           </Link>
           <Link href="/driver" className={styles.todayBrand}>
@@ -82,15 +82,15 @@ export default function DriverV3Shell({
         </Link>
         <Link className={active === 'history' ? styles.active : ''} href="/driver/history">
           <History />
-          <span>{t.drvRouteHistory}</span>
+          <span>{t.drvHistory || t.history || 'History'}</span>
         </Link>
         <Link className={active === 'truck' ? styles.active : ''} href="/driver/truck">
           <Truck />
           <span>{t.drvTruck}</span>
         </Link>
-        <Link className={active === 'more' ? styles.active : ''} href="/driver/more">
-          <MoreHorizontal />
-          <span>{t.drvMore}</span>
+        <Link className={active === 'more' ? styles.active : ''} href="/driver/settings">
+          <Settings />
+          <span>{t.drvSettings}</span>
         </Link>
       </nav>
     </main>
@@ -106,10 +106,10 @@ function tabLabel(tab: Tab, t: Record<string, string>) {
     case 'map':
       return t.drvMap
     case 'history':
-      return t.drvRouteHistory
+      return t.drvHistory || t.drvRouteHistory
     case 'truck':
       return t.drvTruck
     case 'more':
-      return t.drvMore
+      return t.drvSettings
   }
 }

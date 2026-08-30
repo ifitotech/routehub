@@ -1,54 +1,50 @@
 'use client'
-import Link from 'next/link'
-import {
-  CalendarDays,
-  ChevronRight,
-  History,
-  LogOut,
-  Settings,
-} from 'lucide-react'
+import {useEffect, useState} from 'react'
+import {LogOut} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
-import {useState} from 'react'
+import DeviceNotificationsSetting from '../../device-notifications-setting'
+import InstallAppCard from '../../install-app-card'
+import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {useLocale} from '../../../lib/use-preferences'
 
-function Row({href, icon: Icon, label}: {href: string; icon: typeof History; label: string}) {
-  return (
-    <Link
-      href={href}
-      className="row"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        textDecoration: 'none',
-        color: 'inherit',
-        minHeight: 56,
-        padding: '4px 0',
-      }}
-    >
-      <span
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          background: '#F2F6FB',
-          display: 'grid',
-          placeItems: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <Icon size={20} color="#667892" />
-      </span>
-      <span style={{flex: 1, fontWeight: 700, fontSize: 16}}>{label}</span>
-      <ChevronRight size={18} color="#8A97A8" />
-    </Link>
-  )
-}
+const LANGS = [
+  {id: 'en', label: 'English'},
+  {id: 'es', label: 'Español'},
+  {id: 'fr', label: 'Français'},
+] as const
 
-export default function DriverV3More() {
-  const {t} = useLocale()
+export default function DriverProfile() {
+  const {t, locale, setLocale} = useLocale()
   const [busy, setBusy] = useState(false)
+  const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [profileMsg, setProfileMsg] = useState('')
+
+  useEffect(() => {
+    void getSupabase().auth.getUser().then(({data}) => {
+      const user = data.user
+      setEmail(user?.email || '')
+      setFullName(String(user?.user_metadata?.full_name || user?.user_metadata?.name || ''))
+      setPhone(String(user?.user_metadata?.phone || ''))
+    })
+  }, [])
+
+  const saveProfile = async () => {
+    if (saving) return
+    setSaving(true)
+    const client = getSupabase()
+    const {data: authData, error} = await client.auth.updateUser({data: {full_name: fullName.trim(), phone: phone.trim()}})
+    if (!error && authData.user) {
+      await client.from('users').update({name: fullName.trim(), email: authData.user.email || email}).eq('id', authData.user.id)
+    }
+    setProfileMsg(error?.message || t.drvSaveProfile)
+    if (!error) setEditing(false)
+    setSaving(false)
+  }
 
   const signOut = async () => {
     if (busy) return
@@ -58,40 +54,78 @@ export default function DriverV3More() {
   }
 
   return (
-    <DriverV3Shell active="more" title={t.drvMore}>
-
+    <DriverV3Shell active="more" title={t.drvProfile}>
       <section className="card">
-        <p className="eyebrow" style={{marginBottom: 4}}>
-          {t.drvWork}
-        </p>
-        <Row href="/driver/driving-day" icon={CalendarDays} label={t.drvDrivingDay} />
-      </section>
-
-      <section className="card" style={{marginTop: 12}}>
-        <p className="eyebrow" style={{marginBottom: 4}}>
-          {t.drvActivity}
-        </p>
-        <Row href="/driver/history" icon={History} label={t.drvRouteHistory} />
-      </section>
-
-      <section className="card" style={{marginTop: 12}}>
-        <p className="eyebrow" style={{marginBottom: 4}}>
-          {t.drvAccount}
-        </p>
-        <Row href="/driver/settings" icon={Settings} label={t.drvSettings} />
-      </section>
-
-      <section className="card" style={{marginTop: 12}}>
-        <button
-          className="danger"
-          disabled={busy}
-          onClick={() => void signOut()}
-          style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 56}}
-        >
-          <LogOut size={18} />
-          {busy ? t.drvSigningOut : t.drvSignOut}
+        <p className="eyebrow">{t.drvProfile}</p>
+        {!editing ? (
+          <>
+            <h2 style={{margin: '4px 0 8px', fontSize: 22}}>{fullName || 'RouteHub Driver'}</h2>
+            <p className="muted" style={{margin: 0}}>{email}</p>
+            <p className="muted" style={{margin: '4px 0 0'}}>{phone || t.drvPhone}</p>
+          </>
+        ) : (
+          <>
+            <label>
+              {t.drvFullName}
+              <input value={fullName} onChange={e => setFullName(e.target.value)} />
+            </label>
+            <label>
+              {locale === 'es' ? 'Correo' : locale === 'fr' ? 'E-mail' : 'Email'}
+              <input value={email} readOnly />
+            </label>
+            <label>
+              {t.drvPhone}
+              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
+            </label>
+            <button type="button" className="primary" disabled={saving} onClick={() => void saveProfile()}>
+              {saving ? t.drvSaving : t.drvSaveProfile}
+            </button>
+          </>
+        )}
+        <button type="button" className="secondary" style={{marginTop: 8}} onClick={() => setEditing(v => !v)}>
+          {editing ? t.drvCancel : t.drvEditProfile}
         </button>
+        {profileMsg && <p className="muted" role="status">{profileMsg}</p>}
       </section>
+
+      <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow">{t.drvLanguage}</p>
+        <div style={{display: 'grid', gap: 8, marginTop: 8}}>
+          {LANGS.map(lang => (
+            <button
+              key={lang.id}
+              type="button"
+              className="secondary"
+              onClick={() => setLocale(lang.id)}
+              style={{
+                justifyContent: 'flex-start',
+                paddingLeft: 14,
+                borderColor: locale === lang.id ? '#1667F2' : undefined,
+                background: locale === lang.id ? '#EAF2FF' : undefined,
+                color: locale === lang.id ? '#1667F2' : undefined,
+              }}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
+      </section>
+      <div style={{marginTop: 12}}><DeviceNotificationsSetting /></div>
+      <div style={{marginTop: 12}}><InstallAppCard /></div>
+      <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow">RouteHub Driver</p>
+        <p className="muted" style={{margin: 0}}>{locale==='es'?'Versión':locale==='fr'?'Version':'Version'} {DRIVER_APP_VERSION}</p>
+      </section>
+
+      <button
+        className="danger"
+        disabled={busy}
+        onClick={() => void signOut()}
+        style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, minHeight: 56}}
+      >
+        <LogOut size={18} />
+        {busy ? t.drvSigningOut : t.drvSignOut}
+      </button>
     </DriverV3Shell>
   )
 }

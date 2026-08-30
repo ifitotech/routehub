@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {CalendarDays, History, LogOut, MapPin, Sparkles} from 'lucide-react'
+import {CalendarDays, LogOut, MapPin, Sparkles} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
@@ -81,7 +81,7 @@ export default function DriverV3Settings() {
   }
 
   return (
-    <DriverV3Shell active="more" mode="stack" title={t.drvSettings} backHref="/driver/more" backLabel={t.drvMore}>
+    <DriverV3Shell active="more" title={t.drvSettings}>
       <section className="card">
         <p className="eyebrow">{t.drvProfile}</p>
         {!editing ? (
@@ -116,12 +116,8 @@ export default function DriverV3Settings() {
       </section>
 
       <section className="card" style={{marginTop: 12}}>
-        <p className="eyebrow">{t.drvWork}</p>
         <Link href="/driver/driving-day" className="row" style={{textDecoration: 'none', color: 'inherit', minHeight: 52, display: 'flex', alignItems: 'center', gap: 10}}>
           <CalendarDays size={18} /> {t.drvDrivingDay}
-        </Link>
-        <Link href="/driver/history" className="row" style={{textDecoration: 'none', color: 'inherit', minHeight: 52, display: 'flex', alignItems: 'center', gap: 10}}>
-          <History size={18} /> {t.drvRouteHistory}
         </Link>
       </section>
 
