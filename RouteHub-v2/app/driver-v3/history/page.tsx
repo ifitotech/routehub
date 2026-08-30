@@ -25,35 +25,34 @@ function tone(status: string, isCurrent: boolean) {
 
 export default function History() {
   const {loading, error, routes, snapshot} = useDriverData()
-  const {t} = useLocale()
+  const {t, locale} = useLocale()
   const [day, setDay] = useState(operationalDate())
+  const [section, setSection] = useState<'pending' | 'done'>('pending')
   const currentId = (snapshot?.currentOperation?.route as {id?: string} | undefined)?.id
+  const scheduledLabel = locale === 'es' ? 'Programada' : locale === 'fr' ? 'Prévue' : 'Scheduled'
 
   const rows = useMemo(() => {
-    const kindRank = (r: {mission_type?: string | null}) => {
-      const v = String(r.mission_type || '').toLowerCase()
-      if (v === 'pickup') return 1
-      if (v === 'delivery') return 2
-      if (v === 'return' || v === 'branch') return 3
-      return 4
+    // The route list is a schedule, so its visible order must follow the
+    // programmed time—not stop type or the order in which data arrived.
+    // Keep the persisted queue position only as a stable fallback for older
+    // routes that do not have a scheduled time yet.
+    const scheduledTime = (r: {scheduled_at?: string | null}) => {
+      const value = r.scheduled_at ? new Date(r.scheduled_at).getTime() : Number.NaN
+      return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY
     }
-    const when = (r: {completed_at?: string | null; route_completed_at?: string | null; route_started_at?: string | null; scheduled_at?: string | null}) =>
-      r.completed_at || r.route_completed_at || r.route_started_at || r.scheduled_at || ''
+    const byScheduledTime = (a: {scheduled_at?: string | null; position?: number | null; id?: string}, b: {scheduled_at?: string | null; position?: number | null; id?: string}) =>
+      scheduledTime(a) - scheduledTime(b) || Number(a.position || 0) - Number(b.position || 0) || String(a.id).localeCompare(String(b.id))
     const dayRoutes = routes
       .filter(r => String(r.route_date || '').slice(0, 10) === day)
       .filter(r => String(r.status || '') !== 'cancelled')
     const pending = dayRoutes
       .filter(r => String(r.status || '') !== 'completed')
       .slice()
-      .sort((a, b) => {
-        const ka = kindRank(a) - kindRank(b)
-        if (ka) return ka
-        return String(a.id).localeCompare(String(b.id))
-      })
+      .sort(byScheduledTime)
     const done = dayRoutes
       .filter(r => String(r.status || '') === 'completed')
       .slice()
-      .sort((a, b) => when(b).localeCompare(when(a)))
+      .sort(byScheduledTime)
     return {pending, done, total: dayRoutes.length}
   }, [routes, day])
 
@@ -96,12 +95,17 @@ export default function History() {
           <p className="muted">{t.drvHistoryEmpty}</p>
         </section>
       ) : (
-        <div style={{display: 'grid', gap: 16}}>
-          {[{title: t.drvPendingStops, list: rows.pending}, {title: t.drvCompletedTag, list: rows.done}].map(group => (
-          <section key={group.title}>
-            <p className="eyebrow" style={{margin:'0 0 8px'}}>{group.title} · {group.list.length}</p>
+        <div style={{display: 'grid', gap: 14}}>
+          <div role="tablist" aria-label={t.drvRouteHistory} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8}}>
+            {[{id: 'pending' as const, title: t.drvPendingStops, count: rows.pending.length}, {id: 'done' as const, title: t.drvCompletedTag, count: rows.done.length}].map(tab => {
+              const selected = section === tab.id
+              return <button key={tab.id} type="button" role="tab" aria-selected={selected} onClick={() => setSection(tab.id)} style={{minHeight: 48, border: `1px solid ${selected ? '#1667F2' : '#DDE5EE'}`, borderRadius: 12, background: selected ? '#EAF2FF' : '#fff', color: selected ? '#1667F2' : '#64748B', font: 'inherit', fontWeight: 800, cursor: 'pointer'}}>{tab.title} · {tab.count}</button>
+            })}
+          </div>
+          <section>
+            <p className="eyebrow" style={{margin:'0 0 8px'}}>{section === 'pending' ? t.drvPendingStops : t.drvCompletedTag} · {section === 'pending' ? rows.pending.length : rows.done.length}</p>
             <div style={{display: 'grid', gap: 10}}>
-          {group.list.map((r: any, index: number) => {
+          {(section === 'pending' ? rows.pending : rows.done).map((r: any, index: number) => {
             const isCurrent = r.id === currentId
             const look = tone(String(r.status || ''), isCurrent)
             const statusText =
@@ -130,6 +134,7 @@ export default function History() {
                       {r.destination_name || r.destination_address || t.drvRoute}
                     </h2>
                     {r.destination_address ? <p className="muted" style={{margin: 0, fontSize: 13}}>{r.destination_address}</p> : null}
+                    {r.scheduled_at ? <p className="muted" style={{margin: '6px 0 0', fontSize: 13}}>{scheduledLabel} {new Date(r.scheduled_at).toLocaleTimeString(locale, {hour: 'numeric', minute: '2-digit'})}</p> : null}
                     {r.order_number && !['return','branch'].includes(String(r.mission_type||r.route_type||'').toLowerCase()) ? <p style={{margin: '8px 0 0', fontSize: 22, lineHeight: '26px', fontWeight: 800, letterSpacing: '-0.02em'}}>PO {r.order_number}</p> : null}
                     {r.route_started_at && (r.completed_at||r.route_completed_at) ? <p className="muted" style={{margin:'6px 0 0',fontSize:13}}>{t.drvOnRouteTime||t.drvStartedAt} {(() => { const ms=new Date(r.completed_at||r.route_completed_at).getTime()-new Date(r.route_started_at).getTime(); if(!Number.isFinite(ms)||ms<0) return t.drvDurationNA; const total=Math.floor(ms/1000); const h=Math.floor(total/3600); const m=Math.floor((total%3600)/60); return h>0?`${h}h ${m}m`:`${m}m`; })()}</p> : null}
                   </div>
@@ -150,7 +155,6 @@ export default function History() {
           })}
             </div>
           </section>
-          ))}
         </div>
       )}
     </DriverV3Shell>
