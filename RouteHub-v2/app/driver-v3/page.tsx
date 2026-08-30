@@ -74,7 +74,7 @@ export default function DriverV3Page() {
             <span className={styles.stopCount}>{t.drvStop} <strong>{route.position||completed+1}</strong> {t.drvOf} {total}</span>
           </div>
           <div className={styles.destination}>
-            <div><h1>{route.destination_name||route.destination_address||'Current stop'}</h1>{route.destination_name&&route.destination_address&&<p>{route.destination_address}</p>}{route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}</div>
+            <div><h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>{route.destination_name&&route.destination_address&&<p>{route.destination_address}</p>}{route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}</div>
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
           <div className={styles.divider}/>
@@ -93,4 +93,4 @@ export default function DriverV3Page() {
   </DriverV3Shell>
 }
 
-function TodayLoading(){return <div className={styles.loading} aria-label="Loading your route"><div className={styles.loadingHero}/><div className={styles.loadingProgress}/><div className={styles.loadingNext}/></div>}
+function TodayLoading(){return <div className={styles.loading} aria-label={t.drvLoadingRoute}><div className={styles.loadingHero}/><div className={styles.loadingProgress}/><div className={styles.loadingNext}/></div>}

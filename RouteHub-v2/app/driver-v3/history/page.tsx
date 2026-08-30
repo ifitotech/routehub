@@ -48,7 +48,7 @@ export default function History() {
       ) : completed.length === 0 ? (
         <section className="card">
           <h2>{t.drvNoHistory}</h2>
-          <p className="muted">Completed work will appear here.</p>
+          <p className="muted">{t.drvHistoryEmpty}</p>
         </section>
       ) : (
         <div style={{display: 'grid', gap: 10}}>

@@ -35,7 +35,7 @@ export default function Completed() {
   return (
     <DriverV3Shell active="route" mode="stack" title={t.drvCompleted} backHref="/driver/route" backLabel={t.drvRoute}>
       {loading ? (
-        <section className="card"><p className="muted" style={{margin: 0}}>Loading…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoading}</p></section>
       ) : error ? (
         <section className="card">
           <h2>{t.drvCouldntLoad}</h2>

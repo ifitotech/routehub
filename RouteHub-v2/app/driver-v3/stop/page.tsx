@@ -276,7 +276,7 @@ export default function DriverV3Stop() {
       ) : (
         <>
           <h1 className="title" style={{marginTop: 4, marginBottom: 4, fontSize: 26, lineHeight: '32px'}}>
-            {route.destination_name || route.destination_address || 'Current stop'}
+            {route.destination_name || route.destination_address || t.drvCurrentStopName}
           </h1>
           <p className="muted" style={{marginTop: 0, marginBottom: 12}}>
             <MapPin size={14} style={{display: 'inline', verticalAlign: -2, marginRight: 4}} />

@@ -54,7 +54,7 @@ export default function DrivingDayPage() {
           </h2>
           {drivingSession ? (
             <p className="muted" style={{marginBottom: 16}}>
-              Started{' '}
+              {t.drvStartedAt}{' '}
               {new Date(drivingSession.started_at).toLocaleTimeString([], {
                 hour: 'numeric',
                 minute: '2-digit',
