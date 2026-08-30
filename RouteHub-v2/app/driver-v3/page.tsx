@@ -6,7 +6,7 @@ import {Camera, FileText, Map, MapPin, Package, PenLine, TriangleAlert, X} from 
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
-import {completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
+import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, reportIssue, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
@@ -31,6 +31,8 @@ export default function DriverV3Page() {
   const [podPanel,setPodPanel]=useState<null | 'photo' | 'signature' | 'notes' | 'issue'>(null)
   const [askName,setAskName]=useState(false)
   const nameRef=useRef<HTMLInputElement>(null)
+  const photoRef=useRef<HTMLInputElement>(null)
+  const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
@@ -163,14 +165,8 @@ export default function DriverV3Page() {
   const confirmDelivery=async()=>{
     if(!route||busy||!driverId)return
     const name=recipient.trim()
-    if(!name){
-      setAskName(true)
-      setPodPanel(null)
-      setMessage(t.drvNeedRecipient)
-      setTimeout(()=>nameRef.current?.focus(),50)
-      return
-    }
-    if(!hasPod){
+    const withIssue=podPanel==='issue'||Boolean(issueNote.trim())
+    if(!withIssue && !hasPod){
       setMessage(t.drvNeedPod)
       return
     }
@@ -181,9 +177,18 @@ export default function DriverV3Page() {
       try{await markArrived(ctx())}catch{}
       if(photo) await uploadStopPhoto(ctx(), photo)
       if(signed && canvas.current) await saveStopSignature(ctx(), canvas.current)
+      if(issueNote.trim()){
+        try{await saveStopNote(ctx(), issueNote.trim())}catch{}
+      }
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
-      await completeDeliveryWithRecipient(ctx(), name, '', location)
+      if(withIssue){
+        await reportIssue(ctx(), issueNote.trim()||'Issue reported on delivery')
+      }else if(name){
+        await completeDeliveryWithRecipient(ctx(), name, issueNote, location)
+      }else{
+        await completeDelivery(ctx())
+      }
       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       setSheet(null)
       setRecipient('')
@@ -323,36 +328,33 @@ export default function DriverV3Page() {
             ):null}
             <label className="muted" style={{display:'block',marginBottom:12,padding:askName?'12px':'0',borderRadius:14,background:askName?'#fff7ed':'transparent',border:askName?'1px solid #fdba74':'0'}}>
               {t.drvReceivedBy}
-              <input ref={nameRef} value={recipient} onChange={e=>{setRecipient(e.target.value);if(e.target.value.trim())setAskName(false)}} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box',background:'#fff'}}/>
+              <input ref={nameRef} value={recipient} onFocus={()=>{setNameFocus(true);setPodPanel(null)}} onBlur={()=>setNameFocus(false)} onChange={e=>{setRecipient(e.target.value);if(e.target.value.trim())setAskName(false)}} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box',background:'#fff'}}/>
             </label>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
-              <button type="button" className="secondary" onClick={()=>setPodPanel('photo')} style={{...tileBtn,color:photo?'#16B96B':undefined}}>
+            <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={e=>setPhoto(e.target.files?.[0]||null)}/>
+            {!nameFocus&&(
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
+              <button type="button" className="secondary" onClick={()=>photoRef.current?.click()} style={{...tileBtn,color:photo?'#16B96B':undefined}}>
                 <Camera size={20}/>{t.drvPhoto||'Foto'}
               </button>
-              <button type="button" className="secondary" onClick={()=>setPodPanel('signature')} style={{...tileBtn,color:signed?'#16B96B':undefined}}>
+              <button type="button" className="secondary" onClick={()=>setPodPanel(podPanel==='signature'?null:'signature')} style={{...tileBtn,color:signed?'#16B96B':undefined}}>
                 <PenLine size={20}/>{t.drvSignature||'Firma'}
               </button>
-              <button type="button" className="secondary" onClick={()=>setPodPanel('notes')} style={tileBtn}>
-                <FileText size={20}/>{t.drvNotes||'Notas'}
-              </button>
-              <button type="button" className="secondary" onClick={()=>setPodPanel('issue')} style={{...tileBtn,color:'#EF5350',borderColor:'#f5c2c0'}}>
+              <button type="button" className="secondary" onClick={()=>setPodPanel(podPanel==='issue'?null:'issue')} style={{...tileBtn,color:'#EF5350',borderColor:'#f5c2c0'}}>
                 <TriangleAlert size={20}/>{t.drvIssue}
               </button>
             </div>
-            {podPanel==='photo'&&(
-              <label className="secondary" style={{display:'block',textAlign:'center',marginBottom:10}}>
-                {photo?photo.name:t.drvTakePhoto||t.drvPhoto}
-                <input type="file" accept="image/*" capture="environment" hidden onChange={e=>setPhoto(e.target.files?.[0]||null)}/>
-              </label>
             )}
-            {podPanel==='signature'&&(
-              <canvas ref={canvas} width={320} height={120} onPointerDown={sign} onPointerMove={e=>e.buttons===1&&sign(e)} style={{width:'100%',height:120,border:'1px dashed #cbd5e1',borderRadius:12,background:'#fff',touchAction:'none',marginBottom:10}}/>
+            {!nameFocus&&podPanel==='signature'&&(
+              <div style={{marginBottom:10}}>
+                <canvas ref={canvas} width={340} height={180} onPointerDown={sign} onPointerMove={e=>e.buttons===1&&sign(e)} style={{width:'100%',height:180,border:'1px dashed #cbd5e1',borderRadius:12,background:'#fff',touchAction:'none'}}/>
+                <button type="button" className="secondary" onClick={()=>{const c=canvas.current;if(!c)return;c.getContext('2d')?.clearRect(0,0,c.width,c.height);setSigned(false)}} style={{marginTop:8,width:'100%'}}>{t.drvClear}</button>
+              </div>
             )}
-            {(podPanel==='notes'||podPanel==='issue')&&(
+            {!nameFocus&&podPanel==='issue'&&(
               <textarea value={issueNote} onChange={e=>setIssueNote(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={{width:'100%',border:'1px solid #dde5ee',borderRadius:12,padding:10,font:'inherit',marginBottom:10,boxSizing:'border-box'}}/>
             )}
             {message&&<p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
-            <button className="primary" disabled={busy} onClick={()=>void confirmDelivery()} style={{background:'#16B96B',width:'100%'}}>{busy?t.drvBusy:t.drvCompleteDelivery}</button>
+            <button className="primary" disabled={busy} onClick={()=>void confirmDelivery()} style={{background:podPanel==='issue'?'#E11D48':'#16B96B',width:'100%'}}>{busy?t.drvBusy:(podPanel==='issue'?(t.drvCompleteWithIssue||'COMPLETE WITH ISSUE'):t.drvCompleteDelivery)}</button>
           </section>
         </div>
       )}

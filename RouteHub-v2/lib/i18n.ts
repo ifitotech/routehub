@@ -150,6 +150,10 @@ Object.assign(en, {drvDeliveryHelp:'Confirm who received the material. Add a pho
 Object.assign(es, {drvDeliveryHelp:'Confirma quién recibió el material. Agrega foto o firma antes de completar.'})
 Object.assign(fr, {drvDeliveryHelp:'Confirmez qui a reçu le matériel. Ajoutez photo ou signature avant de terminer.'})
 
+Object.assign(en, {drvCompleteWithIssue:'COMPLETE WITH ISSUE'})
+Object.assign(es, {drvCompleteWithIssue:'COMPLETAR CON PROBLEMA'})
+Object.assign(fr, {drvCompleteWithIssue:'TERMINER AVEC INCIDENT'})
+
 export function getLocale(): Locale {
   if (typeof window === 'undefined') return 'en'
   const value = window.localStorage.getItem('routehub_language') || window.localStorage.getItem('rh2-language')
