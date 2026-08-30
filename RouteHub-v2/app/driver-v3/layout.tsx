@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'black',
   },
   icons: {
     icon: '/routehub-driver-new.jpg',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'apple-mobile-web-app-status-bar-style': 'black',
   },
 }
 
