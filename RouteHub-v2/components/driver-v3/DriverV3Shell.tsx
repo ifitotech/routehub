@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import {ChevronLeft, Home, List, Map, Menu, MoreHorizontal, Truck} from 'lucide-react'
+import {ChevronLeft, History, Home, Menu, MoreHorizontal, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
 
-type Tab = 'today' | 'route' | 'map' | 'truck' | 'more'
+type Tab = 'today' | 'route' | 'map' | 'history' | 'truck' | 'more'
 
 type Props = {
   children: React.ReactNode
@@ -80,9 +80,9 @@ export default function DriverV3Shell({
           <Home />
           <span>{t.drvToday}</span>
         </Link>
-        <Link className={active === 'map' ? styles.active : ''} href="/driver/map">
-          <Map />
-          <span>{t.drvMap}</span>
+        <Link className={active === 'history' ? styles.active : ''} href="/driver/history">
+          <History />
+          <span>{t.drvRouteHistory}</span>
         </Link>
         <Link className={active === 'truck' ? styles.active : ''} href="/driver/truck">
           <Truck />
@@ -105,6 +105,8 @@ function tabLabel(tab: Tab, t: Record<string, string>) {
       return t.drvMyRoute
     case 'map':
       return t.drvMap
+    case 'history':
+      return t.drvRouteHistory
     case 'truck':
       return t.drvTruck
     case 'more':
