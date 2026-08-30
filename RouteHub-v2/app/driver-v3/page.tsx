@@ -59,7 +59,7 @@ export default function DriverV3Page() {
 
   const primaryLabel=route?.status!=='active'?t.drvStartRoute:!route?.arrived_at?t.drvArrived:t.drvContinue
   const nextKind=((nextRoute?.mission_type||'')+'').toLowerCase()
-  const nextKindLabel=nextKind==='pickup'?'PICKUP':nextKind==='branch'||nextKind==='return'?'RETURN':nextKind?'DELIVERY':''
+  const nextKindLabel=nextKind==='pickup'?t.drvPickup:nextKind==='branch'||nextKind==='return'?t.drvReturn:nextKind?t.drvDelivery:''
 
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}>
     <div className={styles.page}>
@@ -70,7 +70,7 @@ export default function DriverV3Page() {
       </section>:operation&&route?<>
         <section className={styles.hero}>
           <div className={styles.heroTop}>
-            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{(kind||'return').toUpperCase()}</span>
+            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup:kind==='delivery'?t.drvDelivery:t.drvReturn}</span>
             <span className={styles.stopCount}>STOP <strong>{route.position||completed+1}</strong> OF {total}</span>
           </div>
           <div className={styles.destination}>

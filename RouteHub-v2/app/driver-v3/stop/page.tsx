@@ -250,7 +250,7 @@ export default function DriverV3Stop() {
   }
 
   const stackSub = route
-    ? `Stop ${route.position || '—'} · ${operationLabel(String(kind))}`
+    ? `Stop ${route.position || '—'} · ${(String(kind)==='pickup'?t.drvPickup:String(kind)==='branch'||String(kind)==='return'?t.drvReturn:t.drvDelivery)}`
     : undefined
 
   return (
@@ -577,7 +577,7 @@ export default function DriverV3Stop() {
       {confirmComplete && route && (
         <div className={styles.confirmBackdrop} role="dialog" aria-modal="true">
           <div className={styles.confirmSheet}>
-            <h2>Complete this {operationLabel(String(kind)).toLowerCase()}?</h2>
+            <h2>{operationLabel(String(kind)) === 'PICKUP' ? t.drvCompletePickup : operationLabel(String(kind)) === 'RETURN' ? t.drvCompleteReturn : t.drvCompleteDelivery}</h2>
             <p>
               <strong style={{color: '#0f1d35'}}>{route.destination_name || route.destination_address}</strong>
               <br />
@@ -608,7 +608,7 @@ export default function DriverV3Stop() {
                   void act('complete')
                 }}
               >
-                {busy ? 'Completing…' : `Complete ${operationLabel(String(kind))}`}
+                {busy ? t.drvBusy : (operationLabel(String(kind))==='PICKUP'?t.drvCompletePickup:operationLabel(String(kind))==='RETURN'?t.drvCompleteReturn:t.drvCompleteDelivery)}
               </button>
             </div>
           </div>

@@ -20,10 +20,10 @@ export default function DriverV3Route() {
   const remaining = Math.max(0, queueRoutes.length - doneCount)
 
   const typeLabel = (r: any) => {
-    const t = (r.mission_type || 'delivery').toString().toLowerCase()
-    if (t === 'pickup') return 'PICKUP'
-    if (t === 'return' || t === 'branch') return 'RETURN'
-    return 'DELIVERY'
+    const v = (r.mission_type || 'delivery').toString().toLowerCase()
+    if (v === 'pickup') return t.drvPickup
+    if (v === 'return' || v === 'branch') return t.drvReturn
+    return t.drvDelivery
   }
 
   const typeColor = (r: any) => {

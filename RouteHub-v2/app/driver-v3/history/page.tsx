@@ -15,11 +15,11 @@ function formatDuration(start?: string | null, end?: string | null) {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
-function typeLabel(t?: string | null) {
-  const v = (t || 'delivery').toLowerCase()
-  if (v === 'pickup') return 'PICKUP'
-  if (v === 'return' || v === 'branch') return 'RETURN'
-  return 'DELIVERY'
+function typeLabel(kind: string | null | undefined, labels: {drvPickup:string;drvReturn:string;drvDelivery:string}) {
+  const v = (kind || 'delivery').toLowerCase()
+  if (v === 'pickup') return labels.drvPickup
+  if (v === 'return' || v === 'branch') return labels.drvReturn
+  return labels.drvDelivery
 }
 
 export default function History() {
@@ -55,7 +55,7 @@ export default function History() {
           {completed.map((r: any) => (
             <article className="card" key={r.id}>
               <p className="eyebrow">
-                {typeLabel(r.mission_type)} · COMPLETED
+                {typeLabel(r.mission_type, t)} · {t.drvCompletedTag}
               </p>
               <h2 style={{margin: '4px 0 6px', fontSize: 18}}>
                 {r.destination_name || r.destination_address || 'Route'}
