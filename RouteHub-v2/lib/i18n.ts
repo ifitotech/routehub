@@ -145,6 +145,9 @@ Object.assign(fr, {drvConfirmPickup:'CONFIRMER LE RAMASSAGE', drvPickUpPo:'Récu
 Object.assign(en, {drvPickupHelp:'Collect this order at the store. Confirm when you have it. If something is wrong, report it and keep the route.', drvReportProblem:'Report a problem'})
 Object.assign(es, {drvPickupHelp:'Recoge este pedido en la tienda. Confirma cuando lo tengas. Si hay un problema, repórtalo y sigue la ruta.', drvReportProblem:'Reportar un problema'})
 Object.assign(fr, {drvPickupHelp:'Récupérez cette commande au magasin. Confirmez quand c’est fait. Un problème ? Signalez-le et continuez.', drvReportProblem:'Signaler un problème'})
+Object.assign(en, {drvCall:'Call', drvTapDetails:'Tap for stop details', drvReturnHelp:'Return this load to the branch and confirm when you arrive.'})
+Object.assign(es, {drvCall:'Llamar', drvTapDetails:'Toca para ver el detalle', drvReturnHelp:'Devuelve la carga a la sucursal y confirma al llegar.'})
+Object.assign(fr, {drvCall:'Appeler', drvTapDetails:'Touchez pour le détail', drvReturnHelp:'Ramenez la charge à la succursale et confirmez à l’arrivée.'})
 
 Object.assign(en, {drvDeliveryHelp:'Confirm who received the material. Add a photo or signature before completing.'})
 Object.assign(es, {drvDeliveryHelp:'Confirma quién recibió el material. Agrega foto o firma antes de completar.'})
