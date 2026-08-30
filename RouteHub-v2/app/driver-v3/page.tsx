@@ -48,6 +48,23 @@ export default function DriverV3Page() {
     return()=>{html.style.overflow=prevHtml;body.style.overflow=prevBody}
   },[sheet])
   const started=['active','paused'].includes(String(route?.status||''))
+  const startedAt=route?.route_started_at||null
+  const [elapsed,setElapsed]=useState('')
+  useEffect(()=>{
+    if(!started||!startedAt){setElapsed('');return}
+    const tick=()=>{
+      const ms=Date.now()-new Date(startedAt).getTime()
+      if(!Number.isFinite(ms)||ms<0){setElapsed('');return}
+      const total=Math.floor(ms/1000)
+      const h=Math.floor(total/3600)
+      const m=Math.floor((total%3600)/60)
+      const s=total%60
+      setElapsed(h>0?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`)
+    }
+    tick()
+    const id=window.setInterval(tick,1000)
+    return()=>window.clearInterval(id)
+  },[started,startedAt])
   const arrived=Boolean(route?.arrived_at)
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
 
@@ -295,6 +312,7 @@ export default function DriverV3Page() {
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
             <MapPin/>{busy?t.drvBusy:action.label}
           </button>
+          {started&&elapsed?<p className="muted" style={{margin:'8px 0 0',textAlign:'center',fontSize:13,fontWeight:700}}>{t.drvOnRouteTime||t.drvStartedAt} {elapsed}</p>:null}
           <div className={styles.secondaryActions}>
             <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
             <button type="button" className={styles.issueAction} onClick={()=>{

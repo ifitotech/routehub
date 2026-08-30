@@ -122,6 +122,7 @@ export default function History() {
                     </h2>
                     {r.destination_address ? <p className="muted" style={{margin: 0, fontSize: 13}}>{r.destination_address}</p> : null}
                     {r.order_number && !['return','branch'].includes(String(r.mission_type||r.route_type||'').toLowerCase()) ? <p style={{margin: '8px 0 0', fontSize: 22, lineHeight: '26px', fontWeight: 800, letterSpacing: '-0.02em'}}>PO {r.order_number}</p> : null}
+                    {r.route_started_at && (r.completed_at||r.route_completed_at) ? <p className="muted" style={{margin:'6px 0 0',fontSize:13}}>{t.drvOnRouteTime||t.drvStartedAt} {(() => { const ms=new Date(r.completed_at||r.route_completed_at).getTime()-new Date(r.route_started_at).getTime(); if(!Number.isFinite(ms)||ms<0) return t.drvDurationNA; const total=Math.floor(ms/1000); const h=Math.floor(total/3600); const m=Math.floor((total%3600)/60); return h>0?`${h}h ${m}m`:`${m}m`; })()}</p> : null}
                   </div>
                 </div>
                 <button

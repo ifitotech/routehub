@@ -162,3 +162,7 @@ export function getLocale(): Locale {
   const value = window.localStorage.getItem('routehub_language') || window.localStorage.getItem('rh2-language')
   return isLocale(value) ? value : 'en'
 }
+
+Object.assign(en, {drvOnRouteTime:'On route'})
+Object.assign(es, {drvOnRouteTime:'En ruta'})
+Object.assign(fr, {drvOnRouteTime:'En route'})
