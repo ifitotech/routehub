@@ -253,6 +253,7 @@ export default function DriverV3Stop() {
       subtitle={stackSub}
       backHref="/driver/route"
       backLabel="Route"
+      hideNav={Boolean(sheet || confirmComplete)}
     >
 
       {loading ? (
@@ -399,51 +400,60 @@ export default function DriverV3Stop() {
 
             {sheet === 'photo' && (
               <>
-                <label
-                  className="secondary"
-                  style={{
-                    cursor: 'pointer',
-                    marginBottom: 16,
-                    minHeight: 84,
-                    display: 'grid',
-                    placeItems: 'center',
-                    gap: 8,
-                    fontSize: 16,
-                  }}
-                >
-                  <Camera size={28} />
-                  {photoName || 'Take photo'}
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    hidden
-                    onChange={e => setPhotoName(e.target.files?.[0]?.name || '')}
-                  />
-                </label>
-                <button className="primary" disabled={sheetBusy} onClick={() => void savePhoto()}>
-                  {sheetBusy ? 'Saving…' : 'SAVE PHOTO'}
-                </button>
+                <div className={styles.sheetBody}>
+                  <label
+                    className="secondary"
+                    style={{
+                      cursor: 'pointer',
+                      marginBottom: 8,
+                      minHeight: 112,
+                      display: 'grid',
+                      placeItems: 'center',
+                      gap: 8,
+                      fontSize: 16,
+                    }}
+                  >
+                    <Camera size={28} />
+                    {photoName || 'Take photo'}
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      hidden
+                      onChange={e => setPhotoName(e.target.files?.[0]?.name || '')}
+                    />
+                  </label>
+                </div>
+                <div className={styles.sheetFooter}>
+                  <button className="primary" disabled={sheetBusy} onClick={() => void savePhoto()}>
+                    {sheetBusy ? 'Saving…' : 'SAVE PHOTO'}
+                  </button>
+                </div>
               </>
             )}
 
             {sheet === 'notes' && (
               <>
-                <textarea
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                  placeholder="Optional delivery note"
-                  style={{marginBottom: 12}}
-                />
-                <button className="primary" disabled={sheetBusy} onClick={() => void saveNotes()}>
-                  {sheetBusy ? 'Saving…' : 'SAVE NOTE'}
-                </button>
+                <div className={styles.sheetBody}>
+                  <textarea
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    placeholder="Optional delivery note"
+                    style={{marginBottom: 12}}
+                  />
+                </div>
+                <div className={styles.sheetFooter}>
+                  <button className="primary" disabled={sheetBusy} onClick={() => void saveNotes()}>
+                    {sheetBusy ? 'Saving…' : 'SAVE NOTE'}
+                  </button>
+                </div>
               </>
             )}
 
             {sheet === 'signature' && (
               <>
+                <div className={styles.sheetBody}>
                 <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 8}}>
                   <button
                     type="button"
@@ -497,14 +507,18 @@ export default function DriverV3Stop() {
                     marginBottom: 12,
                   }}
                 />
-                <button className="primary" disabled={sheetBusy} onClick={() => void saveSignature()}>
-                  {sheetBusy ? 'Saving…' : 'SAVE SIGNATURE'}
-                </button>
+                </div>
+                <div className={styles.sheetFooter}>
+                  <button className="primary" disabled={sheetBusy} onClick={() => void saveSignature()}>
+                    {sheetBusy ? 'Saving…' : 'SAVE SIGNATURE'}
+                  </button>
+                </div>
               </>
             )}
 
             {sheet === 'issue' && (
               <>
+                <div className={styles.sheetBody}>
                 <div style={{display: 'grid', gap: 8, marginBottom: 12}}>
                   {ISSUE_CATEGORIES.map(c => (
                     <button
@@ -531,6 +545,8 @@ export default function DriverV3Stop() {
                   placeholder="Details (optional)"
                   style={{marginBottom: 12}}
                 />
+                </div>
+                <div className={styles.sheetFooter}>
                 <button
                   className="primary"
                   disabled={sheetBusy || !issueCat}
@@ -539,6 +555,7 @@ export default function DriverV3Stop() {
                 >
                   {sheetBusy ? 'Submitting…' : 'SUBMIT ISSUE'}
                 </button>
+                </div>
               </>
             )}
 

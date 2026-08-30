@@ -18,6 +18,8 @@ type Props = {
   headerStatus?: string
   /** Map tab can hide default content padding for full-bleed map */
   flush?: boolean
+  /** Hide tab bar while a sheet/confirm is open so content is never clipped */
+  hideNav?: boolean
 }
 
 export default function DriverV3Shell({
@@ -30,6 +32,7 @@ export default function DriverV3Shell({
   backLabel = 'Back',
   headerStatus,
   flush = false,
+  hideNav = false,
 }: Props) {
   const isToday = active === 'today' && mode === 'tab'
   const isStack = mode === 'stack'
@@ -75,7 +78,7 @@ export default function DriverV3Shell({
 
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
 
-      <nav className={styles.nav} aria-label="Driver navigation">
+      <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
         <Link className={active === 'today' ? styles.active : ''} href="/driver">
           <Home />
           <span>Today</span>
