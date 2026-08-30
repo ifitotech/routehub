@@ -1,12 +1,13 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {LogOut} from 'lucide-react'
+import {CalendarDays, History, LogOut, MapPin} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DeviceNotificationsSetting from '../../device-notifications-setting'
 import InstallAppCard from '../../install-app-card'
+import {getCurrentLocation, getLocationPermission} from '../../../lib/location'
 
 const LANGS = [
   {id: 'en', label: 'English'},
@@ -24,6 +25,8 @@ export default function DriverV3Settings() {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState('')
+  const [locationState, setLocationState] = useState('prompt')
+  const [locationBusy, setLocationBusy] = useState(false)
 
   useEffect(() => {
     void getSupabase().auth.getUser().then(({data}) => {
@@ -32,7 +35,21 @@ export default function DriverV3Settings() {
       setFullName(String(user?.user_metadata?.full_name || user?.user_metadata?.name || ''))
       setPhone(String(user?.user_metadata?.phone || ''))
     })
+    void getLocationPermission().then(setLocationState)
   }, [])
+
+  const enableLocation = async () => {
+    if (locationBusy) return
+    setLocationBusy(true)
+    try {
+      await getCurrentLocation({maximumAge: 0})
+      setLocationState(await getLocationPermission())
+    } catch {
+      setLocationState(await getLocationPermission())
+    } finally {
+      setLocationBusy(false)
+    }
+  }
 
   const saveProfile = async () => {
     if (saving) return
@@ -93,6 +110,30 @@ export default function DriverV3Settings() {
           {editing ? t.drvCancel : t.drvEditProfile}
         </button>
         {profileMsg && <p className="muted" role="status">{profileMsg}</p>}
+      </section>
+
+      <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow">{t.drvWork}</p>
+        <Link href="/driver/driving-day" className="row" style={{textDecoration: 'none', color: 'inherit', minHeight: 52, display: 'flex', alignItems: 'center', gap: 10}}>
+          <CalendarDays size={18} /> {t.drvDrivingDay}
+        </Link>
+        <Link href="/driver/history" className="row" style={{textDecoration: 'none', color: 'inherit', minHeight: 52, display: 'flex', alignItems: 'center', gap: 10}}>
+          <History size={18} /> {t.drvRouteHistory}
+        </Link>
+      </section>
+
+      <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow">{t.drvConsentTitle}</p>
+        <p className="muted" style={{margin: '4px 0 12px'}}>{t.drvConsentBody}</p>
+        <p style={{margin: '0 0 10px', fontWeight: 700}}>
+          <MapPin size={16} style={{verticalAlign: 'middle', marginRight: 6}} />
+          {locationState === 'granted' ? t.drvActive : locationState === 'denied' ? t.drvOpFailed : t.drvNotStarted}
+        </p>
+        {locationState !== 'granted' && (
+          <button type="button" className="primary" disabled={locationBusy} onClick={() => void enableLocation()}>
+            {locationBusy ? t.drvBusy : t.drvConsentCheck}
+          </button>
+        )}
       </section>
 
       <div style={{marginTop: 12}}><DeviceNotificationsSetting /></div>
