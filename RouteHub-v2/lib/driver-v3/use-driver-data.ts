@@ -42,12 +42,22 @@ function useDriverDataInternal(): DriverV3Data {
       setDriverId(user.id)
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id ?? null)
-      const result = await getSupabase()
+      const cols = 'id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at'
+      const fallback = cols.replace('destination_contact_name,','')
+      let result = await getSupabase()
         .from('routes')
-        .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
+        .select(cols)
         .eq('company_id', membership.company_id)
         .eq('driver_id', user.id)
         .order('position', {ascending: true})
+      if (result.error && /destination_contact_name|schema cache|column/i.test(result.error.message || '')) {
+        result = await getSupabase()
+          .from('routes')
+          .select(fallback)
+          .eq('company_id', membership.company_id)
+          .eq('driver_id', user.id)
+          .order('position', {ascending: true})
+      }
       if (result.error) throw result.error
       setRoutes((result.data || []) as DriverV3Route[])
       const session = await getActiveDrivingSession(user.id)
