@@ -6,7 +6,8 @@ import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leafl
 import {MapPin,Route,Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {mapTileConfig} from '../lib/maps/map-config'
-import {calculateRoute} from '../lib/maps/routing'
+import {calculateRoute, nextRouteManeuver} from '../lib/maps/routing'
+import type {ActiveRouteManeuver, RouteManeuver} from '../lib/maps/types'
 
 export type RouteCoordinate={lat:number;lng:number}
 export type RouteWaypoint={address?:string|null;label?:string|null;coordinate?:RouteCoordinate|null}
@@ -26,6 +27,7 @@ type Props={
   onActivate?:()=>void
   useDriverAsOrigin?:boolean
  locale?:string
+ onManeuver?:(maneuver:ActiveRouteManeuver|null)=>void
 }
 
 const makeMarker=(kind:'origin'|'destination'|'driver'|'stop',number?:number)=>L.divIcon({
@@ -74,9 +76,10 @@ async function resolveCoordinate(address:string|null|undefined,known:RouteCoordi
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en',followToken=0}:Props & {followToken?:number}){
+export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en',followToken=0,onManeuver}:Props & {followToken?:number}){
  const [routePoints,setRoutePoints]=useState<RouteCoordinate[]>([])
  const [line,setLine]=useState<RouteCoordinate[]>([])
+ const [maneuvers,setManeuvers]=useState<RouteManeuver[]>([])
  const [loading,setLoading]=useState(true)
  const [unavailable,setUnavailable]=useState(false)
 
@@ -98,12 +101,20 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
    setUnavailable(!points.length)
    if(points.length>1){
     const estimate=await calculateRoute(points)
-    if(!cancelled&&estimate.coordinates.length>1)setLine(estimate.coordinates)
+    if(!cancelled&&estimate.coordinates.length>1){
+     setLine(estimate.coordinates)
+     setManeuvers(estimate.maneuvers||[])
+    }
    }
    if(!cancelled)setLoading(false)
   }).catch(()=>{if(!cancelled){setUnavailable(true);setLoading(false)}})
   return()=>{cancelled=true}
  },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey,useDriverAsOrigin,useDriverAsOrigin?driverLocation?.lat:null,useDriverAsOrigin?driverLocation?.lng:null])
+
+ useEffect(()=>{
+  if(!onManeuver)return
+  onManeuver(nextRouteManeuver(maneuvers,line,driverLocation||null)||null)
+ },[maneuvers,line,driverLocation?.lat,driverLocation?.lng,onManeuver])
 
  const visiblePoints=useMemo(()=>[...routePoints,...(driverLocation?[driverLocation]:[])],[routePoints,driverLocation])
  const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}

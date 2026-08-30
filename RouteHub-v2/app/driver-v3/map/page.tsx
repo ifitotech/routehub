@@ -1,7 +1,8 @@
 'use client'
 import dynamic from 'next/dynamic'
-import {useState} from 'react'
-import {CheckCircle2, Crosshair, Navigation} from 'lucide-react'
+import {useCallback, useState} from 'react'
+import {ArrowRight, CheckCircle2, CornerUpLeft, CornerUpRight, Crosshair, Navigation} from 'lucide-react'
+import type {ActiveRouteManeuver} from '../../../lib/maps/types'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import styles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -17,7 +18,9 @@ export default function DriverV3Map() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [followToken, setFollowToken] = useState(0)
+  const [maneuver, setManeuver] = useState<ActiveRouteManeuver | null>(null)
   const route = snapshot?.currentOperation?.route as any
+  const onManeuver = useCallback((next: ActiveRouteManeuver | null) => setManeuver(next), [])
   const kind = (snapshot?.currentOperation?.kind || 'delivery').toString().toUpperCase()
 
   const maps = () => {
@@ -30,9 +33,10 @@ export default function DriverV3Map() {
           : null,
       label: route.destination_name,
     })
-    // Keep navigation in the current system handoff. Opening a new browser
-    // tab leaves an empty tab behind when the driver returns from Maps.
-    if (url) window.location.assign(url)
+    if (url) {
+      const opened = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!opened) window.location.assign(url)
+    }
   }
 
   const arrived = async () => {
@@ -82,7 +86,44 @@ export default function DriverV3Map() {
                 useDriverAsOrigin
                 followToken={followToken}
                 locale={locale}
+                onManeuver={onManeuver}
               />
+              {maneuver && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 12,
+                    right: 72,
+                    zIndex: 12,
+                    background: '#0F1D35',
+                    color: '#fff',
+                    borderRadius: 16,
+                    padding: '12px 14px',
+                    boxShadow: '0 10px 28px rgba(15,29,53,.28)',
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'center',
+                    minHeight: 64,
+                  }}
+                >
+                  {String(maneuver.modifier || '').includes('left') ? (
+                    <CornerUpLeft size={28} />
+                  ) : String(maneuver.modifier || '').includes('right') ? (
+                    <CornerUpRight size={28} />
+                  ) : (
+                    <ArrowRight size={28} />
+                  )}
+                  <div style={{minWidth: 0}}>
+                    <strong style={{display: 'block', fontSize: 18, lineHeight: 1.2}}>
+                      {formatGuideDistance(maneuver.distanceToManeuverMeters, locale)}
+                    </strong>
+                    <span style={{display: 'block', color: '#B9C9E2', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                      {maneuver.streetName || formatGuideAction(maneuver, locale)}
+                    </span>
+                  </div>
+                </div>
+              )}
               <button
                 type="button"
                 className="secondary"
@@ -163,4 +204,32 @@ export default function DriverV3Map() {
       </div>
     </DriverV3Shell>
   )
+}
+
+function formatGuideDistance(meters: number | undefined, locale: string) {
+  const value = Math.max(0, Math.round(meters || 0))
+  if (locale === 'es') return value >= 1000 ? `${(value / 1000).toFixed(1)} km` : `${value} m`
+  if (locale === 'fr') return value >= 1000 ? `${(value / 1000).toFixed(1)} km` : `${value} m`
+  const feet = Math.round(value * 3.281)
+  return feet >= 1000 ? `${(feet / 5280).toFixed(1)} mi` : `${feet} ft`
+}
+
+function formatGuideAction(maneuver: ActiveRouteManeuver, locale: string) {
+  const turn = `${maneuver.type || ''} ${maneuver.modifier || ''}`.toLowerCase()
+  if (locale === 'es') {
+    if (turn.includes('left')) return 'Gira a la izquierda'
+    if (turn.includes('right')) return 'Gira a la derecha'
+    if (turn.includes('arrive')) return 'Llegando'
+    return 'Sigue adelante'
+  }
+  if (locale === 'fr') {
+    if (turn.includes('left')) return 'Tournez à gauche'
+    if (turn.includes('right')) return 'Tournez à droite'
+    if (turn.includes('arrive')) return 'Arrivée'
+    return 'Continuez'
+  }
+  if (turn.includes('left')) return 'Turn left'
+  if (turn.includes('right')) return 'Turn right'
+  if (turn.includes('arrive')) return 'Arriving'
+  return 'Continue'
 }
