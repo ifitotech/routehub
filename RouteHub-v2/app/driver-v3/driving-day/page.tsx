@@ -138,7 +138,7 @@ export default function DrivingDayPage() {
         <div className={styles.confirmBackdrop} role="dialog" aria-modal="true">
           <div className={styles.confirmSheet}>
             <h2>{t.drvEndDayQ}</h2>
-            <p>Your location sharing for the workday will stop according to the existing operational behavior.</p>
+            <p>{t.drvEndShare}</p>
             <div className={styles.confirmActions}>
               <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmEnd(false)}>
                 Cancel

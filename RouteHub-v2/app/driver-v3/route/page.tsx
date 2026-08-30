@@ -42,9 +42,9 @@ export default function DriverV3Route() {
       ) : error ? (
         <section className="card">
           <h2>{t.drvCouldntLoad}</h2>
-          <p className="muted">Try again when your connection is available.</p>
+          <p className="muted">{t.drvConnRetry}</p>
           <button type="button" className="primary" onClick={() => void refresh()}>
-            TRY AGAIN
+            {t.drvTryAgainBtn}
           </button>
         </section>
       ) : (

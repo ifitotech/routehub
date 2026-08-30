@@ -104,7 +104,7 @@ export default function DriverV3Map() {
           ) : (
             <div style={{padding: 24}}>
               <h2 style={{margin: '0 0 6px'}}>{t.drvNoOperation}</h2>
-              <p className="muted" style={{margin: 0}}>A destination appears here when assigned.</p>
+              <p className="muted" style={{margin: 0}}>{t.drvDestHint}</p>
             </div>
           )}
         </div>

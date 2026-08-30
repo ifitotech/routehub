@@ -172,7 +172,7 @@ export default function DriverV3Truck() {
             <p className="eyebrow">{t.drvRecentActivity}</p>
             {activity.length === 0 ? (
               <p className="muted" style={{margin: '8px 0 0'}}>
-                No fuel or maintenance logs yet.
+                {t.drvNoLogs}
               </p>
             ) : (
               <div style={{marginTop: 4}}>

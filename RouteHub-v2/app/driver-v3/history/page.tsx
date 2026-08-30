@@ -43,7 +43,7 @@ export default function History() {
       ) : error ? (
         <section className="card">
           <h2>{t.drvNoHistory}</h2>
-          <p className="muted">Try again when your connection is available.</p>
+          <p className="muted">{t.drvConnRetry}</p>
         </section>
       ) : completed.length === 0 ? (
         <section className="card">
