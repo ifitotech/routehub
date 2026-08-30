@@ -48,12 +48,15 @@ export default function DriverV3Page() {
     return()=>{html.style.overflow=prevHtml;body.style.overflow=prevBody}
   },[sheet])
   const started=['active','paused'].includes(String(route?.status||''))
+  const localStart=useRef<number|null>(null)
+  const [clockNonce,setClockNonce]=useState(0)
   const startedAt=route?.route_started_at||null
   const [elapsed,setElapsed]=useState('')
   useEffect(()=>{
-    if(!started||!startedAt){setElapsed('');return}
+    const origin=startedAt||(localStart.current?new Date(localStart.current).toISOString():null)
+    if((!started&&!localStart.current)||!origin){setElapsed('');return}
     const tick=()=>{
-      const ms=Date.now()-new Date(startedAt).getTime()
+      const ms=Date.now()-new Date(origin).getTime()
       if(!Number.isFinite(ms)||ms<0){setElapsed('');return}
       const total=Math.floor(ms/1000)
       const h=Math.floor(total/3600)
@@ -64,7 +67,7 @@ export default function DriverV3Page() {
     tick()
     const id=window.setInterval(tick,1000)
     return()=>window.clearInterval(id)
-  },[started,startedAt])
+  },[started,startedAt,clockNonce])
   const arrived=Boolean(route?.arrived_at)
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
 
@@ -85,6 +88,8 @@ export default function DriverV3Page() {
     setBusy(true)
     setMessage('')
     try{
+      localStart.current=Date.now()
+      setClockNonce(n=>n+1)
       await startRoute(ctx(),operationalDate())
       if(!drivingSession){
         try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
@@ -312,7 +317,7 @@ export default function DriverV3Page() {
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
             <MapPin/>{busy?t.drvBusy:action.label}
           </button>
-          {started&&elapsed?<p className="muted" style={{margin:'8px 0 0',textAlign:'center',fontSize:13,fontWeight:700}}>{t.drvOnRouteTime||t.drvStartedAt} {elapsed}</p>:null}
+          {started&&elapsed?<p style={{margin:'10px 0 0',textAlign:'center',fontSize:28,lineHeight:'32px',fontWeight:800,letterSpacing:'-0.03em',fontVariantNumeric:'tabular-nums'}}>{elapsed}<span style={{display:'block',marginTop:2,fontSize:11,fontWeight:700,letterSpacing:'.12em',color:'#667892'}}>{t.drvOnRouteTime}</span></p>:null}
           <div className={styles.secondaryActions}>
             <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
             <button type="button" className={styles.issueAction} onClick={()=>{
