@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import {Bell, ChevronLeft, Home, List, Map, Menu, MoreHorizontal, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
+import {useLocale} from '../../lib/use-preferences'
 
 type Tab = 'today' | 'route' | 'map' | 'truck' | 'more'
 
@@ -34,6 +35,7 @@ export default function DriverV3Shell({
   flush = false,
   hideNav = false,
 }: Props) {
+  const {t} = useLocale()
   const isToday = active === 'today' && mode === 'tab'
   const isStack = mode === 'stack'
 
@@ -67,7 +69,7 @@ export default function DriverV3Shell({
       ) : (
         <header className={`${styles.header} ${styles.tabHeader}`}>
           <div className={styles.tabTitles}>
-            <strong>{title || tabLabel(active)}</strong>
+            <strong>{title || tabLabel(active, t)}</strong>
             {subtitle ? <small>{subtitle}</small> : null}
           </div>
           <button type="button" className={styles.iconButton} aria-label="Notifications">
@@ -81,40 +83,40 @@ export default function DriverV3Shell({
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
         <Link className={active === 'today' ? styles.active : ''} href="/driver">
           <Home />
-          <span>Today</span>
+          <span>{t.drvToday}</span>
         </Link>
         <Link className={active === 'route' ? styles.active : ''} href="/driver/route">
           <List />
-          <span>Route</span>
+          <span>{t.drvRoute}</span>
         </Link>
         <Link className={active === 'map' ? styles.active : ''} href="/driver/map">
           <Map />
-          <span>Map</span>
+          <span>{t.drvMap}</span>
         </Link>
         <Link className={active === 'truck' ? styles.active : ''} href="/driver/truck">
           <Truck />
-          <span>Truck</span>
+          <span>{t.drvTruck}</span>
         </Link>
         <Link className={active === 'more' ? styles.active : ''} href="/driver/more">
           <MoreHorizontal />
-          <span>More</span>
+          <span>{t.drvMore}</span>
         </Link>
       </nav>
     </main>
   )
 }
 
-function tabLabel(tab: Tab) {
+function tabLabel(tab: Tab, t: Record<string, string>) {
   switch (tab) {
     case 'today':
-      return 'Today'
+      return t.drvToday
     case 'route':
-      return 'My Route'
+      return t.drvMyRoute
     case 'map':
-      return 'Map'
+      return t.drvMap
     case 'truck':
-      return 'Truck'
+      return t.drvTruck
     case 'more':
-      return 'More'
+      return t.drvMore
   }
 }

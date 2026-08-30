@@ -5,11 +5,13 @@ import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../../lib/use-preferences'
 import {getSupabase} from '../../../../lib/supabase'
 import {saveFuel} from '../../../../lib/driver-v3/actions'
 
 export default function Fuel() {
   const router = useRouter()
+  const {t} = useLocale()
   const {driverId, companyId, branchId} = useDriverData()
   const [truck, setTruck] = useState<any>(null)
   const [odometer, setOdometer] = useState('')
@@ -61,7 +63,7 @@ export default function Fuel() {
   }
 
   return (
-    <DriverV3Shell active="truck" mode="stack" title="Log Fuel" backHref="/driver/truck" backLabel="Truck">
+    <DriverV3Shell active="truck" mode="stack" title={t.drvLogFuel} backHref="/driver/truck" backLabel={t.drvTruck}>
       
 
       <section className="card">

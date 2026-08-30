@@ -4,10 +4,12 @@ import {useState} from 'react'
 import styles from '../../../components/driver-v3/driver-v3.module.css'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../lib/use-preferences'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
 
 export default function DrivingDayPage() {
   const {loading, error, drivingSession, driverId, companyId, refresh} = useDriverData()
+  const {t} = useLocale()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'ok' | 'err'>('ok')
@@ -37,7 +39,7 @@ export default function DrivingDayPage() {
   }
 
   return (
-    <DriverV3Shell active="more" mode="stack" title="Driving Day" backHref="/driver/more" backLabel="More" hideNav={confirmEnd}>
+    <DriverV3Shell active="more" mode="stack" title={t.drvDrivingDay} backHref="/driver/more" backLabel={t.drvMore} hideNav={confirmEnd}>
       
 
       {loading ? (
@@ -46,9 +48,9 @@ export default function DrivingDayPage() {
         <section className="card"><p role="alert">{error}</p></section>
       ) : (
         <section className="card">
-          <p className="eyebrow">STATUS</p>
+          <p className="eyebrow">{t.drvStatus}</p>
           <h2 style={{margin: '4px 0 8px'}}>
-            {drivingSession ? 'ACTIVE' : 'NOT STARTED'}
+            {drivingSession ? t.drvActive : t.drvNotStarted}
           </h2>
           {drivingSession ? (
             <p className="muted" style={{marginBottom: 16}}>
@@ -73,8 +75,8 @@ export default function DrivingDayPage() {
             {busy
               ? 'Updating…'
               : drivingSession
-                ? 'END DRIVING DAY'
-                : 'START DRIVING DAY'}
+                ? t.drvEndDrivingDay
+                : t.drvStartDrivingDay}
           </button>
 
           {message && (

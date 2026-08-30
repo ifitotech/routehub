@@ -13,7 +13,7 @@ const LANGS = [
 ] as const
 
 export default function DriverV3Settings() {
-  const {locale, setLocale} = useLocale()
+  const {locale, setLocale, t} = useLocale()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -31,9 +31,9 @@ export default function DriverV3Settings() {
   }
 
   return (
-    <DriverV3Shell active="more" mode="stack" title="Settings" backHref="/driver/more" backLabel="More">
+    <DriverV3Shell active="more" mode="stack" title={t.drvSettings} backHref="/driver/more" backLabel={t.drvMore}>
       <section className="card">
-        <p className="eyebrow">ACCOUNT</p>
+        <p className="eyebrow">{t.drvAccount}</p>
         <h2 style={{margin: '4px 0 8px', fontSize: 18}}>RouteHub Driver</h2>
         <p className="muted" style={{margin: 0}}>
           Session and workspace access are managed by your company.
@@ -41,7 +41,7 @@ export default function DriverV3Settings() {
       </section>
 
       <section className="card" style={{marginTop: 12}}>
-        <p className="eyebrow">LANGUAGE</p>
+        <p className="eyebrow">{t.drvLanguage}</p>
         <div style={{display: 'grid', gap: 8, marginTop: 8}}>
           {LANGS.map(lang => (
             <button
@@ -65,7 +65,7 @@ export default function DriverV3Settings() {
 
       <section className="card" style={{marginTop: 12}}>
         <Link href="/settings/contact" className="row" style={{textDecoration: 'none', color: 'inherit', minHeight: 52}}>
-          Help
+          {t.drvHelp}
         </Link>
       </section>
 
@@ -76,7 +76,7 @@ export default function DriverV3Settings() {
         style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 12}}
       >
         <LogOut size={18} />
-        {busy ? 'Signing out…' : 'Sign Out'}
+        {busy ? 'Signing out…' : t.drvSignOut}
       </button>
       {error && (
         <p role="alert" className="muted" style={{marginTop: 10, color: '#b42318'}}>

@@ -4,10 +4,12 @@ import {useState} from 'react'
 import {CheckCircle2, List, Play} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../lib/use-preferences'
 import {finalizeRoute} from '../../../lib/driver-v3/actions'
 
 export default function Completed() {
   const {loading, error, routes, snapshot, driverId, refresh} = useDriverData()
+  const {t} = useLocale()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const done = routes.filter((r: any) => r.status === 'completed')
@@ -31,7 +33,7 @@ export default function Completed() {
   const kind = (last?.mission_type || 'delivery').toString().toUpperCase()
 
   return (
-    <DriverV3Shell active="route" mode="stack" title="Completed" backHref="/driver/route" backLabel="Route">
+    <DriverV3Shell active="route" mode="stack" title="Completed" backHref="/driver/route" backLabel={t.drvRoute}>
       {loading ? (
         <section className="card"><p className="muted" style={{margin: 0}}>Loading…</p></section>
       ) : error ? (
@@ -90,7 +92,7 @@ export default function Completed() {
 
           {next ? (
             <>
-              <p className="eyebrow">UP NEXT</p>
+              <p className="eyebrow">{t.drvUpNext}</p>
               <h2 style={{fontSize: 18, margin: '4px 0 14px'}}>
                 {next.destination_name || next.destination_address || 'Next stop'}
               </h2>
@@ -109,7 +111,7 @@ export default function Completed() {
                 All required operations are complete. Driving Day remains independent.
               </p>
               <button className="primary" disabled={busy} onClick={() => void finish()}>
-                {busy ? 'Finishing…' : 'Complete Route'}
+                {busy ? 'Finishing…' : t.drvCompleteRoute}
               </button>
             </>
           )}
@@ -120,7 +122,7 @@ export default function Completed() {
             style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', marginTop: 10}}
           >
             <List size={18} />
-            View Route
+            {t.drvViewRoute}
           </Link>
           {message && (
             <p role="status" className="muted">

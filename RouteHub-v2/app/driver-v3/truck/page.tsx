@@ -4,10 +4,12 @@ import {useEffect, useState} from 'react'
 import {Fuel, Wrench} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../lib/use-preferences'
 import {getSupabase} from '../../../lib/supabase'
 
 export default function DriverV3Truck() {
   const {companyId, branchId} = useDriverData()
+  const {t} = useLocale()
   const [truck, setTruck] = useState<any>(null)
   const [activity, setActivity] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,10 +79,10 @@ export default function DriverV3Truck() {
   }, [companyId, branchId])
 
   return (
-    <DriverV3Shell active="truck" title="Truck">
+    <DriverV3Shell active="truck" title={t.drvTruck}>
 
       {loading ? (
-        <section className="card"><p className="muted" style={{margin: 0}}>Loading truck…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoadingTruck}</p></section>
       ) : error ? (
         <section className="card">
           <h2>Couldn&apos;t load truck.</h2>
@@ -89,12 +91,12 @@ export default function DriverV3Truck() {
       ) : (
         <>
           <section className="card">
-            <p className="eyebrow">CURRENT TRUCK</p>
+            <p className="eyebrow">{t.drvCurrentTruck}</p>
             {truck ? (
               <h2 style={{margin: '4px 0 0'}}>{truck.name || truck.unit_number}</h2>
             ) : (
               <>
-                <h2 style={{margin: '4px 0 6px'}}>No truck assigned</h2>
+                <h2 style={{margin: '4px 0 6px'}}>{t.drvNoTruck}</h2>
                 <p className="muted" style={{margin: 0}}>
                   When a vehicle is assigned to your branch, it will appear here.
                 </p>
@@ -103,7 +105,7 @@ export default function DriverV3Truck() {
           </section>
 
           <section className="card">
-            <p className="eyebrow">QUICK ACTIONS</p>
+            <p className="eyebrow">{t.drvQuickActions}</p>
             <div style={{display: 'grid', gap: 10, marginTop: 8}}>
               <Link
                 className="primary"
@@ -119,7 +121,7 @@ export default function DriverV3Truck() {
                 }}
               >
                 <Fuel size={18} />
-                Log Fuel
+                {t.drvLogFuel}
               </Link>
               <Link
                 className="secondary"
@@ -135,13 +137,13 @@ export default function DriverV3Truck() {
                 }}
               >
                 <Wrench size={18} />
-                Log Maintenance
+                {t.drvLogMaintenance}
               </Link>
             </div>
           </section>
 
           <section className="card">
-            <p className="eyebrow">RECENT ACTIVITY</p>
+            <p className="eyebrow">{t.drvRecentActivity}</p>
             {activity.length === 0 ? (
               <p className="muted" style={{margin: '8px 0 0'}}>
                 No fuel or maintenance logs yet.

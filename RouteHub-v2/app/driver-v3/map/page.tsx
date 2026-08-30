@@ -5,6 +5,7 @@ import {CheckCircle2, Crosshair, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import styles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../lib/use-preferences'
 import {markArrived} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
 
@@ -12,6 +13,7 @@ const LiveRouteMap = dynamic(() => import('../../live-route-map'), {ssr: false})
 
 export default function DriverV3Map() {
   const {loading, error, snapshot, driverId, refresh} = useDriverData()
+  const {t} = useLocale()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [followToken, setFollowToken] = useState(0)
@@ -50,13 +52,13 @@ export default function DriverV3Map() {
   }
 
   return (
-    <DriverV3Shell active="map" title="Map" subtitle={route ? 'Live operation' : undefined} flush>
+    <DriverV3Shell active="map" title={t.drvMap} subtitle={route ? 'Live operation' : undefined} flush>
       <div className={styles.mapScreen}>
         <div className={styles.mapCanvas}>
           {loading ? (
-            <p className="muted" style={{padding: 24}}>Loading map…</p>
+            <p className="muted" style={{padding: 24}}>{t.drvLoadingMap}</p>
           ) : error ? (
-            <div style={{padding: 24}}><h2 style={{margin:'0 0 8px'}}>Couldn’t load the map.</h2><p className="muted" style={{margin:0}}>{error}</p></div>
+            <p role="alert" style={{padding: 24}}>{error}</p>
           ) : route ? (
             <div style={{position: 'absolute', inset: 0}}>
               <LiveRouteMap
@@ -95,8 +97,8 @@ export default function DriverV3Map() {
             </div>
           ) : (
             <div style={{padding: 24}}>
-              <h2 style={{margin: '0 0 6px'}}>No stops right now.</h2>
-              <p className="muted" style={{margin: 0}}>Your current destination will appear here when assigned.</p>
+              <h2 style={{margin: '0 0 6px'}}>{t.drvNoOperation}</h2>
+              <p className="muted" style={{margin: 0}}>A destination appears here when assigned.</p>
             </div>
           )}
         </div>

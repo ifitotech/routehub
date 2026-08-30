@@ -3,10 +3,12 @@ import Link from 'next/link'
 import {CheckCircle2, ChevronRight} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../lib/use-preferences'
 import {operationalDate} from '../../../lib/driver-queue'
 
 export default function DriverV3Route() {
   const {loading, error, snapshot, refresh} = useDriverData()
+  const {t} = useLocale()
   const current = snapshot?.currentOperation?.route as any
   const queue = snapshot?.queue
   const completedToday =
@@ -32,10 +34,10 @@ export default function DriverV3Route() {
   }
 
   return (
-    <DriverV3Shell active="route" title="My Route">
+    <DriverV3Shell active="route" title={t.drvMyRoute}>
 
       {loading ? (
-        <section className="card"><p className="muted" style={{margin: 0}}>Loading your route…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoadingRoute}</p></section>
       ) : error ? (
         <section className="card">
           <h2>Couldn&apos;t load your route.</h2>
@@ -72,7 +74,7 @@ export default function DriverV3Route() {
           <div style={{marginTop: 14, display: 'grid', gap: 10}}>
             {queueRoutes.length === 0 && (
               <section className="card">
-                <h2>No stops right now</h2>
+                <h2>{t.drvNoStops}</h2>
                 <p className="muted">Assigned stops will appear here in order.</p>
               </section>
             )}

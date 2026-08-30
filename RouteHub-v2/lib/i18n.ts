@@ -44,6 +44,13 @@ Object.assign(en, {
   drvSignOut:'Sign Out', drvLogFuel:'Log Fuel', drvLogMaintenance:'Log Maintenance',
   drvCompletePickup:'COMPLETE PICKUP', drvCompleteDelivery:'COMPLETE DELIVERY', drvCompleteReturn:'COMPLETE RETURN',
   drvReceivedBy:'Received by', drvRecipientName:'Recipient name',
+  drvMyRoute:'My Route', drvStops:'stops', drvCompleted:'completed', drvRemaining:'remaining',
+  drvLoadingRoute:'Loading your route…', drvNoTruck:'No truck assigned', drvCurrentTruck:'CURRENT TRUCK',
+  drvQuickActions:'QUICK ACTIONS', drvRecentActivity:'RECENT ACTIVITY', drvFuel:'Fuel',
+  drvLoadingTruck:'Loading truck…', drvLoadingMap:'Loading map…', drvNoOperation:'No stops right now.',
+  drvLanguage:'LANGUAGE', drvHelp:'Help', drvStatus:'STATUS', drvActive:'ACTIVE', drvNotStarted:'NOT STARTED',
+  drvEndDrivingDay:'END DRIVING DAY', drvUpNext:'UP NEXT', drvViewRoute:'View Route', drvCompleteRoute:'Complete Route',
+  drvStopDetails:'Stop Details', drvBack:'Back', drvLoading:'Loading…', drvNoHistory:'No completed routes',
 })
 Object.assign(es, {
   drvToday:'Hoy', drvRoute:'Ruta', drvMap:'Mapa', drvTruck:'Camion', drvMore:'Mas',
@@ -57,6 +64,13 @@ Object.assign(es, {
   drvSignOut:'Cerrar sesion', drvLogFuel:'Registrar combustible', drvLogMaintenance:'Registrar mantenimiento',
   drvCompletePickup:'COMPLETAR RECOGIDA', drvCompleteDelivery:'COMPLETAR ENTREGA', drvCompleteReturn:'COMPLETAR RETORNO',
   drvReceivedBy:'Recibido por', drvRecipientName:'Nombre del receptor',
+  drvMyRoute:'Mi ruta', drvStops:'paradas', drvCompleted:'hechas', drvRemaining:'restantes',
+  drvLoadingRoute:'Cargando tu ruta…', drvNoTruck:'Sin camion asignado', drvCurrentTruck:'CAMION ACTUAL',
+  drvQuickActions:'ACCIONES', drvRecentActivity:'ACTIVIDAD RECIENTE', drvFuel:'Combustible',
+  drvLoadingTruck:'Cargando camion…', drvLoadingMap:'Cargando mapa…', drvNoOperation:'No hay paradas ahora.',
+  drvLanguage:'IDIOMA', drvHelp:'Ayuda', drvStatus:'ESTADO', drvActive:'ACTIVA', drvNotStarted:'SIN INICIAR',
+  drvEndDrivingDay:'TERMINAR JORNADA', drvUpNext:'SIGUIENTE', drvViewRoute:'Ver ruta', drvCompleteRoute:'Completar ruta',
+  drvStopDetails:'Parada', drvBack:'Atras', drvLoading:'Cargando…', drvNoHistory:'Sin rutas completadas',
 })
 Object.assign(fr, {
   drvToday:"Aujourd'hui", drvRoute:'Itineraire', drvMap:'Carte', drvTruck:'Camion', drvMore:'Plus',
@@ -70,6 +84,13 @@ Object.assign(fr, {
   drvSignOut:'Se deconnecter', drvLogFuel:'Carburant', drvLogMaintenance:'Entretien',
   drvCompletePickup:'TERMINER RAMASSAGE', drvCompleteDelivery:'TERMINER LIVRAISON', drvCompleteReturn:'TERMINER RETOUR',
   drvReceivedBy:'Recu par', drvRecipientName:'Nom du destinataire',
+  drvMyRoute:'Itineraire', drvStops:'arrets', drvCompleted:'termines', drvRemaining:'restants',
+  drvLoadingRoute:'Chargement…', drvNoTruck:'Aucun camion', drvCurrentTruck:'CAMION',
+  drvQuickActions:'ACTIONS', drvRecentActivity:'ACTIVITE RECENTE', drvFuel:'Carburant',
+  drvLoadingTruck:'Chargement camion…', drvLoadingMap:'Chargement carte…', drvNoOperation:'Aucun arret.',
+  drvLanguage:'LANGUE', drvHelp:'Aide', drvStatus:'STATUT', drvActive:'ACTIVE', drvNotStarted:'NON DEMARREE',
+  drvEndDrivingDay:'TERMINER LA JOURNEE', drvUpNext:'SUIVANT', drvViewRoute:'Voir la route', drvCompleteRoute:'Terminer la route',
+  drvStopDetails:'Arret', drvBack:'Retour', drvLoading:'Chargement…', drvNoHistory:'Aucun historique',
 })
 
 export const translations: Record<Locale, TranslationDictionary> = {en, es, fr}

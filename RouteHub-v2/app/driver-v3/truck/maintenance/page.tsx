@@ -5,6 +5,7 @@ import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../../lib/use-preferences'
 import {getSupabase} from '../../../../lib/supabase'
 import {saveMaintenance} from '../../../../lib/driver-v3/actions'
 
@@ -12,6 +13,7 @@ const TYPES = ['Oil change', 'Tires', 'Brakes', 'Inspection', 'Other'] as const
 
 export default function Maintenance() {
   const router = useRouter()
+  const {t} = useLocale()
   const {driverId, companyId, branchId} = useDriverData()
   const [truck, setTruck] = useState<any>(null)
   const [type, setType] = useState('')
@@ -66,7 +68,7 @@ export default function Maintenance() {
   }
 
   return (
-    <DriverV3Shell active="truck" mode="stack" title="Log Maintenance" backHref="/driver/truck" backLabel="Truck">
+    <DriverV3Shell active="truck" mode="stack" title={t.drvLogMaintenance} backHref="/driver/truck" backLabel={t.drvTruck}>
       
 
       <section className="card">

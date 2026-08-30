@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
+import {useLocale} from '../../../lib/use-preferences'
 
 function formatDuration(start?: string | null, end?: string | null) {
   if (!start || !end) return 'Route duration unavailable'
@@ -23,6 +24,7 @@ function typeLabel(t?: string | null) {
 
 export default function History() {
   const {loading, error, routes} = useDriverData()
+  const {t} = useLocale()
   const completed = routes
     .filter((r: any) => r.status === 'completed')
     .slice()
@@ -33,11 +35,11 @@ export default function History() {
     })
 
   return (
-    <DriverV3Shell active="more" mode="stack" title="Route History" backHref="/driver/more" backLabel="More">
+    <DriverV3Shell active="more" mode="stack" title={t.drvRouteHistory} backHref="/driver/more" backLabel={t.drvMore}>
       
 
       {loading ? (
-        <section className="card"><p className="muted" style={{margin: 0}}>Loading history…</p></section>
+        <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoading}</p></section>
       ) : error ? (
         <section className="card">
           <h2>Couldn&apos;t load history.</h2>
@@ -45,7 +47,7 @@ export default function History() {
         </section>
       ) : completed.length === 0 ? (
         <section className="card">
-          <h2>No completed routes</h2>
+          <h2>{t.drvNoHistory}</h2>
           <p className="muted">Completed work will appear here.</p>
         </section>
       ) : (
