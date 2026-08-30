@@ -118,7 +118,8 @@ export default function DriverV3Page() {
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
           <div className={styles.divider}/>
-          <div style={{height:160,borderRadius:14,overflow:'hidden',marginBottom:12}}>
+          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4',cursor:'pointer'}}>
+            <div style={{height:'100%',pointerEvents:'none'}}>
             <LiveRouteMap
               destinationAddress={route.destination_address}
               destinationCoordinate={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
@@ -127,10 +128,11 @@ export default function DriverV3Page() {
               title={t.drvCurrentStop}
               showHeader={false}
               showLocationUpdated={false}
-              interactive
+              interactive={false}
               useDriverAsOrigin
             />
-          </div>
+            </div>
+          </button>
           {route.arrived_at&&kind==='return'?<button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void completeCurrentReturn()}><MapPin/>{busy?t.drvBusy:t.drvCompleteReturn}</button>:route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
           <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link></div>
           {message&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
