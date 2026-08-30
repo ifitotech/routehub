@@ -21,7 +21,7 @@ type AutocompleteInstance = {
   getPlace: () => PlaceResult
 }
 type GoogleMapsApi = {
-  maps?: {places?: {Autocomplete: new (input: HTMLInputElement, options?: {fields?: string[]; types?: string[]; componentRestrictions?: {country: string | string[]}}) => AutocompleteInstance}}
+  maps?: {places?: {Autocomplete: new (input: HTMLInputElement, options?: {fields?: string[]; types?: string[]; componentRestrictions?: {country: string | string[]}; bounds?: {south:number;west:number;north:number;east:number}; strictBounds?: boolean}) => AutocompleteInstance}}
 }
 
 declare global {
@@ -114,7 +114,9 @@ export default function GoogleAddressInput({
       setGoogleReady(ready)
       if (!ready || !inputRef.current || !window.google?.maps?.places?.Autocomplete) return
       const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-        fields: ['formatted_address', 'name'], types: ['address'], componentRestrictions: {country: 'us'},
+        fields: ['formatted_address', 'name', 'geometry'], types: ['address'], componentRestrictions: {country: 'us'},
+        bounds: {south: 24.396308, west: -87.634938, north: 31.000888, east: -79.974306},
+        strictBounds: true,
       })
       listener = autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace()

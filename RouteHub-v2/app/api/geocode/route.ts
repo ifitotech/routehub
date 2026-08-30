@@ -1,5 +1,5 @@
 import {NextRequest,NextResponse} from 'next/server'
-import {geocodingConfig,mapProviderLimits} from '../../../lib/maps/map-config'
+import {floridaBounds,geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQuery} from '../../../lib/maps/map-config'
 
 type CensusMatch={matchedAddress?:string;coordinates?:{x?:number;y?:number}}
 type NominatimMatch={display_name?:string;lat?:string;lon?:string}
@@ -14,7 +14,7 @@ function tooFar(lat:number,lng:number,nearLat:number,nearLng:number){
 }
 
 export async function GET(request:NextRequest){
- const address=request.nextUrl.searchParams.get('address')?.trim()||''
+ const address=withFloridaQuery(request.nextUrl.searchParams.get('address')?.trim()||'')
  const nearLat=Number(request.nextUrl.searchParams.get('nearLat'))
  const nearLng=Number(request.nextUrl.searchParams.get('nearLng'))
  const hasNear=Number.isFinite(nearLat)&&Number.isFinite(nearLng)
@@ -29,7 +29,7 @@ export async function GET(request:NextRequest){
    const payload=await result.json() as {result?:{addressMatches?:CensusMatch[]}}
    const match=payload.result?.addressMatches?.[0]
    const lat=Number(match?.coordinates?.y),lng=Number(match?.coordinates?.x)
-   if(Number.isFinite(lat)&&Number.isFinite(lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng)))return response(lat,lng,match?.matchedAddress||address,'census')
+   if(Number.isFinite(lat)&&Number.isFinite(lng)&&isInFlorida(lat,lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng)))return response(lat,lng,match?.matchedAddress||address,'census')
   }
  }catch{}
  try{
@@ -37,16 +37,14 @@ export async function GET(request:NextRequest){
   url.searchParams.set('format','jsonv2')
   url.searchParams.set('limit','1')
   url.searchParams.set('q',address)
-  if(hasNear){
-   const west=nearLng-0.7,east=nearLng+0.7,north=nearLat+0.55,south=nearLat-0.55
-   url.searchParams.set('viewbox',`${west},${north},${east},${south}`)
-   url.searchParams.set('bounded','1')
-  }
+  url.searchParams.set('countrycodes','us')
+  url.searchParams.set('viewbox',`${floridaBounds.west},${floridaBounds.north},${floridaBounds.east},${floridaBounds.south}`)
+  url.searchParams.set('bounded','1')
   const result=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(geocodingConfig.requestTimeoutMs),headers:{Accept:'application/json','User-Agent':geocodingConfig.userAgent}})
   if(!result.ok)return NextResponse.json({coordinate:null})
   const match=(await result.json() as NominatimMatch[])[0]
   const lat=Number(match?.lat),lng=Number(match?.lng ?? match?.lon)
-  if(Number.isFinite(lat)&&Number.isFinite(lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng)))return response(lat,lng,match?.display_name||address,'nominatim')
+  if(Number.isFinite(lat)&&Number.isFinite(lng)&&isInFlorida(lat,lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng)))return response(lat,lng,match?.display_name||address,'nominatim')
  }catch{}
  return NextResponse.json({coordinate:null})
 }

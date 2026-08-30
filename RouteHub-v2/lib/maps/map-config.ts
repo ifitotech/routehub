@@ -25,3 +25,13 @@ export const mapProviderLimits={
   maximumSearchCharacters:180,
   routeTimeoutMs:8000
 } as const
+
+export const floridaBounds={south:24.396308,west:-87.634938,north:31.000888,east:-79.974306} as const
+
+export function isInFlorida(lat:number,lng:number){
+  return lat>=floridaBounds.south&&lat<=floridaBounds.north&&lng>=floridaBounds.west&&lng<=floridaBounds.east
+}
+
+export function withFloridaQuery(query:string){
+  return /(?:^|,\s*)(?:fl|florida)\b/i.test(query)?query:`${query.trim()}, FL, USA`
+}

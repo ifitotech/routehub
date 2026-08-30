@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server'
-import {geocodingConfig,mapProviderLimits} from '../../../lib/maps/map-config'
+import {floridaBounds,geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQuery} from '../../../lib/maps/map-config'
 
 type CensusMatch = {matchedAddress?: string; coordinates?: {x?: number; y?: number}}
 type NominatimMatch = {display_name?: string; lat?: string; lon?: string; place_id?: number; osm_type?: string; osm_id?: number; name?: string}
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
   const cached = cache.get(key)
   if (cached && cached.expiresAt > Date.now()) return response(cached.suggestions)
 
-  const contextualQuery = near ? `${query}, ${near}` : query
+  const contextualQuery = withFloridaQuery(near ? `${query}, ${near}` : query)
   let suggestions: Suggestion[] = []
 
   try {
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         const label = match.matchedAddress?.trim() || ''
         const coordinate = {lat: Number(match.coordinates?.y), lng: Number(match.coordinates?.x)}
         return {...splitLabel(label), label, coordinate: validCoordinate(coordinate) ? coordinate : undefined, source: 'census' as const}
-      }).filter(candidate => validCoordinate(candidate.coordinate)))
+      }).filter(candidate => validCoordinate(candidate.coordinate) && isInFlorida(candidate.coordinate.lat, candidate.coordinate.lng)))
     }
   } catch {
     // RouteHub still permits manual address entry when lookup is unavailable.
@@ -98,7 +98,9 @@ export async function GET(request: NextRequest) {
       url.searchParams.set('countrycodes', 'us')
       url.searchParams.set('addressdetails', '1')
       url.searchParams.set('dedupe', '1')
-      url.searchParams.set('q', `${contextualQuery}, United States`)
+      url.searchParams.set('viewbox', `${floridaBounds.west},${floridaBounds.north},${floridaBounds.east},${floridaBounds.south}`)
+      url.searchParams.set('bounded', '1')
+      url.searchParams.set('q', contextualQuery)
       const nominatimResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(geocodingConfig.requestTimeoutMs), headers: {Accept: 'application/json', 'User-Agent': geocodingConfig.userAgent}})
       if (nominatimResponse.ok) {
         const rows = await nominatimResponse.json() as NominatimMatch[]
@@ -112,7 +114,7 @@ export async function GET(request: NextRequest) {
             externalId: row.osm_type && row.osm_id ? `${row.osm_type}:${row.osm_id}` : row.place_id?.toString(),
             name: row.name?.trim() || undefined,
           }
-        }).filter(candidate => validCoordinate(candidate.coordinate)))
+        }).filter(candidate => validCoordinate(candidate.coordinate) && isInFlorida(candidate.coordinate!.lat, candidate.coordinate!.lng)))
       }
     } catch {
       // Manual address entry is always a supported fallback.
