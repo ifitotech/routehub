@@ -1,6 +1,6 @@
 'use client'
 import {useState} from 'react'
-import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -15,6 +15,7 @@ const CATEGORIES = [
 ] as const
 
 export default function Issue() {
+  const router = useRouter()
   const {driverId, snapshot, refresh} = useDriverData()
   const [category, setCategory] = useState<string>('')
   const [note, setNote] = useState('')
@@ -40,6 +41,7 @@ export default function Issue() {
       setMessage('Issue submitted.')
       setNote('')
       setCategory('')
+      router.replace('/driver/stop')
     } catch (e) {
       setMessageType('err')
       setMessage(e instanceof Error ? e.message : 'Unable to submit issue.')

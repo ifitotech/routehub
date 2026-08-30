@@ -37,7 +37,7 @@ export default function DrivingDayPage() {
   }
 
   return (
-    <DriverV3Shell active="more" mode="stack" title="Driving Day" backHref="/driver/more" backLabel="More">
+    <DriverV3Shell active="more" mode="stack" title="Driving Day" backHref="/driver/more" backLabel="More" hideNav={confirmEnd}>
       
 
       {loading ? (

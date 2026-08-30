@@ -109,6 +109,23 @@ body[data-driver-app='v3'] {
 .driver-v3-root a,
 .driver-v3-root button {
   -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+
+/* Kill website leftovers from globals.css */
+.driver-v3-root a {
+  text-decoration: none !important;
+  color: inherit;
+}
+.driver-v3-root a:hover {
+  text-decoration: none !important;
+}
+.driver-v3-root .card:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(15, 29, 53, 0.06) !important;
+}
+.driver-v3-root .primary:hover {
+  transform: none !important;
 }
 
 /* No frosted/blur status or header on Driver */

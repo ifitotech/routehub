@@ -52,8 +52,8 @@ export default function Completed() {
           >
             <CheckCircle2 size={48} strokeWidth={2.2} />
           </div>
-          <h1 className="title" style={{margin: '0 0 6px'}}>Stop Completed!</h1>
-          <p className="muted" style={{marginBottom: 20}}>Great job! Keep it moving.</p>
+          <h1 className="title" style={{margin: '0 0 6px'}}>{kind} completed</h1>
+          <p className="muted" style={{marginBottom: 20}}>Stop recorded.</p>
 
           {last && (
             <div

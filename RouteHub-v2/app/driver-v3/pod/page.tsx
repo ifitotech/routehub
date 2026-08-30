@@ -1,6 +1,6 @@
 'use client'
 import {useRef, useState} from 'react'
-import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import {Camera, FileText, PenLine} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
@@ -8,6 +8,7 @@ import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {saveStopNote, uploadStopPhoto, saveStopSignature} from '../../../lib/driver-v3/actions'
 
 export default function Pod() {
+  const router = useRouter()
   const {driverId, snapshot, refresh} = useDriverData()
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -114,6 +115,7 @@ export default function Pod() {
       setPhotoName('')
       if (file.current) file.current.value = ''
       clearSignature()
+      router.replace('/driver/stop')
     } catch (e) {
       setMessageType('err')
       setMessage(e instanceof Error ? e.message : "Couldn't save the photo. Try again.")
