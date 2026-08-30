@@ -28,7 +28,7 @@ export default function Manager() {
     newRoute: 'Nueva ruta', reorder: 'Reordenar rutas', addContact: 'Agregar contacto', noPending: 'No hay rutas hoy.',
     assignment: 'Asignado', waiting: 'Sin asignar', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
     branchManager: 'Manager de sucursal', currentBranch: 'Sucursal actual', updated: 'Actualizado',
-    lastSeen: 'Última ubicación', noFix: 'El Driver no está compartiendo ubicación (app cerrada).', ago: 'hace',
+    lastSeen: 'Última ubicación', noFix: 'El Driver no está compartiendo ubicación (app cerrada).', ago: 'hace', seeMore: 'Ver más',
   } : locale === 'fr' ? {
     today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'En cours', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
     liveDescription: 'Arrêt en cours chez le chauffeur.', quickActions: 'Actions',
@@ -36,7 +36,7 @@ export default function Manager() {
     newRoute: 'Nouvel itinéraire', reorder: 'Réordonner', addContact: 'Ajouter un contact', noPending: 'Aucun itinéraire aujourd’hui.',
     assignment: 'Assigné', waiting: 'Non assigné', issue: 'incident ouvert', review: 'Consultez les rapports.',
     branchManager: 'Manager de succursale', currentBranch: 'Succursale actuelle', updated: 'Mis à jour',
-    lastSeen: 'Dernière position', noFix: 'Le chauffeur ne partage pas sa position (app fermée).', ago: 'il y a',
+    lastSeen: 'Dernière position', noFix: 'Le chauffeur ne partage pas sa position (app fermée).', ago: 'il y a', seeMore: 'Voir plus',
   } : {
     today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'In progress', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
     liveDescription: 'The stop the driver is running now.', quickActions: 'Actions',
@@ -44,7 +44,7 @@ export default function Manager() {
     newRoute: 'New route', reorder: 'Reorder routes', addContact: 'Add contact', noPending: 'No routes today.',
     assignment: 'Assigned', waiting: 'Unassigned', issue: 'open issue', review: 'Review route reports.',
     branchManager: 'Branch Manager', currentBranch: 'Current branch', updated: 'Updated',
-    lastSeen: 'Last location', noFix: 'Driver is not sharing location (app closed).', ago: 'ago',
+    lastSeen: 'Last location', noFix: 'Driver is not sharing location (app closed).', ago: 'ago', seeMore: 'See more',
   }
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
@@ -194,30 +194,44 @@ export default function Manager() {
       </main>
       <aside className={todayStyles.todaySide}>
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
-          <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes?new=1">{copy.newRoute}</Link></div>
-          {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (
-            <div className={todayStyles.dayList}>
-              {todayRoutes.map((route, index) => {
-                const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
-                return (
-                  <Link href="/routes/manage" className={todayStyles.dayRow} data-status={route.status} key={route.id}>
-                    <span className={todayStyles.order}>{index + 1}</span>
-                    <span className={todayStyles.routeInfo}>
-                      <strong>{route.destination_name || t.destination}</strong>
-                      <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''} · {route.driver_id ? copy.assignment : copy.waiting}</span>
-                    </span>
-                    <em className={todayStyles.status}>{statusLabel(route.status)}</em>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
+          <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
+          {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (() => {
+            const pending = todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || '')))
+            const done = todayRoutes.filter(route => route.status === 'completed')
+            const extra = pending.length > 4 || done.length > 4
+            const row = (route: DashboardRoute) => {
+              const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
+              return (
+                <Link href="/routes/manage" className={todayStyles.dayRow} data-status={route.status} key={route.id}>
+                  <span className={todayStyles.order}>{todayRoutes.findIndex(item => item.id === route.id) + 1}</span>
+                  <span className={todayStyles.routeInfo}>
+                    <strong>{route.destination_name || t.destination}</strong>
+                    <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''}</span>
+                  </span>
+                </Link>
+              )
+            }
+            return (
+              <>
+                <div className={todayStyles.splitLists}>
+                  <div>
+                    <p className={todayStyles.splitLabel}>{copy.pending}</p>
+                    <div className={todayStyles.dayList}>{pending.slice(0, 4).map(route => row(route))}</div>
+                  </div>
+                  <div>
+                    <p className={todayStyles.splitLabel}>{copy.completed}</p>
+                    <div className={todayStyles.dayList}>{done.slice(0, 4).map(route => row(route))}</div>
+                  </div>
+                </div>
+                {extra ? <Link className={todayStyles.seeMore} href="/routes">{copy.seeMore}</Link> : null}
+              </>
+            )
+          })()}
         </section>
-        <section className={todayStyles.sideCard} aria-label={copy.quickActions}><div className={todayStyles.sideHeading}><h2>{copy.quickActions}</h2></div><div className={todayStyles.quickGrid}><Link href="/routes?new=1"><Plus size={17}/><span>{copy.newRoute}</span><ArrowRight size={14}/></Link><Link href="/routes/manage"><RouteIcon size={17}/><span>{copy.reorder}</span><ArrowRight size={14}/></Link><Link href="/contacts"><Users size={17}/><span>{copy.addContact}</span><ArrowRight size={14}/></Link></div></section>
       </aside>
     </div>
     {hasIssue && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{summary.openIssues} {copy.issue}</strong><p>{copy.review}</p></div><Link href="/reports"><ArrowRight size={16}/></Link></section>}
-    <div className={styles.desktopOnly}><TemporaryRouteAssignments /></div>
+    <div className={`${styles.desktopOnly} ${todayStyles.hideOnFit}`}><TemporaryRouteAssignments /></div>
     <nav className={`nav ${styles.nav} ${styles.todayNav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </ManagerShell>
 }
