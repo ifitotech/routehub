@@ -2,12 +2,11 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import {ChevronRight, Map, MapPin, Package, TriangleAlert} from 'lucide-react'
+import {Map, MapPin, Package, TriangleAlert} from 'lucide-react'
 import {useState} from 'react'
-import {useRouter} from 'next/navigation'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
-import {completeReturn, markArrived, startRoute} from '../../lib/driver-v3/actions'
+import {completeDelivery, completePickupWithEvidence, completeReturn, markArrived, startRoute} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
@@ -20,73 +19,13 @@ const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
 
 export default function DriverV3Page() {
   const {t}=useLocale()
-  const router=useRouter()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,routes,liveFix}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
-  const total=operation?.total??0
-  const completed=operation?.completed??0
-  const remaining=Math.max(0,total-completed)
-  const progress=total>0?Math.min(100,Math.max(0,(completed/total)*100)):0
-  const progressNodes=total>0&&total<=7?Array.from({length:total},(_,index)=>index):null
-
-  const operate=async()=>{
-    if(!route||busy)return
-    setBusy(true)
-    setMessage('')
-    const starting=route.status!=='active'
-    try{
-      const context={routeId:route.id,driverId,companyId:route.company_id}
-      if(starting){
-        await startRoute(context,operationalDate())
-        if(!drivingSession){
-          try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
-        }
-      }
-      else if(!route.arrived_at)await markArrived(context)
-      if(drivingSession){
-        try{
-          const location=await getCurrentLocation({maximumAge:0})
-          await updateDrivingLocation(drivingSession.id,driverId,location)
-        }catch{}
-      }
-      await refresh()
-      setMessage(starting?t.drvStartRoute:t.drvArrivedOk)
-      if(!starting) router.push(`/driver/stop?id=${encodeURIComponent(route.id)}`)
-    }catch(error){
-      setMessage(error instanceof Error?error.message:t.drvOpFailed)
-    }finally{
-      setBusy(false)
-    }
-  }
-
-  const completeCurrentReturn=async()=>{
-    if(!route||kind!=='return'||busy||!driverId)return
-    setBusy(true)
-    setMessage('')
-    try{
-      const context={routeId:route.id,driverId,companyId:route.company_id}
-      if(!['active','paused'].includes(String(route.status||''))){
-        await startRoute(context,operationalDate())
-        if(!drivingSession){
-          try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
-        }
-      }
-      let location
-      try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
-      await completeReturn(context,{location})
-      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
-      await refresh()
-      router.push('/driver/completed')
-    }catch(error){
-      setMessage(error instanceof Error?error.message:t.drvOpFailed)
-    }finally{
-      setBusy(false)
-    }
-  }
+  const started=['active','paused'].includes(String(route?.status||''))
 
   const openMaps=()=>{
     if(!route)return
@@ -95,12 +34,60 @@ export default function DriverV3Page() {
       coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,
       label:route.destination_name,
     })
-    // Keep navigation in the current system handoff. Opening a new browser
-    // tab leaves an empty tab behind when the driver returns from Maps.
     if(url)window.location.assign(url)
   }
 
-  const primaryLabel=route?.status!=='active'?t.drvStartRoute:!route?.arrived_at?t.drvArrived:t.drvContinue
+  const startCurrent=async()=>{
+    if(!route||busy)return
+    setBusy(true)
+    setMessage('')
+    try{
+      const context={routeId:route.id,driverId,companyId:route.company_id}
+      await startRoute(context,operationalDate())
+      if(!drivingSession){
+        try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
+      }
+      if(drivingSession){
+        try{
+          const location=await getCurrentLocation({maximumAge:0})
+          await updateDrivingLocation(drivingSession.id,driverId,location)
+        }catch{}
+      }
+      await refresh()
+      openMaps()
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
+  const completeCurrent=async()=>{
+    if(!route||busy||!driverId)return
+    setBusy(true)
+    setMessage('')
+    try{
+      const context={routeId:route.id,driverId,companyId:route.company_id}
+      if(!['active','paused'].includes(String(route.status||''))){
+        await startRoute(context,operationalDate())
+      }
+      try{await markArrived(context)}catch{}
+      let location
+      try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
+      if(kind==='pickup')await completePickupWithEvidence(context)
+      else if(kind==='return')await completeReturn(context,{location})
+      else await completeDelivery(context)
+      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+      await refresh()
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
+  }
+
+  const completeLabel=kind==='pickup'?t.drvCompletePickup:kind==='return'?t.drvCompleteReturn:t.drvCompleteDelivery
+
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}>
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
@@ -110,15 +97,18 @@ export default function DriverV3Page() {
       </section>:operation&&route?<>
         <section className={styles.hero}>
           <div className={styles.heroTop}>
-            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup:kind==='delivery'?t.drvDelivery:t.drvReturn}</span>
-            <span className={styles.stopCount}><strong>{route.position||completed+1}</strong> / {total||1}</span>
+            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
           </div>
           <div className={styles.destination}>
-            <div><h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>{route.destination_name&&route.destination_address&&<p>{route.destination_address}</p>}{route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}</div>
+            <div>
+              <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
+              {route.destination_address&&<p>{route.destination_address}</p>}
+              {route.order_number&&<span className={styles.order}>PO {route.order_number}</span>}
+            </div>
             <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
           </div>
           <div className={styles.divider}/>
-          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4',cursor:'pointer'}}>
+          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} style={{display:'block',width:'100%',height:160,border:0,padding:0,margin:'0 0 12px',borderRadius:14,overflow:'hidden',background:'#e8eef4'}}>
             <div style={{height:'100%',pointerEvents:'none'}}>
             <LiveRouteMap
               destinationAddress={route.destination_address}
@@ -133,27 +123,20 @@ export default function DriverV3Page() {
             />
             </div>
           </button>
-          {route.arrived_at&&kind==='return'?<button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void completeCurrentReturn()}><MapPin/>{busy?t.drvBusy:t.drvCompleteReturn}</button>:route.arrived_at?<Link className={styles.primary} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><MapPin/>{t.drvContinue}</Link>:<button className={styles.primary} disabled={busy} onClick={()=>void operate()}><MapPin/>{busy?t.drvBusy:primaryLabel}</button>}
-          <div className={styles.secondaryActions}><button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button><Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link></div>
+          {started?(
+            <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void completeCurrent()}>
+              <MapPin/>{busy?t.drvBusy:completeLabel}
+            </button>
+          ):(
+            <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void startCurrent()}>
+              <MapPin/>{busy?t.drvBusy:t.drvStartRoute}
+            </button>
+          )}
+          <div className={styles.secondaryActions}>
+            <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
+            <Link className={styles.issueAction} href="/driver/issue"><TriangleAlert/>{t.drvIssue}</Link>
+          </div>
           {message&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
-        </section>
-        <section className={styles.progressCard} aria-label={`${completed} completed, ${remaining} remaining`}>
-          <div><strong>{completed}</strong><span>{t.drvDoneWord}</span></div>
-          {progressNodes?<div className={styles.progressDots}>{progressNodes.map(index=><i key={index} className={index<completed?styles.done:index===completed?styles.current:styles.upcoming}/>)}</div>:<div className={styles.progressTrack}><span style={{width:`${progress}%`}}/><i style={{left:`clamp(8px, ${progress}%, calc(100% - 8px))`}}/></div>}
-          <div><strong>{remaining}</strong><span>{t.drvLeftWord}</span></div>
-        </section>
-        <Link className={styles.nextCard} href={`/driver/stop?id=${encodeURIComponent(route.id)}`}><div><span>{t.drvStopDetails}</span><strong>{route.order_number?`PO ${route.order_number}`:t.drvStopDetails}</strong></div><i><ChevronRight/></i></Link>
-        <section className={styles.progressCard} style={{display:'block',marginTop:12}}>
-          <p className="eyebrow" style={{marginBottom:8}}>{t.drvMyRoute}</p>
-          {routes.filter((item:any)=>(item.route_date||'').slice(0,10)===operationalDate()).sort((a:any,b:any)=>(a.position||0)-(b.position||0)).map((item:any)=>(
-            <Link key={item.id} href={`/driver/stop?id=${encodeURIComponent(item.id)}`} className={styles.nextCard} style={{margin:'0 0 8px',textDecoration:'none'}}>
-              <div>
-                <span>{item.status==='completed'?t.drvCompletedTag:item.id===route.id?t.drvCurrentStop:t.drvNextStop}{item.order_number?` · PO ${item.order_number}`:''}</span>
-                <strong>{item.destination_name||item.destination_address||t.drvCurrentStopName}</strong>
-              </div>
-              <i><ChevronRight/></i>
-            </Link>
-          ))}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
     </div>
@@ -164,8 +147,6 @@ function TodayLoading({label}:{label:string}) {
   return (
     <div className={styles.loading} aria-label={label}>
       <div className={styles.loadingHero}/>
-      <div className={styles.loadingProgress}/>
-      <div className={styles.loadingNext}/>
     </div>
   )
 }
