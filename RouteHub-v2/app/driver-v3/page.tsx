@@ -61,7 +61,7 @@ export default function DriverV3Page() {
   const nextKind=((nextRoute?.mission_type||'')+'').toLowerCase()
   const nextKindLabel=nextKind==='pickup'?'PICKUP':nextKind==='branch'||nextKind==='return'?'RETURN':nextKind?'DELIVERY':''
 
-  return <DriverV3Shell active="today" headerStatus={`Driving Day · ${drivingSession?'Active':'Inactive'}`}>
+  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}>
     <div className={styles.page}>
       {!drivingSession&&<Link className={styles.startDay} href="/driver/driving-day">{t.drvStartDrivingDay}</Link>}
       {loading?<TodayLoading/>:error?<section className={styles.stateCard}>

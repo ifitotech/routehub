@@ -72,7 +72,7 @@ export default function History() {
                 {r.order_number ? ` · PO ${r.order_number}` : ''}
               </p>
               <p className="muted" style={{margin: '6px 0 0', fontSize: 13, fontWeight: 600}}>
-                {formatDuration(r.route_started_at, r.route_completed_at)}
+                {formatDuration(r.route_started_at, r.route_completed_at) === 'Route duration unavailable' ? t.drvDurationNA : formatDuration(r.route_started_at, r.route_completed_at)}
               </p>
             </article>
           ))}

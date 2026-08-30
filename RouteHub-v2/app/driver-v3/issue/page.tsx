@@ -105,7 +105,7 @@ export default function Issue() {
                 onClick={() => void submit()}
                 style={{background: '#EF5350'}}
               >
-                {busy ? 'Submitting…' : '{t.drvSubmitIssue}'}
+                {busy ? t.drvBusy : t.drvSubmitIssue}
               </button>
             </div>
 

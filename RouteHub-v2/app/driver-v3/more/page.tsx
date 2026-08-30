@@ -89,7 +89,7 @@ export default function DriverV3More() {
           style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 56}}
         >
           <LogOut size={18} />
-          {busy ? 'Signing out…' : t.drvSignOut}
+          {busy ? t.drvSigningOut : t.drvSignOut}
         </button>
       </section>
     </DriverV3Shell>
