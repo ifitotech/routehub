@@ -22,3 +22,26 @@
 .nav{padding-left:max(4px,env(safe-area-inset-left));padding-right:max(4px,env(safe-area-inset-right))}
 .primary,.secondary,.danger{min-height:52px}
 .primary{min-height:60px}
+
+/* Sticky operational action — above bottom nav, never overlaps home indicator */
+.stickyAction{
+  position:sticky;
+  bottom:0;
+  z-index:5;
+  margin-top:16px;
+  margin-left:-18px;
+  margin-right:-18px;
+  padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(247,249,252,0) 0%,#f7f9fc 28%,#f7f9fc 100%);
+  display:grid;
+  gap:10px;
+}
+.stickyAction .primary,
+.stickyAction .secondary,
+.stickyAction .danger{
+  width:100%;
+}
+/* Extra end padding so last content clears sticky bar */
+.contentHasSticky{
+  padding-bottom:8px;
+}

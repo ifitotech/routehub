@@ -12,6 +12,7 @@ import {
   Phone,
 } from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import styles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {markArrived, completeStop} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
@@ -45,7 +46,7 @@ export default function DriverV3Stop() {
       } else {
         await completeStop(ctx)
         await refresh()
-        router.push('/driver/completed')
+        router.push('/driver-v3/completed')
         return
       }
     } catch (e) {
@@ -65,7 +66,6 @@ export default function DriverV3Stop() {
       label: route?.destination_name,
     })
     if (url) {
-      // Prefer external handoff so the installed PWA is not replaced by a browser tab.
       const opened = window.open(url, '_blank', 'noopener,noreferrer')
       if (!opened) window.location.assign(url)
     }
@@ -102,7 +102,18 @@ export default function DriverV3Stop() {
           <section className="card">
             {route.destination_phone && (
               <p style={{margin: '0 0 8px'}}>
-                <a href={`tel:${route.destination_phone}`} style={{display: 'inline-flex', alignItems: 'center', gap: 6, color: '#1667F2', fontWeight: 700, textDecoration: 'none'}}>
+                <a
+                  href={`tel:${route.destination_phone}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    color: '#1667F2',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    minHeight: 44,
+                  }}
+                >
                   <Phone size={16} />
                   {route.destination_phone}
                 </a>
@@ -113,14 +124,13 @@ export default function DriverV3Stop() {
                 <strong>PO / Order:</strong> {route.order_number}
               </p>
             )}
-            {route.instructions || route.notes ? (
+            {(route.instructions || route.notes) && (
               <p className="muted" style={{margin: '8px 0 0'}}>
                 <strong style={{color: '#0F1D35'}}>Instructions: </strong>
                 {route.instructions || route.notes}
               </p>
-            ) : null}
+            )}
 
-            {/* POD tiles */}
             <div
               style={{
                 display: 'grid',
@@ -129,56 +139,112 @@ export default function DriverV3Stop() {
                 marginTop: 16,
               }}
             >
-              <Link href="/driver-v3/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+              <Link
+                href="/driver-v3/pod"
+                className="secondary"
+                style={{
+                  minHeight: 72,
+                  display: 'grid',
+                  placeItems: 'center',
+                  gap: 4,
+                  textDecoration: 'none',
+                  padding: 8,
+                  fontSize: 12,
+                }}
+              >
                 <Camera size={22} />
                 Photo
               </Link>
-              <Link href="/driver-v3/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+              <Link
+                href="/driver-v3/pod"
+                className="secondary"
+                style={{
+                  minHeight: 72,
+                  display: 'grid',
+                  placeItems: 'center',
+                  gap: 4,
+                  textDecoration: 'none',
+                  padding: 8,
+                  fontSize: 12,
+                }}
+              >
                 <PenLine size={22} />
                 Signature
               </Link>
-              <Link href="/driver-v3/pod" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12}}>
+              <Link
+                href="/driver-v3/pod"
+                className="secondary"
+                style={{
+                  minHeight: 72,
+                  display: 'grid',
+                  placeItems: 'center',
+                  gap: 4,
+                  textDecoration: 'none',
+                  padding: 8,
+                  fontSize: 12,
+                }}
+              >
                 <FileText size={22} />
                 Notes
               </Link>
-              <Link href="/driver-v3/issue" className="secondary" style={{minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, textDecoration: 'none', padding: 8, fontSize: 12, color: '#EF5350', borderColor: '#f5c2c0'}}>
+              <Link
+                href="/driver-v3/issue"
+                className="secondary"
+                style={{
+                  minHeight: 72,
+                  display: 'grid',
+                  placeItems: 'center',
+                  gap: 4,
+                  textDecoration: 'none',
+                  padding: 8,
+                  fontSize: 12,
+                  color: '#EF5350',
+                  borderColor: '#f5c2c0',
+                }}
+              >
                 <AlertTriangle size={22} />
                 Issue
               </Link>
             </div>
 
-            <div style={{display: 'grid', gap: 10, marginTop: 16}}>
-              {!route.arrived_at ? (
-                <button
-                  className="primary"
-                  disabled={busy || !isCurrent}
-                  onClick={() => void act('arrive')}
-                >
-                  {busy ? 'Updating…' : 'ARRIVED AT STOP'}
-                </button>
-              ) : (
-                <button
-                  className="primary"
-                  disabled={busy || !isCurrent}
-                  onClick={() => void act('complete')}
-                  style={{background: '#16B96B'}}
-                >
-                  {busy ? 'Completing…' : `COMPLETE ${operationLabel(String(kind))}`}
-                </button>
-              )}
-              <button className="secondary" onClick={maps} type="button">
-                <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
-                  <Navigation size={18} />
-                  Open in Maps
-                </span>
+            <button
+              className="secondary"
+              onClick={maps}
+              type="button"
+              style={{marginTop: 14}}
+            >
+              <span style={{display: 'inline-flex', alignItems: 'center', gap: 8}}>
+                <Navigation size={18} />
+                Open in Maps
+              </span>
+            </button>
+          </section>
+
+          <div className={styles.stickyAction}>
+            {!route.arrived_at ? (
+              <button
+                className="primary"
+                disabled={busy || !isCurrent}
+                onClick={() => void act('arrive')}
+              >
+                {busy ? 'Updating…' : 'ARRIVED AT STOP'}
               </button>
-            </div>
+            ) : (
+              <button
+                className="primary"
+                disabled={busy || !isCurrent}
+                onClick={() => void act('complete')}
+                style={{background: '#16B96B'}}
+              >
+                {busy ? 'Completing…' : `COMPLETE ${operationLabel(String(kind))}`}
+              </button>
+            )}
             {message && (
-              <p role="status" className="muted">
+              <p role="status" className="muted" style={{margin: 0, textAlign: 'center'}}>
                 {message}
               </p>
             )}
-          </section>
+          </div>
         </>
       )}
     </DriverV3Shell>

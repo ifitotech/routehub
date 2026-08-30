@@ -3,6 +3,7 @@ import {useRef, useState} from 'react'
 import Link from 'next/link'
 import {Camera, FileText, PenLine} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {saveStopNote, uploadStopPhoto, saveStopSignature} from '../../../lib/driver-v3/actions'
 
@@ -210,25 +211,28 @@ export default function Pod() {
             />
           </section>
 
-          <button className="primary" disabled={busy} onClick={() => void submit()}>
-            {busy ? 'Saving…' : 'SAVE EVIDENCE'}
-          </button>
-          {message && (
-            <p
-              role="status"
-              className="muted"
-              style={{
-                marginTop: 12,
-                padding: '10px 12px',
-                borderRadius: 10,
-                background: messageType === 'ok' ? '#EAF9F1' : '#FFF0F0',
-                color: messageType === 'ok' ? '#147a4a' : '#b42318',
-                fontWeight: 600,
-              }}
-            >
-              {message}
-            </p>
-          )}
+          <div className={shellStyles.stickyAction}>
+            <button className="primary" disabled={busy} onClick={() => void submit()}>
+              {busy ? 'Saving…' : 'SAVE EVIDENCE'}
+            </button>
+            {message && (
+              <p
+                role="status"
+                className="muted"
+                style={{
+                  margin: 0,
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  background: messageType === 'ok' ? '#EAF9F1' : '#FFF0F0',
+                  color: messageType === 'ok' ? '#147a4a' : '#b42318',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                }}
+              >
+                {message}
+              </p>
+            )}
+          </div>
         </>
       )}
     </DriverV3Shell>
