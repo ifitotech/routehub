@@ -58,7 +58,7 @@ export default function DriverV3More() {
   }
 
   return (
-    <DriverV3Shell active="more" title="More">
+    <DriverV3Shell active="more" title={t.drvMore}>
 
       <section className="card">
         <p className="eyebrow" style={{marginBottom: 4}}>

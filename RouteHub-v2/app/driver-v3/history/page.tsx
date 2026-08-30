@@ -42,7 +42,7 @@ export default function History() {
         <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoading}</p></section>
       ) : error ? (
         <section className="card">
-          <h2>Couldn&apos;t load history.</h2>
+          <h2>{t.drvNoHistory}</h2>
           <p className="muted">Try again when your connection is available.</p>
         </section>
       ) : completed.length === 0 ? (

@@ -33,12 +33,12 @@ export default function Completed() {
   const kind = (last?.mission_type || 'delivery').toString().toUpperCase()
 
   return (
-    <DriverV3Shell active="route" mode="stack" title="Completed" backHref="/driver/route" backLabel={t.drvRoute}>
+    <DriverV3Shell active="route" mode="stack" title={t.drvCompleted} backHref="/driver/route" backLabel={t.drvRoute}>
       {loading ? (
         <section className="card"><p className="muted" style={{margin: 0}}>Loading…</p></section>
       ) : error ? (
         <section className="card">
-          <h2>Couldn&apos;t load this stop.</h2>
+          <h2>{t.drvCouldntLoad}</h2>
           <p className="muted">{error}</p>
         </section>
       ) : (

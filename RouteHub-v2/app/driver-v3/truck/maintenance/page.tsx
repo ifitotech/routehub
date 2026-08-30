@@ -78,7 +78,7 @@ export default function Maintenance() {
           </p>
         ) : (
           <>
-            <p className="eyebrow">VEHICLE</p>
+            <p className="eyebrow">{t.drvCurrentTruck}</p>
             <h2 style={{margin: '4px 0 16px', fontSize: 18}}>
               {truck.name || truck.unit_number || 'Current truck'}
             </h2>

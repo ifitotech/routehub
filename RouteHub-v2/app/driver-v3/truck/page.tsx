@@ -85,7 +85,7 @@ export default function DriverV3Truck() {
         <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoadingTruck}</p></section>
       ) : error ? (
         <section className="card">
-          <h2>Couldn&apos;t load truck.</h2>
+          <h2>{t.drvNoTruck}</h2>
           <p className="muted">{error}</p>
         </section>
       ) : (

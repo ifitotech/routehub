@@ -265,12 +265,12 @@ export default function DriverV3Stop() {
     >
 
       {loading ? (
-        <section className="card"><p>Loading stop…</p></section>
+        <section className="card"><p className="muted">{t.drvLoading}</p></section>
       ) : error ? (
         <section className="card"><p role="alert">{error}</p></section>
       ) : !route ? (
         <section className="card">
-          <h2>No current stop</h2>
+          <h2>{t.drvNoCurrentStop}</h2>
           <p className="muted">There is no active operation.</p>
         </section>
       ) : (

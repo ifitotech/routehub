@@ -43,7 +43,7 @@ export default function DrivingDayPage() {
       
 
       {loading ? (
-        <section className="card"><p>Loading driving day…</p></section>
+        <section className="card"><p className="muted">{t.drvLoading}</p></section>
       ) : error ? (
         <section className="card"><p role="alert">{error}</p></section>
       ) : (

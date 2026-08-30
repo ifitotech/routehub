@@ -40,7 +40,7 @@ export default function DriverV3Route() {
         <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoadingRoute}</p></section>
       ) : error ? (
         <section className="card">
-          <h2>Couldn&apos;t load your route.</h2>
+          <h2>{t.drvCouldntLoad}</h2>
           <p className="muted">Try again when your connection is available.</p>
           <button type="button" className="primary" onClick={() => void refresh()}>
             TRY AGAIN
