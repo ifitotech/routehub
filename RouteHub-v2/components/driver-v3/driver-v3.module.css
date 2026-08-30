@@ -181,3 +181,7 @@
 .todayPage .title{margin:0}
 .todayIntro{margin:0 0 2px;font-size:13px}
 .todayPage .card{padding:14px 16px}
+
+.nav a:active{opacity:.7}
+.primary:active,.secondary:active,.danger:active{opacity:.92;transform:scale(.985)}
+.primary:disabled,.secondary:disabled,.danger:disabled{opacity:.45}
