@@ -151,13 +151,12 @@
   .todayLayout {
     grid-template-columns: minmax(0, 1.7fr) minmax(320px, .55fr);
     gap: 16px;
-    height: calc(100dvh - 196px);
     min-height: 0;
-    padding-bottom: 0;
-    overflow: hidden;
+    padding-bottom: 12px;
+    overflow: visible;
   }
-  .todayMain { min-height: 0; height: 100%; grid-template-rows: auto auto 1fr; }
-  .opsMap { min-height: 0; height: 100%; --operations-map-height: 100%; }
+  .todayMain { min-height: 0; }
+  .opsMap { min-height: 420px; height: 46vh; --operations-map-height: 46vh; }
   .hideOnFit { display: none; }
   .todayNav { display: none; }
 
