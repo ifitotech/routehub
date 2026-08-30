@@ -137,3 +137,58 @@ html[data-driver-app='v3'] header {
   background-color: #0f1d35 !important;
   opacity: 1 !important;
 }
+
+.driver-v3-root .card {
+  background: #fff;
+  border: 1px solid #dde5ee;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(15, 29, 53, 0.06);
+}
+.driver-v3-root .eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #667892;
+}
+.driver-v3-root .muted {
+  color: #667892;
+}
+.driver-v3-root h1,
+.driver-v3-root h2 {
+  color: #0f1d35;
+  letter-spacing: -0.02em;
+}
+.driver-v3-root .primary,
+.driver-v3-root .secondary,
+.driver-v3-root .danger {
+  min-height: 52px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 16px;
+}
+.driver-v3-root label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  color: #0f1d35;
+  margin-bottom: 12px;
+}
+.driver-v3-root input,
+.driver-v3-root select,
+.driver-v3-root textarea {
+  min-height: 48px;
+  border: 1px solid #dde5ee;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  color: #0f1d35;
+}
+.driver-v3-root textarea {
+  min-height: 96px;
+}
+.driver-v3-root .row {
+  min-height: 52px;
+}
