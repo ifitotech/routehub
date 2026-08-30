@@ -10,6 +10,7 @@ import {
 import {getSupabase} from '../../../lib/supabase'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useState} from 'react'
+import {useLocale} from '../../../lib/use-preferences'
 
 function Row({href, icon: Icon, label}: {href: string; icon: typeof History; label: string}) {
   return (
@@ -46,6 +47,7 @@ function Row({href, icon: Icon, label}: {href: string; icon: typeof History; lab
 }
 
 export default function DriverV3More() {
+  const {t} = useLocale()
   const [busy, setBusy] = useState(false)
 
   const signOut = async () => {
@@ -60,23 +62,23 @@ export default function DriverV3More() {
 
       <section className="card">
         <p className="eyebrow" style={{marginBottom: 4}}>
-          WORK
+          {t.drvWork}
         </p>
-        <Row href="/driver/driving-day" icon={CalendarDays} label="Driving Day" />
+        <Row href="/driver/driving-day" icon={CalendarDays} label={t.drvDrivingDay} />
       </section>
 
       <section className="card" style={{marginTop: 12}}>
         <p className="eyebrow" style={{marginBottom: 4}}>
-          ACTIVITY
+          {t.drvActivity}
         </p>
-        <Row href="/driver/history" icon={History} label="Route History" />
+        <Row href="/driver/history" icon={History} label={t.drvRouteHistory} />
       </section>
 
       <section className="card" style={{marginTop: 12}}>
         <p className="eyebrow" style={{marginBottom: 4}}>
-          ACCOUNT
+          {t.drvAccount}
         </p>
-        <Row href="/driver/settings" icon={Settings} label="Settings" />
+        <Row href="/driver/settings" icon={Settings} label={t.drvSettings} />
       </section>
 
       <section className="card" style={{marginTop: 12}}>
@@ -87,7 +89,7 @@ export default function DriverV3More() {
           style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 56}}
         >
           <LogOut size={18} />
-          {busy ? 'Signing out…' : 'Log Out'}
+          {busy ? 'Signing out…' : t.drvSignOut}
         </button>
       </section>
     </DriverV3Shell>

@@ -40,6 +40,7 @@ const ISSUE_CATEGORIES = [
 type Sheet = 'photo' | 'signature' | 'notes' | 'issue' | null
 
 export default function DriverV3Stop() {
+  const {t} = useLocale()
   const router = useRouter()
   const params = useSearchParams()
   const {driverId, loading, error, routes, snapshot, refresh} = useDriverData()
@@ -366,7 +367,7 @@ export default function DriverV3Stop() {
                 onClick={() => setConfirmComplete(true)}
                 style={{background: '#16B96B'}}
               >
-                {busy ? 'Completing…' : `COMPLETE ${operationLabel(String(kind))}`}
+                {busy ? 'Completing…' : (operationLabel(String(kind))==='PICKUP'?t.drvCompletePickup:operationLabel(String(kind))==='RETURN'?t.drvCompleteReturn:t.drvCompleteDelivery)}
               </button>
             )}
             {message && (
@@ -584,11 +585,11 @@ export default function DriverV3Stop() {
             </p>
             {operationLabel(String(kind)) === 'DELIVERY' && (
               <label>
-                Received by
+                {t.drvReceivedBy}
                 <input
                   value={recipient}
                   onChange={e => setRecipient(e.target.value)}
-                  placeholder="Recipient name"
+                  placeholder={t.drvRecipientName}
                   autoComplete="name"
                 />
               </label>

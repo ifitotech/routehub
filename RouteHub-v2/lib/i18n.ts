@@ -32,6 +32,46 @@ Object.assign(en, {retry:'Retry', noRoutesAssignedToday:'No routes assigned for 
 Object.assign(es, {retry:'Reintentar', noRoutesAssignedToday:'No hay rutas asignadas para hoy.'})
 Object.assign(fr, {retry:'Réessayer', noRoutesAssignedToday:"Aucun itinéraire n’est assigné pour aujourd’hui."})
 
+Object.assign(en, {
+  drvToday:'Today', drvRoute:'Route', drvMap:'Map', drvTruck:'Truck', drvMore:'More',
+  drvStartRoute:'START ROUTE', drvArrived:'ARRIVED AT STOP', drvContinue:'CONTINUE ROUTE',
+  drvOpenMaps:'Open Maps', drvIssue:'Issue', drvStartDrivingDay:'START DRIVING DAY',
+  drvNoStops:'No stops right now.', drvAssignedWork:'Your assigned work will appear here.',
+  drvCouldntLoad:'Couldn\'t load your route.', drvTryAgain:'TRY AGAIN',
+  drvNextStop:'NEXT STOP', drvNoMoreStops:'No more required stops',
+  drvWork:'WORK', drvActivity:'ACTIVITY', drvAccount:'ACCOUNT',
+  drvDrivingDay:'Driving Day', drvRouteHistory:'Route History', drvSettings:'Settings',
+  drvSignOut:'Sign Out', drvLogFuel:'Log Fuel', drvLogMaintenance:'Log Maintenance',
+  drvCompletePickup:'COMPLETE PICKUP', drvCompleteDelivery:'COMPLETE DELIVERY', drvCompleteReturn:'COMPLETE RETURN',
+  drvReceivedBy:'Received by', drvRecipientName:'Recipient name',
+})
+Object.assign(es, {
+  drvToday:'Hoy', drvRoute:'Ruta', drvMap:'Mapa', drvTruck:'Camion', drvMore:'Mas',
+  drvStartRoute:'INICIAR RUTA', drvArrived:'LLEGUE A LA PARADA', drvContinue:'CONTINUAR RUTA',
+  drvOpenMaps:'Abrir Maps', drvIssue:'Incidencia', drvStartDrivingDay:'INICIAR JORNADA',
+  drvNoStops:'No hay paradas ahora.', drvAssignedWork:'Tu trabajo asignado aparecera aqui.',
+  drvCouldntLoad:'No se pudo cargar tu ruta.', drvTryAgain:'REINTENTAR',
+  drvNextStop:'SIGUIENTE', drvNoMoreStops:'No quedan paradas requeridas',
+  drvWork:'TRABAJO', drvActivity:'ACTIVIDAD', drvAccount:'CUENTA',
+  drvDrivingDay:'Jornada', drvRouteHistory:'Historial', drvSettings:'Ajustes',
+  drvSignOut:'Cerrar sesion', drvLogFuel:'Registrar combustible', drvLogMaintenance:'Registrar mantenimiento',
+  drvCompletePickup:'COMPLETAR RECOGIDA', drvCompleteDelivery:'COMPLETAR ENTREGA', drvCompleteReturn:'COMPLETAR RETORNO',
+  drvReceivedBy:'Recibido por', drvRecipientName:'Nombre del receptor',
+})
+Object.assign(fr, {
+  drvToday:"Aujourd'hui", drvRoute:'Itineraire', drvMap:'Carte', drvTruck:'Camion', drvMore:'Plus',
+  drvStartRoute:'DEMARRER', drvArrived:'ARRIVE A L ARRET', drvContinue:'CONTINUER',
+  drvOpenMaps:'Ouvrir Maps', drvIssue:'Incident', drvStartDrivingDay:'DEMARRER LA JOURNEE',
+  drvNoStops:"Aucun arret pour le moment.", drvAssignedWork:'Votre travail apparaitra ici.',
+  drvCouldntLoad:'Impossible de charger l itineraire.', drvTryAgain:'REESSAYER',
+  drvNextStop:'SUIVANT', drvNoMoreStops:'Plus d arrets requis',
+  drvWork:'TRAVAIL', drvActivity:'ACTIVITE', drvAccount:'COMPTE',
+  drvDrivingDay:'Journee', drvRouteHistory:'Historique', drvSettings:'Reglages',
+  drvSignOut:'Se deconnecter', drvLogFuel:'Carburant', drvLogMaintenance:'Entretien',
+  drvCompletePickup:'TERMINER RAMASSAGE', drvCompleteDelivery:'TERMINER LIVRAISON', drvCompleteReturn:'TERMINER RETOUR',
+  drvReceivedBy:'Recu par', drvRecipientName:'Nom du destinataire',
+})
+
 export const translations: Record<Locale, TranslationDictionary> = {en, es, fr}
 
 export function isLocale(value: unknown): value is Locale { return value === 'en' || value === 'es' || value === 'fr' }
