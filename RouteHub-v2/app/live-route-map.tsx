@@ -130,7 +130,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
  return <section className={`live-route-map ${onActivate?'is-activatable':''}`} onClick={onActivate} onKeyDown={event=>{if(onActivate&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onActivate()}}} role={onActivate?'button':undefined} tabIndex={onActivate?0:undefined}>
   {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?copy.connected:copy.scheduled}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?copy.live:copy.waiting}</span></header>}
   <div className="live-route-canvas">
-   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={15} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive} aria-label={copy.map}>
+   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={15} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={false} aria-label={copy.map}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={routePoints.length?routePoints:visiblePoints}/>
     <RecenterOnRequest points={driverLocation?[driverLocation]:visiblePoints} token={followToken||0}/>
@@ -139,7 +139,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
     {origin&&(!useDriverAsOrigin||!driverLocation)&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
     {intermediate.map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+2)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`${copy.next} ${index+2}`}</Tooltip></Marker>)}
     {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination',1)} zIndexOffset={300}><Tooltip direction="top" offset={[0,-18]}>{destinationAddress||copy.next}</Tooltip></Marker>}
-    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]} permanent>{copy.driver}</Tooltip></Marker>}
+    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]}>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
   </div>
   <footer><span><b>S</b>{useDriverAsOrigin&&driverLocation?(locale==='es'?'Mi ubicación':locale==='fr'?'Ma position': 'My location'):(originAddress||copy.start)}</span><span><b>1</b>{destinationAddress||copy.next}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>

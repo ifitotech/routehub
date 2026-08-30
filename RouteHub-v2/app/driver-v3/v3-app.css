@@ -212,3 +212,8 @@ html[data-driver-app='v3'] header {
   border: 3px solid #fff;
   box-shadow: 0 0 0 8px rgba(26, 115, 232, 0.22), 0 4px 10px rgba(15, 29, 53, 0.28);
 }
+
+.driver-v3-root .leaflet-control-zoom,
+.driver-v3-root .leaflet-control-attribution {
+  display: none !important;
+}

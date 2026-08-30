@@ -68,9 +68,16 @@ export default function DriverV3Page() {
     setBusy(true)
     setMessage('')
     try{
+      const context={routeId:route.id,driverId,companyId:route.company_id}
+      if(!['active','paused'].includes(String(route.status||''))){
+        await startRoute(context,operationalDate())
+        if(!drivingSession){
+          try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
+        }
+      }
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
-      await completeReturn({routeId:route.id,driverId,companyId:route.company_id},{location})
+      await completeReturn(context,{location})
       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       await refresh()
       router.push('/driver/completed')
