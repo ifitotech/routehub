@@ -1,18 +1,24 @@
 'use client'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import {useState} from 'react'
+import {useRouter} from 'next/navigation'
 import {CheckCircle2, ChevronRight, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {operationalDate} from '../../../lib/driver-queue'
 import {openNavigation} from '../../../lib/maps/external-navigation'
+import {markArrived, startRoute} from '../../../lib/driver-v3/actions'
+import {startTemporaryRouteSession} from '../../../lib/driving-session'
 
 const LiveRouteMap = dynamic(() => import('../../live-route-map'), {ssr: false})
 
 export default function DriverV3Route() {
-  const {loading, error, snapshot, refresh, routes, drivingSession} = useDriverData()
+  const {loading, error, snapshot, refresh, routes, drivingSession, driverId, companyId, branchId} = useDriverData()
   const {t} = useLocale()
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
   const today = operationalDate()
   const current = snapshot?.currentOperation?.route as any
   const queueRoutes = routes
@@ -128,9 +134,40 @@ export default function DriverV3Route() {
                     {t.drvOpenInMaps}
                   </span>
                 </button>
-                <Link className="primary" href={`/driver/stop?id=${encodeURIComponent(current.id)}`} style={{textDecoration: 'none', display: 'grid', placeItems: 'center'}}>
-                  {t.drvStopDetails}
-                </Link>
+                {current.arrived_at ? (
+                  <Link className="primary" href={`/driver/stop?id=${encodeURIComponent(current.id)}`} style={{textDecoration: 'none', display: 'grid', placeItems: 'center'}}>
+                    {t.drvContinue}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={busy}
+                    onClick={() => {
+                      void (async () => {
+                        if (busy) return
+                        setBusy(true)
+                        try {
+                          const ctx = {routeId: current.id, driverId, companyId: current.company_id || companyId}
+                          if (current.status !== 'active' && current.status !== 'paused') {
+                            await startRoute(ctx, operationalDate())
+                            if (!drivingSession) {
+                              try { await startTemporaryRouteSession({companyId: ctx.companyId, branchId, driverId, routeId: current.id}) } catch {}
+                            }
+                          } else {
+                            await markArrived(ctx)
+                            router.push(`/driver/stop?id=${encodeURIComponent(current.id)}`)
+                          }
+                          await refresh()
+                        } finally {
+                          setBusy(false)
+                        }
+                      })()
+                    }}
+                  >
+                    {busy ? t.drvBusy : current.status === 'active' || current.status === 'paused' ? t.drvArrived : t.drvStartRoute}
+                  </button>
+                )}
               </div>
             </section>
           )}

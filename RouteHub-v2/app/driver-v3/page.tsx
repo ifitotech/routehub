@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import {ChevronRight, Map, MapPin, Package, TriangleAlert} from 'lucide-react'
 import {useState} from 'react'
+import {useRouter} from 'next/navigation'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {markArrived, startRoute} from '../../lib/driver-v3/actions'
@@ -16,6 +17,7 @@ import styles from './today.module.css'
 
 export default function DriverV3Page() {
   const {t}=useLocale()
+  const router=useRouter()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
@@ -50,6 +52,7 @@ export default function DriverV3Page() {
       }
       await refresh()
       setMessage(starting?t.drvStartRoute:t.drvArrivedOk)
+      if(!starting) router.push(`/driver/stop?id=${encodeURIComponent(route.id)}`)
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
