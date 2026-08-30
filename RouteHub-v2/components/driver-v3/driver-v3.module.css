@@ -346,7 +346,7 @@
   font-weight:800;
   letter-spacing:-.02em;
 }
-.headerBrand img{border-radius:6px;background:#fff}
+.headerBrand img{border-radius:6px;background:#fff;image-rendering:crisp-edges;filter:none!important}
 .headerIcon{
   display:grid;place-items:center;width:44px;height:44px;color:#fff;text-decoration:none;
 }
