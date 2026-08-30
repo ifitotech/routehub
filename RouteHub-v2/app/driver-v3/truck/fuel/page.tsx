@@ -53,7 +53,7 @@ export default function Fuel() {
       setOdometer('')
       setAmount('')
       setPhoto(null)
-      router.replace('/driver/truck')
+      window.setTimeout(() => router.replace('/driver/truck?saved=fuel'), 900)
     } catch (e) {
       setMessageType('err')
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)

@@ -7,17 +7,18 @@ import {useLocale} from '../../../lib/use-preferences'
 import {operationalDate} from '../../../lib/driver-queue'
 
 export default function DriverV3Route() {
-  const {loading, error, snapshot, refresh} = useDriverData()
+  const {loading, error, snapshot, refresh, routes} = useDriverData()
   const {t} = useLocale()
+  const today = operationalDate()
   const current = snapshot?.currentOperation?.route as any
-  const queue = snapshot?.queue
-  const completedToday =
-    queue?.completed?.filter((r: any) => r.route_date?.slice(0, 10) === operationalDate()) || []
-  const queueRoutes = queue
-    ? [...(queue.current ? [queue.current] : []), ...queue.upcoming, ...completedToday]
-    : []
-  const doneCount = snapshot?.currentOperation?.completed || 0
-  const remaining = Math.max(0, queueRoutes.length - doneCount)
+  const queueRoutes = routes
+    .filter((r: any) => (r.route_date || '').slice(0, 10) === today)
+    .slice()
+    .sort((a: any, b: any) => (a.position || 0) - (b.position || 0) || String(a.id).localeCompare(String(b.id)))
+  const activeRows = queueRoutes.filter((r: any) => r.status !== 'cancelled')
+  const doneCount = activeRows.filter((r: any) => r.status === 'completed').length
+  const issueCount = queueRoutes.filter((r: any) => r.status === 'issue').length
+  const remaining = Math.max(0, activeRows.length - doneCount)
 
   const typeLabel = (r: any) => {
     const v = (r.mission_type || 'delivery').toString().toLowerCase()
@@ -142,6 +143,17 @@ export default function DriverV3Route() {
                         <span className="tag" style={{marginTop: 6}}>
                           {t.drvCurrentStop}
                         </span>
+                      )}
+                      {route.status === 'issue' && (
+                        <span className="tag" style={{marginTop: 6, background: '#FFF0F0', color: '#b42318'}}>
+                          {t.drvIssue}
+                        </span>
+                      )}
+                      {route.status === 'cancelled' && (
+                        <span className="tag" style={{marginTop: 6}}>{t.drvPaused}</span>
+                      )}
+                      {route.status === 'paused' && (
+                        <span className="tag" style={{marginTop: 6}}>{t.drvPaused}</span>
                       )}
                     </div>
                     <ChevronRight size={18} color="#8A97A8" style={{marginTop: 6, flexShrink: 0}} />

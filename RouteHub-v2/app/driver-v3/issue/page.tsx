@@ -1,5 +1,6 @@
 'use client'
 import {useState} from 'react'
+import {Camera} from 'lucide-react'
 import {useRouter} from 'next/navigation'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../components/driver-v3/driver-v3.module.css'
@@ -24,6 +25,7 @@ export default function Issue() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'ok' | 'err'>('ok')
+  const [photo, setPhoto] = useState<File | null>(null)
   const route = snapshot?.currentOperation?.route as any
 
   const submit = async () => {
@@ -37,12 +39,13 @@ export default function Issue() {
     setMessage('')
     try {
       const text = note.trim() ? `${category}: ${note.trim()}` : category
-      await reportIssue({routeId: route.id, driverId, companyId: route.company_id}, text)
+      await reportIssue({routeId: route.id, driverId, companyId: route.company_id}, text, photo || undefined)
       await refresh()
       setMessageType('ok')
       setMessage(t.drvIssueSent)
       setNote('')
       setCategory('')
+      setPhoto(null)
       router.replace('/driver/stop')
     } catch (e) {
       setMessageType('err')
@@ -53,7 +56,7 @@ export default function Issue() {
   }
 
   return (
-    <DriverV3Shell active="route" mode="stack" title={t.drvReportIssue} backHref="/driver/stop" backLabel="Stop">
+    <DriverV3Shell active="route" mode="stack" title={t.drvReportIssue} backHref="/driver/stop" backLabel={t.drvStopDetails}>
       
 
       <section className="card">
@@ -91,7 +94,12 @@ export default function Issue() {
 
             <label style={{marginTop: 14}}>
               {t.drvDetailsOpt}
-              <textarea
+              <label className="secondary" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginBottom:12}}>
+              <Camera size={18} />
+              {photo ? photo.name : t.drvTakePhoto}
+              <input type="file" accept="image/*" capture="environment" hidden onChange={e => setPhoto(e.target.files?.[0] || null)} />
+            </label>
+            <textarea
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 placeholder={t.drvDetailsOpt}

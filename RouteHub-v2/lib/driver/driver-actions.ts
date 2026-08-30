@@ -95,7 +95,7 @@ export async function completePickupWithEvidence(ctx:DriverMutationContext, phot
     if(photo) await uploadMissionEvidence(photo,ctx.routeId,{kind:'photo',attachAsCompletionPhoto:false})
     const arrival=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).is('arrived_at',null).select('id').maybeSingle()
     if(arrival.error) throw arrival.error
-    if(!arrival.data) throw new Error('Pickup arrival was already recorded.')
+    // Arrived may already exist from the normal Start → Arrived → Complete flow.
     return completeMission(ctx.routeId)
   })
 }
@@ -153,6 +153,14 @@ export async function saveStopSignature(ctx:DriverMutationContext, canvas:HTMLCa
 
 export async function finalizeRoute(ctx:DriverMutationContext, method:'normal'|'photo'|'issue', note='', issue='', photo?:File) {
   return driverActions.run(`finalize:${ctx.routeId}`, async()=>{
+    const {canFinalizeRoute}=await import('../stop-workflow')
+    const client=getSupabase()
+    const current=await client.from('routes').select('id,route_date,company_id,driver_id').eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).maybeSingle()
+    if(current.error) throw current.error
+    if(!current.data) throw new Error('Route not found.')
+    const siblings=await client.from('routes').select('id,position,status,mission_type,completed_at,finalized_at').eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).eq('route_date',current.data.route_date)
+    if(siblings.error) throw siblings.error
+    if(!canFinalizeRoute((siblings.data||[]) as any)) throw new Error('Required stops remain.')
     let photoPath:string|undefined
     if(photo) photoPath=(await uploadMissionEvidence(photo,ctx.routeId,{kind:method==='issue'?'issue':'finalization',attachAsCompletionPhoto:false})).path
     const result=await getSupabase().from('routes').update({finalized_at:new Date().toISOString(),route_completed_at:new Date().toISOString(),finalization_method:method,finalization_note:note.trim()||null,finalization_issue:method==='issue'?issue||'Other':null,finalization_photo_path:photoPath||null,updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).is('finalized_at',null).select('id,finalized_at,route_completed_at').maybeSingle()

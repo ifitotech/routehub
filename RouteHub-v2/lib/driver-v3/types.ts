@@ -17,6 +17,7 @@ export type DriverV3Route = {
   route_completed_at?: string | null
   completion_photo_path?: string | null
   customer_signature_path?: string | null
+  finalized_at?: string | null
   driver_note?: string | null
   company_id?: string
 }

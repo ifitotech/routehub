@@ -10,10 +10,12 @@ import {getSupabase} from '../../../lib/supabase'
 export default function DriverV3Truck() {
   const {companyId, branchId} = useDriverData()
   const {t} = useLocale()
-  const [truck, setTruck] = useState<any>(null)
+  const [trucks, setTrucks] = useState<any[]>([])
+  const [truckId, setTruckId] = useState('')
   const [activity, setActivity] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const truck = trucks.find(item => item.id === truckId) || trucks[0] || null
 
   useEffect(() => {
     let gone = false
@@ -23,46 +25,61 @@ export default function DriverV3Truck() {
         return
       }
       const db = getSupabase()
-      const [t, f, m] = await Promise.all([
-        db
-          .from('trucks')
-          .select('id,name,unit_number')
-          .eq('company_id', companyId)
-          .eq('branch_id', branchId)
-          .eq('active', true)
-          .limit(1),
+      const truckResult = await db
+        .from('trucks')
+        .select('id,name,unit_number')
+        .eq('company_id', companyId)
+        .eq('branch_id', branchId)
+        .eq('active', true)
+      if (gone) return
+      if (truckResult.error) {
+        setError(t.drvOpFailed)
+        setLoading(false)
+        return
+      }
+      const list = truckResult.data || []
+      setTrucks(list)
+      const selected = truckId && list.some(item => item.id === truckId) ? truckId : list[0]?.id || ''
+      if (selected !== truckId) setTruckId(selected)
+      if (!selected) {
+        setActivity([])
+        setLoading(false)
+        return
+      }
+      const [fuelResult, maintenanceResult] = await Promise.all([
         db
           .from('truck_fuel_logs')
-          .select('id,odometer,amount,filled_at')
+          .select('id,odometer,amount,filled_at,truck_id')
           .eq('company_id', companyId)
           .eq('branch_id', branchId)
+          .eq('truck_id', selected)
           .order('filled_at', {ascending: false})
           .limit(8),
         db
           .from('truck_maintenance_logs')
-          .select('id,maintenance_type,odometer,amount,serviced_at')
+          .select('id,maintenance_type,odometer,amount,serviced_at,truck_id')
           .eq('company_id', companyId)
           .eq('branch_id', branchId)
+          .eq('truck_id', selected)
           .order('serviced_at', {ascending: false})
           .limit(8),
       ])
       if (gone) return
-      if (t.error || f.error || m.error) {
+      if (fuelResult.error || maintenanceResult.error) {
         setError(t.drvOpFailed)
       } else {
-        setTruck(t.data?.[0] || null)
         setActivity(
           [
-            ...((f.data || []).map((x: any) => ({
+            ...((fuelResult.data || []).map((x: any) => ({
               ...x,
               kind: 'Fuel',
-              label: 'Fuel',
+              label: t.drvLogFuel,
               at: x.filled_at,
             }))),
-            ...((m.data || []).map((x: any) => ({
+            ...((maintenanceResult.data || []).map((x: any) => ({
               ...x,
               kind: 'Maintenance',
-              label: x.maintenance_type || 'Maintenance',
+              label: x.maintenance_type || t.drvLogMaintenance,
               at: x.serviced_at,
             }))),
           ]
@@ -76,7 +93,7 @@ export default function DriverV3Truck() {
     return () => {
       gone = true
     }
-  }, [companyId, branchId])
+  }, [companyId, branchId, truckId, t.drvOpFailed, t.drvLogFuel, t.drvLogMaintenance])
 
   return (
     <DriverV3Shell active="truck" title={t.drvTruck}>
@@ -93,7 +110,16 @@ export default function DriverV3Truck() {
           <section className="card">
             <p className="eyebrow">{t.drvCurrentTruck}</p>
             {truck ? (
-              <h2 style={{margin: '4px 0 0'}}>{truck.name || truck.unit_number}</h2>
+              <>
+                <h2 style={{margin: '4px 0 0'}}>{truck.name || truck.unit_number}</h2>
+                {trucks.length > 1 && (
+                  <select value={truckId} onChange={e => setTruckId(e.target.value)} style={{marginTop: 10, minHeight: 48}}>
+                    {trucks.map(item => (
+                      <option key={item.id} value={item.id}>{item.name || item.unit_number}</option>
+                    ))}
+                  </select>
+                )}
+              </>
             ) : (
               <>
                 <h2 style={{margin: '4px 0 6px'}}>{t.drvNoTruck}</h2>

@@ -44,6 +44,11 @@ export default function Maintenance() {
 
   const submit = async () => {
     if (!truck || !type.trim() || busy) return
+    if (!odometer.trim() || Number(odometer) <= 0) {
+      setMessageType('err')
+      setMessage(t.drvNeedNote)
+      return
+    }
     setBusy(true)
     setMessage('')
     try {
@@ -64,7 +69,7 @@ export default function Maintenance() {
       setOdometer('')
       setAmount('')
       setPhoto(null)
-      router.replace('/driver/truck')
+      window.setTimeout(() => router.replace('/driver/truck?saved=maint'), 900)
     } catch (e) {
       setMessageType('err')
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)

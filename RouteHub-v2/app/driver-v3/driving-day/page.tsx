@@ -10,7 +10,7 @@ import {getCurrentLocation} from '../../../lib/location'
 import {updateDrivingLocation} from '../../../lib/driving-session'
 
 export default function DrivingDayPage() {
-  const {loading, error, drivingSession, driverId, companyId, refresh} = useDriverData()
+  const {loading, error, drivingSession, driverId, companyId, branchId, refresh} = useDriverData()
   const {t} = useLocale()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -44,7 +44,7 @@ export default function DrivingDayPage() {
           window.localStorage.setItem(`routehub-location-consent-v1:${driverId}`, 'accepted')
           setConsentAccepted(true)
         }
-        const session = await startDrivingDay({driverId, companyId})
+        const session = await startDrivingDay({driverId, companyId, branchId})
         try {
           const location = await getCurrentLocation({maximumAge: 0})
           if (session?.id) await updateDrivingLocation(session.id, driverId, location)

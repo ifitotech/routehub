@@ -74,6 +74,7 @@ export default function DriverV3Stop() {
     op?.route) as any
   const isCurrent = !selectedId || selectedId === op?.route?.id
   const kind = op?.kind || route?.mission_type || 'delivery'
+  const closed = ['completed','issue','cancelled'].includes(String(route?.status||''))
 
   const ctx = route
     ? {routeId: route.id, driverId, companyId: route.company_id}
@@ -116,6 +117,7 @@ export default function DriverV3Stop() {
         } else {
           await completeStop(ctx, {location})
         }
+        try { window.sessionStorage.setItem('routehub:last-completed-id', route.id) } catch {}
         await refresh()
         router.push('/driver/completed')
         return
@@ -409,13 +411,13 @@ export default function DriverV3Stop() {
 
           <div className={styles.stickyAction}>
             {!route.arrived_at ? (
-              <button className="primary" disabled={busy || !isCurrent} onClick={() => void act('arrive')}>
+              <button className="primary" disabled={busy || !isCurrent || closed} onClick={() => void act('arrive')}>
                 {busy ? t.drvBusy : t.drvArrivedShort}
               </button>
             ) : (
               <button
                 className="primary"
-                disabled={busy || !isCurrent}
+                disabled={busy || !isCurrent || closed}
                 onClick={() => setConfirmComplete(true)}
                 style={{background: '#16B96B'}}
               >

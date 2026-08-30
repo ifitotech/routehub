@@ -12,7 +12,7 @@ import {openNavigation} from '../../../lib/maps/external-navigation'
 const LiveRouteMap = dynamic(() => import('../../live-route-map'), {ssr: false})
 
 export default function DriverV3Map() {
-  const {loading, error, snapshot, driverId, refresh} = useDriverData()
+  const {loading, error, snapshot, driverId, refresh, drivingSession} = useDriverData()
   const {t} = useLocale()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -68,6 +68,12 @@ export default function DriverV3Map() {
                     ? {lat: Number(route.destination_lat), lng: Number(route.destination_lng)}
                     : null
                 }
+                driverLocation={
+                  drivingSession?.last_lat != null && drivingSession?.last_lng != null
+                    ? {lat: Number(drivingSession.last_lat), lng: Number(drivingSession.last_lng)}
+                    : null
+                }
+                driverUpdatedAt={drivingSession?.last_updated_at || null}
                 title={t.drvCurrentStop}
                 showHeader={false}
                 interactive
@@ -129,7 +135,7 @@ export default function DriverV3Map() {
                   {t.drvOpenInMaps}
                 </span>
               </button>
-              {!route.arrived_at && (
+              {!route.arrived_at && ['active','paused'].includes(String(route.status)) && (
                 <button
                   className="primary"
                   disabled={busy}

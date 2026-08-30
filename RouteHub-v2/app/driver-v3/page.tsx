@@ -6,6 +6,7 @@ import {useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {markArrived, startRoute} from '../../lib/driver-v3/actions'
+import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
 import {getCurrentLocation} from '../../lib/location'
@@ -15,7 +16,7 @@ import styles from './today.module.css'
 
 export default function DriverV3Page() {
   const {t}=useLocale()
-  const {loading,error,snapshot,driverId,refresh,drivingSession}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const operation=snapshot?.currentOperation
@@ -35,7 +36,12 @@ export default function DriverV3Page() {
     const starting=route.status!=='active'
     try{
       const context={routeId:route.id,driverId,companyId:route.company_id}
-      if(starting)await startRoute(context,operationalDate())
+      if(starting){
+        await startRoute(context,operationalDate())
+        if(!drivingSession){
+          try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
+        }
+      }
       else if(!route.arrived_at)await markArrived(context)
       if(drivingSession){
         try{

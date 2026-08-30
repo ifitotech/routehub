@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {Bell, ChevronLeft, Home, List, Map, Menu, MoreHorizontal, Truck} from 'lucide-react'
+import {ChevronLeft, Home, List, Map, Menu, MoreHorizontal, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
 
@@ -49,9 +49,7 @@ export default function DriverV3Shell({
           <Link href="/driver" className={styles.todayBrand}>
             RouteHub Driver
           </Link>
-          <button type="button" className={styles.headerIcon} aria-label="Notifications">
-            <Bell />
-          </button>
+<span className={styles.headerIcon} aria-hidden="true" />
           {headerStatus && <span className={styles.headerStatus}>{headerStatus}</span>}
         </header>
       ) : isStack ? (
@@ -72,9 +70,7 @@ export default function DriverV3Shell({
             <strong>{title || tabLabel(active, t)}</strong>
             {subtitle ? <small>{subtitle}</small> : null}
           </div>
-          <button type="button" className={styles.iconButton} aria-label="Notifications">
-            <Bell size={19} />
-          </button>
+<span className={styles.stackSpacer} aria-hidden="true" />
         </header>
       )}
 
