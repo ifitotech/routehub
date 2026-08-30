@@ -499,7 +499,7 @@ export default function DriverV3Stop() {
                   onPointerUp={() => {
                     drawing.current = false
                   }}
-                  onPointer{t.drvCancel}={() => {
+                  onPointerCancel={() => {
                     drawing.current = false
                   }}
                   style={{
