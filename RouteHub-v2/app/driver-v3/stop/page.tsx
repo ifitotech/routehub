@@ -158,7 +158,7 @@ export default function DriverV3Stop() {
         setSheetMsg('')
       }, 600)
     } catch (e) {
-      setSheetMsg(e instanceof Error ? e.message : "Couldn't save the photo.")
+      setSheetMsg(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setSheetBusy(false)
     }
@@ -210,14 +210,14 @@ export default function DriverV3Stop() {
     try {
       await saveStopSignature(ctx, c)
       await refresh()
-      setSheetMsg('Signature saved.')
+      setSheetMsg(t.drvSigSaved)
       clearSignature()
       setTimeout(() => {
         setSheet(null)
         setSheetMsg('')
       }, 600)
     } catch (e) {
-      setSheetMsg(e instanceof Error ? e.message : 'Unable to save signature.')
+      setSheetMsg(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setSheetBusy(false)
     }
@@ -226,7 +226,7 @@ export default function DriverV3Stop() {
   const saveIssue = async () => {
     if (!ctx || sheetBusy) return
     if (!issueCat) {
-      setSheetMsg('Select a category.')
+      setSheetMsg(t.drvPickCat)
       return
     }
     setSheetBusy(true)

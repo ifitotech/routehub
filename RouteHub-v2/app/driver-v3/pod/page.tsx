@@ -107,12 +107,12 @@ export default function Pod() {
       }
       if (!saved) {
         setMessageType('err')
-        setMessage('Add a photo, note, or signature before saving.')
+        setMessage(t.drvNeedEvidence)
         return
       }
       await refresh()
       setMessageType('ok')
-      setMessage('Proof saved.')
+      setMessage(t.drvProofSaved)
       setNote('')
       setPhotoName('')
       if (file.current) file.current.value = ''
@@ -120,7 +120,7 @@ export default function Pod() {
       router.replace('/driver/stop')
     } catch (e) {
       setMessageType('err')
-      setMessage(e instanceof Error ? e.message : "Couldn't save the photo. Try again.")
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }

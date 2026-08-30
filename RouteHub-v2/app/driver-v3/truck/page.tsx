@@ -48,7 +48,7 @@ export default function DriverV3Truck() {
       ])
       if (gone) return
       if (t.error || f.error || m.error) {
-        setError('Unable to load truck activity.')
+        setError(t.drvOpFailed)
       } else {
         setTruck(t.data?.[0] || null)
         setActivity(
