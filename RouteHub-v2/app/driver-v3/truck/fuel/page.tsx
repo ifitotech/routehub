@@ -49,14 +49,14 @@ export default function Fuel() {
         photo: photo || undefined,
       })
       setMessageType('ok')
-      setMessage('Fuel saved.')
+      setMessage(t.drvFuelSaved)
       setOdometer('')
       setAmount('')
       setPhoto(null)
       router.replace('/driver/truck')
     } catch (e) {
       setMessageType('err')
-      setMessage(e instanceof Error ? e.message : 'Unable to save fuel.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }

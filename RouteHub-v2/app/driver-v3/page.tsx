@@ -36,9 +36,9 @@ export default function DriverV3Page() {
       if(starting)await startRoute(context,operationalDate())
       else if(!route.arrived_at)await markArrived(context)
       await refresh()
-      setMessage(starting?'Route started.':'Arrival recorded.')
+      setMessage(starting?t.drvStartRoute:t.drvArrivedOk)
     }catch(error){
-      setMessage(error instanceof Error?error.message:'Unable to update operation.')
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
       setBusy(false)
     }

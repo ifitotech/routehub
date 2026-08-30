@@ -78,7 +78,7 @@ export default function DriverV3Stop() {
       if (action === 'arrive') {
         await markArrived(ctx)
         await refresh()
-        setMessage('Arrival recorded.')
+        setMessage(t.drvArrivedOk)
       } else {
         const isDelivery = operationLabel(String(kind)) === 'DELIVERY'
         if (isDelivery) {
@@ -91,7 +91,7 @@ export default function DriverV3Stop() {
         return
       }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Unable to update stop.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }
@@ -150,7 +150,7 @@ export default function DriverV3Stop() {
     try {
       await uploadStopPhoto(ctx, file)
       await refresh()
-      setSheetMsg('Photo saved.')
+      setSheetMsg(t.drvSavedPhoto)
       setPhotoName('')
       if (fileRef.current) fileRef.current.value = ''
       setTimeout(() => {
@@ -235,7 +235,7 @@ export default function DriverV3Stop() {
       const text = issueNote.trim() ? `${issueCat}: ${issueNote.trim()}` : issueCat
       await reportIssue(ctx, text)
       await refresh()
-      setSheetMsg('Issue submitted.')
+      setSheetMsg(t.drvIssueSent)
       setIssueCat('')
       setIssueNote('')
       setTimeout(() => {
@@ -243,7 +243,7 @@ export default function DriverV3Stop() {
         setSheetMsg('')
       }, 600)
     } catch (e) {
-      setSheetMsg(e instanceof Error ? e.message : 'Unable to submit issue.')
+      setSheetMsg(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setSheetBusy(false)
     }

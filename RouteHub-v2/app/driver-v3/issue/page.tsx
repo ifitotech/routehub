@@ -40,13 +40,13 @@ export default function Issue() {
       await reportIssue({routeId: route.id, driverId, companyId: route.company_id}, text)
       await refresh()
       setMessageType('ok')
-      setMessage('Issue submitted.')
+      setMessage(t.drvIssueSent)
       setNote('')
       setCategory('')
       router.replace('/driver/stop')
     } catch (e) {
       setMessageType('err')
-      setMessage(e instanceof Error ? e.message : 'Unable to submit issue.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }
@@ -94,7 +94,7 @@ export default function Issue() {
               <textarea
                 value={note}
                 onChange={e => setNote(e.target.value)}
-                placeholder="Describe what happened"
+                placeholder={t.drvDetailsOpt}
               />
             </label>
 

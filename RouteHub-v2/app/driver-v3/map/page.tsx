@@ -43,9 +43,9 @@ export default function DriverV3Map() {
     try {
       await markArrived({routeId: route.id, driverId, companyId: route.company_id})
       await refresh()
-      setMessage('Arrival recorded.')
+      setMessage(t.drvArrivedOk)
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Unable to record arrival.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }

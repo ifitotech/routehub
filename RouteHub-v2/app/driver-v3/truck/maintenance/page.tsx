@@ -53,7 +53,7 @@ export default function Maintenance() {
         photo: photo || undefined,
       })
       setMessageType('ok')
-      setMessage('Maintenance saved.')
+      setMessage(t.drvMaintSaved)
       setType('')
       setOdometer('')
       setAmount('')
@@ -61,7 +61,7 @@ export default function Maintenance() {
       router.replace('/driver/truck')
     } catch (e) {
       setMessageType('err')
-      setMessage(e instanceof Error ? e.message : 'Unable to save maintenance.')
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setBusy(false)
     }
