@@ -617,7 +617,7 @@ export default function Routes() {
       const {data: lastQueue, error: queueError} = await queueQuery
       if (queueError) throw queueError
 
-      const {data: createdRoute,error} = await client.from('routes').insert({
+      const payload: Record<string, unknown> = {
         company_id: companyId,
         branch_id: branchId,
         driver_id: form.driver_id,
@@ -636,13 +636,19 @@ export default function Routes() {
         destination_location_source: destinationLocation?.source || selected?.location_source || null,
         destination_location_external_id: destinationLocation?.externalId || selected?.location_external_id || null,
         destination_phone: destinationPhone,
-        destination_contact_name: destinationContactName,
         priority: form.priority,
         order_number: form.order_number.trim() || null,
         notes: form.notes.trim() || null,
         scheduled_at: scheduledAt,
         position: Number(lastRoute?.position || 0) + 1,
-      }).select('id').single()
+      }
+      if (destinationContactName) payload.destination_contact_name = destinationContactName
+      let created = await client.from('routes').insert(payload).select('id').single()
+      if (created.error && /destination_contact_name|schema cache|column/i.test(created.error.message || '')) {
+        delete payload.destination_contact_name
+        created = await client.from('routes').insert(payload).select('id').single()
+      }
+      const {data: createdRoute, error} = created
       if (error) throw error
 
       // New work is appended first, then atomically inserted before the
@@ -861,16 +867,6 @@ export default function Routes() {
               </div>}
               {contactSaveMessage && <small className={styles.contactSaveMessage} role="status">{contactSaveMessage}</small>}
               {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number:event.target.value}))}/></label>}
-              <div className={styles.splitFields}>
-                <label className={styles.field}>
-                  <span>{locale==='es'?'Persona en esta parada':locale==='fr'?'Personne à cet arrêt':'Person at this stop'} <em>{c.optional}</em></span>
-                  <input value={form.stop_contact_name} placeholder={selectedContact?.contact_name || (locale==='es'?'Ejemplo: Eduardo':locale==='fr'?'Exemple : Eduardo':'Example: Eduardo')} onChange={event=>setForm(current=>({...current,stop_contact_name:event.target.value}))}/>
-                </label>
-                <label className={styles.field}>
-                  <span>{c.contactPhone} <em>{c.optional}</em></span>
-                  <input type="tel" value={form.destination_phone} placeholder={selectedContact?.phone || ''} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/>
-                </label>
-              </div>
             </>}
             </section>
 
@@ -883,7 +879,14 @@ export default function Routes() {
             {detailsOpen && form.type!=='return' && <div className={styles.optionalDetails}>
               {form.type!=='pickup'&&<label className={styles.field}><span>{locale==='es'?'Job / número de orden':locale==='fr'?'Chantier / numéro de commande':'Job / order number'} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm(current => ({...current, order_number: event.target.value}))}/></label>}
               <label className={styles.field}><span>{form.type==='delivery'?(locale==='es'?'Instrucciones de entrega':locale==='fr'?'Instructions de livraison':'Delivery instructions'):c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} placeholder={form.type==='delivery'?c.notesPlaceholder:c.notes} onChange={event => setForm(current => ({...current, notes: event.target.value}))}/></label>
-              {null}
+              <label className={styles.field}>
+                <span>{locale==='es'?'Otra persona en esta ruta':locale==='fr'?'Autre personne pour cet itinéraire':'Different person on this route'} <em>{c.optional}</em></span>
+                <input value={form.stop_contact_name} placeholder={selectedContact?.contact_name || (locale==='es'?'Solo si no es el contacto guardado':locale==='fr'?'Seulement si ce n’est pas le contact enregistré':'Only if not the saved contact')} onChange={event=>setForm(current=>({...current,stop_contact_name:event.target.value}))}/>
+              </label>
+              <label className={styles.field}>
+                <span>{locale==='es'?'Teléfono de esta ruta':locale==='fr'?'Téléphone de cet itinéraire':'Phone for this route'} <em>{c.optional}</em></span>
+                <input type="tel" value={form.destination_phone} placeholder={selectedContact?.phone || ''} onChange={event=>setForm(current=>({...current,destination_phone:event.target.value}))}/>
+              </label>
             </div>}
             </section>
 
