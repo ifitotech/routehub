@@ -1,13 +1,16 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {CalendarDays, History, LogOut, MapPin} from 'lucide-react'
+import {CalendarDays, History, LogOut, MapPin, Sparkles} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DeviceNotificationsSetting from '../../device-notifications-setting'
 import InstallAppCard from '../../install-app-card'
 import {getCurrentLocation, getLocationPermission} from '../../../lib/location'
+import {requestOnboardingReplay} from '../../../lib/onboarding'
+
+const DRIVER_APP_VERSION = '0.1b3'
 
 const LANGS = [
   {id: 'en', label: 'English'},
@@ -162,9 +165,24 @@ export default function DriverV3Settings() {
       </section>
 
       <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow">{t.drvHelp}</p>
         <Link href="/settings/contact" className="row" style={{textDecoration: 'none', color: 'inherit', minHeight: 52}}>
           {t.drvHelp}
         </Link>
+        <button
+          type="button"
+          className="secondary"
+          style={{marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}
+          onClick={() => requestOnboardingReplay()}
+        >
+          <Sparkles size={18} />
+          {t.drvTour}
+        </button>
+      </section>
+
+      <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow">RouteHub Driver</p>
+        <p className="muted" style={{margin: 0}}>Version {DRIVER_APP_VERSION}</p>
       </section>
 
       <button
