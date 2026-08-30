@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import {Map, MapPin, Package, TriangleAlert} from 'lucide-react'
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
@@ -30,6 +30,16 @@ export default function DriverV3Page() {
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
+  useEffect(()=>{
+    if(!sheet)return
+    const html=document.documentElement
+    const body=document.body
+    const prevHtml=html.style.overflow
+    const prevBody=body.style.overflow
+    html.style.overflow='hidden'
+    body.style.overflow='hidden'
+    return()=>{html.style.overflow=prevHtml;body.style.overflow=prevBody}
+  },[sheet])
   const started=['active','paused'].includes(String(route?.status||''))
   const arrived=Boolean(route?.arrived_at)
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
@@ -236,20 +246,20 @@ export default function DriverV3Page() {
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 
       {sheet==='pickup'&&route&&(
-        <div style={overlay}>
-          <section className="card" style={{width:'min(420px,100%)'}}>
+        <div style={overlay} onTouchMove={e=>e.preventDefault()}>
+          <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
             <p className="eyebrow">{t.drvPickup}</p>
-            <h2 style={{margin:'6px 0 8px'}}>{t.drvPickUpPo} {route.order_number||''}</h2>
-            <p className="muted">{route.destination_name||route.destination_address}</p>
+            <h2 style={{margin:'8px 0 6px',fontSize:26,lineHeight:'30px'}}>{t.drvPickUpPo} {route.order_number||''}</h2>
+            <p className="muted" style={{margin:'0 0 18px'}}>{route.destination_name||route.destination_address}</p>
             <button className="primary" disabled={busy} onClick={()=>void confirmPickup()}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
-            <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:8}}>{t.drvCancel||t.cancel}</button>
+            <button className="secondary" disabled={busy} onClick={()=>setSheet(null)} style={{marginTop:10}}>{t.drvCancel||t.cancel}</button>
           </section>
         </div>
       )}
 
       {sheet==='delivery'&&route&&(
-        <div style={overlay}>
-          <section className="card" style={{width:'min(420px,100%)'}}>
+        <div style={overlay} onTouchMove={e=>e.preventDefault()}>
+          <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
             <p className="eyebrow">{t.drvDelivery}</p>
             <h2 style={{margin:'6px 0 8px'}}>{t.drvCompleteDelivery}</h2>
             {route.order_number&&<p style={{fontSize:22,fontWeight:800,margin:'0 0 12px'}}>PO {route.order_number}</p>}
@@ -274,7 +284,23 @@ export default function DriverV3Page() {
 }
 
 const overlay: React.CSSProperties = {
-  position:'fixed', inset:0, background:'rgba(15,29,53,.45)', display:'grid', placeItems:'end center', padding:'16px 16px calc(16px + env(safe-area-inset-bottom))', zIndex:40
+  position:'fixed',
+  inset:0,
+  background:'rgba(15,29,53,.58)',
+  backdropFilter:'blur(14px)',
+  WebkitBackdropFilter:'blur(14px)',
+  display:'grid',
+  placeItems:'center',
+  padding:'20px',
+  zIndex:80,
+  touchAction:'none',
+  overscrollBehavior:'none',
+}
+const dialog: React.CSSProperties = {
+  width:'min(360px,100%)',
+  padding:'22px 20px 18px',
+  borderRadius:22,
+  boxShadow:'0 18px 40px rgba(15,29,53,.28)',
 }
 
 function TodayLoading({label}:{label:string}) {
