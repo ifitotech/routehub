@@ -1,6 +1,6 @@
 'use client'
 import {useEffect, useState} from 'react'
-import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
@@ -11,6 +11,7 @@ import {saveMaintenance} from '../../../../lib/driver-v3/actions'
 const TYPES = ['Oil change', 'Tires', 'Brakes', 'Inspection', 'Other'] as const
 
 export default function Maintenance() {
+  const router = useRouter()
   const {driverId, companyId, branchId} = useDriverData()
   const [truck, setTruck] = useState<any>(null)
   const [type, setType] = useState('')
@@ -55,6 +56,7 @@ export default function Maintenance() {
       setOdometer('')
       setAmount('')
       setPhoto(null)
+      router.replace('/driver/truck')
     } catch (e) {
       setMessageType('err')
       setMessage(e instanceof Error ? e.message : 'Unable to save maintenance.')

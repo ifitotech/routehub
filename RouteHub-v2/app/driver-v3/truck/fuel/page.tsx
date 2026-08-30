@@ -1,6 +1,6 @@
 'use client'
 import {useEffect, useState} from 'react'
-import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
 import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
@@ -9,6 +9,7 @@ import {getSupabase} from '../../../../lib/supabase'
 import {saveFuel} from '../../../../lib/driver-v3/actions'
 
 export default function Fuel() {
+  const router = useRouter()
   const {driverId, companyId, branchId} = useDriverData()
   const [truck, setTruck] = useState<any>(null)
   const [odometer, setOdometer] = useState('')
@@ -50,6 +51,7 @@ export default function Fuel() {
       setOdometer('')
       setAmount('')
       setPhoto(null)
+      router.replace('/driver/truck')
     } catch (e) {
       setMessageType('err')
       setMessage(e instanceof Error ? e.message : 'Unable to save fuel.')

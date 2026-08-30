@@ -27,12 +27,21 @@ export default function DriverV3Settings() {
       
 
       <section className="card">
-        <p className="muted" style={{marginTop: 0}}>
-          Your RouteHub account and workspace access are managed securely.
+        <p className="eyebrow">ACCOUNT</p>
+        <h2 style={{margin: '4px 0 8px', fontSize: 18}}>RouteHub Driver</h2>
+        <p className="muted" style={{margin: 0}}>
+          Session and workspace access are managed by your company.
         </p>
-        <p className="muted" style={{fontSize: 13}}>
-          RouteHub Driver
-        </p>
+      </section>
+
+      <section className="card" style={{marginTop: 12}}>
+        <Link
+          href="/settings/contact"
+          className="row"
+          style={{textDecoration: 'none', color: 'inherit', minHeight: 52}}
+        >
+          Help
+        </Link>
       </section>
 
       <button

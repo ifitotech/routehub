@@ -3,7 +3,6 @@ import Link from 'next/link'
 import {
   CalendarDays,
   ChevronRight,
-  HelpCircle,
   History,
   LogOut,
   Settings,
@@ -63,8 +62,14 @@ export default function DriverV3More() {
         <p className="eyebrow" style={{marginBottom: 4}}>
           WORK
         </p>
-        <Row href="/driver/history" icon={History} label="Route History" />
         <Row href="/driver/driving-day" icon={CalendarDays} label="Driving Day" />
+      </section>
+
+      <section className="card" style={{marginTop: 12}}>
+        <p className="eyebrow" style={{marginBottom: 4}}>
+          ACTIVITY
+        </p>
+        <Row href="/driver/history" icon={History} label="Route History" />
       </section>
 
       <section className="card" style={{marginTop: 12}}>
@@ -72,7 +77,6 @@ export default function DriverV3More() {
           ACCOUNT
         </p>
         <Row href="/driver/settings" icon={Settings} label="Settings" />
-        <Row href="/settings/contact" icon={HelpCircle} label="Help" />
       </section>
 
       <section className="card" style={{marginTop: 12}}>
