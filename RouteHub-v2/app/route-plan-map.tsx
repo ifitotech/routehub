@@ -4,7 +4,7 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import type {CSSProperties,PointerEvent as ReactPointerEvent} from 'react'
 import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
-import {ArrowUp,CornerUpLeft,CornerUpRight,Crosshair,Flag,LocateFixed,RotateCcw,Route as RouteIcon,Satellite,WifiOff} from 'lucide-react'
+import {ArrowUp,CornerUpLeft,CornerUpRight,Crosshair,Flag,LocateFixed,RotateCcw,Route as RouteIcon,Satellite,Volume2,VolumeX,WifiOff} from 'lucide-react'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters,nextRouteManeuver,remainingRouteDistance} from '../lib/maps/routing'
@@ -128,6 +128,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
  const [map,setMap]=useState<L.Map|null>(null)
  const [view,setView]=useState<'navigate'|'plan'>('navigate')
  const [navigationActive,setNavigationActive]=useState(false)
+ const [voiceEnabled,setVoiceEnabled]=useState(false)
  const [sheetExpanded,setSheetExpanded]=useState(false)
  const [sheetDragY,setSheetDragY]=useState(0)
  const [offRoute,setOffRoute]=useState(false)
@@ -343,6 +344,16 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
 
  const center=points[0]||{lat:39.8283,lng:-98.5795}
  const maneuver=useMemo(()=>nextRouteManeuver(estimate?.maneuvers,line,deviceLocation),[deviceLocation?.lat,deviceLocation?.lng,estimate?.maneuvers,line])
+ const maneuverKey=maneuver?`${maneuver.type}:${maneuver.modifier||''}:${maneuver.streetName||''}`:''
+ useEffect(()=>{
+  if(!navigationActive||!voiceEnabled||!maneuverKey||typeof window==='undefined'||!('speechSynthesis' in window))return
+  const utterance=new SpeechSynthesisUtterance(maneuverInstruction(maneuver,locale))
+  utterance.lang=locale==='es'?'es-US':locale==='fr'?'fr-FR':'en-US'
+  utterance.rate=1
+  window.speechSynthesis.cancel()
+  window.speechSynthesis.speak(utterance)
+  return()=>window.speechSynthesis.cancel()
+ },[maneuverKey,navigationActive,voiceEnabled,locale])
  const routeProgress=useMemo(()=>remainingRouteDistance(line,deviceLocation),[line,deviceLocation?.lat,deviceLocation?.lng])
  const destination=points[1]||points[0]
  const destinationDistance=deviceLocation&&destination?distanceMeters(deviceLocation,destination):undefined
@@ -356,7 +367,7 @@ export default function RoutePlanMap({originAddress,stops,locale='en',navigation
  const followingStop=navigationStops[1]
  const stopKindLabel=(kind:PlannedStop['kind'])=>kind==='pickup'?(locale==='es'?'Recogida':locale==='fr'?'Collecte':'Pickup'):kind==='branch'?(locale==='es'?'Regresar a sucursal':locale==='fr'?'Retour à la succursale':'Return to branch'):(locale==='es'?'Entrega':locale==='fr'?'Livraison':'Delivery')
  return <section className={`route-plan-map route-plan-${view}${driverMode?' route-plan-driver':''}${navigationActive?' is-driving':''}${sheetExpanded?' is-sheet-expanded':''}${transitioningOut?' is-returning-today':''}`} aria-label={copy.label}>
-  <header className="route-plan-nav"><div><small className={view==='navigate'&&(activeStop?.pastDue||activeStop?.pending)?'route-plan-overdue':''}>{view==='navigate'?(activeStop?.pastDue?copy.pastDue:activeStop?.pending?copy.pending:copy.next):copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation&&!gpsWeak?'is-live':''}>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}{deviceLocation&&<small> · {gpsMeta}</small>}</span></header>
+  <header className="route-plan-nav"><div><small className={view==='navigate'&&(activeStop?.pastDue||activeStop?.pending)?'route-plan-overdue':''}>{view==='navigate'?(activeStop?.pastDue?copy.pastDue:activeStop?.pending?copy.pending:copy.next):copy.complete}</small><strong>{view==='navigate'?(navigationStops[0]?.label||navigationStops[0]?.address||copy.stop):`${validStops.length} ${validStops.length===1?copy.single:copy.plural}`}</strong></div><span className={deviceLocation&&!gpsWeak?'is-live':''}>{gpsWeak?(deviceLocation?copy.gpsWeak:copy.gpsLost):copy.gps}{deviceLocation&&<small> · {gpsMeta}</small>}{view==='navigate'&&navigationActive&&<button type="button" className="route-plan-voice" aria-label={voiceEnabled?'Mute navigation instructions':'Enable spoken navigation instructions'} onClick={()=>setVoiceEnabled(value=>!value)}>{voiceEnabled?<Volume2 size={17}/>:<VolumeX size={17}/>}</button>}</span></header>
   {!driverMode&&<div className="route-plan-tabs"><button className={view==='navigate'?'active':''} onClick={()=>setView('navigate')}>{locale==='es'?'Navegar':locale==='fr'?'Naviguer':'Navigate'}</button><button className={view==='plan'?'active':''} onClick={()=>setView('plan')}>{locale==='es'?'Plan':locale==='fr'?'Plan':'Plan'}</button></div>}
   {view==='navigate'&&navigationActive&&<div className="route-plan-guide" aria-live="polite"><ManeuverIcon maneuver={maneuver}/><div><b>{formatDistance(maneuver?.distanceToManeuverMeters)}</b><span>{maneuverInstruction(maneuver,locale)}</span></div></div>}
   {view==='navigate'&&navigationActive&&(rerouting||offRoute||!online)&&<div className={`route-plan-driving-alert${rerouting||offRoute?' is-warning':''}`}>{!online?<WifiOff size={16}/>:<RouteIcon size={16}/>}<span>{!online?copy.offline:rerouting?copy.rerouting:copy.offRoute}</span></div>}
