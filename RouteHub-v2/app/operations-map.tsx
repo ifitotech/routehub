@@ -5,8 +5,8 @@ import L from 'leaflet'
 import {MapContainer,Marker,Polyline,Popup,TileLayer,Tooltip,useMap} from 'react-leaflet'
 import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {mapTileConfig} from '../lib/maps/map-config'
-import {calculateRoute} from '../lib/maps/routing'
+import {isInFlorida,mapTileConfig} from '../lib/maps/map-config'
+import {calculateRoute,distanceMeters} from '../lib/maps/routing'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -61,9 +61,16 @@ type Props={
 const miamiCenter:Coordinate={lat:25.9017,lng:-80.3078}
 const sequenceColors=['#1667F2','#7c3aed','#0f766e','#ea580c','#16a34a']
 const isRemaining=(status?:string|null)=>status!=='completed'&&status!=='cancelled'
+const MAX_SEGMENT_METERS=90_000
 const asPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>{
  const nextLat=Number(lat),nextLng=Number(lng)
- return Number.isFinite(nextLat)&&Number.isFinite(nextLng)?{lat:nextLat,lng:nextLng}:null
+ if(!Number.isFinite(nextLat)||!Number.isFinite(nextLng))return null
+ if(isInFlorida(nextLat,nextLng))return {lat:nextLat,lng:nextLng}
+ if(isInFlorida(nextLng,nextLat))return {lat:nextLng,lng:nextLat}
+ return null
+}
+function usableSegment(from:Coordinate,to:Coordinate){
+ return distanceMeters(from,to)<=MAX_SEGMENT_METERS
 }
 
 function routeColor(status?:string|null){
@@ -129,28 +136,32 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
 }
 
 async function buildStreetLine(points:Coordinate[]){
- if(points.length<2)return {line:points,street:false,distanceMeters:undefined as number|undefined,durationSeconds:undefined as number|undefined}
- const full=await calculateRoute(points)
- if(full.source==='osrm'&&full.coordinates.length>2){
+ const safe=points.filter((point,index,list)=>index===0||usableSegment(list[index-1],point))
+ if(safe.length<2)return {line:safe,street:false,distanceMeters:undefined as number|undefined,durationSeconds:undefined as number|undefined}
+ const full=await calculateRoute(safe)
+ if(full.source==='osrm'&&full.coordinates.length>safe.length){
   return {line:full.coordinates,street:true,distanceMeters:full.distanceMeters,durationSeconds:full.durationSeconds}
  }
  const segments:Coordinate[]=[]
- let distanceMeters=0
- let durationSeconds=0
+ let meters=0
+ let seconds=0
  let street=false
- for(let index=0;index<points.length-1;index+=1){
-  const estimate=await calculateRoute([points[index],points[index+1]])
-  const chunk=estimate.coordinates.length>1?estimate.coordinates:[points[index],points[index+1]]
-  if(estimate.source==='osrm'&&estimate.coordinates.length>2)street=true
-  segments.push(...(index===0?chunk:chunk.slice(1)))
-  distanceMeters+=(estimate.distanceMeters||0)
-  durationSeconds+=(estimate.durationSeconds||0)
+ for(let index=0;index<safe.length-1;index+=1){
+  if(!usableSegment(safe[index],safe[index+1]))continue
+  const estimate=await calculateRoute([safe[index],safe[index+1]])
+  const good=estimate.source==='osrm'&&estimate.coordinates.length>2
+  const chunk=good?estimate.coordinates:[safe[index],safe[index+1]]
+  if(good)street=true
+  if(!segments.length)segments.push(...chunk)
+  else segments.push(...chunk.slice(1))
+  meters+=(estimate.distanceMeters||distanceMeters(safe[index],safe[index+1]))
+  seconds+=(estimate.durationSeconds||0)
  }
  return {
-  line:segments.length>1?segments:points,
+  line:segments.length>1?segments:safe,
   street,
-  distanceMeters:distanceMeters||undefined,
-  durationSeconds:durationSeconds||undefined,
+  distanceMeters:meters||undefined,
+  durationSeconds:seconds||undefined,
  }
 }
 
@@ -229,8 +240,8 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
 
  const allPoints=useMemo(()=>{
   const operational=[
-   ...sequences.flatMap(sequence=>sequence.line.slice(0,12)),
-   ...resolved.filter(route=>isRemaining(route.status)||route.status==='issue').map(route=>route.destination),
+   ...resolved.map(route=>route.destination),
+   ...resolved.map(route=>route.origin),
    ...driverLocations.map(driver=>driver.location),
   ].filter((point):point is Coordinate=>Boolean(point))
   return operational.length?operational:resolved.map(route=>route.destination).filter((point):point is Coordinate=>Boolean(point))
