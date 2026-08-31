@@ -89,9 +89,11 @@ function FitBounds({points}:{points:Coordinate[]}){
  const map=useMap()
  const pointKey=points.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join('|')
  useEffect(()=>{
-  if(!points.length)return
-  if(points.length===1){map.setView([points[0].lat,points[0].lng],14);return}
-  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[32,32],maxZoom:15})
+  const local=points.filter(point=>point.lat>=25.1&&point.lat<=26.7&&point.lng>=-80.7&&point.lng<=-80.05)
+  const use=local.length?local:points
+  if(!use.length){map.setView([25.7617,-80.1918],11);return}
+  if(use.length===1){map.setView([use[0].lat,use[0].lng],13);return}
+  map.fitBounds(use.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:12})
  },[map,pointKey])
  return null
 }
