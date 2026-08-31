@@ -10,7 +10,7 @@
   min-height: var(--operations-map-height, 360px);
 }
 
-.canvas :global(.leaflet-container) {
+.googleMap {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -175,7 +175,7 @@
 
 @media (max-width: 640px) {
   .canvas,
-  .canvas :global(.leaflet-container),
+  .googleMap,
   .state { min-height: 240px; }
 
   .legend {

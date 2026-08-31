@@ -3,14 +3,15 @@
 import {useCallback, useEffect, useId, useRef, useState} from 'react'
 import type {InputHTMLAttributes} from 'react'
 import type {GeocodedLocation} from '../lib/maps/types'
+import {loadGoogleMaps} from '../lib/maps/google-maps'
 
-type PlaceResult = {formatted_address?: string; name?: string}
+type PlaceResult = {formatted_address?: string; name?: string; geometry?:{location?:{lat:()=>number;lng:()=>number}}}
 export type AddressSearchSuggestion = {
   label: string
   primary: string
   secondary: string
   coordinate?: GeocodedLocation['coordinate']
-  source: Extract<GeocodedLocation['source'], 'census' | 'nominatim'>
+  source: Extract<GeocodedLocation['source'], 'census' | 'nominatim' | 'google'>
   externalId?: string
   name?: string
 }
@@ -20,51 +21,7 @@ type AutocompleteInstance = {
   addListener: (event: 'place_changed', callback: () => void) => MapsListener
   getPlace: () => PlaceResult
 }
-type GoogleMapsApi = {
-  maps?: {places?: {Autocomplete: new (input: HTMLInputElement, options?: {fields?: string[]; types?: string[]; componentRestrictions?: {country: string | string[]}; bounds?: {south:number;west:number;north:number;east:number}; strictBounds?: boolean}) => AutocompleteInstance}}
-}
-
-declare global {
-  interface Window {
-    google?: GoogleMapsApi
-    __routeHubGooglePlaces?: Promise<boolean>
-  }
-}
-
-function loadGooglePlaces() {
-  if (typeof window === 'undefined') return Promise.resolve(false)
-  if (window.google?.maps?.places?.Autocomplete) return Promise.resolve(true)
-  if (window.__routeHubGooglePlaces) return window.__routeHubGooglePlaces
-  // This existing provider stays opt-in. The default beta path below uses an
-  // explicit RouteHub search rather than paid autocomplete on every keystroke.
-  if (process.env.NEXT_PUBLIC_ADDRESS_SEARCH_PROVIDER !== 'google') return Promise.resolve(false)
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  if (!apiKey) return Promise.resolve(false)
-
-  window.__routeHubGooglePlaces = new Promise<boolean>(resolve => {
-    let settled = false
-    const finish = (ready: boolean) => { if (!settled) { settled = true; resolve(ready) } }
-    const ready = () => finish(Boolean(window.google?.maps?.places?.Autocomplete))
-    const existing = document.querySelector<HTMLScriptElement>('script[data-routehub-google-places]')
-    if (existing) {
-      existing.addEventListener('load', ready, {once: true})
-      existing.addEventListener('error', () => finish(false), {once: true})
-      return
-    }
-    const script = document.createElement('script')
-    const callback = `__routeHubGooglePlacesReady_${Math.random().toString(36).slice(2)}`
-    const callbackWindow = window as unknown as Record<string, unknown>
-    callbackWindow[callback] = () => { ready(); delete callbackWindow[callback] }
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&v=weekly&loading=async&callback=${callback}`
-    script.async = true
-    script.defer = true
-    script.dataset.routehubGooglePlaces = 'true'
-    script.addEventListener('error', () => finish(false), {once: true})
-    document.head.appendChild(script)
-    window.setTimeout(() => finish(false), 8_000)
-  })
-  return window.__routeHubGooglePlaces
-}
+type GoogleMapsApi={places?:{Autocomplete:new(input:HTMLInputElement,options?:{fields?:string[];types?:string[];componentRestrictions?:{country:string|string[]};bounds?:{south:number;west:number;north:number;east:number};strictBounds?:boolean})=>AutocompleteInstance}}
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
   value: string
@@ -89,6 +46,7 @@ export default function GoogleAddressInput({
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const onValueChangeRef = useRef(onValueChange)
+  const onSelectSearchSuggestionRef = useRef(onSelectSearchSuggestion)
   const selectedValueRef = useRef('')
   const searchController = useRef<AbortController | null>(null)
   const listId = useId().replace(/:/g, '')
@@ -104,16 +62,19 @@ export default function GoogleAddressInput({
   }).slice(0, 5)
 
   useEffect(() => { onValueChangeRef.current = onValueChange }, [onValueChange])
+  useEffect(() => { onSelectSearchSuggestionRef.current = onSelectSearchSuggestion }, [onSelectSearchSuggestion])
   useEffect(() => () => searchController.current?.abort(), [])
 
   useEffect(() => {
     let listener: MapsListener | undefined
     let disposed = false
-    void loadGooglePlaces().then(ready => {
+    void loadGoogleMaps().then(raw => {
+      const maps=raw as unknown as GoogleMapsApi
+      const ready=Boolean(maps.places?.Autocomplete)
       if (disposed) return
       setGoogleReady(ready)
-      if (!ready || !inputRef.current || !window.google?.maps?.places?.Autocomplete) return
-      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+      if (!ready || !inputRef.current || !maps.places?.Autocomplete) return
+      const autocomplete = new maps.places.Autocomplete(inputRef.current, {
         fields: ['formatted_address', 'name', 'geometry'], types: ['address'], componentRestrictions: {country: 'us'},
         bounds: {south: 24.396308, west: -87.634938, north: 31.000888, east: -79.974306},
         strictBounds: true,
@@ -123,8 +84,10 @@ export default function GoogleAddressInput({
         const result = place.formatted_address || place.name || inputRef.current?.value || ''
         selectedValueRef.current = result
         onValueChangeRef.current(result)
+        const location=place.geometry?.location
+        if(location)onSelectSearchSuggestionRef.current?.({label:result,primary:place.name||result,secondary:place.formatted_address||'',coordinate:{lat:location.lat(),lng:location.lng()},source:'google',name:place.name})
       })
-    })
+    }).catch(()=>setGoogleReady(false))
     return () => { disposed = true; listener?.remove() }
   }, [])
 

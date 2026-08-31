@@ -117,6 +117,29 @@ export default function Manager() {
     return () => { cancelled = true }
   }, [t.unableLoadReports])
 
+  useEffect(() => {
+    if (!companyId) return
+    const client = getSupabase()
+    const channel = client
+      .channel(`manager-driver-location-${companyId}-${dashboardBranchId || 'all'}`)
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'driving_sessions', filter: `company_id=eq.${companyId}`}, payload => {
+        const row = payload.new as Partial<{driver_id:string;branch_id:string|null;status:string;last_lat:number|null;last_lng:number|null;last_updated_at:string|null}>
+        if (!row.driver_id || (dashboardBranchId && row.branch_id && row.branch_id !== dashboardBranchId)) return
+        if (!['active', 'paused'].includes(String(row.status || '')) || row.last_lat == null || row.last_lng == null) {
+          setLiveFix(current => current?.driverId === row.driver_id ? null : current)
+          return
+        }
+        setLiveFix({
+          driverId: row.driver_id,
+          updatedAt: row.last_updated_at || new Date().toISOString(),
+          lat: Number(row.last_lat),
+          lng: Number(row.last_lng),
+        })
+      })
+      .subscribe()
+    return () => { void client.removeChannel(channel) }
+  }, [companyId, dashboardBranchId])
+
   const metrics = [
     {label: copy.active, value: summary.activeRoutes, href: '/routes', tone: todayStyles.summaryActive},
     {label: copy.pending, value: summary.pendingRoutes, href: '/routes', tone: todayStyles.summaryPending},

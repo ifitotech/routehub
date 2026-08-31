@@ -12,7 +12,7 @@ export type RouteEstimate={
   coordinates:MapCoordinate[]
   distanceMeters?:number
   durationSeconds?:number
-  source:'osrm'|'fallback'
+  source:'google'|'osrm'|'fallback'
   maneuvers?:RouteManeuver[]
 }
 

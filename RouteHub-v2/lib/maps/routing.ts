@@ -91,7 +91,7 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal)
         coordinates:payload.coordinates.filter(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lng)),
         distanceMeters:payload.distanceMeters,
         durationSeconds:payload.durationSeconds,
-        source:payload.source==='osrm'?'osrm':'fallback',
+        source:payload.source==='google'?'google':payload.source==='osrm'?'osrm':'fallback',
         maneuvers:payload.maneuvers,
       }
     }
