@@ -105,7 +105,7 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
+export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,onSummary}:Props){
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [sequences,setSequences]=useState<ResolvedSequence[]>([])
  const [loading,setLoading]=useState(true)
@@ -133,8 +133,9 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.destination)
     const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
     const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-    const estimate=points.length>1?await calculateRoute(points):{coordinates:points}
-    return {key,driverId,routes:groupRoutes,start,line:estimate.coordinates.length>1?estimate.coordinates:points,color:sequenceColors[index%sequenceColors.length],distanceMeters:estimate.distanceMeters,durationSeconds:estimate.durationSeconds}
+    const estimate=points.length>1?await calculateRoute(points):null
+    const line=estimate?.coordinates?.length>1?estimate.coordinates:points
+    return {key,driverId,routes:groupRoutes,start,line,color:sequenceColors[index%sequenceColors.length],distanceMeters:estimate?.distanceMeters,durationSeconds:estimate?.durationSeconds}
    }))
    if(!cancelled){setResolved(numbered);setSequences(built);onSummary?.({count:built.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0),distanceMeters:built.some(sequence=>Number.isFinite(sequence.distanceMeters))?built.reduce((total,sequence)=>total+(sequence.distanceMeters||0),0):undefined,durationSeconds:built.some(sequence=>Number.isFinite(sequence.durationSeconds))?built.reduce((total,sequence)=>total+(sequence.durationSeconds||0),0):undefined})}
   }).catch(()=>{if(!cancelled){setResolved([]);setSequences([])}}).finally(()=>{if(!cancelled)setLoading(false)})
