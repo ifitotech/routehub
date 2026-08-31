@@ -78,7 +78,7 @@ export default function DriverHistory() {
 
   return <main className={`app driver-dashboard ${styles.page}`}>
     <header className={styles.header}>
-      <Link className={styles.brand} href="/driver"><Image src="/routehub-driver-new.jpg" alt="" width={42} height={42}/><span>RouteHub<small>{t.driverWorkspace}</small></span></Link>
+      <Link className={styles.brand} href="/driver"><Image src="/routehub-driver-app.jpg" alt="" width={42} height={42}/><span>RouteHub<small>{t.driverWorkspace}</small></span></Link>
     </header>
     <p className={styles.eyebrow}>{t.driverWorkspace}</p>
     <h1 className={styles.title}>{copy.title}</h1>
