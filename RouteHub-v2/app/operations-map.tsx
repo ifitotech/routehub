@@ -37,7 +37,7 @@ export type OperationsDriverLocation={
 }
 
 type ResolvedRoute=OperationsRoute&{points:Coordinate[];line:Coordinate[];number:number}
-type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean}
+type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean;onSummary?:(summary:{count:number;distanceMeters?:number;durationSeconds?:number})=>void}
 
 const fallbackCenter:Coordinate={lat:25.7617,lng:-80.1918}
 function isCoordinate(lat:number|null|undefined,lng:number|null|undefined):lat is number{
@@ -147,7 +147,7 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
  }catch{return null}
 }
 
-export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
+export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,onSummary}:Props){
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [loading,setLoading]=useState(true)
  const [totals,setTotals]=useState<{distanceMeters:number;durationSeconds:number}|null>(null)
@@ -199,6 +199,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    if(cancelled)return
    setResolved(pins)
    setLoading(false)
+   onSummary?.({count:visibleRoutes.length})
    const lined=await Promise.all(pins.map(async route=>{
     if(route.points.length<2)return route
     const estimate=await withTimeout(calculateRoute(route.points),2500,{coordinates:route.points,source:'fallback' as const})
@@ -212,7 +213,9 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    if(path.length>1){
     const total=await withTimeout(calculateRoute(path.slice(0,8)),3000,{coordinates:path,source:'fallback' as const})
     if(!cancelled&&Number.isFinite(total.distanceMeters)&&Number.isFinite(total.durationSeconds)){
-     setTotals({distanceMeters:total.distanceMeters!,durationSeconds:total.durationSeconds!})
+     const next={distanceMeters:total.distanceMeters!,durationSeconds:total.durationSeconds!}
+     setTotals(next)
+     onSummary?.({count:visibleRoutes.length,...next})
     }
    }
   })().catch(()=>{if(!cancelled)setLoading(false)})

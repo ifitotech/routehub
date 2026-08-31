@@ -24,7 +24,7 @@ export default function Manager() {
   const copy = locale === 'es' ? {
     today: 'Hoy', todayOverview: 'Operación de hoy', liveOperations: 'En curso', active: 'Activas', pending: 'Pendientes', completed: 'Completadas', issues: 'Incidencias',
     liveDescription: 'Parada que el Driver está ejecutando ahora.', quickActions: 'Acciones',
-    upcoming: 'Rutas de hoy', attention: 'Atención necesaria', viewAll: 'Ver todas', viewRoute: 'Ver ruta', viewMap: 'Ver en mapa',
+    upcoming: 'Rutas pendientes', attention: 'Atención necesaria', viewAll: 'Ver todas', viewRoute: 'Ver ruta', viewMap: 'Ver en mapa',
     newRoute: 'Nueva ruta', reorder: 'Reordenar rutas', addContact: 'Agregar contacto', noPending: 'No hay rutas hoy.',
     assignment: 'Asignado', waiting: 'Sin asignar', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
     branchManager: 'Manager de sucursal', currentBranch: 'Sucursal actual', updated: 'Actualizado',
@@ -32,7 +32,7 @@ export default function Manager() {
   } : locale === 'fr' ? {
     today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'En cours', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
     liveDescription: 'Arrêt en cours chez le chauffeur.', quickActions: 'Actions',
-    upcoming: 'Itinéraires du jour', attention: 'Attention requise', viewAll: 'Voir tout', viewRoute: 'Voir l’itinéraire', viewMap: 'Voir sur la carte',
+    upcoming: 'Itinéraires en attente', attention: 'Attention requise', viewAll: 'Voir tout', viewRoute: 'Voir l’itinéraire', viewMap: 'Voir sur la carte',
     newRoute: 'Nouvel itinéraire', reorder: 'Réordonner', addContact: 'Ajouter un contact', noPending: 'Aucun itinéraire aujourd’hui.',
     assignment: 'Assigné', waiting: 'Non assigné', issue: 'incident ouvert', review: 'Consultez les rapports.',
     branchManager: 'Manager de succursale', currentBranch: 'Succursale actuelle', updated: 'Mis à jour',
@@ -40,7 +40,7 @@ export default function Manager() {
   } : {
     today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'In progress', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
     liveDescription: 'The stop the driver is running now.', quickActions: 'Actions',
-    upcoming: 'Today’s routes', attention: 'Attention needed', viewAll: 'View all', viewRoute: 'View route', viewMap: 'View on map',
+    upcoming: 'Pending routes', attention: 'Attention needed', viewAll: 'View all', viewRoute: 'View route', viewMap: 'View on map',
     newRoute: 'New route', reorder: 'Reorder routes', addContact: 'Add contact', noPending: 'No routes today.',
     assignment: 'Assigned', waiting: 'Unassigned', issue: 'open issue', review: 'Review route reports.',
     branchManager: 'Branch Manager', currentBranch: 'Current branch', updated: 'Updated',
@@ -56,6 +56,7 @@ export default function Manager() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
+  const [mapSummary, setMapSummary] = useState<{count:number;distanceMeters?:number;durationSeconds?:number} | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -167,7 +168,8 @@ export default function Manager() {
         <p className={todayStyles.fixLine}>{fixLabel}</p>
         <div className={todayStyles.opsMap}>
           <OperationsMap
-            routes={todayRoutes.map(route => ({
+            onSummary={setMapSummary}
+            routes={todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).map(route => ({
               id: route.id,
               origin_address: route.origin_address || branchOrigin.address,
               origin_lat: route.origin_lat ?? branchOrigin.lat,
@@ -191,6 +193,17 @@ export default function Manager() {
             locale={locale}
           />
         </div>
+        <p className={todayStyles.mapStrip}>
+          {(() => {
+            const open = todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).length
+            const count = mapSummary?.count ?? open
+            const base = locale === 'es' ? `${count} rutas abiertas` : locale === 'fr' ? `${count} itinéraires ouverts` : `${count} open routes`
+            if (!mapSummary?.durationSeconds || !mapSummary?.distanceMeters) return base
+            const minutes = Math.max(1, Math.round(mapSummary.durationSeconds / 60))
+            const miles = Math.max(1, Math.round(mapSummary.distanceMeters / 1609.34))
+            return `${base} · ${minutes} min · ${miles} mi`
+          })()}
+        </p>
       </main>
       <aside className={todayStyles.todaySide}>
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
