@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {ChevronRight, FileText, Send, Settings, Users} from 'lucide-react'
 import {useLocale} from '../../../lib/use-preferences'
 import styles from './more.module.css'
+import ManagerShell from '../manager-shell'
 
 const copy = {
   en: {eyebrow: 'WORKSPACE', title: 'More', subtitle: 'Team, branch tools and account settings.', team: 'Team', teamHelp: 'Invite members and manage roles.', branches: 'Branches', branchesHelp: 'Manage branch locations and details.', invitations: 'Invitations', invitationsHelp: 'Review sent invitations.', reports: 'Reports', reportsHelp: 'Review route activity and delivery history.', settings: 'Settings', settingsHelp: 'Profile, language, theme and support.'},
@@ -20,7 +21,7 @@ export default function ManagerMorePage() {
     {href: '/reports', label: c.reports, help: c.reportsHelp, Icon: FileText},
     {href: '/settings', label: c.settings, help: c.settingsHelp, Icon: Settings},
   ]
-  return <main className={`app ${styles.page}`}>
+  return <ManagerShell active="settings"><div className={styles.page}>
     <header className={styles.header}>
       <p>{c.eyebrow}</p>
       <h1>{c.title}</h1>
@@ -33,5 +34,5 @@ export default function ManagerMorePage() {
         <ChevronRight size={21} aria-hidden="true" />
       </Link>)}
     </section>
-  </main>
+  </div></ManagerShell>
 }

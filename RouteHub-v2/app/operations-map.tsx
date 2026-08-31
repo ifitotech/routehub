@@ -114,7 +114,8 @@ function canGeocode(address:string){
 }
 
 async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined,near?:Coordinate|null){
- if(isCoordinate(lat,lng))return {lat,lng}
+ const stored=asPoint(lat,lng)
+ if(stored)return stored
  if(!address||!canGeocode(address))return null
  try{
   const coordinate=await withTimeout(geocodeAddress(address,undefined,near).then(value=>value?.coordinate||null),3500,null)

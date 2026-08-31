@@ -96,7 +96,7 @@ test('geocoding API routes use the centralized provider configuration',async()=>
 
 test('address suggestions discard provider results without usable coordinates',async()=>{
   const source=await readFile(new URL('../app/api/address-suggestions/route.ts',import.meta.url),'utf8')
-  assert.match(source,/\.filter\(candidate => validCoordinate\(candidate\.coordinate\)\)/)
+  assert.match(source,/\.filter\(candidate => validCoordinate\(candidate\.coordinate\) && isInFlorida\(candidate\.coordinate/)
 })
 
 test('route location storage has one canonical destination coordinate contract',async()=>{

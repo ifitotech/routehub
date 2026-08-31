@@ -6,6 +6,7 @@ import {roleLabelOptions} from '../../../lib/role-labels'
 import {getSupabase} from '../../../lib/supabase'
 import {useLocale} from '../../../lib/use-preferences'
 import styles from '../manager-tools.module.css'
+import ManagerShell from '../manager-shell'
 
 type Invite = {id: string; email: string; role: string; status: string; created_at?: string}
 
@@ -76,9 +77,9 @@ export default function Invitations() {
     if (!error) await load()
   }
   const statusLabel = (status: string) => status === 'pending' ? t.pending : status === 'revoked' ? t.revoked : status === 'accepted' ? t.accepted : status
-  return <main className="app"><div className={styles.page}>
+  return <ManagerShell active="settings"><div className={styles.page}>
     <header className={styles.header}><div><p className={styles.eyebrow}>{t.managerAccess}</p><h1 className={styles.title}>{t.teamInvitations}</h1><p className={styles.subtitle}>{t.invitationsHelp}</p></div></header>
     <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{t.inviteTeamMember}</h2><p>{t.invitePendingHelp}</p></div><span className={styles.panelIcon}><UserPlus size={21}/></span></header><div className={styles.formGrid}><label className={styles.field}>{t.emailAddress}<input type="email" inputMode="email" autoComplete="email" placeholder="name@company.com" value={email} onChange={event => setEmail(event.target.value)}/></label><label className={styles.field}>{t.role}<select value={role} onChange={event => setRole(event.target.value)}>{choices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}</select></label><button className={styles.saveButton} disabled={busy || !email.trim()} onClick={send}><Send size={17}/>{busy ? t.sending : t.sendInvitation}</button></div></section>
     {message && <p className={styles.status} role="status" aria-live="polite">{message}</p>}<h2 className={styles.sectionLabel}>{t.invitationActivity}</h2><section className={styles.list} aria-label={t.teamInvitationsLabel}>{items.map(invite => <article className={styles.rowCard} key={invite.id}><span className={styles.mailIcon}><Mail size={20}/></span><div className={styles.identity}><h2>{invite.email}</h2><p>{choices.find(choice => choice.role === invite.role)?.label || invite.role}</p></div><div className={styles.rowActions}><div><span className={styles.statusBadge} data-status={invite.status}>{statusLabel(invite.status)}</span>{invite.created_at && <div className={styles.date}>{new Date(invite.created_at).toLocaleDateString(locale)}</div>}</div>{invite.status === 'pending' && <button className={styles.revokeButton} onClick={() => revoke(invite.id)}>{t.revoke}</button>}</div></article>)}{!items.length && !message && <section className={styles.empty}><span><Mail size={24}/></span><h2>{t.noInvitations}</h2><p>{t.noInvitationsHelp}</p></section>}</section>
-  </div></main>
+  </div></ManagerShell>
 }

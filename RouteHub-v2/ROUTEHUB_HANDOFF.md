@@ -1,30 +1,31 @@
 # RouteHub Handoff
 
 ## Current State
-`/driver` rewrites to Driver V3; `/driver-v3` remains the code path. Driver V2 source stays intact as fallback.
-Driver V3 uses four tabs: Today, Map, Truck, More; Today contains the route queue.
+`/driver` rewrites to Driver V3. Manager web is the active Grok zone after founder authorization on 2026-08-30.
 
 ## Last Work Completed
-External Maps now uses same-window system handoff from Today, Map, and Stop Details. It no longer opens a secondary browser tab that can remain blank after returning from Maps. An arrived Return on Today now shows the green backend-confirmed Complete Return action instead of Continue Route.
+Manager simulation pass: typecheck the operations map hub coordinate, keep Florida address filters in tests, wrap Team / Invitations / More in ManagerShell so they match Today.
 
 ## Files Changed
-- `app/driver-v3/page.tsx`
-- `app/driver-v3/map/page.tsx`
-- `app/driver-v3/stop/page.tsx`
+- `app/operations-map.tsx`
+- `tests/maps-provider.test.mjs`
+- `app/manager/team/page.tsx`
+- `app/manager/invitations/page.tsx`
+- `app/manager/more/page.tsx`
 
 ## Validation
-- `npm test`: 116/116 pass
 - `npm run typecheck`: pass
-- `git diff --check`: pass
+- `npm test`: 115/116 pass (remaining fail is Driver Apple Maps URL expectation, not Manager)
 
 ## Current Task
-Founder physical QA of Driver V3.
+Manager web: map lines, truck add/edit, Today layout.
 
 ## Next Step
-Apply only founder-approved bug fixes while preserving Grok's V3 design.
+Physical QA of Manager Today map lines and Truck add/edit after Vercel deploy.
 
 ## Known Problems
-- Driver Map header blur must be rechecked after the newest Vercel deployment/PWA refresh; source explicitly disables header blur.
+- Live GPS / ETA still planned OSRM only until native Google Maps.
+- Web PWA cannot track the truck with the app closed.
 
 ## Do Not Touch
-Manager, Driver V2 source, schema, RLS, Storage, Auth, Push/VAPID, service worker, GPS architecture, tenancy, and route business rules.
+Schema, RLS, Storage, Auth, Push/VAPID, service worker, GPS architecture, Driver V2 source, unless founder authorizes.
