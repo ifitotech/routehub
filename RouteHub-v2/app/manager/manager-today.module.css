@@ -169,11 +169,11 @@
   }
   .todayMain { min-height: 0; }
   .opsMap {
-    min-height: 0;
-    height: auto;
-    overflow: visible;
+    height: var(--operations-map-height);
+    min-height: 380px;
+    overflow: hidden;
     --operations-map-height: min(460px, calc(100dvh - 360px));
-    background: #fff;
+    background: #eaf2fb;
   }
   .hideOnFit { display: none; }
   .todayNav { display: none; }

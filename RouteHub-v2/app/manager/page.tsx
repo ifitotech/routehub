@@ -161,6 +161,7 @@ export default function Manager() {
         <p className={todayStyles.fixLine}>{fixLabel}</p>
         <div className={todayStyles.opsMap}>
           <OperationsMap
+            hideFooter
             onSummary={setMapSummary}
             routes={todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).map(route => ({
               id: route.id,
@@ -183,6 +184,9 @@ export default function Manager() {
               location: {lat: liveFix.lat, lng: liveFix.lng},
               updatedAt: liveFix.updatedAt,
               status: 'on_route',
+              nextStop: todayRoutes.find(route => route.driver_id === liveFix.driverId && ['active', 'paused'].includes(String(route.status || '')))?.destination_name
+                || todayRoutes.find(route => ['active', 'paused'].includes(String(route.status || '')))?.destination_name
+                || undefined,
             }] : []}
             locale={locale}
           />
@@ -207,7 +211,7 @@ export default function Manager() {
               .filter(route => !['completed', 'cancelled'].includes(String(route.status || '')))
               .slice()
               .sort((a, b) => {
-                const rank = (status?: string | null) => status === 'active' || status === 'paused' ? 0 : 1
+                const rank = (status?: string | null) => status === 'active' || status === 'paused' ? 0 : status === 'issue' ? 2 : 1
                 return rank(a.status) - rank(b.status) || Number(a.position || 0) - Number(b.position || 0)
               })
             const extra = pending.length > 6
@@ -220,6 +224,7 @@ export default function Manager() {
                     <strong>{route.destination_name || t.destination}</strong>
                     <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''}</span>
                   </span>
+                  <em className={todayStyles.status}>{statusLabel(route.status)}</em>
                 </Link>
               )
             }
