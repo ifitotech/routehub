@@ -16,8 +16,7 @@ export function appleMapsNavigationUrl(destination:NavigationDestination):string
   if(!value)return null
   const params=new URLSearchParams({daddr:value,dirflg:'d'})
   if(destination.label?.trim())params.set('q',destination.label.trim())
-  // maps: opens the Apple Maps app. https://maps.apple.com often opens Safari first.
-  return `maps:?${params.toString()}`
+  return `https://maps.apple.com/?${params.toString()}`
 }
 
 export function openNavigation(destination:NavigationDestination,platform=''):string|null{
