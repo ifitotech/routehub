@@ -98,14 +98,7 @@ export default function Manager() {
           lat: branch?.latitude == null ? null : Number(branch.latitude),
           lng: branch?.longitude == null ? null : Number(branch.longitude),
         })
-        const kindRank = (value?: string | null) => {
-          const v = String(value || '').toLowerCase()
-          if (v === 'pickup') return 1
-          if (v === 'delivery') return 2
-          if (v === 'return' || v === 'branch') return 3
-          return 4
-        }
-        setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => kindRank(a.mission_type) - kindRank(b.mission_type) || Number(a.position || 0) - Number(b.position || 0)))
+        setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0)))
         setSummary(dashboard.summary)
         const session = (sessions || []).find(row => row.last_lat != null && row.last_lng != null) || sessions?.[0] || null
         setLiveFix(session ? {
