@@ -15,3 +15,14 @@ type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?:'pickup'|'delivery'|'branch';orderNumber?:string|null;notes?:string|null;position?:number;pastDue?:boolean;pending?:boolean;coordinate?:Coordinate|null}
 
 type Props={originAddress?:string|null;originCoordinate?:Coordinate|null;stops:PlannedStop[];locale?:string;navigationOnly?:boolean;autoStartNavigation?:boolean;onReturnToday?:()=>void;onExitNavigation?:()=>void;onArrive?:()=>void|Promise<void>;transitioningOut?:boolean;trackDevice?:boolean;sharedLocation?:Coordinate|null}
+
+function bearingBetween(from:Coordinate,to:Coordinate){
+ const radians=Math.PI/180
+ const y=Math.sin((to.lng-from.lng)*radians)*Math.cos(to.lat*radians)
+ const x=Math.cos(from.lat*radians)*Math.sin(to.lat*radians)-Math.sin(from.lat*radians)*Math.cos(to.lat*radians)*Math.cos((to.lng-from.lng)*radians)
+ return (Math.atan2(y,x)/radians+360)%360
+}
+
+export default function RoutePlanMap({originAddress,originCoordinate=null,stops,locale='en',navigationOnly=false,autoStartNavigation=false,onReturnToday,onExitNavigation,onArrive,transitioningOut=false,trackDevice=true,sharedLocation=null}:Props){
+ return null
+}
