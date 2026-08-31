@@ -27,13 +27,13 @@
       "purpose": "any"
     },
     {
-      "src": "/routehub-icon-192.png",
+      "src": "/routehub-driver-new.jpg",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/routehub-icon-512.png",
+      "src": "/routehub-driver-new.jpg",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
