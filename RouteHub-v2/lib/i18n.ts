@@ -82,7 +82,7 @@ Object.assign(es, {
   drvWork:'TRABAJO', drvActivity:'ACTIVIDAD', drvAccount:'CUENTA',
   drvDrivingDay:'Jornada', drvRouteHistory:'Historial', drvHistory:'Historial', drvSettings:'Ajustes',
   drvSignOut:'Cerrar sesión', drvLogFuel:'Registrar combustible', drvLogMaintenance:'Registrar mantenimiento',
-  drvCompletePickup:'COMPLETAR RECOGIDA', drvCompleteDelivery:'COMPLETAR ENTREGA', drvCompleteReturn:'COMPLETAR RETORNO',
+  drvCompletePickup:'COMPLETAR RECOGIDA', drvCompleteDelivery:'COMPLETAR ENTREGA', drvCompleteReturn:'COMPLETAR REGRESO',
   drvReceivedBy:'Recibido por', drvRecipientName:'Nombre del receptor',
   drvMyRoute:'Mi ruta', drvStops:'paradas', drvCompleted:'hechas', drvRemaining:'restantes',
   drvLoadingRoute:'Cargando tu ruta…', drvNoTruck:'Sin camión asignado', drvCurrentTruck:'CAMIÓN ACTUAL',
