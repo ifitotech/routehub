@@ -61,16 +61,27 @@ type Props={
 const miamiCenter:Coordinate={lat:25.9017,lng:-80.3078}
 const sequenceColors=['#1667F2','#7c3aed','#0f766e','#ea580c','#16a34a']
 const isRemaining=(status?:string|null)=>status!=='completed'&&status!=='cancelled'
-const MAX_SEGMENT_METERS=90_000
+const MAX_SEGMENT_METERS=160_000
 const asPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>{
  const nextLat=Number(lat),nextLng=Number(lng)
  if(!Number.isFinite(nextLat)||!Number.isFinite(nextLng))return null
- if(isInFlorida(nextLat,nextLng))return {lat:nextLat,lng:nextLng}
+ if(isInFlorida(nextLat,nextLng)||distanceMeters({lat:nextLat,lng:nextLng},miamiCenter)<=MAX_SEGMENT_METERS)return {lat:nextLat,lng:nextLng}
  if(isInFlorida(nextLng,nextLat))return {lat:nextLng,lng:nextLat}
  return null
 }
 function usableSegment(from:Coordinate,to:Coordinate){
  return distanceMeters(from,to)<=MAX_SEGMENT_METERS
+}
+function sequenceLine(groupRoutes:ResolvedRoute[],driver?:OperationsDriverLocation){
+ const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.status!=='issue'&&route.destination)
+ const finished=groupRoutes.filter(route=>route.status==='completed'&&route.destination)
+ const path=remaining.length?remaining:finished
+ const dests=path.map(route=>route.destination).filter((point):point is Coordinate=>Boolean(point))
+ let start=driver?.location||path[0]?.origin||null
+ if(start&&dests[0]&&!usableSegment(start,dests[0]))start=path[0]?.origin||dests[0]
+ if(!start)start=path[0]?.origin||dests[0]||null
+ const line=[start,...dests].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
+ return {remaining,start,line,color:remaining.length?undefined:'#94a3b8'}
 }
 
 function routeColor(status?:string|null){
@@ -132,11 +143,17 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
  const known=asPoint(lat,lng)
  if(known)return known
  if(!address)return null
- try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
+ try{
+  const found=await geocodeAddress(address)
+  const point=asPoint(found?.coordinate?.lat,found?.coordinate?.lng)
+  if(point)return point
+  const retry=await geocodeAddress(`${address}, Florida`)
+  return asPoint(retry?.coordinate?.lat,retry?.coordinate?.lng)
+ }catch{return null}
 }
 
 async function buildStreetLine(points:Coordinate[]){
- const safe=points.filter((point,index,list)=>index===0||usableSegment(list[index-1],point))
+ const safe=points
  if(safe.length<2)return {line:safe,street:false,distanceMeters:undefined as number|undefined,durationSeconds:undefined as number|undefined}
  const full=await calculateRoute(safe)
  if(full.source==='osrm'&&full.coordinates.length>safe.length){
@@ -190,12 +207,8 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   const draft:ResolvedSequence[]=[...grouped.entries()].map(([key,groupRoutes],index)=>{
    const driverId=key==='unassigned'?null:key
    const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
-   const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.status!=='issue'&&route.destination)
-   const finished=groupRoutes.filter(route=>route.status==='completed'&&route.destination)
-   const path=remaining.length?remaining:finished
-   const start=driver?.location||path[0]?.origin||groupRoutes[0]?.origin||null
-   const line=[start,...path.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-   return {key,driverId,routes:groupRoutes,start,line,color:remaining.length?sequenceColors[index%sequenceColors.length]:'#94a3b8',street:false}
+   const built=sequenceLine(groupRoutes,driver)
+   return {key,driverId,routes:groupRoutes,start:built.start,line:built.line,color:built.color||sequenceColors[index%sequenceColors.length],street:false}
   })
   setResolved(instant)
   setSequences(draft)
@@ -218,12 +231,8 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    const ready:ResolvedSequence[]=[...nextGroups.entries()].map(([key,groupRoutes],index)=>{
     const driverId=key==='unassigned'?null:key
     const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
-    const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.status!=='issue'&&route.destination)
-    const finished=groupRoutes.filter(route=>route.status==='completed'&&route.destination)
-    const path=remaining.length?remaining:finished
-    const start=driver?.location||path[0]?.origin||groupRoutes[0]?.origin||null
-    const line=[start,...path.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-    return {key,driverId,routes:groupRoutes,start,line,color:remaining.length?sequenceColors[index%sequenceColors.length]:'#94a3b8',street:false}
+    const built=sequenceLine(groupRoutes,driver)
+    return {key,driverId,routes:groupRoutes,start:built.start,line:built.line,color:built.color||sequenceColors[index%sequenceColors.length],street:false}
    })
    setResolved(hydrated)
    setSequences(ready)
