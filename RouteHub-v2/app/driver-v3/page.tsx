@@ -190,14 +190,14 @@ export default function DriverV3Page() {
   const confirmDelivery=async()=>{
     if(!route||busy||!driverId)return
     const name=recipient.trim()
-    if(!name){
+    const withIssue=podPanel==='issue'||Boolean(issueNote.trim())
+    if(!withIssue && !name){
       setAskName(true)
       setNameFocus(true)
       setPodPanel(null)
       setMessage(t.drvNeedRecipient)
       return
     }
-    const withIssue=podPanel==='issue'||Boolean(issueNote.trim())
     setBusy(true)
     setMessage('')
     try{
