@@ -115,13 +115,34 @@ function canGeocode(address:string){
  return address.trim().length>=3
 }
 
+const GEO_CACHE='rh-ops-geo-v1'
+function readCache(address:string){
+ try{
+  const raw=sessionStorage.getItem(GEO_CACHE)
+  const bag=raw?JSON.parse(raw) as Record<string,Coordinate>:{}
+  const hit=bag[address.toLowerCase().trim()]
+  return hit&&Number.isFinite(hit.lat)&&Number.isFinite(hit.lng)?hit:null
+ }catch{return null}
+}
+function writeCache(address:string,point:Coordinate){
+ try{
+  const raw=sessionStorage.getItem(GEO_CACHE)
+  const bag=raw?JSON.parse(raw) as Record<string,Coordinate>:{}
+  bag[address.toLowerCase().trim()]=point
+  sessionStorage.setItem(GEO_CACHE,JSON.stringify(bag))
+ }catch{}
+}
+
 async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined,near?:Coordinate|null){
  const stored=asPoint(lat,lng)
  if(stored)return stored
  if(!address||!canGeocode(address))return null
+ const cached=readCache(address)
+ if(cached&&isInFlorida(cached.lat,cached.lng))return cached
  try{
-  const coordinate=await withTimeout(geocodeAddress(address,undefined,near).then(value=>value?.coordinate||null),3500,null)
+  const coordinate=await withTimeout(geocodeAddress(address,undefined,near).then(value=>value?.coordinate||null),2500,null)
   if(!coordinate||(near&&kmBetween(near,coordinate)>220))return null
+  writeCache(address,coordinate)
   return coordinate
  }catch{return null}
 }
@@ -145,16 +166,21 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    setLoading(false)
    return
   }
-  setLoading(true)
+  const instant=visibleRoutes.map((route,index)=>{
+   const origin=asPoint(route.origin_lat,route.origin_lng)
+   const destination=asPoint(route.destination_lat,route.destination_lng)
+   const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
+   return {...route,points,line:points,number:index+1}
+  })
+  const ready=instant.some(route=>route.points.length)
+  if(ready){
+   setResolved(instant)
+   setLoading(false)
+  }else{
+   setLoading(true)
+  }
   void (async()=>{
-   const known=visibleRoutes.flatMap(route=>{
-    const points:Coordinate[]=[]
-    const originPoint=asPoint(route.origin_lat,route.origin_lng)
-    const destPoint=asPoint(route.destination_lat,route.destination_lng)
-    if(originPoint)points.push(originPoint)
-    if(destPoint)points.push(destPoint)
-    return points
-   })
+   const known=instant.flatMap(route=>route.points)
    const near=known[0]||fallbackCenter
    const hub=asPoint(visibleRoutes[0]?.origin_lat,visibleRoutes[0]?.origin_lng)
     ||await resolveCoordinate(visibleRoutes.find(route=>route.origin_address)?.origin_address,null,null,near)
@@ -175,7 +201,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    setLoading(false)
    const lined=await Promise.all(pins.map(async route=>{
     if(route.points.length<2)return route
-    const estimate=await withTimeout(calculateRoute(route.points),4000,{coordinates:route.points,source:'fallback' as const})
+    const estimate=await withTimeout(calculateRoute(route.points),2500,{coordinates:route.points,source:'fallback' as const})
     return {...route,line:estimate.coordinates.length>1?estimate.coordinates:route.points}
    }))
    if(cancelled)return
@@ -184,12 +210,12 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    const start=lined.find(route=>route.points.length>1)?.points[0]
    const path=start?[start,...chain.filter(point=>point!==start)]:chain
    if(path.length>1){
-    const total=await withTimeout(calculateRoute(path.slice(0,12)),5000,{coordinates:path,source:'fallback' as const})
+    const total=await withTimeout(calculateRoute(path.slice(0,8)),3000,{coordinates:path,source:'fallback' as const})
     if(!cancelled&&Number.isFinite(total.distanceMeters)&&Number.isFinite(total.durationSeconds)){
      setTotals({distanceMeters:total.distanceMeters!,durationSeconds:total.durationSeconds!})
     }
    }
-  })().catch(()=>{if(!cancelled){setResolved([]);setLoading(false)}})
+  })().catch(()=>{if(!cancelled)setLoading(false)})
   return()=>{cancelled=true}
  },[routeKey])
 
@@ -207,7 +233,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
 
  return <section className={styles.map} aria-label={copy.label}>
   <div className={styles.canvas}>
-   {loading?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
+   {loading&&!resolved.length?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={allPoints}/>
     {resolved.map((route,index)=><Fragment key={`route-${route.id}`}>
