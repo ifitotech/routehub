@@ -24,9 +24,11 @@ export type NavigationStop={
 }
 
 type Coordinate={lat:number;lng:number}
+type Waypoint={address?:string|null;label?:string|null;coordinate?:Coordinate|null}
 
 type Props={
   stops?:NavigationStop[]
+  waypoints?:Waypoint[]
   originAddress?:string|null
   destinationAddress?:string|null
   originCoordinate?:Coordinate|null
@@ -47,6 +49,7 @@ type Props={
 
 export default function DriverRouteNavigation({
   stops,
+  waypoints=[],
   originAddress,
   destinationAddress,
   originCoordinate=null,
@@ -57,7 +60,18 @@ export default function DriverRouteNavigation({
   onArrive,
   onExit,
 }:Props){
-  const incoming=stops&&stops.length?stops:[{id:'current',destination_address:destinationAddress,destination_lat:destinationCoordinate?.lat??null,destination_lng:destinationCoordinate?.lng??null,origin_lat:originCoordinate?.lat??null,origin_lng:originCoordinate?.lng??null,origin_address:originAddress,status:'active',position:1}]
+  const fromStops=stops&&stops.length?stops:null
+  const currentStop:NavigationStop={id:'current',destination_address:destinationAddress,destination_name:destinationAddress,destination_lat:destinationCoordinate?.lat??null,destination_lng:destinationCoordinate?.lng??null,origin_lat:originCoordinate?.lat??null,origin_lng:originCoordinate?.lng??null,origin_address:originAddress,status:'active',position:1}
+  const fromWaypoints:NavigationStop[]=waypoints.map((point,index)=>({
+    id:`waypoint-${index}`,
+    destination_address:point.address,
+    destination_name:point.label||point.address,
+    destination_lat:point.coordinate?.lat??null,
+    destination_lng:point.coordinate?.lng??null,
+    status:'published',
+    position:index+2,
+  }))
+  const incoming=fromStops||[currentStop,...fromWaypoints]
   const sorted=incoming.filter(stop=>stop.status!=='cancelled').slice().sort((left,right)=>Number(left.position||0)-Number(right.position||0)||left.id.localeCompare(right.id))
   const open=sorted.filter(stop=>!['completed','issue'].includes(String(stop.status||'')))
   const planned:PlannedStop[]=(open.length?open:sorted).map(stop=>({
