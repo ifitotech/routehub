@@ -133,7 +133,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.destination)
     const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
     const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-    return {key,driverId,routes:groupRoutes,start,line:points,color:sequenceColors[index%sequenceColors.length],points}
+    return {key,driverId,routes:groupRoutes,start,line:points,color:sequenceColors[index%sequenceColors.length],points,distanceMeters:undefined as number|undefined,durationSeconds:undefined as number|undefined}
    })
    if(!cancelled){
     setResolved(numbered)
@@ -147,7 +147,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
      const routed=estimate?.coordinates
      return {...sequence,line:routed&&routed.length>1?routed:sequence.points,distanceMeters:estimate?.distanceMeters,durationSeconds:estimate?.durationSeconds}
     }catch{
-     return sequence
+     return {...sequence,distanceMeters:undefined,durationSeconds:undefined}
     }
    }))
    if(!cancelled){
