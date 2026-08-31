@@ -252,7 +252,10 @@ export default function DriverV3Page() {
   }
 
   const primary=()=>{
-    if(!started) return {label:kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute, run:startCurrent}
+    if(!started) {
+      const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
+      return {label:startLabel, run:startCurrent}
+    }
     if(kind==='pickup') return {label:arrived?t.drvCompletePickup:t.drvArrived, run:arrivePickup}
     if(kind==='return') return {label:t.drvCompleteReturn, run:completeReturnNow}
     return {label:t.drvCompleteDelivery, run:openDelivery}
