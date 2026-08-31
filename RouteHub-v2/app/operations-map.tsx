@@ -130,7 +130,11 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [loading,setLoading]=useState(true)
  const [totals,setTotals]=useState<{distanceMeters:number;durationSeconds:number}|null>(null)
- const visibleRoutes=useMemo(()=>routes.filter(route=>route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng)),[routes])
+ const visibleRoutes=useMemo(()=>routes.filter(route=>{
+  const status=String(route.status||'').toLowerCase()
+  if(status==='completed'||status==='cancelled')return false
+  return Boolean(route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng))
+ }),[routes])
  const routeKey=visibleRoutes.map(route=>[route.id,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.position].join(':')).join('|')
 
  useEffect(()=>{
@@ -221,6 +225,6 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    </MapContainer>}
    <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{driverLocations.length} {copy.driver.toLowerCase()}{driverLocations.length===1?'':'s'}</span></div>
   </div>
-  <footer><span>{routes.length} {locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}{totals?` · ${formatRouteEstimate(totals,locale)}`:''}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'} · ${locale==='es'?'ubicación actualizada':locale==='fr'?'position actualisée':'location updated'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>
+  <footer><span>{visibleRoutes.length} {locale==='es'?'rutas abiertas':locale==='fr'?'itinéraires ouverts':'open routes'}{totals?` · ${formatRouteEstimate(totals,locale)}`:''}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'} · ${locale==='es'?'ubicación actualizada':locale==='fr'?'position actualisée':'location updated'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>
  </section>
 }
