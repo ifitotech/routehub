@@ -127,19 +127,34 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    const numbered=sorted.map((route,index)=>({...route,number:Number(route.position)>0?Number(route.position):index+1}))
    const grouped=new Map<string,ResolvedRoute[]>()
    for(const route of numbered){const key=route.driver_id||'unassigned';grouped.set(key,[...(grouped.get(key)||[]),route])}
-   const built=await Promise.all([...grouped.entries()].map(async([key,groupRoutes],index)=>{
+   const draft=[...grouped.entries()].map(([key,groupRoutes],index)=>{
     const driverId=key==='unassigned'?null:key
     const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
     const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.destination)
     const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
     const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-    const estimate=points.length>1?await calculateRoute(points):null
-    const routed=estimate?.coordinates
-    const line=routed&&routed.length>1?routed:points
-    return {key,driverId,routes:groupRoutes,start,line,color:sequenceColors[index%sequenceColors.length],distanceMeters:estimate?.distanceMeters,durationSeconds:estimate?.durationSeconds}
+    return {key,driverId,routes:groupRoutes,start,line:points,color:sequenceColors[index%sequenceColors.length],points}
+   })
+   if(!cancelled){
+    setResolved(numbered)
+    setSequences(draft.map(({points,...sequence})=>sequence))
+    setLoading(false)
+    onSummary?.({count:draft.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0)})
+   }
+   const built=await Promise.all(draft.map(async sequence=>{
+    try{
+     const estimate=sequence.points.length>1?await calculateRoute(sequence.points):null
+     const routed=estimate?.coordinates
+     return {...sequence,line:routed&&routed.length>1?routed:sequence.points,distanceMeters:estimate?.distanceMeters,durationSeconds:estimate?.durationSeconds}
+    }catch{
+     return sequence
+    }
    }))
-   if(!cancelled){setResolved(numbered);setSequences(built);onSummary?.({count:built.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0),distanceMeters:built.some(sequence=>Number.isFinite(sequence.distanceMeters))?built.reduce((total,sequence)=>total+(sequence.distanceMeters||0),0):undefined,durationSeconds:built.some(sequence=>Number.isFinite(sequence.durationSeconds))?built.reduce((total,sequence)=>total+(sequence.durationSeconds||0),0):undefined})}
-  }).catch(()=>{if(!cancelled){setResolved([]);setSequences([])}}).finally(()=>{if(!cancelled)setLoading(false)})
+   if(!cancelled){
+    setSequences(built.map(({points,...sequence})=>sequence))
+    onSummary?.({count:built.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0),distanceMeters:built.some(sequence=>Number.isFinite(sequence.distanceMeters))?built.reduce((total,sequence)=>total+(sequence.distanceMeters||0),0):undefined,durationSeconds:built.some(sequence=>Number.isFinite(sequence.durationSeconds))?built.reduce((total,sequence)=>total+(sequence.durationSeconds||0),0):undefined})
+   }
+  }).catch(()=>{if(!cancelled)setLoading(false)}).finally(()=>{if(!cancelled)setLoading(false)})
   return()=>{cancelled=true}
  },[routeKey,driverKey,onSummary])
 

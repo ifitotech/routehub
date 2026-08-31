@@ -164,6 +164,7 @@ export default function Manager() {
             onSummary={setMapSummary}
             routes={todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).map(route => ({
               id: route.id,
+              mission_type: route.mission_type,
               origin_address: route.origin_address || branchOrigin.address,
               origin_lat: route.origin_lat ?? branchOrigin.lat,
               origin_lng: route.origin_lng ?? branchOrigin.lng,
