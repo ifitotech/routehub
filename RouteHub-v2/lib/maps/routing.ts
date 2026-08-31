@@ -76,12 +76,26 @@ export function routeRequestUrl(points:MapCoordinate[]):string|null{
 
 export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal):Promise<RouteEstimate>{
   const fallback={coordinates:points,source:'fallback' as const}
-  const url=routeRequestUrl(points)
-  if(!url)return fallback
+  if(points.length<2)return fallback
   try{
-    const response=await fetch(url,{signal:signal||AbortSignal.timeout(mapProviderLimits.routeTimeoutMs)})
+    const response=await fetch('/api/route',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({points:points.slice(0,25)}),
+      signal:signal||AbortSignal.timeout(mapProviderLimits.routeTimeoutMs+2_000),
+    })
     if(!response.ok)return fallback
-    return normalizeOsrmRoute(await response.json() as OsrmResponse,points)
+    const payload=await response.json() as Partial<RouteEstimate>
+    if(Array.isArray(payload.coordinates)&&payload.coordinates.length>1){
+      return {
+        coordinates:payload.coordinates.filter(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lng)),
+        distanceMeters:payload.distanceMeters,
+        durationSeconds:payload.durationSeconds,
+        source:payload.source==='osrm'?'osrm':'fallback',
+        maneuvers:payload.maneuvers,
+      }
+    }
+    return fallback
   }catch{return fallback}
 }
 

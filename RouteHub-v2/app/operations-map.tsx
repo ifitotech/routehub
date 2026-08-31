@@ -44,6 +44,7 @@ type ResolvedSequence={
  start:Coordinate|null
  line:Coordinate[]
  color:string
+ street?:boolean
  distanceMeters?:number
  durationSeconds?:number
 }
@@ -213,9 +214,11 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     try{
      const estimate=sequence.points.length>1?await calculateRoute(sequence.points):null
      const routed=estimate?.coordinates
+     const street=estimate?.source==='osrm'&&!!routed&&routed.length>sequence.points.length
      return {
       ...sequence,
-      line:routed&&routed.length>1?routed:sequence.points,
+      line:street&&routed?routed:sequence.points,
+      street,
       distanceMeters:estimate?.distanceMeters,
       durationSeconds:estimate?.durationSeconds,
      }
@@ -258,7 +261,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={allPoints}/>
     {sequences.map(sequence=><Fragment key={`sequence-${sequence.key}`}>
-     {sequence.line.length>1&&<>
+     {sequence.street&&sequence.line.length>1&&<>
       <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.92,lineCap:'round',lineJoin:'round'}}/>
       <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:sequence.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round'}}/>
      </>}
