@@ -62,7 +62,7 @@
 .quickGrid a:hover { border-color: color-mix(in srgb, var(--rh-blue, #1667f2) 35%, var(--rh-border, #dde5ee)); background: var(--rh-soft-blue, #eaf2ff); }
 .quickGrid a svg:first-child { color: var(--rh-blue, #1667f2); }
 .quickGrid a svg:last-child { margin-left: auto; color: var(--rh-muted, #667892); }
-.opsMap { overflow:hidden;border-radius:18px;min-height:480px;background:#eaf2fb;--operations-map-height:480px }
+.opsMap { overflow:visible;border-radius:18px;min-height:480px;background:#eaf2fb;--operations-map-height:420px }
 @media (min-width: 1024px) {
   .opsMap { min-height:560px;--operations-map-height:560px }
 }
@@ -158,10 +158,11 @@
   }
   .todayMain { min-height: 0; }
   .opsMap {
-    min-height: 320px;
-    height: min(520px, calc(100dvh - 310px));
-    --operations-map-height: min(520px, calc(100dvh - 310px));
-    background: #eaf2fb;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+    --operations-map-height: min(460px, calc(100dvh - 360px));
+    background: #fff;
   }
   .hideOnFit { display: none; }
   .todayNav { display: none; }
