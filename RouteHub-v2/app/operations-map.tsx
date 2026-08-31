@@ -191,9 +191,11 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    const driverId=key==='unassigned'?null:key
    const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
    const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.status!=='issue'&&route.destination)
-   const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
-   const line=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-   return {key,driverId,routes:groupRoutes,start,line,color:sequenceColors[index%sequenceColors.length],street:false}
+   const finished=groupRoutes.filter(route=>route.status==='completed'&&route.destination)
+   const path=remaining.length?remaining:finished
+   const start=driver?.location||path[0]?.origin||groupRoutes[0]?.origin||null
+   const line=[start,...path.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
+   return {key,driverId,routes:groupRoutes,start,line,color:remaining.length?sequenceColors[index%sequenceColors.length]:'#94a3b8',street:false}
   })
   setResolved(instant)
   setSequences(draft)
@@ -217,9 +219,11 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const driverId=key==='unassigned'?null:key
     const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
     const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.status!=='issue'&&route.destination)
-    const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
-    const line=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-    return {key,driverId,routes:groupRoutes,start,line,color:sequenceColors[index%sequenceColors.length],street:false}
+    const finished=groupRoutes.filter(route=>route.status==='completed'&&route.destination)
+    const path=remaining.length?remaining:finished
+    const start=driver?.location||path[0]?.origin||groupRoutes[0]?.origin||null
+    const line=[start,...path.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
+    return {key,driverId,routes:groupRoutes,start,line,color:remaining.length?sequenceColors[index%sequenceColors.length]:'#94a3b8',street:false}
    })
    setResolved(hydrated)
    setSequences(ready)
