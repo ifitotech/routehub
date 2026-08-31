@@ -134,7 +134,8 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
     const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
     const estimate=points.length>1?await calculateRoute(points):null
-    const line=estimate?.coordinates?.length>1?estimate.coordinates:points
+    const routed=estimate?.coordinates
+    const line=routed&&routed.length>1?routed:points
     return {key,driverId,routes:groupRoutes,start,line,color:sequenceColors[index%sequenceColors.length],distanceMeters:estimate?.distanceMeters,durationSeconds:estimate?.durationSeconds}
    }))
    if(!cancelled){setResolved(numbered);setSequences(built);onSummary?.({count:built.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0),distanceMeters:built.some(sequence=>Number.isFinite(sequence.distanceMeters))?built.reduce((total,sequence)=>total+(sequence.distanceMeters||0),0):undefined,durationSeconds:built.some(sequence=>Number.isFinite(sequence.durationSeconds))?built.reduce((total,sequence)=>total+(sequence.durationSeconds||0),0):undefined})}
