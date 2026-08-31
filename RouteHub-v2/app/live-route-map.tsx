@@ -125,7 +125,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
    :{connected:'Driver connected',scheduled:'Route scheduled',live:'LIVE',waiting:'WAITING',loading:'Preparing map…',unavailable:'We could not locate this route yet.',map:'Live route map',driver:'Driver',start:'Start',next:'Next stop',updated:'Location updated'}
  const origin=routePoints[0]||null
  const destination=routePoints[routePoints.length-1]||null
- const intermediate=routePoints.slice(1,-1)
+ const routeStops=routePoints.slice(1)
 
  return <section className={`live-route-map ${onActivate?'is-activatable':''}`} onClick={onActivate} onKeyDown={event=>{if(onActivate&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onActivate()}}} role={onActivate?'button':undefined} tabIndex={onActivate?0:undefined}>
   {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?copy.connected:copy.scheduled}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?copy.live:copy.waiting}</span></header>}
@@ -135,10 +135,9 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
     <FitBounds points={routePoints.length?routePoints:visiblePoints}/>
     <RecenterOnRequest points={driverLocation?[driverLocation]:visiblePoints} token={followToken||0}/>
     {useDriverAsOrigin&&driverLocation&&<FollowDriver location={driverLocation}/>}
-    {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1A73E8',weight:6,opacity:0.92,lineJoin:'round',lineCap:'round'}}/>}
+    {line.length>1&&<><Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.9,lineJoin:'round',lineCap:'round'}}/><Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1A73E8',weight:6,opacity:.96,lineJoin:'round',lineCap:'round'}}/></>}
     {origin&&(!useDriverAsOrigin||!driverLocation)&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
-    {intermediate.map((point,index)=><Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker('stop',index+2)}><Tooltip direction="top" offset={[0,-18]}>{waypoints[index]?.label||`${copy.next} ${index+2}`}</Tooltip></Marker>)}
-    {destination&&<Marker position={[destination.lat,destination.lng]} icon={makeMarker('destination',1)} zIndexOffset={300}><Tooltip direction="top" offset={[0,-18]}>{destinationAddress||copy.next}</Tooltip></Marker>}
+    {routeStops.map((point,index)=>{const last=index===routeStops.length-1;return <Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker(last?'destination':'stop',index+1)} zIndexOffset={last?300:220}><Tooltip direction="top" offset={[0,-18]}>{last?(destinationAddress||`${copy.next} ${index+1}`):(waypoints[index]?.label||`${copy.next} ${index+1}`)}</Tooltip></Marker>})}
     {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]}>{copy.driver}</Tooltip></Marker>}
    </MapContainer>}
   </div>

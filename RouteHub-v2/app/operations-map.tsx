@@ -5,14 +5,15 @@ import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,Popup,useMap} from 'react-leaflet'
 import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {isInFlorida,mapTileConfig} from '../lib/maps/map-config'
-import {calculateRoute,formatRouteEstimate} from '../lib/maps/routing'
+import {mapTileConfig} from '../lib/maps/map-config'
+import {calculateRoute} from '../lib/maps/routing'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
 
 export type OperationsRoute={
  id:string
+ mission_type?:string|null
  origin_address?:string|null
  destination_address?:string|null
  destination_name?:string|null
@@ -23,7 +24,6 @@ export type OperationsRoute={
  status?:string|null
  driver_id?:string|null
  position?:number|null
- order_number?:string|null
 }
 
 export type OperationsDriverLocation={
@@ -36,24 +36,27 @@ export type OperationsDriverLocation={
  nextStop?:string|null
 }
 
-type ResolvedRoute=OperationsRoute&{points:Coordinate[];line:Coordinate[];number:number}
-type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean;onSummary?:(summary:{count:number;distanceMeters?:number;durationSeconds?:number})=>void}
+type ResolvedRoute=OperationsRoute&{origin:Coordinate|null;destination:Coordinate|null;number:number}
+type ResolvedSequence={key:string;driverId:string|null;routes:ResolvedRoute[];start:Coordinate|null;line:Coordinate[];color:string}
+type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean}
 
-const fallbackCenter:Coordinate={lat:25.7617,lng:-80.1918}
-function isCoordinate(lat:number|null|undefined,lng:number|null|undefined):lat is number{
- return lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
-}
-function asPoint(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null{
- if(!isCoordinate(lat,lng))return null
- const point={lat,lng:lng as number}
- return isInFlorida(point.lat,point.lng)?point:null
-}
+const fallbackCenter:Coordinate={lat:39.8283,lng:-98.5795}
+const isCoordinate=(lat:number|null|undefined,lng:number|null|undefined):lat is number=>lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
 
 function routeColor(status?:string|null){
  if(status==='issue')return '#dc2626'
- if(status==='completed')return '#16a34a'
- if(status==='active'||status==='paused')return '#16a34a'
- return '#eab308'
+ if(status==='completed')return '#94a3b8'
+ if(status==='active'||status==='paused')return '#2563eb'
+ return '#f59e0b'
+}
+
+const sequenceColors=['#2563eb','#7c3aed','#0891b2','#ea580c','#16a34a']
+const isRemaining=(status?:string|null)=>status!=='completed'&&status!=='cancelled'
+
+function routeTypeLabel(type:string|null|undefined,locale:string){
+ if(locale==='es')return type==='pickup'?'Recogida':type==='delivery'?'Entrega':type==='return'?'Retorno':'Parada'
+ if(locale==='fr')return type==='pickup'?'Collecte':type==='delivery'?'Livraison':type==='return'?'Retour':'Arrêt'
+ return type==='pickup'?'Pickup':type==='delivery'?'Delivery':type==='return'?'Return':'Stop'
 }
 
 function statusLabel(status:string|undefined|null,locale:string){
@@ -62,8 +65,8 @@ function statusLabel(status:string|undefined|null,locale:string){
  return status==='issue'?'Issue':status==='completed'?'Completed':status==='active'||status==='paused'?'Current route':'Pending'
 }
 
-function routeMarker(number:number,color:string){
- return L.divIcon({className:'operations-route-marker-wrap',html:`<span class="operations-route-marker" style="--marker-color:${color}">${number}</span>`,iconSize:[34,34],iconAnchor:[17,17]})
+function routeMarker(number:number,color:string,completed=false){
+ return L.divIcon({className:'operations-route-marker-wrap',html:`<span class="operations-route-marker${completed?' is-completed':''}" style="--marker-color:${color}">${completed?'✓':number}</span>`,iconSize:[36,42],iconAnchor:[18,38]})
 }
 
 function originMarker(color:string){
@@ -71,7 +74,7 @@ function originMarker(color:string){
 }
 
 function driverMarker(){
- return L.divIcon({className:'operations-driver-marker-wrap',html:'<span class="operations-driver-marker"></span>',iconSize:[44,44],iconAnchor:[22,22]})
+ return L.divIcon({className:'operations-driver-marker-wrap',html:'<span class="operations-driver-marker"><i></i></span>',iconSize:[48,48],iconAnchor:[24,24]})
 }
 
 function ageLabel(updatedAt:string|null|undefined,locale:string){
@@ -89,163 +92,85 @@ function FitBounds({points}:{points:Coordinate[]}){
  const map=useMap()
  const pointKey=points.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join('|')
  useEffect(()=>{
-  const local=points.filter(point=>point.lat>=25.1&&point.lat<=26.7&&point.lng>=-80.7&&point.lng<=-80.05)
-  const use=local.length?local:points
-  if(!use.length){map.setView([25.7617,-80.1918],11);return}
-  if(use.length===1){map.setView([use[0].lat,use[0].lng],13);return}
-  map.fitBounds(use.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:12})
+  if(!points.length)return
+  if(points.length===1){map.setView([points[0].lat,points[0].lng],14);return}
+  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[32,32],maxZoom:15})
  },[map,pointKey])
  return null
 }
 
-async function withTimeout<T>(task:Promise<T>,ms:number,fallback:T){
- try{
-  return await Promise.race([task,new Promise<T>(resolve=>setTimeout(()=>resolve(fallback),ms))])
- }catch{return fallback}
+async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
+ if(isCoordinate(lat,lng))return {lat:Number(lat),lng:Number(lng)}
+ if(!address)return null
+ try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-function kmBetween(a:Coordinate,b:Coordinate){
- const radians=Math.PI/180
- const dLat=(b.lat-a.lat)*radians,dLng=(b.lng-a.lng)*radians
- const value=Math.sin(dLat/2)**2+Math.cos(a.lat*radians)*Math.cos(b.lat*radians)*Math.sin(dLng/2)**2
- return 2*6371*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
-}
-
-function canGeocode(address:string){
- return address.trim().length>=3
-}
-
-const GEO_CACHE='rh-ops-geo-v1'
-function readCache(address:string){
- try{
-  const raw=sessionStorage.getItem(GEO_CACHE)
-  const bag=raw?JSON.parse(raw) as Record<string,Coordinate>:{}
-  const hit=bag[address.toLowerCase().trim()]
-  return hit&&Number.isFinite(hit.lat)&&Number.isFinite(hit.lng)?hit:null
- }catch{return null}
-}
-function writeCache(address:string,point:Coordinate){
- try{
-  const raw=sessionStorage.getItem(GEO_CACHE)
-  const bag=raw?JSON.parse(raw) as Record<string,Coordinate>:{}
-  bag[address.toLowerCase().trim()]=point
-  sessionStorage.setItem(GEO_CACHE,JSON.stringify(bag))
- }catch{}
-}
-
-async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined,near?:Coordinate|null){
- const stored=asPoint(lat,lng)
- if(stored)return stored
- if(!address||!canGeocode(address))return null
- const cached=readCache(address)
- if(cached&&isInFlorida(cached.lat,cached.lng))return cached
- try{
-  const coordinate=await withTimeout(geocodeAddress(address,undefined,near).then(value=>value?.coordinate||null),2500,null)
-  if(!coordinate||(near&&kmBetween(near,coordinate)>220))return null
-  writeCache(address,coordinate)
-  return coordinate
- }catch{return null}
-}
-
-export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,onSummary}:Props){
- const visibleRoutes=useMemo(()=>routes.filter(route=>{
-  const status=String(route.status||'').toLowerCase()
-  if(status==='completed'||status==='cancelled')return false
-  return Boolean(route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng))
- }),[routes])
- const instant=useMemo(()=>visibleRoutes.map((route,index)=>{
-  const origin=asPoint(route.origin_lat,route.origin_lng)
-  const destination=asPoint(route.destination_lat,route.destination_lng)
-  const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
-  return {...route,points,line:points,number:index+1}
- }),[visibleRoutes])
- const [resolved,setResolved]=useState<ResolvedRoute[]>(instant)
- const [totals,setTotals]=useState<{distanceMeters:number;durationSeconds:number}|null>(null)
- const routeKey=visibleRoutes.map(route=>[route.id,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.position].join(':')).join('|')
- const pins=resolved.length?resolved:instant
+export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true}:Props){
+ const [resolved,setResolved]=useState<ResolvedRoute[]>([])
+ const [sequences,setSequences]=useState<ResolvedSequence[]>([])
+ const [loading,setLoading]=useState(true)
+ const visibleRoutes=useMemo(()=>routes.filter(route=>route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng)),[routes])
+ const routeKey=visibleRoutes.map(route=>[route.id,route.mission_type,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.driver_id,route.position].join(':')).join('|')
+ const driverKey=driverLocations.map(driver=>[driver.id,driver.driver_id,driver.location.lat,driver.location.lng,driver.status,driver.updatedAt].join(':')).join('|')
 
  useEffect(()=>{
   let cancelled=false
-  if(!visibleRoutes.length){
-   setResolved([])
-   setTotals(null)
-   return
-  }
-  setResolved(instant)
-  void (async()=>{
-   const known=instant.flatMap(route=>route.points)
-   const near=known[0]||fallbackCenter
-   const hub=asPoint(visibleRoutes[0]?.origin_lat,visibleRoutes[0]?.origin_lng)
-    ||await resolveCoordinate(visibleRoutes.find(route=>route.origin_address)?.origin_address,null,null,near)
-    ||near
-   const pins=await Promise.all(visibleRoutes.map(async(route,index)=>{
-    const destination=await resolveCoordinate(
-     route.destination_address||route.destination_name,
-     route.destination_lat,
-     route.destination_lng,
-     hub,
-    )
-    const origin=asPoint(route.origin_lat,route.origin_lng)||hub
-    const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
-    return {...route,points,line:points,number:index+1}
+  setLoading(true)
+  void Promise.all(visibleRoutes.map(async route=>{
+   const [origin,destination]=await Promise.all([
+    resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng),
+    resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng),
+   ])
+   return {...route,origin,destination,number:0}
+  })).then(async next=>{
+   const sorted=next.sort((a,b)=>Number(a.position||Number.MAX_SAFE_INTEGER)-Number(b.position||Number.MAX_SAFE_INTEGER)||a.id.localeCompare(b.id))
+   const numbered=sorted.map((route,index)=>({...route,number:Number(route.position)>0?Number(route.position):index+1}))
+   const grouped=new Map<string,ResolvedRoute[]>()
+   for(const route of numbered){const key=route.driver_id||'unassigned';grouped.set(key,[...(grouped.get(key)||[]),route])}
+   const built=await Promise.all([...grouped.entries()].map(async([key,groupRoutes],index)=>{
+    const driverId=key==='unassigned'?null:key
+    const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
+    const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.destination)
+    const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
+    const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
+    const estimate=points.length>1?await calculateRoute(points):{coordinates:points}
+    return {key,driverId,routes:groupRoutes,start,line:estimate.coordinates.length>1?estimate.coordinates:points,color:sequenceColors[index%sequenceColors.length]}
    }))
-   if(cancelled)return
-   setResolved(pins)
-   onSummary?.({count:visibleRoutes.length})
-   const lined=await Promise.all(pins.map(async route=>{
-    if(route.points.length<2)return route
-    const estimate=await withTimeout(calculateRoute(route.points),2500,{coordinates:route.points,source:'fallback' as const})
-    return {...route,line:estimate.coordinates.length>1?estimate.coordinates:route.points}
-   }))
-   if(cancelled)return
-   setResolved(lined)
-   const chain=lined.flatMap(route=>route.points.slice(-1))
-   const start=lined.find(route=>route.points.length>1)?.points[0]
-   const path=start?[start,...chain.filter(point=>point!==start)]:chain
-   if(path.length>1){
-    const total=await withTimeout(calculateRoute(path.slice(0,8)),3000,{coordinates:path,source:'fallback' as const})
-    if(!cancelled&&Number.isFinite(total.distanceMeters)&&Number.isFinite(total.durationSeconds)){
-     const next={distanceMeters:total.distanceMeters!,durationSeconds:total.durationSeconds!}
-     setTotals(next)
-     onSummary?.({count:visibleRoutes.length,...next})
-    }
-   }
-  })().catch(()=>{})
+   if(!cancelled){setResolved(numbered);setSequences(built)}
+  }).catch(()=>{if(!cancelled){setResolved([]);setSequences([])}}).finally(()=>{if(!cancelled)setLoading(false)})
   return()=>{cancelled=true}
- },[routeKey])
+ },[routeKey,driverKey])
 
- const allPoints=useMemo(()=>[...pins.flatMap(route=>route.points),...driverLocations.map(driver=>driver.location)],[driverLocations,pins])
- const driverDestinations=useMemo(()=>new Map(driverLocations.map(driver=>{
-  const next=pins.find(route=>route.driver_id===driver.driver_id&&['active','paused','published','pending'].includes(route.status||''))
-  return [driver.id,next?.points[next.points.length-1]||null] as const
- })),[driverLocations,pins])
+ const allPoints=useMemo(()=>{
+  const operational=[...sequences.map(sequence=>sequence.start),...resolved.filter(route=>isRemaining(route.status)).map(route=>route.destination),...driverLocations.map(driver=>driver.location)].filter((point):point is Coordinate=>Boolean(point))
+  return operational.length?operational:resolved.map(route=>route.destination).filter((point):point is Coordinate=>Boolean(point))
+ },[driverLocations,resolved,sequences])
  const center=allPoints[0]||fallbackCenter
  const copy=locale==='es'
-  ?{label:'Mapa operativo de rutas',loading:'Preparando mapa operativo…',unavailable:'No hay rutas activas ni conductores compartiendo ubicación.',current:'Ruta actual',pending:'Pendientes',issue:'Incidencias',driver:'Conductor',start:'Inicio'}
+  ?{label:'Mapa operativo de rutas',loading:'Preparando mapa operativo…',unavailable:'No hay rutas activas ni conductores compartiendo ubicación.',current:'Ruta en carretera',pending:'Pendiente',completed:'Completada',issue:'Incidencia',driver:'Conductor',start:'Inicio'}
   :locale==='fr'
-   ?{label:'Carte opérationnelle des itinéraires',loading:'Préparation de la carte opérationnelle…',unavailable:'Aucun itinéraire actif ni conducteur ne partage sa position.',current:'Itinéraire actuel',pending:'En attente',issue:'Incidents',driver:'Conducteur',start:'Départ'}
-   :{label:'Route operations map',loading:'Preparing operations map…',unavailable:'No active routes or drivers are sharing location.',current:'Current route',pending:'Pending',issue:'Issues',driver:'Driver',start:'Start'}
+   ?{label:'Carte opérationnelle des itinéraires',loading:'Préparation de la carte opérationnelle…',unavailable:'Aucun itinéraire actif ni conducteur ne partage sa position.',current:'Itinéraire routier',pending:'En attente',completed:'Terminé',issue:'Incident',driver:'Conducteur',start:'Départ'}
+   :{label:'Route operations map',loading:'Preparing operations map…',unavailable:'No active routes or drivers are sharing location.',current:'Road route',pending:'Pending',completed:'Completed',issue:'Issue',driver:'Driver',start:'Start'}
 
  return <section className={styles.map} aria-label={copy.label}>
   <div className={styles.canvas}>
-   {!pins.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
+   {loading?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={11} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={allPoints}/>
-    {pins.map((route,index)=><Fragment key={`route-${route.id}`}>
-     {route.line.length>1&&<Polyline positions={route.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:routeColor(route.status),weight:4,opacity:.82}}/>}
-     {index===0&&route.points[0]&&<Marker position={[route.points[0].lat,route.points[0].lng]} icon={originMarker('#0F1D35')}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
-     {route.points[route.points.length-1]&&<Marker position={[route.points[route.points.length-1].lat,route.points[route.points.length-1].lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={200}><Tooltip direction="top" offset={[0,-16]}>{`${route.number}. ${route.destination_name||route.destination_address||copy.driver}`}</Tooltip><Popup><strong>{route.destination_name||copy.driver}</strong><br/>{statusLabel(route.status,locale)}{route.order_number?` · ${route.order_number}`:''}{route.destination_address?<><br/><small>{route.destination_address}</small></>:null}</Popup></Marker>}
+    {sequences.map(sequence=><Fragment key={`sequence-${sequence.key}`}>
+     {sequence.line.length>1&&<><Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.9,lineCap:'round',lineJoin:'round'}}/><Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:sequence.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round'}}/></>}
+     {sequence.start&&!driverLocations.some(driver=>driver.driver_id===sequence.driverId&&driver.status!=='unavailable')&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
-    {driverLocations.map(driver=>{const destination=driverDestinations.get(driver.id);return <Fragment key={driver.id}>
-      {destination&&<Polyline positions={[[driver.location.lat,driver.location.lng],[destination.lat,destination.lng]]} pathOptions={{color:'#2563eb',weight:3,dashArray:'7 8',opacity:.8}}/>}
+    {resolved.map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='completed'?100:300}><Tooltip direction="top" offset={[0,-20]}>{`${route.number}. ${routeTypeLabel(route.mission_type,locale)} · ${route.destination_name||route.destination_address||copy.driver} · ${statusLabel(route.status,locale)}`}</Tooltip></Marker>)}
+    {driverLocations.map(driver=><Fragment key={driver.id}>
       <Marker position={[driver.location.lat,driver.location.lng]} icon={driverMarker()} zIndexOffset={1000}>
        <Tooltip direction="top" offset={[0,-22]} permanent>{driver.label||copy.driver}{driver.nextStop?` · ${driver.nextStop}`:''}</Tooltip>
        <Popup><strong>{driver.label||copy.driver}</strong><br/><span>{driver.status==='on_route'?'On route':driver.status==='available'?'Available':driver.status==='unavailable'?'Location unavailable':'Driving'}</span><br/><small>{ageLabel(driver.updatedAt,locale)}</small>{driver.nextStop&&<><br/><small>{driver.nextStop}</small></>}</Popup>
       </Marker>
-    </Fragment>})}
+    </Fragment>)}
    </MapContainer>}
-   <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{driverLocations.length} {copy.driver.toLowerCase()}{driverLocations.length===1?'':'s'}</span></div>
+   <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.completed}/>{copy.completed}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{driverLocations.length} {copy.driver.toLowerCase()}{driverLocations.length===1?'':'s'}</span></div>
   </div>
-  <footer><span>{visibleRoutes.length} {locale==='es'?'rutas abiertas':locale==='fr'?'itinéraires ouverts':'open routes'}{totals?` · ${formatRouteEstimate(totals,locale)}`:''}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'} · ${locale==='es'?'ubicación actualizada':locale==='fr'?'position actualisée':'location updated'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>
+  <footer><span>{routes.length} {locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'} · ${locale==='es'?'ubicación actualizada':locale==='fr'?'position actualisée':'location updated'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>
  </section>
 }
