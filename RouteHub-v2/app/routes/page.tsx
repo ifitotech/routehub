@@ -398,12 +398,15 @@ export default function Routes() {
   const todayValue = localSchedule().date
   const routeSort = (left: RouteRecord, right: RouteRecord) => Number(left.position || 0) - Number(right.position || 0) || String(left.scheduled_at || '').localeCompare(String(right.scheduled_at || '')) || left.id.localeCompare(right.id)
   const todayRoutes = useMemo(() => routes
-    .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status !== 'completed')
+    .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && !['completed', 'issue', 'cancelled'].includes(route.status || ''))
     .sort(routeSort), [routes, todayValue])
   const inProgressRoutes = useMemo(() => todayRoutes.filter(route => ['active', 'paused'].includes(route.status || '')), [todayRoutes])
   const scheduledTodayRoutes = useMemo(() => todayRoutes.filter(route => !['active', 'paused'].includes(route.status || '')), [todayRoutes])
+  const issueTodayRoutes = useMemo(() => routes
+    .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'issue')
+    .sort(routeSort), [routes, todayValue])
   const upcomingRoutes = useMemo(() => routes
-    .filter(route => routeDateValue(route) > todayValue && route.status !== 'completed')
+    .filter(route => routeDateValue(route) > todayValue && !['completed', 'issue', 'cancelled'].includes(route.status || ''))
     .sort((left, right) => routeDateValue(left).localeCompare(routeDateValue(right)) || routeSort(left, right)), [routes, todayValue])
   const completedTodayRoutes = useMemo(() => routes
     .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'completed')
@@ -732,7 +735,7 @@ export default function Routes() {
       <div className={styles.headerActions}>
         <Link className={styles.secondaryButton} href="/routes/live"><MapPin size={18}/>{locale==='es'?'Mapa en vivo':locale==='fr'?'Carte en direct':'Live map'}</Link>
         <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
-        <Link className={styles.secondaryButton} href="/routes/manage"><RouteIcon size={18}/>{c.manage}</Link>
+        <Link className={styles.secondaryButton} href="/routes/manage?reorder=1"><RouteIcon size={18}/>{c.manage}</Link>
         <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
       </div>
     </header>
@@ -765,6 +768,11 @@ export default function Routes() {
       {completedTodayRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length} {c.active}</span></div>
         <section className={styles.routeGrid}>{renderRouteCards(completedTodayRoutes)}</section>
+      </section>}
+
+      {issueTodayRoutes.length > 0 && <section className={styles.routeSection}>
+        <div className={styles.sectionHeading}><h2>{c.issue}</h2><span>{issueTodayRoutes.length}</span></div>
+        <section className={styles.routeGrid}>{renderRouteCards(issueTodayRoutes)}</section>
       </section>}
     </>}
 
