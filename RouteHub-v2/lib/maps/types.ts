@@ -4,7 +4,7 @@ export type GeocodedLocation={
   name?:string
   formattedAddress:string
   coordinate:MapCoordinate
-  source:'routehub'|'census'|'nominatim'|'manual'
+  source:'routehub'|'census'|'nominatim'|'google'|'manual'
   externalId?:string
 }
 

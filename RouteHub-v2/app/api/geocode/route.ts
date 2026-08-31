@@ -3,8 +3,9 @@ import {floridaBounds,geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQ
 
 type CensusMatch={matchedAddress?:string;coordinates?:{x?:number;y?:number}}
 type NominatimMatch={display_name?:string;lat?:string;lon?:string}
+type GoogleResult={formatted_address?:string;geometry?:{location?:{lat?:number;lng?:number}}}
 
-const response=(lat:number,lng:number,label:string,source:'census'|'nominatim')=>NextResponse.json({coordinate:{lat,lng},label,source})
+const response=(lat:number,lng:number,label:string,source:'google'|'census'|'nominatim')=>NextResponse.json({coordinate:{lat,lng},label,source})
 
 function tooFar(lat:number,lng:number,nearLat:number,nearLng:number){
  const radians=Math.PI/180
@@ -19,6 +20,25 @@ export async function GET(request:NextRequest){
  const nearLng=Number(request.nextUrl.searchParams.get('nearLng'))
  const hasNear=Number.isFinite(nearLat)&&Number.isFinite(nearLng)
  if(address.length<mapProviderLimits.minimumSearchCharacters||address.length>mapProviderLimits.maximumSearchCharacters)return NextResponse.json({coordinate:null},{status:400})
+ if(geocodingConfig.googleKey){
+  try{
+   const url=new URL(geocodingConfig.googleGeocodeEndpoint)
+   url.searchParams.set('address',address)
+   url.searchParams.set('components','country:US|administrative_area:FL')
+   url.searchParams.set('region','us')
+   url.searchParams.set('key',geocodingConfig.googleKey)
+   const result=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(geocodingConfig.requestTimeoutMs)})
+   if(result.ok){
+    const payload=await result.json() as {status?:string;results?:GoogleResult[]}
+    const match=payload.results?.[0]
+    const lat=Number(match?.geometry?.location?.lat)
+    const lng=Number(match?.geometry?.location?.lng)
+    if(payload.status==='OK'&&Number.isFinite(lat)&&Number.isFinite(lng)&&isInFlorida(lat,lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng))){
+     return response(lat,lng,match?.formatted_address||address,'google')
+    }
+   }
+  }catch{}
+ }
  try{
   const url=new URL(geocodingConfig.censusEndpoint)
   url.searchParams.set('address',address)
