@@ -86,6 +86,10 @@ export default function GoogleAddressInput({
         onValueChangeRef.current(result)
         const location=place.geometry?.location
         if(location)onSelectSearchSuggestionRef.current?.({label:result,primary:place.name||result,secondary:place.formatted_address||'',coordinate:{lat:location.lat(),lng:location.lng()},source:'google',name:place.name})
+        // Google renders its own suggestion popup outside React. Blur the
+        // input after a selection so the popup closes and never blocks the
+        // route/contact form on touch devices.
+        window.setTimeout(() => inputRef.current?.blur(), 0)
       })
     }).catch(()=>setGoogleReady(false))
     return () => { disposed = true; listener?.remove() }
