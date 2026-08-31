@@ -750,15 +750,15 @@ export default function Routes() {
     {loading ? <section className={styles.routeGrid} aria-label={c.loadError}>
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
     </section> : <>
-      <section className={styles.routeSection}>
-        <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{todayRoutes.length} {c.active}</span></div>
-        {scheduledTodayRoutes.length ? <section className={styles.routeGrid}>{renderRouteCards(scheduledTodayRoutes)}</section> : <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
-      </section>
-
       {inProgressRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.inProgressSection}</h2><span>{inProgressRoutes.length} {c.active}</span></div>
         <section className={styles.routeGrid}>{renderRouteCards(inProgressRoutes)}</section>
       </section>}
+
+      <section className={styles.routeSection}>
+        <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{todayRoutes.length} {c.active}</span></div>
+        {scheduledTodayRoutes.length ? <section className={styles.routeGrid}>{renderRouteCards(scheduledTodayRoutes)}</section> : <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
+      </section>
 
       {upcomingRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.upcomingSection}</h2><span>{upcomingRoutes.length} {c.active}</span></div>

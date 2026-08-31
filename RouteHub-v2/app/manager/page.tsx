@@ -203,7 +203,13 @@ export default function Manager() {
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
           <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
           {loading ? <div className={todayStyles.loading}>{t.loading}</div> : (() => {
-            const pending = todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || '')))
+            const pending = todayRoutes
+              .filter(route => !['completed', 'cancelled'].includes(String(route.status || '')))
+              .slice()
+              .sort((a, b) => {
+                const rank = (status?: string | null) => status === 'active' || status === 'paused' ? 0 : 1
+                return rank(a.status) - rank(b.status) || Number(a.position || 0) - Number(b.position || 0)
+              })
             const extra = pending.length > 6
             const row = (route: DashboardRoute, index: number) => {
               const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
