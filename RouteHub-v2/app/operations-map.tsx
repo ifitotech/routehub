@@ -5,7 +5,7 @@ import L from 'leaflet'
 import {MapContainer,Marker,Polyline,TileLayer,Tooltip,Popup,useMap} from 'react-leaflet'
 import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {mapTileConfig} from '../lib/maps/map-config'
+import {isInFlorida,mapTileConfig} from '../lib/maps/map-config'
 import {calculateRoute,formatRouteEstimate} from '../lib/maps/routing'
 import styles from './operations-map.module.css'
 
@@ -44,7 +44,9 @@ function isCoordinate(lat:number|null|undefined,lng:number|null|undefined):lat i
  return lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
 }
 function asPoint(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null{
- return isCoordinate(lat,lng)?{lat,lng:lng as number}:null
+ if(!isCoordinate(lat,lng))return null
+ const point={lat,lng:lng as number}
+ return isInFlorida(point.lat,point.lng)?point:null
 }
 
 function routeColor(status?:string|null){
@@ -108,8 +110,7 @@ function kmBetween(a:Coordinate,b:Coordinate){
 }
 
 function canGeocode(address:string){
- if(/\d/.test(address))return true
- return /miami|florida|\bfl\b|kendale|doral|hialeah|homestead|kendall/i.test(address)
+ return address.trim().length>=3
 }
 
 async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined,near?:Coordinate|null){
@@ -148,14 +149,19 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     return points
    })
    const near=known[0]||fallbackCenter
+   const hub=asPoint(visibleRoutes[0]?.origin_lat,visibleRoutes[0]?.origin_lng)
+    ||await resolveCoordinate(visibleRoutes.find(route=>route.origin_address)?.origin_address,null,null,near)
+    ||near
    const pins=await Promise.all(visibleRoutes.map(async(route,index)=>{
-    const [origin,destination]=await Promise.all([
-     resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng,near),
-     resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng,near),
-    ])
+    const destination=await resolveCoordinate(
+     route.destination_address||route.destination_name,
+     route.destination_lat,
+     route.destination_lng,
+     hub,
+    )
+    const origin=asPoint(route.origin_lat,route.origin_lng)||hub
     const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
-    const line=points.length===2&&kmBetween(points[0],points[1])>220?[points[points.length-1]]:points
-    return {...route,points:line.length===1?line:points,line,number:index+1}
+    return {...route,points,line:points,number:index+1}
    }))
    if(cancelled)return
    setResolved(pins)
@@ -197,9 +203,9 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    {loading?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={allPoints}/>
-    {resolved.map(route=><Fragment key={`route-${route.id}`}>
-     {route.line.length>1&&<Polyline positions={route.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:routeColor(route.status),weight:5,opacity:.9}}/>}
-     {route.points[0]&&<Marker position={[route.points[0].lat,route.points[0].lng]} icon={originMarker(routeColor(route.status))}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
+    {resolved.map((route,index)=><Fragment key={`route-${route.id}`}>
+     {route.line.length>1&&<Polyline positions={route.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:routeColor(route.status),weight:4,opacity:.82}}/>}
+     {index===0&&route.points[0]&&<Marker position={[route.points[0].lat,route.points[0].lng]} icon={originMarker('#0F1D35')}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
      {route.points[route.points.length-1]&&<Marker position={[route.points[route.points.length-1].lat,route.points[route.points.length-1].lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={200}><Tooltip direction="top" offset={[0,-16]}>{`${route.number}. ${route.destination_name||route.destination_address||copy.driver}`}</Tooltip><Popup><strong>{route.destination_name||copy.driver}</strong><br/>{statusLabel(route.status,locale)}{route.order_number?` · ${route.order_number}`:''}{route.destination_address?<><br/><small>{route.destination_address}</small></>:null}</Popup></Marker>}
     </Fragment>)}
     {driverLocations.map(driver=>{const destination=driverDestinations.get(driver.id);return <Fragment key={driver.id}>

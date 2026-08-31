@@ -34,11 +34,17 @@ export default function LiveRoutePage() {
           branchId: membership.branch_id || null,
           routeDate: managerOperationalDate(),
         })
+        const {data: branch} = membership.branch_id
+          ? await getSupabase().from('branches').select('address,name,latitude,longitude').eq('id', membership.branch_id).maybeSingle()
+          : {data: null}
+        const originAddress = String(branch?.address || branch?.name || '')
+        const originLat = branch?.latitude == null ? null : Number(branch.latitude)
+        const originLng = branch?.longitude == null ? null : Number(branch.longitude)
         setRoutes(dashboard.todayRoutes.map(route => ({
           id: route.id,
-          origin_address: route.origin_address,
-          origin_lat: route.origin_lat,
-          origin_lng: route.origin_lng,
+          origin_address: route.origin_address || originAddress,
+          origin_lat: route.origin_lat ?? originLat,
+          origin_lng: route.origin_lng ?? originLng,
           destination_name: route.destination_name,
           destination_address: route.destination_address,
           destination_lat: route.destination_lat,
