@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import {stopKind} from '../lib/stop-workflow'
 import type {PlannedStop} from './route-plan-map'
 
-const RoutePlanMap=dynamic(()=>import('./route-plan-map'),{ssr:false})
+const RoutePlanMap=dynamic(()=>import('./route-plan-map').then(mod=>mod.default),{ssr:false})
 
 export type NavigationStop={
   id:string
