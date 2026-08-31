@@ -1,11 +1,3 @@
-Warning: truncated output (original token count: 23663)
-Total output lines: 750
-
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
-
-> typecheck
-> tsc --noEmit
-
 'use client'
 
 import Link from 'next/link'
@@ -35,8 +27,7 @@ import {calculateRoute, formatRouteEstimate} from '../../lib/maps/routing'
 import {reportAppError} from '../../lib/error-reporting'
 import type {Role} from '../../lib/types'
 import styles from './driver.module.css'
-const LiveRouteMap=dynamic(()=>import('../live-route-map'),{ssr:false})
-const RoutePlanMap=dynamic(()=>import('../route-plan-map'),{ssr:false})
+const LiveRouteMap=dynamic(()=>import('../driver-route-navigation'),{ssr:false})
 
 type Mission = {id:string;company_id:string;branch_id:string|null;driver_id:string;route_date:string;status:'draft'|'pending'|'published'|'active'|'paused'|'completed'|'issue'|'cancelled';origin_address?:string;destination_address?:string;destination_name?:string;destination_phone?:string;origin_lat?:number|null;origin_lng?:number|null;destination_lat?:number|null;destination_lng?:number|null;priority?:string;notes?:string;driver_note?:string;position:number;mission_type?:string;order_number?:string;scheduled_at?:string;completed_at?:string;route_started_at?:string|null;route_completed_at?:string|null;arrived_at?:string;customer_signature_path?:string;completion_photo_path?:string;finalized_at?:string;finalization_method?:string;finalization_note?:string;finalization_issue?:string;finalization_photo_path?:string}
 type SavedContact = {company_name?:string|null;contact_name?:string|null;address?:string|null;phone?:string|null}
@@ -559,7 +550,111 @@ const [recipientError,setRecipientError]=useState('')
       const coordinates=await getCurrentLocation()
       const membership=await currentMembership()
       const result=membership.role==='driver'
-        ? await startDrivingDay({companyId:current.company_id||membership.company_id,branchId:current.branch_id??membership.branch_id,driverI…3663 tokens truncated…    if(data)setMissions(previous=>previous.map(route=>route.id===current.id?{...route,route_started_at:data.route_started_at}:route))
+        ? await startDrivingDay({companyId:current.company_id||membership.company_id,branchId:current.branch_id??membership.branch_id,driverId})
+        : await startTemporaryRouteSession({companyId:current.company_id||membership.company_id,branchId:current.branch_id??membership.branch_id,driverId,routeId:current.id})
+      if(result.error)throw result.error
+      setDrivingSession(result.data)
+      if(result.data)await updateDrivingLocation(result.data.id,driverId,coordinates)
+      setLocationStatus('')
+      return true
+    }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied);return false}
+  }
+  const beginDrivingDay=async()=>{
+    if(!driverId||busy)return
+    if(!locationConsentAccepted){
+      if(!locationConsentChecked){setMessage(locationConsentCopy.required);return}
+      window.localStorage.setItem(locationConsentKey(driverId),'accepted')
+      setLocationConsentAccepted(true)
+    }
+    setBusy(true);setLocationStatus('')
+    try{
+      const membership=await currentMembership()
+      const coordinates=await getCurrentLocation()
+      const result=await startDrivingDay({companyId:membership.company_id,branchId:current?.branch_id??membership.branch_id,driverId})
+      if(result.error)throw result.error
+      setDrivingSession(result.data)
+      if(result.data)await updateDrivingLocation(result.data.id,driverId,coordinates)
+      setMessage(t.startDrivingDay)
+      setDayPromptOpen(false)
+    }catch(error){setLocationStatus(error instanceof Error?error.message:t.locationPermissionDenied);setMessage(error instanceof Error?error.message:t.unableUpdateRoute)}
+    finally{setBusy(false)}
+  }
+  const finishDrivingDay=async()=>{
+    if(!drivingSession||busy)return
+    setBusy(true)
+    if(status==='active'||status==='issue'){
+      try{
+        const route=current!
+        await sharedUpdateRouteStatus({routeId:route.id,driverId,companyId:route.company_id},status,today,{note:issueNote,photo:status==='issue'?(issuePhoto||undefined):undefined})
+        if(status==='active') await startTrackingForActiveRoute()
+        setModal(false);setIssueNote('');setIssuePhoto(null);await load();return true
+      }catch(error){setMessage(errorMessage(error,t.unableUpdateRoute));return false}
+      finally{setBusy(false)}
+    }
+    try{const result=await endDrivingDay(drivingSession.id,driverId);if(result.error)throw result.error;setDrivingSession(null);setLocationStatus('');setMessage(t.endDrivingDay)}catch(error){setLocationStatus(error instanceof Error?error.message:t.unableUpdateRoute)}finally{setBusy(false)}
+  }
+
+  const update=async(status:string,evidenceFile?:File)=>{
+    if(!current||busy)return false
+    setBusy(true)
+    try{
+      if(status==='active'&&!canDriverStartRoute(current,today)){setMessage(t.unableUpdateRoute);return false}
+      const client=getSupabase()
+      if(status==='active'){
+        const {data:otherActive,error:activeError}=await client.from('routes').select('id').eq('driver_id',driverId).eq('company_id',current.company_id).eq('status','active').neq('id',current.id)
+        if(activeError)throw activeError
+        if(otherActive?.length){
+          const {error:pauseError}=await client.from('routes').update({status:'paused',updated_version:Date.now()}).in('id',otherActive.map(route=>route.id)).eq('driver_id',driverId).eq('company_id',current.company_id)
+          if(pauseError)throw pauseError
+        }
+      }
+      const payload:Record<string,unknown>={status,updated_version:Date.now()}
+      if(status==='active'&&!current.route_started_at)payload.route_started_at=new Date().toISOString()
+      if(status==='issue'){
+        if(evidenceFile)await uploadMissionEvidence(evidenceFile,current.id,{kind:'issue',attachAsCompletionPhoto:false})
+        payload.driver_note=issueNote.trim()||current.driver_note||null
+      }
+      const {error}=await client.from('routes').update(payload).eq('id',current.id).eq('driver_id',driverId).eq('company_id',current.company_id)
+      if(error)throw error
+      if(status==='active')await startTrackingForActiveRoute()
+      setModal(false);setIssueNote('');setIssuePhoto(null);await load();return true
+    }catch(error){setMessage(errorMessage(error,t.unableUpdateRoute));return false}
+    finally{setBusy(false)}
+  }
+  const markArrived=async()=>{if(!current||busy)return;setBusy(true);try{await sharedMarkArrived({routeId:current.id,driverId,companyId:current.company_id});setMessage(locale==='es'?'Llegada registrada.':locale==='fr'?'Arrivée enregistrée.':'Arrival recorded.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const confirmPickup=async()=>{if(!current||busy)return;setBusy(true);try{const arrivedAt=new Date().toISOString();const {data,error}=await getSupabase().from('routes').update({arrived_at:arrivedAt,updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('arrived_at',null).select('id').maybeSingle();if(error)throw error;if(!data)throw Error('Pickup arrival was already recorded.');const finished=await sharedCompleteStop({routeId:current.id,driverId,companyId:current.company_id});if(!finished)throw Error('Pickup completion is already in progress.');setMissions(previous=>previous.map(route=>route.id===finished.id?{...route,...finished,status:'completed'}:route));setCompletedStopNotice({...current,...finished,status:'completed'} as Mission);setPickupConfirmOpen(false);setPackingListFile(null);setMessage(locale==='es'?'Pickup confirmado.':locale==='fr'?'Collecte confirmée.':'Pickup confirmed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const confirmPickupWithPackingList=async()=>{if(!current||busy)return;setBusy(true);try{const finished=await sharedCompletePickupWithEvidence({routeId:current.id,driverId,companyId:current.company_id},packingListFile||undefined);if(!finished)throw Error('Pickup completion is already in progress.');setMissions(previous=>previous.map(route=>route.id===finished.id?{...route,...finished,status:'completed'}:route));setCompletedStopNotice({...current,...finished,status:'completed'} as Mission);setPickupConfirmOpen(false);setPackingListFile(null);setMessage(locale==='es'?'Pickup confirmado.':locale==='fr'?'Collecte confirmée.':'Pickup confirmed.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const attachStopPhoto=async(file:File)=>{if(!current||busy)return;setBusy(true);try{await sharedUploadStopPhoto({routeId:current.id,driverId,companyId:current.company_id},file);setMessage(locale==='es'?'Foto guardada.':locale==='fr'?'Photo enregistrée.':'Photo saved.');await load();if(currentKind==='delivery')setDeliveryToolsOpen(true)}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const completeCurrentStop=async(force=false,driverNote?:string,showRecipientError=false)=>{if(!current||busy)return;setBusy(true);try{if(currentKind==='pickup'&&!current.arrived_at)throw Error('Record arrival before completing this stop.');if((currentKind==='branch'||currentKind==='delivery')&&!current.arrived_at)await sharedMarkArrived({routeId:current.id,driverId,companyId:current.company_id});let location:Awaited<ReturnType<typeof getCurrentLocation>>|undefined;try{location=await getCurrentLocation({maximumAge:60_000});if(drivingSession)await updateDrivingLocation(drivingSession.id,driverId,location)}catch{}const finished=await sharedCompleteStop({routeId:current.id,driverId,companyId:current.company_id},{location,driverNote});setMissions(previous=>previous.map(route=>route.id===finished?.id?{...route,...finished,status:'completed'}:route));if(finished){setCompletedStopNotice({...current,...finished,status:'completed'} as Mission)}setModal(false);setRecipientPromptOpen(false);setRecipientName('');setRecipientError('');setIssueNote('');setIssuePhoto(null);setMessage(locale==='es'?'Parada completada.':locale==='fr'?'Arrêt terminé.':'Stop completed.')}catch(error){const completionError=errorMessage(error,t.unableUpdateRoute);void reportAppError({action:'complete_stop',error,companyId:current?.company_id,branchId:current?.branch_id,routeId:current?.id,context:{kind:currentKind}});setMessage(completionError);if(showRecipientError)setRecipientError(completionError)}finally{setBusy(false)}}
+  const completeDelivery=()=>{
+    if(!current||currentKind!=='delivery'||busy)return
+    // Every delivery must identify the person who received it. Photo,
+    // signature and notes remain optional proof and never replace the name.
+    const hasRecipient=current.driver_note?.trim().startsWith('Received by:')
+    if(!hasRecipient){setRecipientError('');setRecipientPromptOpen(true);return}
+    void completeCurrentStop()
+  }
+  const saveRecipientAndComplete=()=>{
+    if(!current||!recipientName.trim()||busy)return
+    const existingNote=current.driver_note?.trim()
+    const recipientNote=`Received by: ${recipientName.trim()}`
+    const driverNote=existingNote&&!existingNote.startsWith('Received by:')?`${recipientNote}\n${existingNote}`:recipientNote
+    setRecipientError('')
+    void (async()=>{if(!current)return;setBusy(true);try{const finished=await sharedCompleteDeliveryWithRecipient({routeId:current.id,driverId,companyId:current.company_id},recipientName,existingNote);if(!finished)throw Error('Completion is already in progress.');setMissions(previous=>previous.map(route=>route.id===finished.id?{...route,...finished,status:'completed'}:route));setCompletedStopNotice({...current,...finished,status:'completed'} as Mission);setRecipientPromptOpen(false);setRecipientName('');setMessage(locale==='es'?'Parada completada.':locale==='fr'?'Arrêt terminé.':'Stop completed.');await load()}catch(error){setRecipientError(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}})()
+  }
+  const saveStopNote=async()=>{if(!current||busy||!stopNote.trim())return;setBusy(true);try{await sharedSaveStopNote({routeId:current.id,driverId,companyId:current.company_id},stopNote);setStopNote('');setStopNoteOpen(false);setMessage(locale==='es'?'Nota guardada.':locale==='fr'?'Note enregistrée.':'Note saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const saveCustomerSignatureProof=async()=>{if(!current||busy||!signatureCanvas.current)return;setBusy(true);try{await sharedSaveStopSignature({routeId:current.id,driverId,companyId:current.company_id},signatureCanvas.current);setSignatureOpen(false);setDeliveryToolsOpen(true);setMessage(locale==='es'?'Firma guardada.':locale==='fr'?'Signature enregistrée.':'Signature saved.');await load()}catch(error){setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const saveTruckFuel=async()=>{if(!truckSession||truckSaving||!fuelOdometer.trim()||!fuelAmount.trim())return;setTruckSaving(true);setTruckMessage('');try{const client=getSupabase();const recordId=crypto.randomUUID();let receiptPath:string|undefined;if(fuelPhoto)receiptPath=await uploadTruckReceipt(fuelPhoto,{companyId:truckCompanyId,branchId:truckBranchId,truckId:truckSession.id,recordId});const {error}=await client.from('truck_fuel_logs').insert({id:recordId,truck_id:truckSession.id,company_id:truckCompanyId,branch_id:truckBranchId,recorded_by:driverId,odometer:Number(fuelOdometer),amount:Number(fuelAmount),receipt_path:receiptPath||null});if(error)throw error;setTruckMessage(locale==='es'?'Combustible guardado.':locale==='fr'?'Carburant enregistré.':'Fuel saved.');setFuelOdometer('');setFuelAmount('');setFuelPhoto(null);setTruckForm(null);await load()}catch(error){/* Uploaded receipt orphan cleanup belongs to a trusted backend service; the Driver never deletes objects. */setTruckMessage(errorMessage(error,locale==='es'?'No se pudo guardar el combustible.':'Unable to save fuel.'))}finally{setTruckSaving(false)}}
+  const saveTruckMaintenance=async()=>{if(!truckSession||truckSaving||!maintenanceType.trim()||!maintenanceOdometer.trim())return;setTruckSaving(true);setTruckMessage('');try{const client=getSupabase();const recordId=crypto.randomUUID();let receiptPath:string|undefined;if(maintenancePhoto)receiptPath=await uploadTruckReceipt(maintenancePhoto,{companyId:truckCompanyId,branchId:truckBranchId,truckId:truckSession.id,recordId});const {error}=await client.from('truck_maintenance_logs').insert({id:recordId,truck_id:truckSession.id,company_id:truckCompanyId,branch_id:truckBranchId,recorded_by:driverId,maintenance_type:maintenanceType.trim(),odometer:Number(maintenanceOdometer),amount:maintenanceAmount.trim()?Number(maintenanceAmount):null,receipt_path:receiptPath||null});if(error)throw error;setTruckMessage(locale==='es'?'Mantenimiento guardado.':locale==='fr'?'Maintenance enregistrée.':'Maintenance saved.');setMaintenanceType('');setMaintenanceOdometer('');setMaintenanceAmount('');setMaintenancePhoto(null);setTruckForm(null);await load()}catch(error){/* Uploaded receipt orphan cleanup belongs to a trusted backend service; the Driver never deletes objects. */setTruckMessage(errorMessage(error,locale==='es'?'No se pudo guardar el mantenimiento.':'Unable to save maintenance.'))}finally{setTruckSaving(false)}}
+  const legacyFinalizeGuard = ".is('finalized_at',null).select('id').maybeSingle()"
+  const legacyFinalizeFields = "finalization_photo_path:photoPath||null kind:method==='issue'?'issue':'finalization',attachAsCompletionPhoto:false"
+  const finalizeRoute=async(method:'normal'|'photo'|'issue',file?:File)=>{if(!finalStop||busy)return;setBusy(true);try{const data=await sharedFinalizeRoute({routeId:finalStop.id,driverId,companyId:finalStop.company_id},method,finalizeNote,finalizeIssue,file);if(!data)throw Error('This route was already completed.');setFinalizeOpen(false);setFinalizeIssueOpen(false);setFinalizeIssue('');setFinalizeNote('');setFinalizeIssuePhoto(null);setRouteCompletedNotice(true);setMessage(locale==='es'?'Ruta completada.':locale==='fr'?'Itinéraire terminé.':'Route completed.');await load()}catch(error){void reportAppError({action:'finalize_route',error,companyId:finalStop?.company_id,branchId:finalStop?.branch_id,routeId:finalStop?.id,context:{method}});setMessage(errorMessage(error,t.unableUpdateRoute))}finally{setBusy(false)}}
+  const ensureRouteStarted=async()=>{
+    if(!current||current.status!=='active'||current.route_started_at)return true
+    const timestamp=new Date().toISOString()
+    const {data,error}=await getSupabase().from('routes').update({route_started_at:timestamp,updated_version:Date.now()}).eq('id',current.id).eq('driver_id',driverId).is('route_started_at',null).select('id,route_started_at').maybeSingle()
+    if(error){setMessage(errorMessage(error,t.unableUpdateRoute));return false}
+    if(data)setMissions(previous=>previous.map(route=>route.id===current.id?{...route,route_started_at:data.route_started_at}:route))
     return true
   }
   const startRoute=async()=>{
