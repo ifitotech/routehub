@@ -34,7 +34,7 @@ Object.assign(fr, {retry:'Réessayer', noRoutesAssignedToday:"Aucun itinéraire 
 
 Object.assign(en, {
   drvToday:'Today', drvRoute:'Route', drvMap:'Map', drvTruck:'Truck', drvMore:'More',
-  drvStartRoute:'START ROUTE', drvArrived:'ARRIVED AT STOP', drvContinue:'CONTINUE ROUTE',
+  drvStartRoute:'START ROUTE', drvStartReturn:'START RETURN', drvArrived:'ARRIVED AT STOP', drvContinue:'CONTINUE ROUTE',
   drvOpenMaps:'Open Maps', drvIssue:'Issue', drvStartDrivingDay:'START DRIVING DAY',
   drvNoStops:'No stops right now.', drvAssignedWork:'Your assigned work will appear here.',
   drvCouldntLoad:'Couldn\'t load your route.', drvTryAgain:'TRY AGAIN',
@@ -74,7 +74,7 @@ Object.assign(en, {
 })
 Object.assign(es, {
   drvToday:'Hoy', drvRoute:'Ruta', drvMap:'Mapa', drvTruck:'Camión', drvMore:'Mas',
-  drvStartRoute:'INICIAR RUTA', drvArrived:'LLEGUÉ A LA PARADA', drvContinue:'CONTINUAR RUTA',
+  drvStartRoute:'INICIAR RUTA', drvStartReturn:'COMENZAR REGRESO', drvArrived:'LLEGUÉ A LA PARADA', drvContinue:'CONTINUAR RUTA',
   drvOpenMaps:'Abrir Maps', drvIssue:'Incidencia', drvStartDrivingDay:'INICIAR JORNADA',
   drvNoStops:'No hay paradas ahora.', drvAssignedWork:'Tu trabajo asignado aparecerá aquí.',
   drvCouldntLoad:'No se pudo cargar tu ruta.', drvTryAgain:'REINTENTAR',
@@ -104,7 +104,7 @@ Object.assign(es, {
 })
 Object.assign(fr, {
   drvToday:"Aujourd'hui", drvRoute:'Itinéraire', drvMap:'Carte', drvTruck:'Camion', drvMore:'Plus',
-  drvStartRoute:'DEMARRER', drvArrived:'ARRIVE A L ARRÊT', drvContinue:'CONTINUER',
+  drvStartRoute:'DEMARRER', drvStartReturn:'COMMENCER LE RETOUR', drvArrived:'ARRIVE A L ARRÊT', drvContinue:'CONTINUER',
   drvOpenMaps:'Ouvrir Maps', drvIssue:'Incident', drvStartDrivingDay:'DEMARRER LA JOURNEE',
   drvNoStops:"Aucun arret pour le moment.", drvAssignedWork:'Votre travail apparaitra ici.',
   drvCouldntLoad:'Impossible de charger l itineraire.', drvTryAgain:'REESSAYER',
