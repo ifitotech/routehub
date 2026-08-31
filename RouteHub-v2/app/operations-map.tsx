@@ -214,10 +214,10 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     try{
      const estimate=sequence.points.length>1?await calculateRoute(sequence.points):null
      const routed=estimate?.coordinates
-     const street=estimate?.source==='osrm'&&!!routed&&routed.length>sequence.points.length
+     const street=Boolean(estimate?.source==='osrm'&&routed&&routed.length>1)
      return {
       ...sequence,
-      line:street&&routed?routed:sequence.points,
+      line:routed&&routed.length>1?routed:sequence.points,
       street,
       distanceMeters:estimate?.distanceMeters,
       durationSeconds:estimate?.durationSeconds,
@@ -236,7 +236,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   })()
 
   return()=>{cancelled=true}
- },[routeKey,driverKey,visibleRoutes,driverLocations])
+ },[routeKey,driverKey])
 
  const allPoints=useMemo(()=>{
   const operational=[

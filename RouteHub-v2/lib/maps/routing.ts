@@ -78,7 +78,7 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal)
   const fallback={coordinates:points,source:'fallback' as const}
   if(points.length<2)return fallback
   try{
-    const response=await fetch('/api/route',{
+    const response=await fetch('/api/routing',{
       method:'POST',
       headers:{'content-type':'application/json'},
       body:JSON.stringify({points:points.slice(0,25)}),
