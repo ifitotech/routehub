@@ -148,37 +148,30 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
 }
 
 export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,onSummary}:Props){
- const [resolved,setResolved]=useState<ResolvedRoute[]>([])
- const [loading,setLoading]=useState(true)
- const [totals,setTotals]=useState<{distanceMeters:number;durationSeconds:number}|null>(null)
  const visibleRoutes=useMemo(()=>routes.filter(route=>{
   const status=String(route.status||'').toLowerCase()
   if(status==='completed'||status==='cancelled')return false
   return Boolean(route.origin_address||route.destination_address||isCoordinate(route.origin_lat,route.origin_lng)||isCoordinate(route.destination_lat,route.destination_lng))
  }),[routes])
+ const instant=useMemo(()=>visibleRoutes.map((route,index)=>{
+  const origin=asPoint(route.origin_lat,route.origin_lng)
+  const destination=asPoint(route.destination_lat,route.destination_lng)
+  const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
+  return {...route,points,line:points,number:index+1}
+ }),[visibleRoutes])
+ const [resolved,setResolved]=useState<ResolvedRoute[]>(instant)
+ const [totals,setTotals]=useState<{distanceMeters:number;durationSeconds:number}|null>(null)
  const routeKey=visibleRoutes.map(route=>[route.id,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.position].join(':')).join('|')
+ const pins=resolved.length?resolved:instant
 
  useEffect(()=>{
   let cancelled=false
   if(!visibleRoutes.length){
    setResolved([])
    setTotals(null)
-   setLoading(false)
    return
   }
-  const instant=visibleRoutes.map((route,index)=>{
-   const origin=asPoint(route.origin_lat,route.origin_lng)
-   const destination=asPoint(route.destination_lat,route.destination_lng)
-   const points=[origin,destination].filter((point):point is Coordinate=>Boolean(point))
-   return {...route,points,line:points,number:index+1}
-  })
-  const ready=instant.some(route=>route.points.length)
-  if(ready){
-   setResolved(instant)
-   setLoading(false)
-  }else{
-   setLoading(true)
-  }
+  setResolved(instant)
   void (async()=>{
    const known=instant.flatMap(route=>route.points)
    const near=known[0]||fallbackCenter
@@ -198,7 +191,6 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    }))
    if(cancelled)return
    setResolved(pins)
-   setLoading(false)
    onSummary?.({count:visibleRoutes.length})
    const lined=await Promise.all(pins.map(async route=>{
     if(route.points.length<2)return route
@@ -218,15 +210,15 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
      onSummary?.({count:visibleRoutes.length,...next})
     }
    }
-  })().catch(()=>{if(!cancelled)setLoading(false)})
+  })().catch(()=>{})
   return()=>{cancelled=true}
  },[routeKey])
 
- const allPoints=useMemo(()=>[...resolved.flatMap(route=>route.points),...driverLocations.map(driver=>driver.location)],[driverLocations,resolved])
+ const allPoints=useMemo(()=>[...pins.flatMap(route=>route.points),...driverLocations.map(driver=>driver.location)],[driverLocations,pins])
  const driverDestinations=useMemo(()=>new Map(driverLocations.map(driver=>{
-  const next=resolved.find(route=>route.driver_id===driver.driver_id&&['active','paused','published','pending'].includes(route.status||''))
+  const next=pins.find(route=>route.driver_id===driver.driver_id&&['active','paused','published','pending'].includes(route.status||''))
   return [driver.id,next?.points[next.points.length-1]||null] as const
- })),[driverLocations,resolved])
+ })),[driverLocations,pins])
  const center=allPoints[0]||fallbackCenter
  const copy=locale==='es'
   ?{label:'Mapa operativo de rutas',loading:'Preparando mapa operativo…',unavailable:'No hay rutas activas ni conductores compartiendo ubicación.',current:'Ruta actual',pending:'Pendientes',issue:'Incidencias',driver:'Conductor',start:'Inicio'}
@@ -236,10 +228,10 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
 
  return <section className={styles.map} aria-label={copy.label}>
   <div className={styles.canvas}>
-   {loading&&!resolved.length?<div className={styles.state}>{copy.loading}</div>:!resolved.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
+   {!pins.length&&!driverLocations.length?<div className={styles.state}>{copy.unavailable}</div>:<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
     <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
     <FitBounds points={allPoints}/>
-    {resolved.map((route,index)=><Fragment key={`route-${route.id}`}>
+    {pins.map((route,index)=><Fragment key={`route-${route.id}`}>
      {route.line.length>1&&<Polyline positions={route.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:routeColor(route.status),weight:4,opacity:.82}}/>}
      {index===0&&route.points[0]&&<Marker position={[route.points[0].lat,route.points[0].lng]} icon={originMarker('#0F1D35')}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
      {route.points[route.points.length-1]&&<Marker position={[route.points[route.points.length-1].lat,route.points[route.points.length-1].lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={200}><Tooltip direction="top" offset={[0,-16]}>{`${route.number}. ${route.destination_name||route.destination_address||copy.driver}`}</Tooltip><Popup><strong>{route.destination_name||copy.driver}</strong><br/>{statusLabel(route.status,locale)}{route.order_number?` · ${route.order_number}`:''}{route.destination_address?<><br/><small>{route.destination_address}</small></>:null}</Popup></Marker>}

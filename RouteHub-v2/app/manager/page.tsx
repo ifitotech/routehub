@@ -10,10 +10,10 @@ import {useLocale} from '../../lib/use-preferences'
 import dynamic from 'next/dynamic'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
 import ManagerShell from './manager-shell'
-
-const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
 import styles from './manager-dashboard.module.css'
 import todayStyles from './manager-today.module.css'
+
+const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false, loading: () => <div className={todayStyles.opsMap} aria-hidden />})
 
 const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRoutes: 0, completedRoutes: 0, openIssues: 0}
 
