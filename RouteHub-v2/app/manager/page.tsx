@@ -195,15 +195,14 @@ export default function Manager() {
       <aside className={todayStyles.todaySide}>
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
           <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
-          {loading ? <div className={todayStyles.loading}>{t.loading}</div> : todayRoutes.length === 0 ? <p className={todayStyles.emptyText}>{copy.noPending}</p> : (() => {
+          {loading ? <div className={todayStyles.loading}>{t.loading}</div> : (() => {
             const pending = todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || '')))
-            const done = todayRoutes.filter(route => route.status === 'completed')
-            const extra = pending.length > 4 || done.length > 4
-            const row = (route: DashboardRoute) => {
+            const extra = pending.length > 6
+            const row = (route: DashboardRoute, index: number) => {
               const po = route.order_number && !['return', 'branch'].includes(String(route.mission_type || '').toLowerCase()) ? `PO ${route.order_number}` : ''
               return (
                 <Link href="/routes/manage" className={todayStyles.dayRow} data-status={route.status} key={route.id}>
-                  <span className={todayStyles.order}>{todayRoutes.findIndex(item => item.id === route.id) + 1}</span>
+                  <span className={todayStyles.order}>{index + 1}</span>
                   <span className={todayStyles.routeInfo}>
                     <strong>{route.destination_name || t.destination}</strong>
                     <span>{routeTypeLabel(route.mission_type)}{po ? ` · ${po}` : ''}</span>
@@ -211,18 +210,10 @@ export default function Manager() {
                 </Link>
               )
             }
+            if (!pending.length) return <p className={todayStyles.emptyText}>{copy.noPending}</p>
             return (
               <>
-                <div className={todayStyles.splitLists}>
-                  <div>
-                    <p className={todayStyles.splitLabel}>{copy.pending}</p>
-                    <div className={todayStyles.dayList}>{pending.slice(0, 4).map(route => row(route))}</div>
-                  </div>
-                  <div>
-                    <p className={todayStyles.splitLabel}>{copy.completed}</p>
-                    <div className={todayStyles.dayList}>{done.slice(0, 4).map(route => row(route))}</div>
-                  </div>
-                </div>
+                <div className={todayStyles.dayList}>{pending.slice(0, 6).map((route, index) => row(route, index))}</div>
                 {extra ? <Link className={todayStyles.seeMore} href="/routes">{copy.seeMore}</Link> : null}
               </>
             )

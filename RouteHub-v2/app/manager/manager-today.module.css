@@ -149,15 +149,20 @@
   .summaryPending { color: #6c7c94; }
 
   .todayLayout {
-    grid-template-columns: minmax(0, 1.7fr) minmax(320px, .55fr);
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, .42fr);
     gap: 16px;
-    align-items: stretch;
-    min-height: calc(100dvh - 220px);
+    align-items: start;
+    min-height: 0;
     padding-bottom: 0;
     overflow: visible;
   }
-  .todayMain { min-height: 0; height: 100%; grid-template-rows: auto auto 1fr; }
-  .opsMap { min-height: 0; height: calc(100dvh - 280px); --operations-map-height: calc(100dvh - 280px); }
+  .todayMain { min-height: 0; }
+  .opsMap {
+    min-height: 320px;
+    height: min(520px, calc(100dvh - 310px));
+    --operations-map-height: min(520px, calc(100dvh - 310px));
+    background: #eaf2fb;
+  }
   .hideOnFit { display: none; }
   .todayNav { display: none; }
 
