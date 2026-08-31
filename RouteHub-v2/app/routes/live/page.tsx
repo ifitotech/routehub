@@ -42,6 +42,7 @@ export default function LiveRoutePage() {
         const originLng = branch?.longitude == null ? null : Number(branch.longitude)
         setRoutes(dashboard.todayRoutes.map(route => ({
           id: route.id,
+          mission_type: route.mission_type,
           origin_address: route.origin_address || originAddress,
           origin_lat: route.origin_lat ?? originLat,
           origin_lng: route.origin_lng ?? originLng,
@@ -52,7 +53,6 @@ export default function LiveRoutePage() {
           status: route.status,
           driver_id: route.driver_id,
           position: route.position,
-          order_number: route.order_number,
         })))
         let query = getSupabase()
           .from('driving_sessions')
