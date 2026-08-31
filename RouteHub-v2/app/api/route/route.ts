@@ -3,6 +3,15 @@ import {mapProviderLimits,routingConfig} from '../../../lib/maps/map-config'
 import {normalizeOsrmRoute} from '../../../lib/maps/routing'
 import type {MapCoordinate} from '../../../lib/maps/types'
 
+type OsrmPayload={
+  routes?:Array<{
+    distance?:number
+    duration?:number
+    geometry?:{coordinates?:Array<[number,number]>}
+    legs?:Array<{steps?:Array<{name?:string;distance?:number;maneuver?:{type?:string;modifier?:string;location?:[number,number]}}>}>
+  }>
+}
+
 function validPoints(value:unknown):MapCoordinate[]{
   if(!Array.isArray(value))return []
   return value.flatMap(item=>{
@@ -22,7 +31,8 @@ export async function POST(request:NextRequest){
   try{
     const result=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(mapProviderLimits.routeTimeoutMs)})
     if(!result.ok)return NextResponse.json({coordinates:points,source:'fallback'})
-    return NextResponse.json(normalizeOsrmRoute(await result.json() as {routes?:Array<{distance?:number;duration?:number;geometry?:{coordinates?:Array<[number,number]>};legs?:Array<{steps?:Array<{name?:string;distance?:number;maneuver?:{type?:string;modifier?:string;location?:[number,number]}}>}>}>}>},points))
+    const payload=await result.json() as OsrmPayload
+    return NextResponse.json(normalizeOsrmRoute(payload,points))
   }catch{
     return NextResponse.json({coordinates:points,source:'fallback'})
   }
