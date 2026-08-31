@@ -163,7 +163,7 @@ export default function Manager() {
           <OperationsMap
             hideFooter
             onSummary={setMapSummary}
-            routes={todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).map(route => ({
+            routes={todayRoutes.filter(route => String(route.status || '') !== 'cancelled').map(route => ({
               id: route.id,
               mission_type: route.mission_type,
               origin_address: route.origin_address || branchOrigin.address,
