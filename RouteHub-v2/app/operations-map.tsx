@@ -37,8 +37,8 @@ export type OperationsDriverLocation={
 }
 
 type ResolvedRoute=OperationsRoute&{origin:Coordinate|null;destination:Coordinate|null;number:number}
-type ResolvedSequence={key:string;driverId:string|null;routes:ResolvedRoute[];start:Coordinate|null;line:Coordinate[];color:string}
-type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean}
+type ResolvedSequence={key:string;driverId:string|null;routes:ResolvedRoute[];start:Coordinate|null;line:Coordinate[];color:string;distanceMeters?:number;durationSeconds?:number}
+type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean;onSummary?:(summary:{count:number;distanceMeters?:number;durationSeconds?:number}|null)=>void}
 
 const fallbackCenter:Coordinate={lat:39.8283,lng:-98.5795}
 const isCoordinate=(lat:number|null|undefined,lng:number|null|undefined):lat is number=>lat!=null&&lng!=null&&Number.isFinite(lat)&&Number.isFinite(lng)
@@ -134,12 +134,12 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
     const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
     const estimate=points.length>1?await calculateRoute(points):{coordinates:points}
-    return {key,driverId,routes:groupRoutes,start,line:estimate.coordinates.length>1?estimate.coordinates:points,color:sequenceColors[index%sequenceColors.length]}
+    return {key,driverId,routes:groupRoutes,start,line:estimate.coordinates.length>1?estimate.coordinates:points,color:sequenceColors[index%sequenceColors.length],distanceMeters:estimate.distanceMeters,durationSeconds:estimate.durationSeconds}
    }))
-   if(!cancelled){setResolved(numbered);setSequences(built)}
+   if(!cancelled){setResolved(numbered);setSequences(built);onSummary?.({count:built.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0),distanceMeters:built.some(sequence=>Number.isFinite(sequence.distanceMeters))?built.reduce((total,sequence)=>total+(sequence.distanceMeters||0),0):undefined,durationSeconds:built.some(sequence=>Number.isFinite(sequence.durationSeconds))?built.reduce((total,sequence)=>total+(sequence.durationSeconds||0),0):undefined})}
   }).catch(()=>{if(!cancelled){setResolved([]);setSequences([])}}).finally(()=>{if(!cancelled)setLoading(false)})
   return()=>{cancelled=true}
- },[routeKey,driverKey])
+ },[routeKey,driverKey,onSummary])
 
  const allPoints=useMemo(()=>{
   const operational=[...sequences.map(sequence=>sequence.start),...resolved.filter(route=>isRemaining(route.status)).map(route=>route.destination),...driverLocations.map(driver=>driver.location)].filter((point):point is Coordinate=>Boolean(point))
