@@ -27,7 +27,10 @@ export type DriverTodayQueue<T extends DriverQueueRoute> = {
   completed: T[]
 }
 
-const upcomingStatuses: MissionStatus[] = ['pending', 'published']
+// Dispatch assigns routes with `assigned`; treat that state as actionable so
+// Start Delivery can promote it to the active operation without disappearing
+// on the next refresh.
+const upcomingStatuses: MissionStatus[] = ['pending', 'published', 'assigned']
 
 function ordered<T extends DriverQueueRoute>(routes: T[]) {
   return [...routes].sort((left, right) =>
