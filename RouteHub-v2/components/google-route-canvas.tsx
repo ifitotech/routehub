@@ -22,6 +22,11 @@ type MapsApi={
   SymbolPath:{CIRCLE:unknown;FORWARD_CLOSED_ARROW:unknown}
 }
 
+function driverTruckIcon(color:string){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="21" fill="${color}" stroke="white" stroke-width="3"/><path fill="white" d="M11 14h17v14h4.2l3.8 4v4h-3a3.5 3.5 0 0 1-7 0h-7a3.5 3.5 0 0 1-7 0H8v-18c0-2.2 1.2-4 3-4Zm4 20a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm14.5 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm1-4h3l-2-2h-1v2Z"/></svg>`
+  return {url:`data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`}
+}
+
 export type GoogleRouteMarker={
   id:string
   position:MapCoordinate|null|undefined
@@ -119,13 +124,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           draggable:Boolean(marker.draggable&&onMarkerDrag),
           label:marker.label?{text:marker.label,color:'#fff',fontWeight:'800'}:undefined,
           icon:marker.driver?{
-            path:maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale:8,
-            rotation:Number.isFinite(marker.heading)?Number(marker.heading):0,
-            fillColor:marker.tone||'#0F1D35',
-            fillOpacity:1,
-            strokeColor:'#fff',
-            strokeWeight:3,
+            ...driverTruckIcon(marker.tone||'#0F1D35'),
           }:{
             path:maps.SymbolPath.CIRCLE,
             scale:marker.label?16:12,
@@ -151,13 +150,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           position:current.driverMarker.position,
           title:current.driverMarker.title,
           icon:{
-            path:maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale:8,
-            rotation:Number.isFinite(current.driverMarker.heading)?Number(current.driverMarker.heading):0,
-            fillColor:current.driverMarker.tone||'#0F1D35',
-            fillOpacity:1,
-            strokeColor:'#fff',
-            strokeWeight:3,
+            ...driverTruckIcon(current.driverMarker.tone||'#0F1D35'),
           },
           zIndex:1000,
         })
@@ -191,13 +184,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
     driverMarkerRef.current?.setPosition?.(position)
     if(driverMarker){
       driverMarkerRef.current?.setIcon?.({
-        path:(window as unknown as {google?:{maps?:MapsApi}}).google?.maps?.SymbolPath.FORWARD_CLOSED_ARROW,
-        scale:8,
-        rotation:Number.isFinite(driverMarker.heading)?Number(driverMarker.heading):0,
-        fillColor:driverMarker.tone||'#0F1D35',
-        fillOpacity:1,
-        strokeColor:'#fff',
-        strokeWeight:3,
+        ...driverTruckIcon(driverMarker.tone||'#0F1D35'),
       })
     }
     if(followDevice||followToken){

@@ -18,6 +18,11 @@ type MapsApi={
  SymbolPath:{CIRCLE:unknown;FORWARD_CLOSED_ARROW:unknown}
 }
 
+function driverTruckIcon(){
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="21" fill="#0b1f3a" stroke="white" stroke-width="3"/><path fill="white" d="M11 14h17v14h4.2l3.8 4v4h-3a3.5 3.5 0 0 1-7 0h-7a3.5 3.5 0 0 1-7 0H8v-18c0-2.2 1.2-4 3-4Zm4 20a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm14.5 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm1-4h3l-2-2h-1v2Z"/></svg>'
+ return {url:`data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`}
+}
+
 export type OperationsRoute={
  id:string
  mission_type?:string|null
@@ -45,7 +50,7 @@ export type OperationsDriverLocation={
 }
 
 type Stop=OperationsRoute&{destination:Coordinate|null;number:number}
-type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean;hideFooter?:boolean;onSummary?:(summary:{count:number;distanceMeters?:number;durationSeconds?:number}|null)=>void}
+type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean;hideFooter?:boolean;compact?:boolean;onSummary?:(summary:{count:number;distanceMeters?:number;durationSeconds?:number}|null)=>void}
 
 const miami:Coordinate={lat:25.857,lng:-80.278}
 const isPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>{
@@ -73,7 +78,7 @@ async function locate(address:string|null|undefined,lat:number|null|undefined,ln
  try{return sanitizeCoordinate((await geocodeAddress(address))?.coordinate||null)}catch{return null}
 }
 
-export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,hideFooter=false,onSummary}:Props){
+export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,hideFooter=false,compact=false,onSummary}:Props){
  const containerRef=useRef<HTMLDivElement>(null)
  const mapRef=useRef<GoogleMap|null>(null)
  const mapObjectsRef=useRef<MapObject[]>([])
@@ -141,7 +146,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const color=colorFor(stop.status)
     mapObjectsRef.current.push(new maps.Marker({map,position:stop.destination,title:`${stop.number}. ${typeLabel(stop.mission_type,locale)} · ${stop.destination_name||stop.destination_address||''}`,label:{text:stop.status==='completed'?'✓':String(stop.number),color:'#ffffff',fontWeight:'800'},icon:{path:maps.SymbolPath.CIRCLE,scale:16,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3}}))
    }
-   if(driver)mapObjectsRef.current.push(new maps.Marker({map,position:driver.location,title:`${driver.label||'Driver'}${driver.nextStop?` · ${driver.nextStop}`:''}`,label:{text:'D',color:'#ffffff',fontWeight:'900'},icon:{path:maps.SymbolPath.FORWARD_CLOSED_ARROW,scale:8,fillColor:'#0b1f3a',fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3},zIndex:1000}))
+   if(driver)mapObjectsRef.current.push(new maps.Marker({map,position:driver.location,title:`${driver.label||'Driver'}${driver.nextStop?` · ${driver.nextStop}`:''}`,icon:driverTruckIcon(),zIndex:1000}))
    const points=[...line,...stops.map(stop=>stop.destination),driver?.location].filter((point):point is Coordinate=>Boolean(point))
    if(points.length>1){const bounds=new maps.LatLngBounds();points.forEach(point=>bounds.extend(point));map.fitBounds(bounds,42)}
    else if(points.length===1){map.setCenter(points[0]);map.setZoom(14)}
@@ -152,7 +157,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
  },[renderKey,interactive,locale,line,stops,driver])
 
  const copy=locale==='es'?{label:'Mapa operativo',empty:'No hay paradas con dirección hoy.',driver:'Conductor'}:locale==='fr'?{label:'Carte opérationnelle',empty:'Aucun arrêt avec adresse aujourd’hui.',driver:'Conducteur'}:{label:'Operations map',empty:'No stops with an address today.',driver:'Driver'}
- return <section className={styles.map} aria-label={copy.label}>
+ return <section className={`${styles.map}${compact?` ${styles.compact}`:''}`} aria-label={copy.label}>
   <div className={styles.canvas}><div ref={containerRef} className={styles.googleMap}/>{mapError&&<div className={styles.state}>{mapError}</div>}{!mapError&&!stops.length&&!driver&&<div className={styles.state}>{copy.empty}</div>}</div>
   {!hideFooter&&<footer><span>{stops.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</span><small>{line.length>1?(locale==='es'?'Recorrido listo':locale==='fr'?'Trajet prêt':'Route ready'):(locale==='es'?'Sin recorrido':locale==='fr'?'Pas de trajet':'No path yet')}</small></footer>}
  </section>

@@ -18,7 +18,7 @@ import {useLocale} from '../../lib/use-preferences'
 import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 
-const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
+const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
 
 export default function DriverV3Page() {
   const router=useRouter()
@@ -43,6 +43,16 @@ export default function DriverV3Page() {
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
+  const operationQueue=snapshot?.queue
+  const todayOperationRoutes=useMemo(()=>[
+    ...(operationQueue?.current?[operationQueue.current]:[]),
+    ...(operationQueue?.upcoming||[]),
+  ].map((item,index)=>({...item,position:index+1})),[operationQueue])
+  const operationMapDriverLocation=liveFix
+    ? {lat:liveFix.lat,lng:liveFix.lng}
+    : drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null
+      ? {lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}
+      : null
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -331,16 +341,15 @@ export default function DriverV3Page() {
           <div className={styles.divider}/>
           <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            <LiveRouteMap
-              destinationAddress={route.destination_address}
-              destinationCoordinate={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
-              driverLocation={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
-              driverUpdatedAt={liveFix?.at||drivingSession?.last_updated_at||null}
-              title={t.drvCurrentStop}
-              showHeader={false}
-              showLocationUpdated={false}
+            <OperationsMap
+              routes={todayOperationRoutes}
+              driverLocations={operationMapDriverLocation?[
+                {id:'driver',driver_id:driverId,location:operationMapDriverLocation,label:'Driver',nextStop:route.destination_name||route.destination_address||null,status:'driving'},
+              ]:[]}
+              locale="en"
               interactive={false}
-              useDriverAsOrigin
+              hideFooter
+              compact
             />
             </div>
           </div>

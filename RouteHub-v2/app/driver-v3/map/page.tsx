@@ -1,12 +1,11 @@
 'use client'
 import dynamic from 'next/dynamic'
-import {useMemo, useState} from 'react'
+import {useState} from 'react'
 import {Component, type ReactNode} from 'react'
 import {useRouter} from 'next/navigation'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {markArrived} from '../../../lib/driver-v3/actions'
-import {operationalDate} from '../../../lib/driver-queue'
 
 const DriverRouteNavigation = dynamic(() => import('../../driver-route-navigation'), {ssr: false})
 
@@ -17,7 +16,7 @@ class NavigationBoundary extends Component<{children: ReactNode; fallback: React
 }
 
 export default function DriverV3Map() {
-  const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix, routes} = useDriverData()
+  const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix} = useDriverData()
   const {t, locale} = useLocale()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -26,14 +25,6 @@ export default function DriverV3Map() {
   const completionKind = snapshot?.currentOperation?.kind === 'branch'
     ? 'return'
     : String(snapshot?.currentOperation?.kind || 'delivery')
-  const today = operationalDate()
-  const dayStops = useMemo(() => {
-    const focusDate = (route?.route_date || today).toString().slice(0, 10)
-    return (routes || [])
-      .filter((item: any) => (item.route_date || '').slice(0, 10) === focusDate && item.status !== 'cancelled')
-      .slice()
-      .sort((left: any, right: any) => Number(left.position || 0) - Number(right.position || 0) || String(left.id).localeCompare(String(right.id)))
-  }, [routes, route?.route_date, today])
 
   const gps = liveFix
     ? liveFix
@@ -73,7 +64,7 @@ export default function DriverV3Map() {
       ) : route ? (
         <NavigationBoundary fallback={<NavigationFallback route={route} onBack={() => router.push('/driver')} onRetry={() => window.location.reload()} t={t} />}>
           <DriverRouteNavigation
-          stops={dayStops}
+          stops={[route]}
           activeStopId={route.id}
           originAddress={route.origin_address}
           originCoordinate={gps}
