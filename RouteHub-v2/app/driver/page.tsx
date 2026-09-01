@@ -1,1 +1,3 @@
-PLACEHOLDER_LOAD_FROM_WORKSPACE
+'use client'
+
+export {default} from './driver-screen'
