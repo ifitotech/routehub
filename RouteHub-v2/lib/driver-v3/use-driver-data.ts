@@ -65,6 +65,19 @@ function useDriverDataInternal(): DriverV3Data {
             }))
           : null
         loadError = second.error
+        // Last-resort compatibility path for projects whose PostgREST schema
+        // cache is behind the deployed migrations. The driver only needs the
+        // authoritative route row; optional fields are rendered defensively.
+        if (loadError) {
+          const fallback = await getSupabase()
+            .from('routes')
+            .select('*')
+            .eq('company_id', membership.company_id)
+            .eq('driver_id', user.id)
+            .order('position', {ascending: true})
+          rows = fallback.data
+          loadError = fallback.error
+        }
       }
       if (loadError) throw loadError
       setRoutes((rows || []) as DriverV3Route[])
