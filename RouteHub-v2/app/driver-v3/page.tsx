@@ -273,7 +273,9 @@ export default function DriverV3Page() {
   }
   const action=primary()
 
-  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet)}>
+  // Keep the primary navigation available on the empty Today state. A stale
+  // completion sheet must not hide the nav after the last route is completed.
+  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet&&operation)}>
     <div className={styles.page}>
             {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
