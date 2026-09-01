@@ -11,14 +11,13 @@ test('navigation uses coordinates before a human-readable address',()=>{
   assert.match(openNavigation(destination,'iPhone'),/maps\.apple\.com/)
 })
 
-test('Driver entry uses the V3 current operation, operational queue map, and real navigation adapters',async()=>{
+test('Driver entry uses the V3 current operation, quota-safe preview, and real external navigation',async()=>{
   const entry=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
   const source=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
   assert.match(entry,/driver-v3\/page/)
   assert.match(source,/snapshot\?\.currentOperation/)
-  assert.match(source,/OperationsMap/)
-  assert.match(source,/operationQueue\?\.current/)
-  assert.match(source,/operationQueue\?\.upcoming/)
+  assert.match(source,/OpenStreetRoutePreview/)
+  assert.match(source,/internalGpsNavigationEnabled=false/)
   assert.match(source,/openNavigation\(/)
   assert.match(source,/route\.destination_lat/)
   assert.doesNotMatch(source,/autoStartNavigation/)

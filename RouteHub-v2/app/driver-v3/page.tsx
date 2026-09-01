@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useRouter, useSearchParams} from 'next/navigation'
+import {useSearchParams} from 'next/navigation'
 import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useMemo, useRef, useState} from 'react'
@@ -18,10 +18,13 @@ import {useLocale} from '../../lib/use-preferences'
 import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 
-const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
+const OpenStreetRoutePreview = dynamic(() => import('../../components/openstreet-route-preview'), {ssr: false})
+
+// Temporary safety mode: until internal GPS navigation is reliable, a new
+// route goes straight to the driver's installed map app without mutating it.
+const internalGpsNavigationEnabled=false
 
 export default function DriverV3Page() {
-  const router=useRouter()
   const searchParams=useSearchParams()
   const {t}=useLocale()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,routes}=useDriverData()
@@ -43,16 +46,6 @@ export default function DriverV3Page() {
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
-  const operationQueue=snapshot?.queue
-  const todayOperationRoutes=useMemo(()=>[
-    ...(operationQueue?.current?[operationQueue.current]:[]),
-    ...(operationQueue?.upcoming||[]),
-  ].map((item,index)=>({...item,position:index+1})),[operationQueue])
-  const operationMapDriverLocation=liveFix
-    ? {lat:liveFix.lat,lng:liveFix.lng}
-    : drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null
-      ? {lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}
-      : null
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -291,6 +284,7 @@ export default function DriverV3Page() {
 
   const primary=()=>{
     if(!started) {
+      if(!internalGpsNavigationEnabled)return {label:t.drvOpenMaps,run:openMaps}
       const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
       return {label:startLabel, run:startCurrent}
     }
@@ -339,17 +333,12 @@ export default function DriverV3Page() {
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
           <div className={styles.divider}/>
-          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
+          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenMaps} onClick={openMaps} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openMaps()}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            <OperationsMap
-              routes={todayOperationRoutes}
-              driverLocations={operationMapDriverLocation?[
-                {id:'driver',driver_id:driverId,location:operationMapDriverLocation,label:'Driver',nextStop:route.destination_name||route.destination_address||null,status:'driving'},
-              ]:[]}
-              locale="en"
-              interactive={false}
-              hideFooter
-              compact
+            <OpenStreetRoutePreview
+              destination={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
+              driverLocation={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
+              label={route.destination_name||route.destination_address||t.drvCurrentStopName}
             />
             </div>
           </div>
