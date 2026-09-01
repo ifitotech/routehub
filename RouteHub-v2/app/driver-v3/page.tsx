@@ -19,11 +19,12 @@ import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 
 const OpenStreetRoutePreview = dynamic(() => import('../../components/openstreet-route-preview'), {ssr: false})
+const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
 
 export default function DriverV3Page() {
   const router=useRouter()
   const searchParams=useSearchParams()
-  const {t}=useLocale()
+  const {t,locale}=useLocale()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
@@ -272,6 +273,7 @@ export default function DriverV3Page() {
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
   const action=primary()
+  const previewRoutes = [snapshot?.queue.current, ...(snapshot?.queue.upcoming||[])].filter(Boolean).filter((item:any)=>!['completed','issue','cancelled'].includes(String(item.status))) as any[]
 
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
@@ -316,11 +318,7 @@ export default function DriverV3Page() {
           <div className={styles.divider}/>
           <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            <OpenStreetRoutePreview
-              destination={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
-              driverLocation={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}:null}
-              label={route.destination_name||route.destination_address||t.drvCurrentStopName}
-            />
+            {previewRoutes.length?<OperationsMap routes={previewRoutes} locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
             </div>
           </div>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
