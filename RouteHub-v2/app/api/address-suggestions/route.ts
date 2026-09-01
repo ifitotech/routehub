@@ -1,15 +1,13 @@
 import {NextRequest, NextResponse} from 'next/server'
-import {floridaBounds,geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQuery} from '../../../lib/maps/map-config'
+import {geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQuery} from '../../../lib/maps/map-config'
 
-type CensusMatch = {matchedAddress?: string; coordinates?: {x?: number; y?: number}}
-type NominatimMatch = {display_name?: string; lat?: string; lon?: string; place_id?: number; osm_type?: string; osm_id?: number; name?: string}
+type GoogleMatch = {formatted_address?: string; place_id?: string; geometry?: {location?: {lat?: number; lng?: number}}}
 type Coordinate = {lat: number; lng: number}
-type LocationSource = 'census' | 'nominatim'
+type LocationSource = 'google'
 type Suggestion = {label: string; primary: string; secondary: string; coordinate?: Coordinate; source: LocationSource; externalId?: string; name?: string}
 
 const CACHE_TTL_MS = 15 * 60 * 1000
 const cache = new Map<string, {expiresAt: number; suggestions: Suggestion[]}>()
-let lastNominatimRequestAt = 0
 
 const normalize = (value: string) => value.toLowerCase()
   // Treat common ordinal street forms as their numeric equivalent (33 Pl = 33rd Pl).
@@ -55,9 +53,9 @@ function cacheKey(query: string, near: string) { return `${normalize(query)}|${n
 function response(suggestions: Suggestion[]) { return NextResponse.json({suggestions}, {headers: {'Cache-Control': 'private, max-age=300'}}) }
 
 /**
- * Controlled, explicit beta location lookup. This route is deliberately not
- * intended for type-ahead use: callers invoke it after selecting Search/Enter;
- * saved RouteHub contacts and branches are handled in the client first.
+ * Controlled Google address lookup. Browser Places Autocomplete remains the
+ * first choice; this endpoint keeps explicit Search/Enter usable with the
+ * same provider when Places is unavailable.
  */
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get('q')?.trim() || ''
@@ -70,54 +68,26 @@ export async function GET(request: NextRequest) {
 
   const contextualQuery = withFloridaQuery(near ? `${query}, ${near}` : query)
   let suggestions: Suggestion[] = []
-
-  try {
-    const url = new URL(geocodingConfig.censusEndpoint)
-    url.searchParams.set('address', contextualQuery)
-    url.searchParams.set('benchmark', 'Public_AR_Current')
-    url.searchParams.set('format', 'json')
-    const censusResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(geocodingConfig.requestTimeoutMs)})
-    if (censusResponse.ok) {
-      const payload = await censusResponse.json() as {result?: {addressMatches?: CensusMatch[]}}
-      suggestions = rankSuggestions(query, (payload.result?.addressMatches || []).map(match => {
-        const label = match.matchedAddress?.trim() || ''
-        const coordinate = {lat: Number(match.coordinates?.y), lng: Number(match.coordinates?.x)}
-        return {...splitLabel(label), label, coordinate: validCoordinate(coordinate) ? coordinate : undefined, source: 'census' as const}
-      }).filter(candidate => validCoordinate(candidate.coordinate) && isInFlorida(candidate.coordinate.lat, candidate.coordinate.lng)))
-    }
-  } catch {
-    // RouteHub still permits manual address entry when lookup is unavailable.
-  }
-
-  if (!suggestions.length && Date.now() - lastNominatimRequestAt >= 1_100) {
+  if (geocodingConfig.googleKey) {
     try {
-      lastNominatimRequestAt = Date.now()
-      const url = new URL(geocodingConfig.nominatimEndpoint)
-      url.searchParams.set('format', 'jsonv2')
-      url.searchParams.set('limit', '5')
-      url.searchParams.set('countrycodes', 'us')
-      url.searchParams.set('addressdetails', '1')
-      url.searchParams.set('dedupe', '1')
-      url.searchParams.set('viewbox', `${floridaBounds.west},${floridaBounds.north},${floridaBounds.east},${floridaBounds.south}`)
-      url.searchParams.set('bounded', '1')
-      url.searchParams.set('q', contextualQuery)
-      const nominatimResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(geocodingConfig.requestTimeoutMs), headers: {Accept: 'application/json', 'User-Agent': geocodingConfig.userAgent}})
-      if (nominatimResponse.ok) {
-        const rows = await nominatimResponse.json() as NominatimMatch[]
-        suggestions = rankSuggestions(query, rows.map(row => {
-          const label = row.display_name?.trim() || ''
-          const coordinate = {lat: Number(row.lat), lng: Number(row.lon)}
-          return {
-            ...splitLabel(label), label,
-            coordinate: validCoordinate(coordinate) ? coordinate : undefined,
-            source: 'nominatim' as const,
-            externalId: row.osm_type && row.osm_id ? `${row.osm_type}:${row.osm_id}` : row.place_id?.toString(),
-            name: row.name?.trim() || undefined,
-          }
-        }).filter(candidate => validCoordinate(candidate.coordinate) && isInFlorida(candidate.coordinate!.lat, candidate.coordinate!.lng)))
+      const url = new URL(geocodingConfig.googleGeocodeEndpoint)
+      url.searchParams.set('address', contextualQuery)
+      url.searchParams.set('components', 'country:US|administrative_area:FL')
+      url.searchParams.set('region', 'us')
+      url.searchParams.set('key', geocodingConfig.googleKey)
+      const googleResponse = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(geocodingConfig.requestTimeoutMs)})
+      if (googleResponse.ok) {
+        const payload = await googleResponse.json() as {status?: string; results?: GoogleMatch[]}
+        if (payload.status === 'OK') {
+          suggestions = rankSuggestions(query, (payload.results || []).map(match => {
+            const label = match.formatted_address?.trim() || ''
+            const coordinate = {lat: Number(match.geometry?.location?.lat), lng: Number(match.geometry?.location?.lng)}
+            return {...splitLabel(label), label, coordinate: validCoordinate(coordinate) ? coordinate : undefined, source: 'google' as const, externalId: match.place_id}
+          }).filter(candidate => validCoordinate(candidate.coordinate) && isInFlorida(candidate.coordinate.lat, candidate.coordinate.lng)))
+        }
       }
     } catch {
-      // Manual address entry is always a supported fallback.
+      // Manual address entry remains available when Google lookup is unavailable.
     }
   }
 

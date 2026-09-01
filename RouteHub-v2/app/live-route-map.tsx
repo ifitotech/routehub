@@ -1,14 +1,12 @@
 'use client'
 
 import {useEffect,useMemo,useState} from 'react'
-import L from 'leaflet'
-import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
 import {MapPin,Route,Truck} from 'lucide-react'
+import GoogleRouteCanvas from '../components/google-route-canvas'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {mapTileConfig} from '../lib/maps/map-config'
-import {calculateRoute, nextRouteManeuver} from '../lib/maps/routing'
-import type {ActiveRouteManeuver, RouteManeuver} from '../lib/maps/types'
-import {clusterCoordinates, sanitizeCoordinate} from '../lib/maps/coordinates'
+import {calculateRoute,nextRouteManeuver} from '../lib/maps/routing'
+import {clusterCoordinates,sanitizeCoordinate} from '../lib/maps/coordinates'
+import type {ActiveRouteManeuver,RouteManeuver} from '../lib/maps/types'
 
 export type RouteCoordinate={lat:number;lng:number}
 export type RouteWaypoint={address?:string|null;label?:string|null;coordinate?:RouteCoordinate|null}
@@ -24,51 +22,11 @@ type Props={
  title?:string
  showHeader?:boolean
  showLocationUpdated?:boolean
-  interactive?:boolean
-  onActivate?:()=>void
-  useDriverAsOrigin?:boolean
+ interactive?:boolean
+ onActivate?:()=>void
+ useDriverAsOrigin?:boolean
  locale?:string
  onManeuver?:(maneuver:ActiveRouteManeuver|null)=>void
-}
-
-const makeMarker=(kind:'origin'|'destination'|'driver'|'stop',number?:number)=>L.divIcon({
- className:'route-map-marker-wrap',
- html:kind==='driver'
-  ?`<span class="route-map-marker route-map-marker-driver"><i></i></span>`
-  :`<span class="route-map-marker route-map-marker-${kind}">${kind==='origin'?'S':number||1}</span>`,
- iconSize:kind==='driver'?[28,28]:[42,42],
- iconAnchor:kind==='driver'?[14,14]:[21,21]
-})
-
-function FollowDriver({location}:{location:RouteCoordinate|null}){
- const map=useMap()
- useEffect(()=>{
-  if(!location)return
-  map.panTo([location.lat,location.lng],{animate:true,duration:0.4})
- },[map,location?.lat,location?.lng])
- return null
-}
-
-function FitBounds({points}:{points:RouteCoordinate[]}){
- const map=useMap()
- const pointKey=points.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join('|')
- useEffect(()=>{
-  if(!points.length)return
-  if(points.length===1){map.setView([points[0].lat,points[0].lng],14);return}
-  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:16})
- },[map,pointKey])
- return null
-}
-
-
-function RecenterOnRequest({points, token}:{points:RouteCoordinate[]; token:number}){
- const map=useMap()
- useEffect(()=>{
-  if(!token||!points.length)return
-  if(points.length===1){map.setView([points[0].lat,points[0].lng],14,{animate:true});return}
-  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:16,animate:true})
- },[map,token])
- return null
 }
 
 async function resolveCoordinate(address:string|null|undefined,known:RouteCoordinate|null|undefined){
@@ -77,6 +35,7 @@ async function resolveCoordinate(address:string|null|undefined,known:RouteCoordi
  try{return sanitizeCoordinate((await geocodeAddress(address))?.coordinate||null)}catch{return null}
 }
 
+/** Google Maps renderer for the same RouteHub Core route coordinates. */
 export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en',followToken=0,onManeuver}:Props & {followToken?:number}){
  const [routePoints,setRoutePoints]=useState<RouteCoordinate[]>([])
  const [line,setLine]=useState<RouteCoordinate[]>([])
@@ -90,25 +49,21 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
   setLoading(true)
   setUnavailable(false)
   const locations=[
-    ...(useDriverAsOrigin&&driverLocation?[{address:null,coordinate:driverLocation}]:[{address:originAddress,coordinate:originCoordinate}]),
-    ...waypoints,
-    {address:destinationAddress,coordinate:destinationCoordinate},
+   ...(useDriverAsOrigin&&driverLocation?[{address:null,coordinate:driverLocation}]:[{address:originAddress,coordinate:originCoordinate}]),
+   ...waypoints,
+   {address:destinationAddress,coordinate:destinationCoordinate},
   ]
   void Promise.all(locations.map(location=>resolveCoordinate(location.address,location.coordinate))).then(async coordinates=>{
-   const resolved=coordinates.filter((point):point is RouteCoordinate=>Boolean(point))
-   // Keep the map focused on the active operating area. A malformed or
-   // stale coordinate must never pull the viewport to another continent.
-   const clustered=clusterCoordinates(resolved)
-   const allowed=new Set(clustered.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`))
-   const points=resolved.filter(point=>allowed.has(`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`))
+   const points=clusterCoordinates(coordinates)
    if(cancelled)return
    setRoutePoints(points)
    setLine(points)
+   setManeuvers([])
    setUnavailable(!points.length)
    if(points.length>1){
     const estimate=await calculateRoute(points)
     if(!cancelled&&estimate.coordinates.length>1){
-     setLine(estimate.coordinates)
+     setLine(clusterCoordinates(estimate.coordinates,2_000))
      setManeuvers(estimate.maneuvers||[])
     }
    }
@@ -122,31 +77,27 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
   onManeuver(nextRouteManeuver(maneuvers,line,driverLocation||null)||null)
  },[maneuvers,line,driverLocation?.lat,driverLocation?.lng,onManeuver])
 
- const visiblePoints=useMemo(()=>[...routePoints,...(driverLocation?[driverLocation]:[])],[routePoints,driverLocation])
- const center=visiblePoints[0]||{lat:39.8283,lng:-98.5795}
  const copy=locale==='es'
   ?{connected:'Conductor conectado',scheduled:'Ruta programada',live:'EN VIVO',waiting:'EN ESPERA',loading:'Preparando mapa…',unavailable:'No pudimos ubicar esta ruta todavía.',map:'Mapa de ruta en vivo',driver:'Conductor',start:'Inicio',next:'Próxima parada',updated:'Ubicación actualizada'}
   :locale==='fr'
    ?{connected:'Conducteur connecté',scheduled:'Itinéraire programmé',live:'EN DIRECT',waiting:'EN ATTENTE',loading:'Préparation de la carte…',unavailable:'Nous ne pouvons pas encore localiser cet itinéraire.',map:'Carte de l’itinéraire',driver:'Conducteur',start:'Départ',next:'Prochain arrêt',updated:'Position actualisée'}
    :{connected:'Driver connected',scheduled:'Route scheduled',live:'LIVE',waiting:'WAITING',loading:'Preparing map…',unavailable:'We could not locate this route yet.',map:'Live route map',driver:'Driver',start:'Start',next:'Next stop',updated:'Location updated'}
  const origin=routePoints[0]||null
- const destination=routePoints[routePoints.length-1]||null
  const routeStops=routePoints.slice(1)
+ const markers=useMemo(()=>[
+  ...(origin&&(!useDriverAsOrigin||!driverLocation)?[{id:'origin',position:origin,label:'S',title:copy.start,tone:'#0F1D35'}]:[]),
+  ...routeStops.map((point,index)=>{
+   const last=index===routeStops.length-1
+   return {id:`stop-${index}`,position:point,label:String(index+1),title:last?(destinationAddress||`${copy.next} ${index+1}`):(waypoints[index]?.label||`${copy.next} ${index+1}`),tone:last?'#1667F2':'#7C3AED'}
+  }),
+  ...(driverLocation?[{id:'driver',position:driverLocation,label:'',title:copy.driver,tone:'#0F1D35',driver:true}]:[]),
+ ],[origin,routeStops,useDriverAsOrigin,driverLocation,copy.start,copy.next,copy.driver,destinationAddress,waypoints])
 
  return <section className={`live-route-map ${onActivate?'is-activatable':''}`} onClick={onActivate} onKeyDown={event=>{if(onActivate&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onActivate()}}} role={onActivate?'button':undefined} tabIndex={onActivate?0:undefined}>
   {showHeader&&<header className="live-route-map-head"><div><span><Route size={15}/> {title}</span><strong>{driverLocation?copy.connected:copy.scheduled}</strong></div><span className={`live-route-state ${driverLocation?'is-live':''}`}><i/>{driverLocation?copy.live:copy.waiting}</span></header>}
   <div className="live-route-canvas">
-   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<MapContainer center={[center.lat,center.lng]} zoom={15} scrollWheelZoom={interactive} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={false} aria-label={copy.map}>
-    <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
-    <FitBounds points={routePoints.length?routePoints:visiblePoints}/>
-    <RecenterOnRequest points={driverLocation?[driverLocation]:visiblePoints} token={followToken||0}/>
-    {useDriverAsOrigin&&driverLocation&&<FollowDriver location={driverLocation}/>}
-    {line.length>1&&<><Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.9,lineJoin:'round',lineCap:'round'}}/><Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#1A73E8',weight:6,opacity:.96,lineJoin:'round',lineCap:'round'}}/></>}
-    {origin&&(!useDriverAsOrigin||!driverLocation)&&<Marker position={[origin.lat,origin.lng]} icon={makeMarker('origin')} zIndexOffset={200}><Tooltip direction="top" offset={[0,-18]}>{copy.start}</Tooltip></Marker>}
-    {routeStops.map((point,index)=>{const last=index===routeStops.length-1;return <Marker key={`stop-${index}`} position={[point.lat,point.lng]} icon={makeMarker(last?'destination':'stop',index+1)} zIndexOffset={last?300:220}><Tooltip direction="top" offset={[0,-18]}>{last?(destinationAddress||`${copy.next} ${index+1}`):(waypoints[index]?.label||`${copy.next} ${index+1}`)}</Tooltip></Marker>})}
-    {driverLocation&&<Marker position={[driverLocation.lat,driverLocation.lng]} icon={makeMarker('driver')} zIndexOffset={1000}><Tooltip direction="top" offset={[0,-20]}>{copy.driver}</Tooltip></Marker>}
-   </MapContainer>}
+   {loading?<div className="live-route-loading">{copy.loading}</div>:unavailable?<div className="live-route-loading"><MapPin size={19}/><span>{copy.unavailable}</span></div>:<GoogleRouteCanvas className="live-route-google-canvas" ariaLabel={copy.map} path={line} markers={markers} fitPoints={routePoints} followPosition={useDriverAsOrigin?driverLocation:null} followToken={followToken||0} interactive={interactive}/>}
   </div>
-  <footer><span><b>S</b>{useDriverAsOrigin&&driverLocation?(locale==='es'?'Mi ubicación':locale==='fr'?'Ma position': 'My location'):(originAddress||copy.start)}</span><span><b>1</b>{destinationAddress||copy.next}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
+  <footer><span><b>S</b>{useDriverAsOrigin&&driverLocation?(locale==='es'?'Mi ubicación':locale==='fr'?'Ma position':'My location'):(originAddress||copy.start)}</span><span><b>1</b>{destinationAddress||copy.next}</span>{showLocationUpdated&&driverUpdatedAt&&<small><Truck size={13}/>{copy.updated}</small>}</footer>
  </section>
 }

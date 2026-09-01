@@ -1,31 +1,40 @@
 # RouteHub Handoff
 
 ## Current State
-`/driver` rewrites to Driver V3. Manager web is the active Grok zone after founder authorization on 2026-08-30.
+`/driver` remains the official Driver V3 entry. The map stack is being unified on Google Maps, Google Routes and Google Geocoding; GPS remains one visible-app browser watch during an active Driving Day.
 
 ## Last Work Completed
-Manager simulation pass: typecheck the operations map hub coordinate, keep Florida address filters in tests, wrap Team / Invitations / More in ManagerShell so they match Today.
+- Replaced Leaflet renderers in the shared live-route, route-plan and location-confirm maps with a shared Google Maps canvas.
+- Google Routes now requests traffic-aware route duration, first-leg ETA, live traffic comparison and maneuver instructions.
+- Address geocoding and explicit address suggestions now use Google only; manual entry remains available if lookup is unavailable.
+- Driver position updates no longer re-fit or reset the map on each GPS fix.
 
 ## Files Changed
-- `app/operations-map.tsx`
+- `components/google-route-canvas.tsx`
+- `app/api/routing/route.ts`
+- `app/api/geocode/route.ts`
+- `app/api/address-suggestions/route.ts`
+- `app/live-route-map.tsx`
+- `app/route-plan-map.tsx`
+- `app/location-confirm-map.tsx`
+- `lib/maps/*`
 - `tests/maps-provider.test.mjs`
-- `app/manager/team/page.tsx`
-- `app/manager/invitations/page.tsx`
-- `app/manager/more/page.tsx`
 
 ## Validation
+- `git diff --check`: pass
 - `npm run typecheck`: pass
-- `npm test`: 115/116 pass (remaining fail is Driver Apple Maps URL expectation, not Manager)
+- `npm test`: 118/118 pass
+- `npm run build`: passes; existing unrelated CSS/lint warnings remain.
 
 ## Current Task
-Manager web: map lines, truck add/edit, Today layout.
+Finish and physically verify the Google map migration with configured browser and server keys, then deploy only after founder authorization.
 
 ## Next Step
-Physical QA of Manager Today map lines and Truck add/edit after Vercel deploy.
+On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic-aware ETA/maneuver card, voice toggle, and Google address autocomplete.
 
 ## Known Problems
-- Live GPS / ETA still planned OSRM only until native Google Maps.
-- Web PWA cannot track the truck with the app closed.
+- Browser/PWA navigation cannot give continuous background GPS or native turn-by-turn audio after the app is closed; that requires a native wrapper and Google Navigation SDK.
+- Current Google migration is uncommitted locally.
 
 ## Do Not Touch
-Schema, RLS, Storage, Auth, Push/VAPID, service worker, GPS architecture, Driver V2 source, unless founder authorizes.
+Schema, migrations, RLS, Storage, Auth, Push/VAPID, service worker, tenancy, route business rules, and Manager workflows without explicit authorization.

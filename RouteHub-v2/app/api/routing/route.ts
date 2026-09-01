@@ -6,8 +6,14 @@ type GoogleRoutePayload={
  routes?:Array<{
   distanceMeters?:number
   duration?:string
+  staticDuration?:string
   polyline?:{encodedPolyline?:string}
-  legs?:Array<{steps?:Array<{distanceMeters?:number;startLocation?:{latLng?:{latitude?:number;longitude?:number}};navigationInstruction?:{instructions?:string;maneuver?:string}}>}>
+  legs?:Array<{
+   distanceMeters?:number
+   duration?:string
+   staticDuration?:string
+   steps?:Array<{distanceMeters?:number;startLocation?:{latLng?:{latitude?:number;longitude?:number}};navigationInstruction?:{instructions?:string;maneuver?:string}}>
+  }>
  }>
 }
 
@@ -62,7 +68,9 @@ export async function POST(request:NextRequest){
   destination:waypoint(points[points.length-1]),
   intermediates:points.slice(1,-1).map(waypoint),
   travelMode:'DRIVE',
-  routingPreference:'TRAFFIC_UNAWARE',
+  // This is the same traffic-aware routing mode used for a live drive. It
+  // supplies a real ETA while keeping the Driver's authoritative stop order.
+  routingPreference:'TRAFFIC_AWARE',
   computeAlternativeRoutes:false,
   languageCode:'en-US',
   units:'IMPERIAL',
@@ -72,7 +80,7 @@ export async function POST(request:NextRequest){
  try{
   const response=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{
    method:'POST',
-   headers:{'content-type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.legs.steps.distanceMeters,routes.legs.steps.startLocation.latLng,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.navigationInstruction.maneuver'},
+   headers:{'content-type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'routes.distanceMeters,routes.duration,routes.staticDuration,routes.polyline.encodedPolyline,routes.legs.distanceMeters,routes.legs.duration,routes.legs.staticDuration,routes.legs.steps.distanceMeters,routes.legs.steps.startLocation.latLng,routes.legs.steps.navigationInstruction.instructions,routes.legs.steps.navigationInstruction.maneuver'},
    body:JSON.stringify(body),
    cache:'no-store',
    signal:AbortSignal.timeout(mapProviderLimits.routeTimeoutMs),
@@ -86,7 +94,17 @@ export async function POST(request:NextRequest){
    if(!Number.isFinite(location?.latitude)||!Number.isFinite(location?.longitude))return []
    return [{instruction:step.navigationInstruction?.instructions||'Continue',distanceMeters:step.distanceMeters,coordinate:{lat:Number(location?.latitude),lng:Number(location?.longitude)},type:step.navigationInstruction?.maneuver}]
   }))
-  const value:RouteEstimate={coordinates:encoded?decodePolyline(encoded):points,distanceMeters:route?.distanceMeters,durationSeconds:seconds(route?.duration),source:encoded?'google':'fallback',maneuvers}
+  const firstLeg=route?.legs?.[0]
+  const value:RouteEstimate={
+   coordinates:encoded?decodePolyline(encoded):points,
+   distanceMeters:route?.distanceMeters,
+   durationSeconds:seconds(route?.duration),
+   staticDurationSeconds:seconds(route?.staticDuration),
+   nextStopDistanceMeters:firstLeg?.distanceMeters,
+   nextStopDurationSeconds:seconds(firstLeg?.duration),
+   source:encoded?'google':'fallback',
+   maneuvers,
+  }
   routeCache.set(lookup,{expires:Date.now()+mapProviderLimits.routeCacheMs,value})
   return NextResponse.json(value,{headers:{'x-routehub-cache':'miss'}})
  }catch{

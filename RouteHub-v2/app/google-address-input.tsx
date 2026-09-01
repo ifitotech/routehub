@@ -11,7 +11,7 @@ export type AddressSearchSuggestion = {
   primary: string
   secondary: string
   coordinate?: GeocodedLocation['coordinate']
-  source: Extract<GeocodedLocation['source'], 'census' | 'nominatim' | 'google'>
+  source: Extract<GeocodedLocation['source'], 'google'>
   externalId?: string
   name?: string
 }

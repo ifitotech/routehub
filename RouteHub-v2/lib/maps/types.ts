@@ -12,7 +12,12 @@ export type RouteEstimate={
   coordinates:MapCoordinate[]
   distanceMeters?:number
   durationSeconds?:number
-  source:'google'|'osrm'|'fallback'
+  /** Historical, traffic-unaware duration returned by Google Routes. */
+  staticDurationSeconds?:number
+  /** First active leg: the current Driver stop, not an invented route-wide ETA. */
+  nextStopDistanceMeters?:number
+  nextStopDurationSeconds?:number
+  source:'google'|'fallback'
   maneuvers?:RouteManeuver[]
 }
 

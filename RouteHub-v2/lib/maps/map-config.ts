@@ -1,21 +1,7 @@
-/** Compatibility settings for Driver/reference maps that are outside the Manager migration. */
-export const mapTileConfig={
-  url:process.env.NEXT_PUBLIC_MAP_TILE_URL||'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  attribution:'&copy; OpenStreetMap'
-} as const
-
-/** Retained only for pure URL helpers; production route calculations use /api/routing and Google Routes. */
-export const routingConfig={
-  endpoint:(process.env.NEXT_PUBLIC_ROUTING_ENDPOINT||'https://router.project-osrm.org').replace(/\/$/,'')
-} as const
-
-/** Server-side geocoding providers used by the controlled beta search routes. */
+/** Google is RouteHub's single provider for maps, route calculation and address lookup. */
 export const geocodingConfig={
-  censusEndpoint:'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress',
-  nominatimEndpoint:'https://nominatim.openstreetmap.org/search',
   googleGeocodeEndpoint:'https://maps.googleapis.com/maps/api/geocode/json',
   googleKey:process.env.GOOGLE_MAPS_SERVER_KEY||'',
-  userAgent:'RouteHub Beta location search',
   requestTimeoutMs:5000
 } as const
 

@@ -68,15 +68,19 @@ test('Driver V3 GPS uses a fresh high-accuracy watch and persists accepted fixes
   assert.match(gps,/setLiveFix\(\{lat: next\.lat, lng: next\.lng/)
 })
 
-test('routing adapter preserves a non-blocking OSRM fallback contract',async()=>{
+test('routing adapter uses the Google Routes API with a safe coordinate-only fallback',async()=>{
   const source=await readFile(new URL('../lib/maps/routing.ts',import.meta.url),'utf8')
-  assert.match(source,/coordinates:coordinates\.length\?coordinates:fallback/)
-  assert.match(source,/source:coordinates\.length\?'osrm':'fallback'/)
+  const api=await readFile(new URL('../app/api/routing/route.ts',import.meta.url),'utf8')
+  assert.match(source,/coordinates:points,source:'fallback'/)
   assert.match(source,/if\(!response\.ok\)return fallback/)
   assert.match(source,/catch\{return fallback\}/)
   assert.match(source,/remainingRouteDistance/)
   assert.match(source,/distanceToManeuverMeters/)
   assert.match(source,/item\.index>=currentIndex/)
+  assert.doesNotMatch(source,/project-osrm|normalizeOsrmRoute|routeRequestUrl/)
+  assert.match(api,/routingPreference:'TRAFFIC_AWARE'/)
+  assert.match(api,/routes\.staticDuration/)
+  assert.match(api,/routes\.legs\.steps\.navigationInstruction\.instructions/)
 })
 
 test('geocoding adapter rejects incomplete queries and invalid coordinates',async()=>{
@@ -87,15 +91,15 @@ test('geocoding adapter rejects incomplete queries and invalid coordinates',asyn
   assert.match(source,/maximumSearchCharacters/)
 })
 
-test('geocoding API routes use the centralized provider configuration',async()=>{
+test('address lookup uses Google as the single centralized provider',async()=>{
   const suggestions=await readFile(new URL('../app/api/address-suggestions/route.ts',import.meta.url),'utf8')
   const geocode=await readFile(new URL('../app/api/geocode/route.ts',import.meta.url),'utf8')
-  assert.match(suggestions,/geocodingConfig\.censusEndpoint/)
-  assert.match(suggestions,/geocodingConfig\.nominatimEndpoint/)
-  assert.match(geocode,/geocodingConfig\.censusEndpoint/)
-  assert.match(geocode,/geocodingConfig\.nominatimEndpoint/)
-  assert.doesNotMatch(suggestions,/new URL\('https:\/\/geocoding\.geo\.census\.gov/)
-  assert.doesNotMatch(geocode,/new URL\('https:\/\/nominatim\.openstreetmap\.org/)
+  assert.match(suggestions,/geocodingConfig\.googleGeocodeEndpoint/)
+  assert.match(suggestions,/geocodingConfig\.googleKey/)
+  assert.match(geocode,/geocodingConfig\.googleGeocodeEndpoint/)
+  assert.match(geocode,/geocodingConfig\.googleKey/)
+  assert.doesNotMatch(suggestions,/censusEndpoint|nominatimEndpoint|openstreetmap/)
+  assert.doesNotMatch(geocode,/censusEndpoint|nominatimEndpoint|openstreetmap/)
 })
 
 test('address suggestions discard provider results without usable coordinates',async()=>{

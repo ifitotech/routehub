@@ -1,40 +1,5 @@
-import {mapProviderLimits,routingConfig} from './map-config'
+import {mapProviderLimits} from './map-config'
 import type {ActiveRouteManeuver,MapCoordinate,RouteEstimate,RouteManeuver} from './types'
-
-type OsrmRoute={
-  distance?:number
-  duration?:number
-  geometry?:{coordinates?:Array<[number,number]>}
-  legs?: Array<{steps?: Array<{name?: string; distance?: number; maneuver?: {type?: string; modifier?: string; location?: [number, number]}}>}> 
-}
-
-type OsrmResponse={routes?:OsrmRoute[]}
-
-export function normalizeOsrmRoute(payload:OsrmResponse,fallback:MapCoordinate[]):RouteEstimate{
-  const route=payload.routes?.[0]
-  const coordinates=route?.geometry?.coordinates?.map(([lng,lat])=>({lat,lng})).filter(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lng))||[]
-  const maneuvers:RouteManeuver[]=(route?.legs||[]).flatMap(leg=>(leg.steps||[]).flatMap(step=>{
-    const location=step.maneuver?.location
-    if(!location)return []
-    const action=[step.maneuver?.type,step.maneuver?.modifier].filter(Boolean).join(' ')||'continue'
-    const street=step.name?.trim()
-    return [{
-      instruction:street?`${action} onto ${street}`:action,
-      distanceMeters:step.distance,
-      coordinate:{lat:location[1],lng:location[0]},
-      type:step.maneuver?.type,
-      modifier:step.maneuver?.modifier,
-      streetName:street
-    }]
-  }))
-  return {
-    coordinates:coordinates.length?coordinates:fallback,
-    distanceMeters:Number.isFinite(route?.distance)?route?.distance:undefined,
-    durationSeconds:Number.isFinite(route?.duration)?route?.duration:undefined,
-    source:coordinates.length?'osrm':'fallback'
-    ,maneuvers
-  }
-}
 
 export function distanceMeters(a:MapCoordinate,b:MapCoordinate){
   const radians=Math.PI/180
@@ -68,12 +33,6 @@ export function nextRouteManeuver(maneuvers:RouteManeuver[]|undefined,route:MapC
   return {...active.maneuver,distanceToManeuverMeters:Math.max(0,distanceToManeuver)}
 }
 
-export function routeRequestUrl(points:MapCoordinate[]):string|null{
-  if(points.length<2)return null
-  const path=points.map(point=>`${point.lng},${point.lat}`).join(';')
-  return `${routingConfig.endpoint}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=true`
-}
-
 export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal):Promise<RouteEstimate>{
   const fallback={coordinates:points,source:'fallback' as const}
   if(points.length<2)return fallback
@@ -91,7 +50,10 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal)
         coordinates:payload.coordinates.filter(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lng)),
         distanceMeters:payload.distanceMeters,
         durationSeconds:payload.durationSeconds,
-        source:payload.source==='google'?'google':payload.source==='osrm'?'osrm':'fallback',
+        staticDurationSeconds:payload.staticDurationSeconds,
+        nextStopDistanceMeters:payload.nextStopDistanceMeters,
+        nextStopDurationSeconds:payload.nextStopDurationSeconds,
+        source:payload.source==='google'?'google':'fallback',
         maneuvers:payload.maneuvers,
       }
     }

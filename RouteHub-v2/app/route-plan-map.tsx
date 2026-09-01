@@ -1,13 +1,12 @@
 'use client'
 
 import {useEffect,useMemo,useRef,useState} from 'react'
-import L from 'leaflet'
-import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leaflet'
 import {Crosshair,Flag,LocateFixed} from 'lucide-react'
-import {mapTileConfig} from '../lib/maps/map-config'
+import GoogleRouteCanvas from '../components/google-route-canvas'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {calculateRoute,distanceMeters} from '../lib/maps/routing'
+import {calculateRoute,distanceMeters,nextRouteManeuver} from '../lib/maps/routing'
 import {clusterCoordinates,sanitizeCoordinate} from '../lib/maps/coordinates'
+import type {RouteEstimate} from '../lib/maps/types'
 
 type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
@@ -28,30 +27,6 @@ type Props={
   sharedLocation?:Coordinate|null
 }
 
-function Fit({points}:{points:Coordinate[]}){
-  const map=useMap()
-  const usable=clusterCoordinates(points)
-  const key=usable.map(point=>`${point.lat.toFixed(4)},${point.lng.toFixed(4)}`).join('|')
-  useEffect(()=>{
-    if(!usable.length)return
-    if(usable.length>1)map.fitBounds(usable.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})
-    else map.setView([usable[0].lat,usable[0].lng],13)
-  },[map,key])
-  return null
-}
-
-const stopIcon=(number:number)=>L.divIcon({
-  className:'route-plan-marker-wrap',
-  html:`<span class="route-plan-marker${number===1?' is-active':''}">${number}</span>`,
-  iconSize:[36,36],iconAnchor:[18,18],
-})
-
-const driverIcon=()=>L.divIcon({
-  className:'route-plan-driver-location',
-  html:'<span class="route-plan-driver-arrow"><i></i></span>',
-  iconSize:[48,48],iconAnchor:[24,24],
-})
-
 export default function RoutePlanMap({
   originAddress,
   originCoordinate=null,
@@ -65,12 +40,15 @@ export default function RoutePlanMap({
 }:Props){
   const [points,setPoints]=useState<Coordinate[]>([])
   const [line,setLine]=useState<Coordinate[]>([])
+  const [estimate,setEstimate]=useState<RouteEstimate|null>(null)
   const [deviceLocation,setDeviceLocation]=useState<GpsFix|null>(null)
-  const [map,setMap]=useState<L.Map|null>(null)
   const [loading,setLoading]=useState(true)
   const [arriving,setArriving]=useState(false)
+  const [voiceEnabled,setVoiceEnabled]=useState(false)
+  const [followToken,setFollowToken]=useState(0)
   const watchRef=useRef<number|null>(null)
   const wakeLock=useRef<{release?:()=>Promise<void>}|null>(null)
+  const lastSpokenInstruction=useRef('')
 
   const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label||stop.coordinate)),[stops])
   const safeOrigin=sanitizeCoordinate(originCoordinate)
@@ -79,10 +57,14 @@ export default function RoutePlanMap({
     safeOrigin?`${safeOrigin.lat},${safeOrigin.lng}`:'',
     ...validStops.map(stop=>`${stop.id}:${stop.address||''}:${stop.coordinate?.lat||''}:${stop.coordinate?.lng||''}`),
   ].join('|'),[originAddress,safeOrigin,validStops])
+  // A rounded key keeps the line useful as the Driver moves without asking
+  // Google Routes for a fresh route on every GPS sample.
+  const sharedLocationKey=sharedLocation?`${sharedLocation.lat.toFixed(3)},${sharedLocation.lng.toFixed(3)}`:''
 
   useEffect(()=>{
     let cancelled=false
     setLoading(true)
+    setEstimate(null)
     const known:Array<{address?:string|null;coordinate?:Coordinate|null}>=[
       {address:originAddress,coordinate:safeOrigin},
       ...validStops.map(stop=>({address:stop.address,coordinate:sanitizeCoordinate(stop.coordinate)})),
@@ -98,14 +80,17 @@ export default function RoutePlanMap({
       setPoints(coordinates)
       if(coordinates.length>1)setLine(coordinates)
       setLoading(false)
-      if(coordinates.length<2)return
-      const start=sanitizeCoordinate(deviceLocation)||sanitizeCoordinate(sharedLocation)||coordinates[0]
+      if(coordinates.length<2){setEstimate(null);return}
+      const start=sanitizeCoordinate(sharedLocation)||sanitizeCoordinate(deviceLocation)||coordinates[0]
       const rest=coordinates.filter(point=>Math.abs(point.lat-start.lat)>1e-5||Math.abs(point.lng-start.lng)>1e-5)
       const estimate=await calculateRoute([start,...rest])
-      if(!cancelled&&estimate.coordinates.length>1)setLine(clusterCoordinates(estimate.coordinates,2_000))
-    }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setLoading(false)}})
+      if(!cancelled){
+        setEstimate(estimate)
+        if(estimate.coordinates.length>1)setLine(clusterCoordinates(estimate.coordinates,2_000))
+      }
+    }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setEstimate(null);setLoading(false)}})
     return()=>{cancelled=true}
-  },[routeKey])
+  },[routeKey,sharedLocationKey])
 
   useEffect(()=>{
     const next=sanitizeCoordinate(sharedLocation)
@@ -147,12 +132,30 @@ export default function RoutePlanMap({
 
   const destination=points[1]||points[0]
   const near=Boolean(deviceLocation&&destination&&distanceMeters(deviceLocation,destination)<75)
+  const activeLocation=deviceLocation||sanitizeCoordinate(sharedLocation)
+  const nextManeuver=useMemo(()=>nextRouteManeuver(estimate?.maneuvers,line,activeLocation||null)||null,[estimate?.maneuvers,line,activeLocation?.lat,activeLocation?.lng])
+  const etaSeconds=estimate?.nextStopDurationSeconds
+  const eta=Number.isFinite(etaSeconds)?Math.max(1,Math.round(Number(etaSeconds)/60)):null
+  const trafficDelay=Boolean(
+    Number.isFinite(estimate?.nextStopDurationSeconds) &&
+    Number.isFinite(estimate?.staticDurationSeconds) &&
+    Number(estimate?.nextStopDurationSeconds)>Number(estimate?.staticDurationSeconds)+60,
+  )
   const copy=locale==='es'
-    ?{loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',exit:'Salir',arrived:'Llegué',recenter:'Recentrar'}
+    ?{loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',exit:'Salir',arrived:'Llegué',recenter:'Recentrar',eta:'Llegada estimada',traffic:'Tráfico en la ruta',voiceOn:'Voz activa',voiceOff:'Activar voz'}
     :locale==='fr'
-      ?{loading:'Préparation du trajet…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',exit:'Quitter',arrived:'Arrivé',recenter:'Recentrer'}
-      :{loading:'Preparing route…',unavailable:'We could not locate these stops yet.',exit:'Exit',arrived:'Arrived',recenter:'Re-center'}
-  const center=points[0]||sanitizeCoordinate(sharedLocation)||{lat:25.7617,lng:-80.1918}
+      ?{loading:'Préparation du trajet…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',exit:'Quitter',arrived:'Arrivé',recenter:'Recentrer',eta:'Arrivée estimée',traffic:'Trafic sur l’itinéraire',voiceOn:'Voix active',voiceOff:'Activer la voix'}
+      :{loading:'Preparing route…',unavailable:'We could not locate these stops yet.',exit:'Exit',arrived:'Arrived',recenter:'Re-center',eta:'Estimated arrival',traffic:'Traffic on route',voiceOn:'Voice on',voiceOff:'Turn on voice'}
+  const markers=useMemo(()=>[
+    ...points.map((point,index)=>({
+      id:validStops[index]?.id||`stop-${index}`,
+      position:point,
+      label:String(index+1),
+      title:validStops[Math.max(0,index-(safeOrigin||originAddress?1:0))]?.label||validStops[index]?.address||`Stop ${index+1}`,
+      tone:index===0?'#1667F2':'#64748B',
+    })),
+    ...(deviceLocation?[{id:'driver',position:deviceLocation,label:'',title:locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location',tone:'#0F1D35',driver:true}]:[]),
+  ],[points,validStops,safeOrigin,originAddress,deviceLocation,locale])
 
   const confirmArrival=async()=>{
     if(arriving)return
@@ -166,24 +169,26 @@ export default function RoutePlanMap({
     }
   }
 
+  useEffect(()=>{
+    if(!voiceEnabled||!nextManeuver?.instruction||typeof speechSynthesis==='undefined')return
+    const instruction=nextManeuver.instruction.trim()
+    if(!instruction||lastSpokenInstruction.current===instruction)return
+    lastSpokenInstruction.current=instruction
+    speechSynthesis.cancel()
+    speechSynthesis.speak(new SpeechSynthesisUtterance(instruction))
+  },[voiceEnabled,nextManeuver?.instruction])
+
   return (
     <section className="route-plan-map route-plan-navigate route-plan-driver is-driving" aria-label="Navigation map">
       <div className="route-plan-canvas">
-        {loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:(
-          <MapContainer ref={setMap} center={[center.lat,center.lng]} zoom={13} scrollWheelZoom={false}>
-            <TileLayer attribution={mapTileConfig.attribution} url={mapTileConfig.url}/>
-            <Fit points={points}/>
-            {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#176bf2',weight:6,opacity:.96}}/>}
-            {points.map((point,index)=>(
-              <Marker key={validStops[index]?.id||index} position={[point.lat,point.lng]} icon={stopIcon(index+1)}>
-                <Tooltip direction="top">{validStops[Math.max(0,index-(safeOrigin||originAddress?1:0))]?.label||validStops[index]?.address||`Stop ${index+1}`}</Tooltip>
-              </Marker>
-            ))}
-            {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverIcon()}><Tooltip direction="top">{locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location'}</Tooltip></Marker>}
-          </MapContainer>
-        )}
-        {deviceLocation&&<button className="route-plan-recenter" type="button" onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],16)}><LocateFixed size={20}/><span>{copy.recenter}</span></button>}
-        {deviceLocation&&<div className="route-plan-float-controls"><button type="button" aria-label={copy.recenter} onClick={()=>map?.setView([deviceLocation.lat,deviceLocation.lng],17)}><Crosshair size={23}/></button></div>}
+        {loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<GoogleRouteCanvas className="route-plan-google-canvas" ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={deviceLocation} followToken={followToken} interactive/>}
+        {(nextManeuver||eta) && <aside className="route-plan-guidance" aria-live="polite">
+          {nextManeuver?.instruction&&<strong>{nextManeuver.instruction}</strong>}
+          <span>{eta?`${copy.eta}: ${eta} min`:''}{trafficDelay?` · ${copy.traffic}`:''}</span>
+          {nextManeuver?.instruction&&<button type="button" onClick={()=>setVoiceEnabled(current=>!current)}>{voiceEnabled?copy.voiceOn:copy.voiceOff}</button>}
+        </aside>}
+        {deviceLocation&&<button className="route-plan-recenter" type="button" onClick={()=>setFollowToken(current=>current+1)}><LocateFixed size={20}/><span>{copy.recenter}</span></button>}
+        {deviceLocation&&<div className="route-plan-float-controls"><button type="button" aria-label={copy.recenter} onClick={()=>setFollowToken(current=>current+1)}><Crosshair size={23}/></button></div>}
       </div>
       <footer className="route-plan-bottom">
         <div className="route-plan-summary">
