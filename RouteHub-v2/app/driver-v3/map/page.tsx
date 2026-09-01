@@ -60,7 +60,7 @@ export default function DriverV3Map() {
       await markArrived({routeId: route.id, driverId, companyId: route.company_id})
       await refresh()
       setMessage(t.drvArrivedOk)
-      router.push(`/driver/stop?id=${encodeURIComponent(route.id)}`)
+      router.push('/driver')
     } catch (e) {
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
