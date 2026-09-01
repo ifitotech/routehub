@@ -69,7 +69,7 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
 
   return {
     current,
-    upcoming: [...overdue, ...eligibleUpcoming].filter(route => route.id !== current?.id),
+    upcoming: [...new Map([...overdue, ...eligibleUpcoming].filter(route => route.id !== current?.id).map(route => [route.id, route])).values()],
     completed: [...driverRoutes]
       .filter(route => route.status === 'completed')
       .sort((left, right) => (right.completed_at || '').localeCompare(left.completed_at || '') || left.position - right.position),
