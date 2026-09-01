@@ -1,26 +1,23 @@
 'use client'
 
-import {useEffect,useMemo,useRef,useState} from 'react'
+import {Fragment,useEffect,useMemo,useRef,useState} from 'react'
+import L from 'leaflet'
+import {MapContainer,Marker,Polyline,TileLayer,Tooltip,Popup,useMap} from 'react-leaflet'
+import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
-import {loadGoogleMaps} from '../lib/maps/google-maps'
-import {calculateRoute} from '../lib/maps/routing'
-import {sanitizeCoordinate} from '../lib/maps/coordinates'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
-type MapObject={setMap:(map:null)=>void}
-type GoogleMap={fitBounds:(bounds:unknown,padding?:number)=>void;setCenter:(center:Coordinate)=>void;setZoom:(zoom:number)=>void}
-type MapsApi={
- Map:new(element:HTMLElement,options:Record<string,unknown>)=>GoogleMap
- Marker:new(options:Record<string,unknown>)=>MapObject
- Polyline:new(options:Record<string,unknown>)=>MapObject
- LatLngBounds:new()=>{extend:(point:Coordinate)=>void}
- SymbolPath:{CIRCLE:unknown;FORWARD_CLOSED_ARROW:unknown}
-}
 
-function driverTruckIcon(){
- const svg='<svg xmlns="http://www.w3.org/2000/svg" width="42" height="50" viewBox="0 0 42 50"><path d="M21 1C11.1 1 3 9.1 3 19c0 13.6 18 30 18 30s18-16.4 18-30C39 9.1 30.9 1 21 1Z" fill="#0b1f3a" stroke="white" stroke-width="2"/><circle cx="21" cy="19" r="12" fill="white"/><path fill="#0b1f3a" d="M12 13h15v11h3l3 3v4h-2a3 3 0 0 1-6 0h-7a3 3 0 0 1-6 0h-1V16c0-1.7.6-3 1-3Zm3 16a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm13 0a1 1 0 1 0 0 2 1 1 0 1 0 0-2Zm1-3h2l-2-2h-1v2Z"/></svg>'
- return {url:`data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`}
+async function osrmRoute(points:Coordinate[]){
+  if(points.length<2)return null
+  const coords=points.map(point=>`${point.lng},${point.lat}`).join(';')
+  const response=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,{headers:{accept:'application/json'},cache:'force-cache'})
+  if(!response.ok)throw new Error('OSRM route failed')
+  const payload=await response.json() as {routes?:Array<{distance?:number;duration?:number;geometry?:{coordinates?:Array<[number,number]>}}>}
+  const route=payload.routes?.[0]
+  const coordinates=(route?.geometry?.coordinates||[]).map(([lng,lat])=>({lat,lng})).filter(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lng))
+  return {coordinates,distanceMeters:route?.distance,durationSeconds:route?.duration}
 }
 
 export type OperationsRoute={
@@ -36,7 +33,6 @@ export type OperationsRoute={
  status?:string|null
  driver_id?:string|null
  position?:number|null
- order_number?:string|null
 }
 
 export type OperationsDriverLocation={
@@ -49,116 +45,249 @@ export type OperationsDriverLocation={
  nextStop?:string|null
 }
 
-type Stop=OperationsRoute&{destination:Coordinate|null;number:number}
-type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[];locale?:string;interactive?:boolean;hideFooter?:boolean;compact?:boolean;onSummary?:(summary:{count:number;distanceMeters?:number;durationSeconds?:number}|null)=>void}
-
-const miami:Coordinate={lat:25.857,lng:-80.278}
-const isPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>{
- return sanitizeCoordinate({lat,lng})
+type ResolvedRoute=OperationsRoute&{origin:Coordinate|null;destination:Coordinate|null;number:number}
+type ResolvedSequence={
+ key:string
+ driverId:string|null
+ routes:ResolvedRoute[]
+ start:Coordinate|null
+ line:Coordinate[]
+ color:string
+ street?:boolean
+ distanceMeters?:number
+ durationSeconds?:number
 }
-const openStatus=(status?:string|null)=>status!=='completed'&&status!=='cancelled'&&status!=='issue'
+type Summary={count:number;distanceMeters?:number;durationSeconds?:number}
+type Props={
+ routes:OperationsRoute[]
+ driverLocations?:OperationsDriverLocation[]
+ locale?:string
+ interactive?:boolean
+ hideFooter?:boolean
+ onSummary?:(summary:Summary|null)=>void
+}
 
-function colorFor(status?:string|null){
+const miamiCenter:Coordinate={lat:25.9017,lng:-80.3078}
+const isCoordinate=(lat:number|null|undefined,lng:number|null|undefined):lat is number=>lat!=null&&lng!=null&&Number.isFinite(Number(lat))&&Number.isFinite(Number(lng))
+const asPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>isCoordinate(lat,lng)?{lat:Number(lat),lng:Number(lng)}:null
+const isRemaining=(status?:string|null)=>status!=='completed'&&status!=='cancelled'&&status!=='issue'
+const sequenceColors=['#1667F2','#7c3aed','#0891b2','#ea580c','#16a34a']
+
+function routeColor(status?:string|null){
  if(status==='issue')return '#E11D48'
  if(status==='completed')return '#94a3b8'
  if(status==='active'||status==='paused')return '#1667F2'
  return '#F59E0B'
 }
 
-function typeLabel(type:string|null|undefined,locale:string){
+function routeTypeLabel(type:string|null|undefined,locale:string){
  if(locale==='es')return type==='pickup'?'Recogida':type==='delivery'?'Entrega':type==='return'?'Regreso':'Parada'
  if(locale==='fr')return type==='pickup'?'Collecte':type==='delivery'?'Livraison':type==='return'?'Retour':'Arrêt'
  return type==='pickup'?'Pickup':type==='delivery'?'Delivery':type==='return'?'Return':'Stop'
 }
 
-async function locate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
- const known=isPoint(lat,lng)
- if(known)return known
- if(!address)return null
- try{return sanitizeCoordinate((await geocodeAddress(address))?.coordinate||null)}catch{return null}
+function statusLabel(status:string|undefined|null,locale:string){
+ if(locale==='es')return status==='issue'?'Incidencia':status==='completed'?'Completada':status==='active'||status==='paused'?'En curso':'Pendiente'
+ if(locale==='fr')return status==='issue'?'Incident':status==='completed'?'Terminé':status==='active'||status==='paused'?'En cours':'En attente'
+ return status==='issue'?'Issue':status==='completed'?'Completed':status==='active'||status==='paused'?'In progress':'Pending'
 }
 
-export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,hideFooter=false,compact=false,onSummary}:Props){
- const containerRef=useRef<HTMLDivElement>(null)
- const mapRef=useRef<GoogleMap|null>(null)
- const mapObjectsRef=useRef<MapObject[]>([])
+function routeMarker(number:number,color:string,completed=false){
+ return L.divIcon({
+  className:'operations-route-marker-wrap',
+  html:`<span class="operations-route-marker${completed?' is-completed':''}" style="--marker-color:${color}">${completed?'✓':number}</span>`,
+  iconSize:[36,42],
+  iconAnchor:[18,38],
+ })
+}
+
+function originMarker(color:string){
+ return L.divIcon({
+  className:'operations-origin-marker-wrap',
+  html:`<span class="operations-origin-marker" style="--marker-color:${color}">S</span>`,
+  iconSize:[24,24],
+  iconAnchor:[12,12],
+ })
+}
+
+function driverMarker(){
+ return L.divIcon({
+  className:'operations-driver-marker-wrap',
+  html:'<span class="operations-driver-marker"><i></i></span>',
+  iconSize:[48,48],
+  iconAnchor:[24,24],
+ })
+}
+
+function ageLabel(updatedAt:string|null|undefined,locale:string){
+ if(!updatedAt)return locale==='es'?'Sin actualización':locale==='fr'?'Aucune mise à jour':'No update'
+ const age=Math.max(0,Date.now()-new Date(updatedAt).getTime())
+ if(!Number.isFinite(age))return locale==='es'?'Sin actualización':locale==='fr'?'Aucune mise à jour':'No update'
+ const minutes=Math.floor(age/60000)
+ if(minutes<1)return locale==='es'?'Actualizado ahora':locale==='fr'?'Mis à jour à l’instant':'Updated just now'
+ if(minutes<60)return locale==='es'?`Actualizado hace ${minutes} min`:locale==='fr'?`Mis à jour il y a ${minutes} min`:`Updated ${minutes} min ago`
+ const hours=Math.floor(minutes/60)
+ return locale==='es'?`Última actualización hace ${hours} h`:locale==='fr'?`Dernière mise à jour il y a ${hours} h`:`Last updated ${hours} hr ago`
+}
+
+function FitBounds({points}:{points:Coordinate[]}){
+ const map=useMap()
+ const pointKey=points.map(point=>`${point.lat.toFixed(4)},${point.lng.toFixed(4)}`).join('|')
+ useEffect(()=>{
+  const frame=window.requestAnimationFrame(()=>map.invalidateSize())
+  if(!points.length){map.setView([miamiCenter.lat,miamiCenter.lng],12);return ()=>window.cancelAnimationFrame(frame)}
+  if(points.length===1){map.setView([points[0].lat,points[0].lng],14);return ()=>window.cancelAnimationFrame(frame)}
+  map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:14})
+  return ()=>window.cancelAnimationFrame(frame)
+ },[map,pointKey,points])
+ return null
+}
+
+function sortRoutes(routes:OperationsRoute[]){
+ return routes.slice().sort((a,b)=>Number(a.position||Number.MAX_SAFE_INTEGER)-Number(b.position||Number.MAX_SAFE_INTEGER)||a.id.localeCompare(b.id))
+}
+
+function withNumbers(routes:Array<OperationsRoute&{origin:Coordinate|null;destination:Coordinate|null}>):ResolvedRoute[]{
+ const remaining=routes.filter(route=>isRemaining(route.status)&&route.destination)
+ const numbers=new Map<string,number>()
+ remaining.forEach((route,index)=>numbers.set(route.id,index+1))
+ return routes.map((route,index)=>({...route,number:numbers.get(route.id)||(Number(route.position)>0?Number(route.position):index+1)}))
+}
+
+async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
+ const known=asPoint(lat,lng)
+ if(known)return known
+ if(!address)return null
+ try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
+}
+
+export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,hideFooter=false,onSummary}:Props){
+ const [resolved,setResolved]=useState<ResolvedRoute[]>([])
+ const [sequences,setSequences]=useState<ResolvedSequence[]>([])
  const summaryRef=useRef(onSummary)
- const [stops,setStops]=useState<Stop[]>([])
- const [line,setLine]=useState<Coordinate[]>([])
- const [mapError,setMapError]=useState('')
  summaryRef.current=onSummary
 
- const ordered=useMemo(()=>routes.slice().sort((a,b)=>Number(a.position||0)-Number(b.position||0)||a.id.localeCompare(b.id)),[routes])
- const routeKey=ordered.map(route=>[route.id,route.status,route.position,route.destination_lat,route.destination_lng,route.destination_address,route.origin_lat,route.origin_lng,route.driver_id].join(':')).join('|')
- const driver=driverLocations.map(item=>({...item,location:sanitizeCoordinate(item.location)})).find(item=>Boolean(item.location)) as (OperationsDriverLocation&{location:Coordinate})|undefined
- // Moving GPS fixes update only the marker; paid route calculations run when the route plan or driver changes.
- const routePlanKey=`${routeKey}|${driver?.driver_id||''}`
+ const visibleRoutes=useMemo(()=>sortRoutes(routes.filter(route=>route.origin_address||route.destination_address||asPoint(route.origin_lat,route.origin_lng)||asPoint(route.destination_lat,route.destination_lng))),[routes])
+ const routeKey=visibleRoutes.map(route=>[route.id,route.mission_type,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.driver_id,route.position].join(':')).join('|')
+ const driverKey=driverLocations.map(driver=>[driver.id,driver.driver_id,driver.location.lat,driver.location.lng,driver.status,driver.updatedAt].join(':')).join('|')
 
  useEffect(()=>{
   let cancelled=false
-  const instant:Stop[]=ordered.map((route,index)=>({...route,destination:isPoint(route.destination_lat,route.destination_lng),number:index+1}))
-  const open=instant.filter(route=>openStatus(route.status)&&route.destination)
-  const start=driver?.location||isPoint(ordered[0]?.origin_lat,ordered[0]?.origin_lng)
-  setStops(instant)
-  setLine([start,...(open.length?open:instant.filter(route=>route.destination)).map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)))
-  summaryRef.current?.({count:open.length})
+  const instant=withNumbers(visibleRoutes.map(route=>({
+   ...route,
+   origin:asPoint(route.origin_lat,route.origin_lng),
+   destination:asPoint(route.destination_lat,route.destination_lng),
+  })))
+  const grouped=new Map<string,ResolvedRoute[]>()
+  for(const route of instant){
+   const key=route.driver_id||'unassigned'
+   grouped.set(key,[...(grouped.get(key)||[]),route])
+  }
+  const draft:Array<ResolvedSequence&{points:Coordinate[]}>=[...grouped.entries()].map(([key,groupRoutes],index)=>{
+   const driverId=key==='unassigned'?null:key
+   const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
+   const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.destination)
+   const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
+   const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
+   return {key,driverId,routes:groupRoutes,start,line:points,color:sequenceColors[index%sequenceColors.length],points,distanceMeters:undefined,durationSeconds:undefined}
+  })
+  setResolved(instant)
+  setSequences(draft.map(({points: _points,...sequence})=>sequence))
+  summaryRef.current?.({count:draft.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0)})
 
   void (async()=>{
-   const resolved:Stop[]=[]
-   for(const [index,route] of ordered.entries())resolved.push({...route,destination:await locate(route.destination_address,route.destination_lat,route.destination_lng),number:index+1})
+   const hydrated=withNumbers(await Promise.all(visibleRoutes.map(async route=>{
+    const [origin,destination]=await Promise.all([
+     resolveCoordinate(route.origin_address,route.origin_lat,route.origin_lng),
+     resolveCoordinate(route.destination_address,route.destination_lat,route.destination_lng),
+    ])
+    return {...route,origin,destination}
+   })))
    if(cancelled)return
-   const pending=resolved.filter(route=>openStatus(route.status)&&route.destination)
-   const visible=pending.length?pending:resolved.filter(route=>route.destination)
-   const numbered=resolved.map((route,index)=>{
-    const pendingIndex=pending.findIndex(item=>item.id===route.id)
-    return {...route,number:pendingIndex>=0?pendingIndex+1:index+1}
+   const nextGroups=new Map<string,ResolvedRoute[]>()
+   for(const route of hydrated){
+    const key=route.driver_id||'unassigned'
+    nextGroups.set(key,[...(nextGroups.get(key)||[]),route])
+   }
+   const ready:Array<ResolvedSequence&{points:Coordinate[]}>=[...nextGroups.entries()].map(([key,groupRoutes],index)=>{
+    const driverId=key==='unassigned'?null:key
+    const driver=driverId?driverLocations.find(item=>item.driver_id===driverId&&item.status!=='unavailable'):undefined
+    const remaining=groupRoutes.filter(route=>isRemaining(route.status)&&route.destination)
+    const start=driver?.location||remaining[0]?.origin||groupRoutes[0]?.origin||null
+    const points=[start,...remaining.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
+    return {key,driverId,routes:groupRoutes,start,line:points,color:sequenceColors[index%sequenceColors.length],points,distanceMeters:undefined,durationSeconds:undefined}
    })
-   const origin=driver?.location||await locate(ordered[0]?.origin_address,ordered[0]?.origin_lat,ordered[0]?.origin_lng)
-   const waypoints=[origin,...visible.map(route=>route.destination)].filter((point):point is Coordinate=>Boolean(point)).filter((point,index,list)=>index===0||point.lat!==list[index-1].lat||point.lng!==list[index-1].lng)
-   setStops(numbered)
-   setLine(waypoints)
-   if(waypoints.length<2){summaryRef.current?.({count:pending.length});return}
-   const estimate=await calculateRoute(waypoints)
+   setResolved(hydrated)
+   setSequences(ready.map(({points: _points,...sequence})=>sequence))
+   const built=await Promise.all(ready.map(async sequence=>{
+    try{
+     const estimate=sequence.points.length>1?await osrmRoute(sequence.points):null
+     const routed=estimate?.coordinates
+     const street=!!routed&&routed.length>sequence.points.length
+     return {
+      ...sequence,
+      line:street&&routed?routed:sequence.points,
+      street,
+      distanceMeters:estimate?.distanceMeters,
+      durationSeconds:estimate?.durationSeconds,
+     }
+    }catch{
+     return sequence
+    }
+   }))
    if(cancelled)return
-   setLine(estimate.coordinates.length>1?estimate.coordinates:waypoints)
-   summaryRef.current?.({count:pending.length,distanceMeters:estimate.distanceMeters,durationSeconds:estimate.durationSeconds})
+   setSequences(built.map(({points: _points,...sequence})=>sequence))
+   summaryRef.current?.({
+    count:built.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0),
+    distanceMeters:built.some(sequence=>Number.isFinite(sequence.distanceMeters))?built.reduce((total,sequence)=>total+(sequence.distanceMeters||0),0):undefined,
+    durationSeconds:built.some(sequence=>Number.isFinite(sequence.durationSeconds))?built.reduce((total,sequence)=>total+(sequence.durationSeconds||0),0):undefined,
+   })
   })()
-  return()=>{cancelled=true}
- // routePlanKey intentionally excludes moving coordinates to protect the daily Routes API quota.
- // eslint-disable-next-line react-hooks/exhaustive-deps
- },[routePlanKey])
 
- const renderKey=[line.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join('|'),stops.map(stop=>`${stop.id}:${stop.number}:${stop.status}:${stop.destination?.lat}:${stop.destination?.lng}`).join('|'),driver?`${driver.location.lat}:${driver.location.lng}:${driver.nextStop||''}`:''].join('::')
- useEffect(()=>{
-  let cancelled=false
-  void loadGoogleMaps().then(raw=>{
-   if(cancelled||!containerRef.current)return
-   const maps=raw as unknown as MapsApi
-   const map=mapRef.current||(mapRef.current=new maps.Map(containerRef.current,{center:miami,zoom:12,disableDefaultUI:false,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,gestureHandling:interactive?'auto':'none',styles:[{featureType:'poi',stylers:[{visibility:'off'}]}]}))
-   mapObjectsRef.current.forEach(item=>item.setMap(null))
-   mapObjectsRef.current=[]
-   if(line.length>1){
-    mapObjectsRef.current.push(new maps.Polyline({map,path:line,strokeColor:'#ffffff',strokeOpacity:1,strokeWeight:9,zIndex:1}))
-    mapObjectsRef.current.push(new maps.Polyline({map,path:line,strokeColor:'#1667F2',strokeOpacity:1,strokeWeight:5,zIndex:2}))
-   }
-   for(const stop of stops){
-    if(!stop.destination)continue
-    const color=colorFor(stop.status)
-    mapObjectsRef.current.push(new maps.Marker({map,position:stop.destination,title:`${stop.number}. ${typeLabel(stop.mission_type,locale)} · ${stop.destination_name||stop.destination_address||''}`,label:{text:stop.status==='completed'?'✓':String(stop.number),color:'#ffffff',fontWeight:'800'},icon:{path:maps.SymbolPath.CIRCLE,scale:16,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3}}))
-   }
-   if(driver)mapObjectsRef.current.push(new maps.Marker({map,position:driver.location,title:`${driver.label||'Driver'}${driver.nextStop?` · ${driver.nextStop}`:''}`,icon:driverTruckIcon(),zIndex:1000}))
-   const points=[...line,...stops.map(stop=>stop.destination),driver?.location].filter((point):point is Coordinate=>Boolean(point))
-   if(points.length>1){const bounds=new maps.LatLngBounds();points.forEach(point=>bounds.extend(point));map.fitBounds(bounds,42)}
-   else if(points.length===1){map.setCenter(points[0]);map.setZoom(14)}
-   else{map.setCenter(miami);map.setZoom(12)}
-   setMapError('')
-  }).catch(error=>{if(!cancelled)setMapError(error instanceof Error?error.message:'Google Maps is unavailable.')})
   return()=>{cancelled=true}
- },[renderKey,interactive,locale,line,stops,driver])
+ },[routeKey,driverKey,visibleRoutes,driverLocations])
 
- const copy=locale==='es'?{label:'Mapa operativo',empty:'No hay paradas con dirección hoy.',driver:'Conductor'}:locale==='fr'?{label:'Carte opérationnelle',empty:'Aucun arrêt avec adresse aujourd’hui.',driver:'Conducteur'}:{label:'Operations map',empty:'No stops with an address today.',driver:'Driver'}
- return <section className={`${styles.map}${compact?` ${styles.compact}`:''}`} aria-label={copy.label}>
-  <div className={styles.canvas}><div ref={containerRef} className={styles.googleMap}/>{mapError&&<div className={styles.state}>{mapError}</div>}{!mapError&&!stops.length&&!driver&&<div className={styles.state}>{copy.empty}</div>}</div>
-  {!hideFooter&&<footer><span>{stops.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</span><small>{line.length>1?(locale==='es'?'Recorrido listo':locale==='fr'?'Trajet prêt':'Route ready'):(locale==='es'?'Sin recorrido':locale==='fr'?'Pas de trajet':'No path yet')}</small></footer>}
+ const allPoints=useMemo(()=>{
+  const operational=[
+   ...sequences.map(sequence=>sequence.start),
+   ...resolved.filter(route=>isRemaining(route.status)||route.status==='issue').map(route=>route.destination),
+   ...driverLocations.map(driver=>driver.location),
+  ].filter((point):point is Coordinate=>Boolean(point))
+  return operational.length?operational:resolved.map(route=>route.destination).filter((point):point is Coordinate=>Boolean(point))
+ },[driverLocations,resolved,sequences])
+ const center=allPoints[0]||miamiCenter
+ const copy=locale==='es'
+  ?{label:'Mapa operativo de rutas',unavailable:'No hay paradas con ubicación todavía.',current:'En curso',pending:'Pendiente',completed:'Completada',issue:'Incidencia',driver:'Conductor',start:'Inicio'}
+  :locale==='fr'
+   ?{label:'Carte opérationnelle des itinéraires',unavailable:'Aucun arrêt avec position pour le moment.',current:'En cours',pending:'En attente',completed:'Terminé',issue:'Incident',driver:'Conducteur',start:'Départ'}
+   :{label:'Route operations map',unavailable:'No stops with a location yet.',current:'In progress',pending:'Pending',completed:'Completed',issue:'Issue',driver:'Driver',start:'Start'}
+
+ const showMap=resolved.length>0||driverLocations.length>0||allPoints.length>0
+
+ return <section className={styles.map} aria-label={copy.label}>
+  <div className={styles.canvas}>
+   {showMap?<MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
+    <TileLayer attribution='© OpenStreetMap contributors' url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'/>
+    <FitBounds points={allPoints}/>
+    {sequences.map(sequence=><Fragment key={`sequence-${sequence.key}`}>
+     {sequence.street&&sequence.line.length>1&&<>
+      <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.92,lineCap:'round',lineJoin:'round'}}/>
+      <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:sequence.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round'}}/>
+     </>}
+     {sequence.start&&!driverLocations.some(driver=>driver.driver_id===sequence.driverId&&driver.status!=='unavailable')&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
+    </Fragment>)}
+    {resolved.map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='active'||route.status==='paused'?500:route.status==='completed'?80:300}>
+     <Tooltip direction="top" offset={[0,-20]}>{`${route.number}. ${routeTypeLabel(route.mission_type,locale)} · ${route.destination_name||route.destination_address||copy.driver} · ${statusLabel(route.status,locale)}`}</Tooltip>
+    </Marker>)}
+    {driverLocations.map(driver=><Fragment key={driver.id}>
+      <Marker position={[driver.location.lat,driver.location.lng]} icon={driverMarker()} zIndexOffset={1000}>
+       <Tooltip direction="top" offset={[0,-22]} permanent>{driver.label||copy.driver}{driver.nextStop?` · ${driver.nextStop}`:''}</Tooltip>
+       <Popup><strong>{driver.label||copy.driver}</strong><br/><span>{driver.status==='on_route'?'On route':driver.status==='available'?'Available':driver.status==='unavailable'?'Location unavailable':'Driving'}</span><br/><small>{ageLabel(driver.updatedAt,locale)}</small>{driver.nextStop&&<><br/><small>{driver.nextStop}</small></>}</Popup>
+      </Marker>
+    </Fragment>)}
+   </MapContainer>:<div className={styles.state}>{copy.unavailable}</div>}
+   <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.completed}/>{copy.completed}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{driverLocations.length} {copy.driver.toLowerCase()}{driverLocations.length===1?'':'s'}</span></div>
+  </div>
+  {!hideFooter&&<footer><span>{visibleRoutes.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</span><small>{driverLocations.length?`${driverLocations.length} ${copy.driver.toLowerCase()}${driverLocations.length===1?'':'s'}`:(locale==='es'?'Sin ubicación activa':locale==='fr'?'Aucune position active':'No active location')}</small></footer>}
  </section>
 }

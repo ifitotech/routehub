@@ -43,6 +43,21 @@ function decodePolyline(encoded:string):MapCoordinate[]{
  return result
 }
 
+function distanceMeters(from:MapCoordinate,to:MapCoordinate){
+ const radians=Math.PI/180
+ const dLat=(to.lat-from.lat)*radians,dLng=(to.lng-from.lng)*radians
+ const value=Math.sin(dLat/2)**2+Math.cos(from.lat*radians)*Math.cos(to.lat*radians)*Math.sin(dLng/2)**2
+ return 2*6371000*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
+}
+
+/** Keep a bad provider polyline from drawing a route on another continent. */
+function isCompatibleRoute(line:MapCoordinate[],points:MapCoordinate[]){
+ if(line.length<2||points.length<2)return false
+ const start=line[0],end=line[line.length-1]
+ if(!start||!end)return false
+ return distanceMeters(start,points[0])<=20_000&&distanceMeters(end,points[points.length-1])<=20_000
+}
+
 function seconds(value:string|undefined){
  const parsed=Number(String(value||'').replace(/s$/,''))
  return Number.isFinite(parsed)?parsed:undefined
@@ -80,9 +95,9 @@ export async function POST(request:NextRequest){
   destination:waypoint(points[points.length-1]),
   intermediates:points.slice(1,-1).map(waypoint),
   travelMode:'DRIVE',
-  // This is the same traffic-aware routing mode used for a live drive. It
-  // supplies a real ETA while keeping the Driver's authoritative stop order.
-  routingPreference:'TRAFFIC_AWARE',
+  // Keep quota usage predictable while the internal navigator is in beta.
+  // Traffic-aware routing can be re-enabled when live navigation is stable.
+  routingPreference:'TRAFFIC_UNAWARE',
   computeAlternativeRoutes:false,
   languageCode,
   units:'IMPERIAL',
@@ -101,6 +116,8 @@ export async function POST(request:NextRequest){
   const payload=await response.json() as GoogleRoutePayload
   const route=payload.routes?.[0]
   const encoded=route?.polyline?.encodedPolyline||''
+  const decoded=encoded?decodePolyline(encoded):[]
+  const routeCoordinates=isCompatibleRoute(decoded,points)?decoded:points
   const maneuvers:RouteManeuver[]=(route?.legs||[]).flatMap(leg=>(leg.steps||[]).flatMap(step=>{
    const location=step.startLocation?.latLng
    if(!Number.isFinite(location?.latitude)||!Number.isFinite(location?.longitude))return []
@@ -108,14 +125,14 @@ export async function POST(request:NextRequest){
   }))
   const firstLeg=route?.legs?.[0]
   const value:RouteEstimate={
-   coordinates:encoded?decodePolyline(encoded):points,
+   coordinates:routeCoordinates,
    distanceMeters:route?.distanceMeters,
    durationSeconds:seconds(route?.duration),
    staticDurationSeconds:seconds(route?.staticDuration),
    nextStopDistanceMeters:firstLeg?.distanceMeters,
    nextStopDurationSeconds:seconds(firstLeg?.duration),
    nextStopStaticDurationSeconds:seconds(firstLeg?.staticDuration),
-   source:encoded?'google':'fallback',
+   source:routeCoordinates===decoded?'google':'fallback',
    maneuvers,
   }
   routeCache.set(lookup,{expires:Date.now()+mapProviderLimits.routeCacheMs,value})

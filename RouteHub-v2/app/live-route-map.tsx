@@ -70,7 +70,7 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
    if(!cancelled)setLoading(false)
   }).catch(()=>{if(!cancelled){setUnavailable(true);setLoading(false)}})
   return()=>{cancelled=true}
- },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey,useDriverAsOrigin,useDriverAsOrigin?driverLocation?.lat:null,useDriverAsOrigin?driverLocation?.lng:null])
+ },[originAddress,originCoordinate?.lat,originCoordinate?.lng,destinationAddress,destinationCoordinate?.lat,destinationCoordinate?.lng,waypointKey,useDriverAsOrigin,useDriverAsOrigin?driverLocation?.lat!=null?Number(driverLocation.lat.toFixed(2)):null:null,useDriverAsOrigin?driverLocation?.lng!=null?Number(driverLocation.lng.toFixed(2)):null:null])
 
  useEffect(()=>{
   if(!onManeuver)return

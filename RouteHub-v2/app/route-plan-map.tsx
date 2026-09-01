@@ -64,7 +64,9 @@ export default function RoutePlanMap({
   ].join('|'),[originAddress,safeOrigin,validStops])
   // A rounded key keeps the line useful as the Driver moves without asking
   // Google Routes for a fresh route on every GPS sample.
-  const sharedLocationKey=sharedLocation?`${sharedLocation.lat.toFixed(3)},${sharedLocation.lng.toFixed(3)}`:''
+  // Keep the GPS marker live without charging for a new route on every fix.
+  // Re-route only after roughly 1 km of movement (or when the plan changes).
+  const sharedLocationKey=sharedLocation?`${sharedLocation.lat.toFixed(2)},${sharedLocation.lng.toFixed(2)}`:''
 
   useEffect(()=>{
     let cancelled=false
