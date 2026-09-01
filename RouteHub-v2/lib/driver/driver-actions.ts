@@ -45,7 +45,9 @@ export async function startRoute(ctx:DriverMutationContext, today:string) {
     const route=await client.from('routes').select('id,status,route_date,route_started_at').eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).maybeSingle()
     if(route.error) throw route.error
     if(!route.data || !['pending','published','assigned','paused'].includes(route.data.status) || (route.data.route_date||'').slice(0,10)>today) throw new Error('This route cannot be started.')
-    const result=await client.from('routes').update({status:'active',route_started_at:route.data.route_started_at||new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).select().single()
+    // Do not require a returned row here: RLS can allow the update while
+    // filtering the SELECT response, which made Start Delivery look stuck.
+    const result=await client.from('routes').update({status:'active',route_started_at:route.data.route_started_at||new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId)
     if(result.error) throw result.error
     return result.data
   })
