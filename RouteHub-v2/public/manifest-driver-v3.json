@@ -21,19 +21,19 @@
   ],
   "icons": [
     {
-      "src": "/routehub-driver-icon.png",
+      "src": "/routehub-driver-app.jpg",
       "sizes": "774x774",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/routehub-driver-icon.png",
+      "src": "/routehub-driver-app.jpg",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/routehub-driver-icon.png",
+      "src": "/routehub-driver-app.jpg",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -46,7 +46,7 @@
       "url": "/driver",
       "icons": [
         {
-          "src": "/routehub-driver-icon.png",
+          "src": "/routehub-driver-app.jpg",
           "sizes": "774x774",
           "type": "image/png"
         }
@@ -58,7 +58,7 @@
       "url": "/driver/map",
       "icons": [
         {
-          "src": "/routehub-driver-icon.png",
+          "src": "/routehub-driver-app.jpg",
           "sizes": "774x774",
           "type": "image/png"
         }
@@ -70,7 +70,7 @@
       "url": "/driver/route",
       "icons": [
         {
-          "src": "/routehub-driver-icon.png",
+          "src": "/routehub-driver-app.jpg",
           "sizes": "774x774",
           "type": "image/png"
         }
