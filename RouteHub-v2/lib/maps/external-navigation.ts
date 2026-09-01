@@ -16,7 +16,9 @@ export function appleMapsNavigationUrl(destination:NavigationDestination):string
   if(!value)return null
   const params=new URLSearchParams({daddr:value,dirflg:'d'})
   if(destination.label?.trim())params.set('q',destination.label.trim())
-  return `https://maps.apple.com/?${params.toString()}`
+  // Use the native scheme so iOS opens Maps directly instead of an in-app
+  // Safari tab. The HTTPS URL remains the fallback for unsupported clients.
+  return `maps://?${params.toString()}`
 }
 
 export function openNavigation(destination:NavigationDestination,platform=''):string|null{
@@ -26,7 +28,7 @@ export function openNavigation(destination:NavigationDestination,platform=''):st
   if(/android/.test(normalizedPlatform)){
     const value=destinationValue(destination)
     if(!value)return null
-    return `geo:0,0?q=${encodeURIComponent(value)}`
+    return `google.navigation:q=${encodeURIComponent(value)}`
   }
   return googleMapsNavigationUrl(destination)
 }
