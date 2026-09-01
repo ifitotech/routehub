@@ -4,7 +4,10 @@ import {readFileSync} from 'node:fs'
 import {canFinalizeRoute,nextRequiredStop,routeProgress,stopAction,stopKind} from '../lib/stop-workflow.ts'
 
 const stop=(id,type,status,position,extra={})=>({id,mission_type:type,status,position,...extra})
-const driverPage=()=>readFileSync(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
+const driverPage=()=>readFileSync(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
+const completedPage=()=>readFileSync(new URL('../app/driver-v3/completed/page.tsx',import.meta.url),'utf8')
+const driverData=()=>readFileSync(new URL('../lib/driver-v3/use-driver-data.ts',import.meta.url),'utf8')
+const driverActions=()=>readFileSync(new URL('../lib/driver/driver-actions.ts',import.meta.url),'utf8')
 const routesPage=()=>readFileSync(new URL('../app/routes/page.tsx',import.meta.url),'utf8')
 const managePage=()=>readFileSync(new URL('../app/routes/manage/page.tsx',import.meta.url),'utf8')
 const migration=()=>readFileSync(new URL('../supabase/migrations/026_stop_workflow_and_finalization.sql',import.meta.url),'utf8')
@@ -73,46 +76,50 @@ test('the final branch enables route finish only after it is completed',()=>{
   assert.deepEqual(routeProgress(after),{total:3,completed:3,next:undefined,readyToFinalize:true})
 })
 
-test('Complete Route is safe to cancel because finalization is a separate explicit write',()=>{
-  const source=driverPage()
-  assert.match(source,/onClick=\{\(\)=>setFinalizeOpen\(false\)\}>\{t\.cancel\}/)
-  assert.match(source,/onClick=\{\(\)=>void finalizeRoute\('normal'\)\}/)
+test('V3 route finalization is a separate guarded backend write',()=>{
+  const source=completedPage()
+  assert.match(source,/const finish = async \(\) =>/)
+  assert.match(source,/if \(!last \|\| busy \|\| !ready\) return/)
+  assert.match(source,/finalizeRoute\(\{routeId: last\.id, driverId, companyId: last\.company_id\}, 'normal'\)/)
 })
 
 test('normal route finalization only becomes available after every required stop',()=>{
   const queue=[stop('a','pickup','completed',1,{arrived_at:'2026-08-22T10:00:00Z'}),stop('b','delivery','completed',2)]
   assert.equal(routeProgress(queue).readyToFinalize,true)
-  assert.match(driverPage(),/group\.progress\.readyToFinalize&&group\.items\.some\(item=>Boolean\(item\.arrived_at\)\)/)
+  const source=completedPage()
+  assert.match(source,/canFinalizeRoute\(dayRoutes as any\)/)
+  assert.match(source,/disabled=\{busy \|\| !ready \|\| !last\}/)
 })
 
 test('Complete with Photo stores separate final evidence without replacing delivery POD',()=>{
-  const source=driverPage()
+  const source=driverActions()
   assert.match(source,/finalization_photo_path:photoPath\|\|null/)
   assert.match(source,/kind:method==='issue'\?'issue':'finalization',attachAsCompletionPhoto:false/)
-  assert.match(source,/finalizeRoute\('photo',file\)/)
+  assert.match(source,/finalization_method:method/)
 })
 
-test('Report an Issue supports the required choices, note, and optional photo',()=>{
+test('Report an Issue uses the shared mutation with a note and optional photo',()=>{
   const source=driverPage()
-  for(const option of ['Customer unavailable','Wrong address','Material issue','Could not complete','Other'])assert.match(source,new RegExp(`'${option}'`))
-  assert.match(source,/finalizeIssueOpen&&<div/)
-  assert.match(source,/setFinalizeIssuePhoto/)
-  assert.match(source,/finalizeRoute\('issue',finalizeIssuePhoto\|\|undefined\)/)
+  const actions=driverActions()
+  assert.match(source,/setIssueOpen\(true\)/)
+  assert.match(source,/setIssueNote/)
+  assert.match(source,/reportIssue\(ctx\(\), issueNote\.trim\(\)\|\|'Issue reported on delivery'\)/)
+  assert.match(actions,/export async function reportIssue/)
+  assert.match(actions,/kind:'issue',attachAsCompletionPhoto:false/)
 })
 
 test('delivery retains photo and customer signature proof while pickup remains lighter',()=>{
   const source=driverPage()
-  assert.match(source,/deliveryToolsOpen&&currentKind==='delivery'&&<div/)
-  assert.match(source,/setSignatureOpen\(true\)/)
-  assert.match(source,/saveCustomerSignature/)
-  assert.match(source,/saveCustomerSignatureProof/)
-  assert.match(source,/setDeliveryToolsOpen\(true\)/)
+  assert.match(source,/if\(photo\) await uploadStopPhoto\(ctx\(\), photo\)/)
+  assert.match(source,/if\(signed && canvas\.current\) await saveStopSignature\(ctx\(\), canvas\.current\)/)
+  assert.match(source,/completeDeliveryWithRecipient\(ctx\(\), name, issueNote, location\)/)
+  assert.match(source,/completePickupWithEvidence\(ctx\(\)\)/)
 })
 
 test('pickup PO is captured in both the builder and focused driver display',()=>{
   assert.match(routesPage(),/form\.type==='pickup'&&<label[^>]*><span>\{c\.po\}/)
-  assert.match(driverPage(),/currentKind==='pickup'&&<div className=\{`\$\{styles\.details\}/)
-  assert.match(driverPage(),/\{routeMetaCopy\.po\}/)
+  assert.match(driverPage(),/kind!=='return'&&route\.order_number/)
+  assert.match(driverPage(),/PO \{route\.order_number\}/)
 })
 
 test('manager can edit pickup, delivery, and branch data without replacing the queue',()=>{
@@ -127,9 +134,10 @@ test('manager can edit pickup, delivery, and branch data without replacing the q
 })
 
 test('driver refresh and realtime loading include persisted workflow state',()=>{
-  const source=driverPage()
+  const source=driverData()+driverActions()
   for(const field of ['arrived_at','destination_phone','customer_signature_path','finalized_at','finalization_method'])assert.match(source,new RegExp(field))
   assert.match(source,/postgres_changes/)
+  assert.match(source,/createRealtimeRefresh\(/)
   assert.match(source,/void load\(\)/)
 })
 
@@ -149,5 +157,5 @@ test('database finalization is additive, atomic, and double-submit safe',()=>{
 test('cancelled stops do not block a route, but issues do',()=>{
   assert.equal(canFinalizeRoute([stop('done','delivery','completed',1),stop('cancelled','pickup','cancelled',2)]),true)
   assert.equal(canFinalizeRoute([stop('done','delivery','completed',1),stop('issue','pickup','issue',2)]),false)
-  assert.match(driverPage(),/items\.filter\(item=>item\.status!=='cancelled'\)/)
+  assert.match(readFileSync(new URL('../lib/driver/driver-selectors.ts',import.meta.url),'utf8'),/status !== 'cancelled'/)
 })

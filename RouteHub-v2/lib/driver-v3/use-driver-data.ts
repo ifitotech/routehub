@@ -6,6 +6,7 @@ import {operationalDate} from '../driver-queue'
 import {buildDriverSnapshot} from '../driver/driver-refresh'
 import type {DriverV3Route} from './types'
 import {getActiveDrivingSession, startDrivingDay, type DrivingSession} from '../driving-session'
+import {createRealtimeRefresh} from '../realtime-sync'
 
 type DriverV3Data = {
   routes: DriverV3Route[]
@@ -99,17 +100,19 @@ function useDriverDataInternal(): DriverV3Data {
   useEffect(() => {
     if(!driverId) return
     const client = getSupabase()
+    const sync = createRealtimeRefresh(() => load(true), 150)
     const channel = client
       .channel('driver-v3-routes')
       .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `driver_id=eq.${driverId}`}, () => {
-        void load(true)
+        sync.schedule()
       })
       .subscribe()
-    const onFocus = () => { void load(true) }
+    const onFocus = () => { sync.schedule() }
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onFocus)
-    const tick = window.setInterval(() => { void load(true) }, 20000)
+    const tick = window.setInterval(() => { sync.schedule() }, 20000)
     return () => {
+      sync.dispose()
       void client.removeChannel(channel)
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onFocus)

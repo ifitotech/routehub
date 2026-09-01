@@ -81,9 +81,9 @@ test('team workspaces expose assigned routes while keeping their normal workspac
 })
 
 test('a permanent Driver can start a driving day independently of a current route', () => {
-  const source = read('../app/driver/page.tsx')
-  assert.match(source, /startDrivingDay\(\{companyId:membership\.company_id/)
-  assert.doesNotMatch(source, /if\(!driverId\|\|!current\|\|busy\)return[\s\S]{0,240}startDrivingDay\(\{companyId:membership\.company_id/)
+  const source = read('../app/driver-v3/driving-day/page.tsx')
+  assert.match(source, /startDrivingDay\(\{driverId, companyId, branchId\}\)/)
+  assert.doesNotMatch(source, /currentOperation|currentRoute|routeId/)
 })
 
 test('Live Route is driven by active sessions rather than active route status', () => {
