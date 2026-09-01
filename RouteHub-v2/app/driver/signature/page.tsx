@@ -1,4 +1,5 @@
-'use client'
-import Link from 'next/link'
-import {useRef,useState} from 'react'
-export default function Signature(){const canvas=useRef<HTMLCanvasElement>(null),[message,setMessage]=useState('');const start=(e:React.PointerEvent)=>{const c=canvas.current;if(!c)return;c.setPointerCapture(e.pointerId);const r=c.getBoundingClientRect(),ctx=c.getContext('2d');if(!ctx)return;ctx.lineWidth=3;ctx.lineCap='round';ctx.strokeStyle='#14233b';ctx.beginPath();ctx.moveTo(e.clientX-r.left,e.clientY-r.top);const move=(ev:PointerEvent)=>{ctx.lineTo(ev.clientX-r.left,ev.clientY-r.top);ctx.stroke()};const stop=()=>{c.removeEventListener('pointermove',move);c.removeEventListener('pointerup',stop)};c.addEventListener('pointermove',move);c.addEventListener('pointerup',stop)};return <main className="app driver-dashboard"><header className="topbar"><Link className="brand" href="/driver">ROUTEHUB</Link></header><p className="muted">Driver · Customer signature</p><h1>Signature</h1><p className="muted">Ask the customer to sign inside the box.</p><canvas ref={canvas} width={700} height={260} onPointerDown={start} style={{width:'100%',height:260,background:'#fff',border:'1px solid var(--line)',borderRadius:16,touchAction:'none'}}/><div className="actions"><button className="primary" onClick={()=>setMessage('Signature ready to save.')}>Save signature</button><button className="secondary" onClick={()=>{const c=canvas.current;c?.getContext('2d')?.clearRect(0,0,c.width,c.height)}}>Clear</button></div>{message&&<p className="muted" role="status">{message}</p>}</main>}
+import {redirect} from 'next/navigation'
+
+export default function DriverSignatureRedirect() {
+  redirect('/driver-v3/pod')
+}

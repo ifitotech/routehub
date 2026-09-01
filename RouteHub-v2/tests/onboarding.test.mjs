@@ -22,7 +22,7 @@ test('driver and manager get different three-step tours', () => {
 test('tour can be skipped, completed and replayed from settings', () => {
   const gate = read('../app/onboarding-gate.tsx')
   const settings = read('../app/settings/page.tsx')
-  const driverSettings = read('../app/driver/settings/page.tsx')
+  const driverSettings = read('../app/driver-v3/settings/page.tsx')
   assert.match(gate, /localStorage\.setItem\(onboardingStorageKey/)
   assert.match(gate, /onClick=\{complete\}>\{copy\.skip\}/)
   assert.match(settings, /requestOnboardingReplay/)

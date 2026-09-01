@@ -8,6 +8,7 @@ import {geocodeAddress} from '../lib/maps/geocoding'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {calculateRoute, nextRouteManeuver} from '../lib/maps/routing'
 import type {ActiveRouteManeuver, RouteManeuver} from '../lib/maps/types'
+import {clusterCoordinates, sanitizeCoordinate} from '../lib/maps/coordinates'
 
 export type RouteCoordinate={lat:number;lng:number}
 export type RouteWaypoint={address?:string|null;label?:string|null;coordinate?:RouteCoordinate|null}
@@ -71,9 +72,9 @@ function RecenterOnRequest({points, token}:{points:RouteCoordinate[]; token:numb
 }
 
 async function resolveCoordinate(address:string|null|undefined,known:RouteCoordinate|null|undefined){
- if(known)return known
+ if(known)return sanitizeCoordinate(known)
  if(!address)return null
- try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
+ try{return sanitizeCoordinate((await geocodeAddress(address))?.coordinate||null)}catch{return null}
 }
 
 export default function LiveRouteMap({originAddress,destinationAddress,originCoordinate,destinationCoordinate,waypoints=[],driverLocation,driverUpdatedAt,title='Live route',showHeader=true,showLocationUpdated=true,interactive=true,onActivate,useDriverAsOrigin=false,locale='en',followToken=0,onManeuver}:Props & {followToken?:number}){
@@ -94,7 +95,12 @@ export default function LiveRouteMap({originAddress,destinationAddress,originCoo
     {address:destinationAddress,coordinate:destinationCoordinate},
   ]
   void Promise.all(locations.map(location=>resolveCoordinate(location.address,location.coordinate))).then(async coordinates=>{
-   const points=coordinates.filter((point):point is RouteCoordinate=>Boolean(point))
+   const resolved=coordinates.filter((point):point is RouteCoordinate=>Boolean(point))
+   // Keep the map focused on the active operating area. A malformed or
+   // stale coordinate must never pull the viewport to another continent.
+   const clustered=clusterCoordinates(resolved)
+   const allowed=new Set(clustered.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`))
+   const points=resolved.filter(point=>allowed.has(`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`))
    if(cancelled)return
    setRoutePoints(points)
    setLine(points)
