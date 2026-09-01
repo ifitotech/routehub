@@ -45,16 +45,16 @@ function useDriverDataInternal(): DriverV3Data {
       setBranchId(membership.branch_id ?? null)
       const first = await getSupabase()
         .from('routes')
-        .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
+        .select('id,route_number,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
         .eq('company_id', membership.company_id)
         .eq('driver_id', user.id)
         .order('position', {ascending: true})
       let rows = first.data
       let loadError = first.error
-      if (loadError && /destination_contact_name|schema cache|column/i.test(loadError.message || '')) {
+      if (loadError && /route_number|destination_contact_name|schema cache|column/i.test(loadError.message || '')) {
         const second = await getSupabase()
           .from('routes')
-          .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
+          .select('id,route_number,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
           .eq('company_id', membership.company_id)
           .eq('driver_id', user.id)
           .order('position', {ascending: true})

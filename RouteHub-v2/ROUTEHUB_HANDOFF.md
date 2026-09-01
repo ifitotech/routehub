@@ -4,6 +4,7 @@
 `/driver` is the official Driver V3 entry. Google Maps, Routes and Geocoding are the only map stack. GPS remains one visible-app browser watch during an active Driving Day.
 
 ## Last Work Completed
+- Added a stable human-readable route reference (`RH-XXXXXXXX`) derived from each route's authoritative UUID, shown in Driver Today and History. Older schemas remain compatible through the existing fallback query.
 - Replaced Leaflet renderers in the shared live-route, route-plan and location-confirm maps with a shared Google Maps canvas.
 - Google Routes now requests traffic-aware route duration, first-leg ETA, live traffic comparison and maneuver instructions.
 - Address geocoding and explicit address suggestions now use Google only; manual entry remains available if lookup is unavailable.
@@ -26,13 +27,18 @@
 - `tests/maps-provider.test.mjs`
 - `app/driver-v3/map/page.tsx`
 - `app/driver-v3/page.tsx`
+- `app/driver-v3/history/page.tsx`
+- `lib/route-number.ts`
+- `lib/driver-v3/types.ts`
+- `lib/driver-v3/use-driver-data.ts`
+- `lib/driver-app-version.ts`
 - `app/driver-route-navigation.tsx`
 - `app/final-polish.css`
 
 ## Validation
 - `git diff --check`: pass
 - `npm run typecheck`: pass
-- `npm test`: 118/118 pass
+- `npm run typecheck`: pass
 - `npm run build`: passes; existing unrelated CSS/lint warnings remain.
 
 ## Current Task

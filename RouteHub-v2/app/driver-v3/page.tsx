@@ -15,6 +15,7 @@ import {distanceMeters, getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
+import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 
 const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
@@ -296,6 +297,7 @@ export default function DriverV3Page() {
         <section className={styles.hero}>
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
+            <span className="muted" style={{fontSize:12,fontWeight:700}}>ROUTE {routeNumber(route)}</span>
           </div>
           <div className={styles.destination} onClick={()=>setSheet('info')} role="button">
             <div>

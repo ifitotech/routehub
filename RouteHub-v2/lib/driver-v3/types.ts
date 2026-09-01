@@ -1,5 +1,6 @@
 export type DriverV3Route = {
   id: string
+  route_number?: string | null
   driver_id?: string | null
   route_date?: string | null
   status: string

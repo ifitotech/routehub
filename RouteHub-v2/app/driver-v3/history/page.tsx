@@ -8,6 +8,7 @@ import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {operationalDate} from '../../../lib/driver-queue'
 import {openNavigation} from '../../../lib/maps/external-navigation'
 import {useLocale} from '../../../lib/use-preferences'
+import {routeNumber} from '../../../lib/route-number'
 
 function typeLabel(kind: string | null | undefined, labels: Record<string, string>) {
   const v = (kind || 'delivery').toLowerCase()
@@ -130,6 +131,7 @@ export default function History() {
                     <p className="eyebrow" style={{margin: 0, color: look.badge}}>
                       {typeLabel(r.mission_type, t)} · {statusText}
                     </p>
+                    <p className="muted" style={{margin: '3px 0 0', fontSize: 12, fontWeight: 700}}>ROUTE {routeNumber(r)}</p>
                     <h2 style={{margin: '4px 0 4px', fontSize: 17}}>
                       {r.destination_name || r.destination_address || t.drvRoute}
                     </h2>
