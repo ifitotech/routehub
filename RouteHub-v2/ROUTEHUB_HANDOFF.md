@@ -11,6 +11,7 @@
 - Internal navigation is a true full-screen map: no Driver header or bottom tabs, compact Exit/Arrived controls, traffic layer, next maneuver, maneuver distance, traffic-aware ETA, arrival time and an optional voice prompt.
 - Pressing Arrived returns to the authoritative current stop and immediately opens the completion flow for Pickup, Delivery, or Return. Return now has its own confirmation sheet.
 - Carry-over selection resumes the newest unfinished operational day first, so an older stale pending route cannot hide the current delivery.
+- Added `lib/driver/driver-state.ts` as the shared persisted-state machine for pending, started, arrived, completed and issue phases plus the next operational action. Today now derives its started/arrived state through that layer.
 
 ## Files Changed
 - `components/google-route-canvas.tsx`
@@ -34,7 +35,7 @@
 - `npm run build`: passes; existing unrelated CSS/lint warnings remain.
 
 ## Current Task
-Physically verify full-screen turn-by-turn navigation on a phone, then continue Driver work only from current `main`.
+Continue consolidating Driver surfaces around the shared queue/state/action controller, then physically verify turn-by-turn navigation on a phone.
 
 ## Next Step
 On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic overlay, next maneuver/distance, ETA, voice toggle, then press Arrived and confirm the correct completion sheet opens. Verify a pending delivery such as 985 W 28th St is selected ahead of older carry-over work.

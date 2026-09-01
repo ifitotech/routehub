@@ -13,6 +13,7 @@ import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
 import {distanceMeters, getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
+import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './today.module.css'
 
@@ -51,8 +52,9 @@ export default function DriverV3Page() {
     body.style.overflow='hidden'
     return()=>{html.style.overflow=prevHtml;body.style.overflow=prevBody}
   },[sheet])
-  const started=['active','paused'].includes(String(route?.status||''))
-  const arrived=Boolean(route?.arrived_at)
+  const phase=route?driverOperationPhase(route):'pending'
+  const started=phase==='started'||phase==='arrived'
+  const arrived=phase==='arrived'
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const todaySummary=useMemo(()=>{
     const day=operationalDate()
