@@ -64,6 +64,12 @@ export async function completeMission(id:string,providedLocation?:{lat:number;ln
   }
 
   let result=await update(completion)
+  if (result.error) {
+    // Older deployed schemas may reject an optional completion metadata field;
+    // the operational state can still be closed with the minimal safe patch.
+    const minimal = await getSupabase().from('routes').update({status:'completed', completed_at:completionBase.completed_at, updated_version:Date.now()}).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['pending','published','active','paused','issue']).select().maybeSingle()
+    if (!minimal.error && minimal.data) result = minimal
+  }
   // Database workflow triggers require an execution state before completion.
   // A recovered return may have arrived_at set while still published; promote
   // that same stop to active, then retry the authoritative completion.
