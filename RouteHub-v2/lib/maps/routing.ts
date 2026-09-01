@@ -9,6 +9,13 @@ export function distanceMeters(a:MapCoordinate,b:MapCoordinate){
   return 2*6371000*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
 }
 
+function geometryMatchesEndpoints(line:MapCoordinate[],points:MapCoordinate[]){
+ if(line.length<2||points.length<2)return false
+ const start=line[0],end=line[line.length-1]
+ if(!start||!end)return false
+ return distanceMeters(start,points[0])<=20_000&&distanceMeters(end,points[points.length-1])<=20_000
+}
+
 /**
  * Chooses the first maneuver still ahead of the driver's closest route point.
  * Selecting by raw geographic distance is incorrect after passing a turn: the
@@ -34,28 +41,30 @@ export function nextRouteManeuver(maneuvers:RouteManeuver[]|undefined,route:MapC
   return {...active.maneuver,distanceToManeuverMeters:Math.max(0,distanceToManeuver)}
 }
 
-export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal,locale='en'):Promise<RouteEstimate>{
+export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal,locale='en',trafficAware=false):Promise<RouteEstimate>{
   const fallback={coordinates:points,source:'fallback' as const}
   if(points.length<2)return fallback
   try{
     const response=await fetch('/api/routing',{
       method:'POST',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({points:points.slice(0,25),locale}),
+      body:JSON.stringify({points:points.slice(0,25),locale,trafficAware}),
       signal:signal||AbortSignal.timeout(mapProviderLimits.routeTimeoutMs+2_000),
     })
     if(!response.ok)return fallback
     const payload=await response.json() as Partial<RouteEstimate>
     if(Array.isArray(payload.coordinates)&&payload.coordinates.length>1){
+      const coordinates=payload.coordinates.map(point=>sanitizeCoordinate(point)).filter((point):point is MapCoordinate=>Boolean(point))
+      const safeCoordinates=geometryMatchesEndpoints(coordinates,points)?coordinates:points
       return {
-        coordinates:payload.coordinates.map(point=>sanitizeCoordinate(point)).filter((point):point is MapCoordinate=>Boolean(point)),
+        coordinates:safeCoordinates,
         distanceMeters:payload.distanceMeters,
         durationSeconds:payload.durationSeconds,
         staticDurationSeconds:payload.staticDurationSeconds,
         nextStopDistanceMeters:payload.nextStopDistanceMeters,
         nextStopDurationSeconds:payload.nextStopDurationSeconds,
         nextStopStaticDurationSeconds:payload.nextStopStaticDurationSeconds,
-        source:payload.source==='google'?'google':'fallback',
+        source:payload.source==='google'&&safeCoordinates===coordinates?'google':'fallback',
         maneuvers:payload.maneuvers,
       }
     }

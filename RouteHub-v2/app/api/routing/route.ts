@@ -77,16 +77,18 @@ function routeLocale(value:unknown){
 export async function POST(request:NextRequest){
  let points:MapCoordinate[]=[]
  let languageCode='en-US'
+ let trafficAware=false
  try{
-  const payload=await request.json() as {points?:unknown;locale?:unknown}
+  const payload=await request.json() as {points?:unknown;locale?:unknown;trafficAware?:boolean}
   points=validPoints(payload.points)
   languageCode=routeLocale(payload.locale)
+  trafficAware=Boolean(payload.trafficAware)
  }catch{points=[]}
  if(points.length<2)return NextResponse.json({coordinates:points,source:'fallback'})
  const key=process.env.GOOGLE_MAPS_SERVER_KEY
  if(!key)return NextResponse.json({coordinates:points,source:'fallback',error:'Routes API is not configured.'},{status:503})
 
- const lookup=`${languageCode}:${cacheKey(points)}`
+ const lookup=`${languageCode}:${trafficAware?'traffic':'static'}:${cacheKey(points)}`
  const cached=routeCache.get(lookup)
  if(cached&&cached.expires>Date.now())return NextResponse.json(cached.value,{headers:{'x-routehub-cache':'hit'}})
  const waypoint=(point:MapCoordinate)=>({location:{latLng:{latitude:point.lat,longitude:point.lng}}})
@@ -97,7 +99,7 @@ export async function POST(request:NextRequest){
   travelMode:'DRIVE',
   // Keep quota usage predictable while the internal navigator is in beta.
   // Traffic-aware routing can be re-enabled when live navigation is stable.
-  routingPreference:'TRAFFIC_UNAWARE',
+  routingPreference:trafficAware?'TRAFFIC_AWARE':'TRAFFIC_UNAWARE',
   computeAlternativeRoutes:false,
   languageCode,
   units:'IMPERIAL',
