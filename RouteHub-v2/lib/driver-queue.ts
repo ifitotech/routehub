@@ -51,7 +51,15 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
   const active = ordered(driverRoutes.filter(route => route.status === 'active' && (route.route_date || '') === today))
   const paused = ordered(driverRoutes.filter(route => route.status === 'paused' && (route.route_date || '') === today))
   const eligibleUpcoming = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') === today))
+  // If more than one carry-over route exists, resume the most recent
+  // unfinished operational day first. Older work remains in the queue, but
+  // it must not hide the latest pending delivery from the driver.
   const overdue = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') < today))
+    .sort((left, right) =>
+      (right.route_date || '').localeCompare(left.route_date || '') ||
+      left.position - right.position ||
+      left.id.localeCompare(right.id),
+    )
   // Carry-over work has priority so an unfinished route left overnight is
   // the first operation the driver sees the next day.
   const current = overdue[0] ?? active[0] ?? paused[0] ?? eligibleUpcoming[0]

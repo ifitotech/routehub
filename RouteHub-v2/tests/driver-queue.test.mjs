@@ -35,6 +35,15 @@ test('an unfinished past-due route remains visible without blocking current work
   assert.deepEqual(queue.upcoming.map(item => item.id), ['today-first'])
 })
 
+test('the latest unfinished carry-over day is resumed before older carry-over work', () => {
+  const queue = selectDriverTodayQueue([
+    route('older', 'pending', 1, '2026-08-11'),
+    route('latest', 'published', 1, '2026-08-12'),
+  ], 'driver-a', '2026-08-13')
+  assert.equal(queue.current?.id, 'latest')
+  assert.deepEqual(queue.upcoming.map(item => item.id), ['older'])
+})
+
 test('a future active record cannot override today work', () => {
   const queue = selectDriverTodayQueue([
     route('today', 'published', 1),

@@ -10,6 +10,7 @@
 - Driver position updates no longer re-fit or reset the map on each GPS fix.
 - Internal navigation is a true full-screen map: no Driver header or bottom tabs, compact Exit/Arrived controls, traffic layer, next maneuver, maneuver distance, traffic-aware ETA, arrival time and an optional voice prompt.
 - Pressing Arrived returns to the authoritative current stop and immediately opens the completion flow for Pickup, Delivery, or Return. Return now has its own confirmation sheet.
+- Carry-over selection resumes the newest unfinished operational day first, so an older stale pending route cannot hide the current delivery.
 
 ## Files Changed
 - `components/google-route-canvas.tsx`
@@ -36,7 +37,7 @@
 Physically verify full-screen turn-by-turn navigation on a phone, then continue Driver work only from current `main`.
 
 ## Next Step
-On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic overlay, next maneuver/distance, ETA, voice toggle, then press Arrived and confirm the correct completion sheet opens.
+On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic overlay, next maneuver/distance, ETA, voice toggle, then press Arrived and confirm the correct completion sheet opens. Verify a pending delivery such as 985 W 28th St is selected ahead of older carry-over work.
 
 ## Known Problems
 - Browser/PWA navigation cannot give continuous background GPS or native turn-by-turn audio after the app is closed; that requires a native wrapper and Google Navigation SDK.
