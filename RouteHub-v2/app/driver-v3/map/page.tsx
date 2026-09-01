@@ -1,6 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
 import {useMemo, useState} from 'react'
+import {Component, type ReactNode} from 'react'
 import {useRouter} from 'next/navigation'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
@@ -8,6 +9,12 @@ import {markArrived} from '../../../lib/driver-v3/actions'
 import {operationalDate} from '../../../lib/driver-queue'
 
 const DriverRouteNavigation = dynamic(() => import('../../driver-route-navigation'), {ssr: false})
+
+class NavigationBoundary extends Component<{children: ReactNode; fallback: ReactNode}, {failed: boolean}> {
+  state = {failed: false}
+  static getDerivedStateFromError() { return {failed: true} }
+  render() { return this.state.failed ? this.props.fallback : this.props.children }
+}
 
 export default function DriverV3Map() {
   const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix, routes} = useDriverData()
@@ -64,7 +71,8 @@ export default function DriverV3Map() {
       ) : error ? (
         <div className="driver-navigation-state" role="alert">{error}</div>
       ) : route ? (
-        <DriverRouteNavigation
+        <NavigationBoundary fallback={<NavigationFallback route={route} onBack={() => router.push('/driver')} onRetry={() => window.location.reload()} t={t} />}>
+          <DriverRouteNavigation
           stops={dayStops}
           activeStopId={route.id}
           originAddress={route.origin_address}
@@ -74,7 +82,8 @@ export default function DriverV3Map() {
           disabled={busy}
           onArrive={() => void arrived()}
           onExit={() => router.push('/driver')}
-        />
+          />
+        </NavigationBoundary>
       ) : (
         <section className="driver-navigation-state">
           <h1>{t.drvNoOperation}</h1>
@@ -85,4 +94,16 @@ export default function DriverV3Map() {
       {message && <p className="driver-navigation-feedback" role="alert">{message}</p>}
     </main>
   )
+}
+
+function NavigationFallback({route, onBack, onRetry, t}: {route: any; onBack: () => void; onRetry: () => void; t: any}) {
+  const address = route.destination_address || route.destination_name || t.drvCurrentStopName
+  const maps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`
+  return <section className="driver-navigation-state" role="alert">
+    <h1>Navigation unavailable</h1>
+    <p>{address}</p>
+    <a className="primary" href={maps} target="_blank" rel="noreferrer">{t.drvOpenMaps || 'Open in Google Maps'}</a>
+    <button type="button" className="secondary" onClick={onRetry}>{t.drvTryAgain || 'Try again'}</button>
+    <button type="button" className="secondary" onClick={onBack}>{t.drvToday || 'Back to Today'}</button>
+  </section>
 }
