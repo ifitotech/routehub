@@ -10,6 +10,7 @@ import type {RouteEstimate} from '../lib/maps/types'
 
 type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
+type SharedGpsFix=Coordinate&{accuracy?:number;heading?:number|null;at?:string}
 export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?:'pickup'|'delivery'|'branch';orderNumber?:string|null;notes?:string|null;position?:number;pastDue?:boolean;pending?:boolean;coordinate?:Coordinate|null}
 
 type Props={
@@ -24,7 +25,7 @@ type Props={
   onArrive?:()=>void|Promise<void>
   transitioningOut?:boolean
   trackDevice?:boolean
-  sharedLocation?:Coordinate|null
+  sharedLocation?:SharedGpsFix|null
   arrivalDisabled?:boolean
 }
 
@@ -33,6 +34,8 @@ export default function RoutePlanMap({
   originCoordinate=null,
   stops,
   locale='en',
+  navigationOnly=false,
+  autoStartNavigation=false,
   onReturnToday,
   onExitNavigation,
   onArrive,
@@ -100,23 +103,33 @@ export default function RoutePlanMap({
     setDeviceLocation(current=>({
       lat:next.lat,
       lng:next.lng,
-      accuracy:current?.accuracy||25,
-      updatedAt:Date.now(),
-      heading:current?.heading??null,
+      accuracy:Number.isFinite(sharedLocation?.accuracy)?Number(sharedLocation?.accuracy):current?.accuracy||25,
+      updatedAt:sharedLocation?.at?new Date(sharedLocation.at).getTime()||Date.now():Date.now(),
+      heading:sharedLocation?.heading??current?.heading??null,
     }))
-  },[sharedLocation?.lat,sharedLocation?.lng])
+  },[sharedLocation?.lat,sharedLocation?.lng,sharedLocation?.accuracy,sharedLocation?.heading,sharedLocation?.at])
 
   useEffect(()=>{
     if(!trackDevice||typeof navigator==='undefined'||!navigator.geolocation)return
     watchRef.current=navigator.geolocation.watchPosition(position=>{
       const next=sanitizeCoordinate({lat:position.coords.latitude,lng:position.coords.longitude})
       if(!next)return
-      setDeviceLocation({
-        lat:next.lat,
-        lng:next.lng,
-        accuracy:position.coords.accuracy,
-        updatedAt:Date.now(),
-        heading:Number.isFinite(position.coords.heading)?position.coords.heading:null,
+      setDeviceLocation(previous=>{
+        const accuracy=position.coords.accuracy
+        const updatedAt=Date.now()
+        const materiallyMorePrecise=Boolean(previous&&Number.isFinite(accuracy)&&accuracy+15<previous.accuracy)
+        const elapsedSeconds=previous?Math.max(1,(updatedAt-previous.updatedAt)/1000):0
+        const moved=previous?distanceMeters(previous,next):0
+        const allowedTravel=Math.max(40,elapsedSeconds*45+(accuracy+(previous?.accuracy||0))*1.5)
+        const muchWorse=Boolean(previous&&accuracy>Math.max(75,previous.accuracy*1.8))
+        if(previous&&((muchWorse&&!materiallyMorePrecise)||(moved>allowedTravel&&!materiallyMorePrecise)))return previous
+        return {
+          lat:next.lat,
+          lng:next.lng,
+          accuracy,
+          updatedAt,
+          heading:Number.isFinite(position.coords.heading)?position.coords.heading:null,
+        }
       })
     },()=>{},{enableHighAccuracy:true,maximumAge:0,timeout:12_000})
     return()=>{
@@ -165,7 +178,7 @@ export default function RoutePlanMap({
       title:validStops[Math.max(0,index-(safeOrigin||originAddress?1:0))]?.label||validStops[index]?.address||`Stop ${index+1}`,
       tone:index===0?'#1667F2':'#64748B',
     })),
-    ...(deviceLocation?[{id:'driver',position:deviceLocation,label:'',title:locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location',tone:'#0F1D35',driver:true}]:[]),
+    ...(deviceLocation?[{id:'driver',position:deviceLocation,label:'',title:locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location',tone:'#0F1D35',driver:true,heading:deviceLocation.heading}]:[]),
   ],[points,validStops,safeOrigin,originAddress,deviceLocation,locale])
 
   const confirmArrival=async()=>{
@@ -192,7 +205,7 @@ export default function RoutePlanMap({
   return (
     <section className="route-plan-map route-plan-navigate route-plan-driver is-driving" aria-label="Navigation map">
       <div className="route-plan-canvas">
-        {loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<GoogleRouteCanvas className="route-plan-google-canvas" ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={deviceLocation} followToken={followToken} interactive showTraffic/>}
+        {loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<GoogleRouteCanvas className="route-plan-google-canvas" ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={deviceLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic/>}
         {(nextManeuver||eta) && <aside className="route-plan-guidance" aria-live="polite">
           {nextManeuver&&<b>{formatDistance(nextManeuver.distanceToManeuverMeters)}</b>}
           {nextManeuver?.instruction&&<strong>{nextManeuver.instruction}</strong>}

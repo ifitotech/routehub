@@ -14,8 +14,8 @@ type DriverV3Data = {
   companyId: string
   branchId: string | null
   drivingSession: DrivingSession | null
-  liveFix: {lat: number; lng: number; at: string} | null
-  setLiveFix: (fix: {lat: number; lng: number; at: string} | null) => void
+  liveFix: {lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null
+  setLiveFix: (fix: {lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null) => void
   loading: boolean
   error: string
   refresh: () => Promise<void>
@@ -31,7 +31,7 @@ function useDriverDataInternal(): DriverV3Data {
   const [companyId, setCompanyId] = useState('')
   const [branchId, setBranchId] = useState<string | null>(null)
   const [drivingSession, setDrivingSession] = useState<DrivingSession | null>(null)
-  const [liveFix, setLiveFix] = useState<{lat: number; lng: number; at: string} | null>(null)
+  const [liveFix, setLiveFix] = useState<{lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 

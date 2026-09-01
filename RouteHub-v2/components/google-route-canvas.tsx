@@ -5,7 +5,7 @@ import {loadGoogleMaps} from '../lib/maps/google-maps'
 import {clusterCoordinates, sanitizeCoordinate} from '../lib/maps/coordinates'
 import type {MapCoordinate} from '../lib/maps/types'
 
-type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void}
+type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void;setIcon?:(icon:Record<string,unknown>)=>void}
 type Listener={remove?:()=>void}
 type GoogleMap={
   fitBounds:(bounds:unknown,padding?:number)=>void
@@ -29,6 +29,7 @@ export type GoogleRouteMarker={
   title?:string
   tone?:string
   driver?:boolean
+  heading?:number|null
   draggable?:boolean
 }
 
@@ -40,6 +41,7 @@ type Props={
   fitPoints?:MapCoordinate[]
   followPosition?:MapCoordinate|null
   followToken?:number
+  followDevice?:boolean
   interactive?:boolean
   showTraffic?:boolean
   onMapClick?:(coordinate:MapCoordinate)=>void
@@ -56,7 +58,7 @@ function coordinateFromEvent(event:unknown):MapCoordinate|null{
 
 /** Shared Google Maps canvas. RouteHub keeps routing data in its own services;
  * this component only renders the real coordinates it receives. */
-export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,interactive=true,showTraffic=false,onMapClick,onMarkerDrag}:Props){
+export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,onMapClick,onMarkerDrag}:Props){
   const containerRef=useRef<HTMLDivElement>(null)
   const mapRef=useRef<GoogleMap|null>(null)
   const objectsRef=useRef<MapObject[]>([])
@@ -119,6 +121,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           icon:marker.driver?{
             path:maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale:8,
+            rotation:Number.isFinite(marker.heading)?Number(marker.heading):0,
             fillColor:marker.tone||'#0F1D35',
             fillOpacity:1,
             strokeColor:'#fff',
@@ -150,6 +153,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           icon:{
             path:maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale:8,
+            rotation:Number.isFinite(current.driverMarker.heading)?Number(current.driverMarker.heading):0,
             fillColor:current.driverMarker.tone||'#0F1D35',
             fillOpacity:1,
             strokeColor:'#fff',
@@ -185,11 +189,22 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
     const position=driverMarker?.position||sanitizeCoordinate(followPosition)
     if(!position)return
     driverMarkerRef.current?.setPosition?.(position)
-    if(followToken){
-      mapRef.current?.panTo(position)
-      mapRef.current?.setZoom(16)
+    if(driverMarker){
+      driverMarkerRef.current?.setIcon?.({
+        path:(window as unknown as {google?:{maps?:MapsApi}}).google?.maps?.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale:8,
+        rotation:Number.isFinite(driverMarker.heading)?Number(driverMarker.heading):0,
+        fillColor:driverMarker.tone||'#0F1D35',
+        fillOpacity:1,
+        strokeColor:'#fff',
+        strokeWeight:3,
+      })
     }
-  },[followToken,followPosition,driverMarker?.position])
+    if(followDevice||followToken){
+      mapRef.current?.panTo(position)
+      mapRef.current?.setZoom(followDevice?17:16)
+    }
+  },[followDevice,followToken,followPosition,driverMarker?.position])
 
   return <div ref={containerRef} className={className} aria-label={ariaLabel}>{error&&<div className="live-route-loading" role="alert">{error}</div>}</div>
 }

@@ -25,6 +25,7 @@ export type NavigationStop={
 }
 
 type Coordinate={lat:number;lng:number}
+type SharedCoordinate=Coordinate&{accuracy?:number;heading?:number|null;at?:string}
 
 type Waypoint={address?:string|null;label?:string|null;coordinate?:Coordinate|null}
 
@@ -45,7 +46,7 @@ type Props={
   onActivate?:()=>void
   useDriverAsOrigin?:boolean
   locale?:string
-  sharedLocation?:Coordinate|null
+  sharedLocation?:SharedCoordinate|null
   disabled?:boolean
   onArrive?:()=>void|Promise<void>
   onExit?:()=>void
@@ -109,10 +110,13 @@ export default function DriverRouteNavigation({
     coordinate:sanitizeCoordinate({lat:stop.destination_lat,lng:stop.destination_lng}),
   }))
   const originFromStops=sorted.find(stop=>sanitizeCoordinate({lat:stop.origin_lat,lng:stop.origin_lng}))
-  const gpsOrigin=sanitizeCoordinate(sharedLocation)||sanitizeCoordinate(driverLocation)
+  const safeSharedLocation=sanitizeCoordinate(sharedLocation)
+  const gpsOrigin=safeSharedLocation||sanitizeCoordinate(driverLocation)
   const storedOrigin=sanitizeCoordinate(originCoordinate)||(originFromStops?sanitizeCoordinate({lat:originFromStops.origin_lat,lng:originFromStops.origin_lng}):null)
   const resolvedOrigin=gpsOrigin||storedOrigin
   const resolvedOriginAddress=gpsOrigin?null:originAddress||originFromStops?.origin_address||null
 
-  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice={false} sharedLocation={gpsOrigin||storedOrigin} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
+  const liveLocation=safeSharedLocation?{...safeSharedLocation,accuracy:sharedLocation?.accuracy,heading:sharedLocation?.heading??null,at:sharedLocation?.at}:gpsOrigin||storedOrigin
+
+  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice={false} sharedLocation={liveLocation} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
 }

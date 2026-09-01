@@ -36,7 +36,7 @@ export default function DriverV3Map() {
   }, [routes, route?.route_date, today])
 
   const gps = liveFix
-    ? {lat: liveFix.lat, lng: liveFix.lng}
+    ? liveFix
     : drivingSession?.last_lat != null && drivingSession?.last_lng != null
       ? {lat: Number(drivingSession.last_lat), lng: Number(drivingSession.last_lng)}
       : null

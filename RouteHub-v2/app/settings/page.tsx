@@ -10,7 +10,10 @@ import DeviceNotificationsSetting from '../device-notifications-setting'
 import InstallAppCard from '../install-app-card'
 import {requestOnboardingReplay} from '../../lib/onboarding'
 import ManagerShell from '../manager/manager-shell'
+import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
 import styles from './settings.module.css'
+
+type BranchSettings = {id: string; name: string; address: string; phone: string; coordinate: MapPoint | null}
 
 export default function Settings() {
   const {locale, t, setLocale} = useLocale()
@@ -18,7 +21,7 @@ export default function Settings() {
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [branch, setBranch] = useState<{id: string; name: string; address: string; phone: string}>()
+  const [branch, setBranch] = useState<BranchSettings>()
   const [editingProfile, setEditingProfile] = useState(false)
   const [editingBranch, setEditingBranch] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
@@ -51,10 +54,18 @@ export default function Settings() {
       const {data: company} = await client.from('companies').select('plan,trial_ends_at').eq('id', membership.company_id).maybeSingle()
       if (company) { setPlan(company.plan || 'free'); setTrialEnd(company.trial_ends_at || null) }
       const branchQuery = membership.branch_id
-        ? client.from('branches').select('id,name,address,phone').eq('id', membership.branch_id).maybeSingle()
-        : client.from('branches').select('id,name,address,phone').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
+        ? client.from('branches').select('id,name,address,phone,latitude,longitude').eq('id', membership.branch_id).maybeSingle()
+        : client.from('branches').select('id,name,address,phone,latitude,longitude').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
       const {data: branchData} = await branchQuery
-      if (branchData) setBranch({id: branchData.id, name: branchData.name || '', address: branchData.address || '', phone: branchData.phone || ''})
+      if (branchData) setBranch({
+        id: branchData.id,
+        name: branchData.name || '',
+        address: branchData.address || '',
+        phone: branchData.phone || '',
+        // Legacy branch rows may have coordinates in [lng, lat] order. Keep
+        // Settings and Add Route on the same canonical {lat, lng} contract.
+        coordinate: sanitizeCoordinate({lat: branchData.latitude, lng: branchData.longitude}),
+      })
     }
     void loadSettings()
     // iOS/Safari can restore a cached route after returning from Team. Reload
@@ -80,7 +91,16 @@ export default function Settings() {
   const saveBranch = async () => {
     if (!branch || branchSaving) return
     setBranchSaving(true)
-    const {error} = await getSupabase().from('branches').update({name: branch.name.trim(), address: branch.address.trim() || null, phone: branch.phone.trim() || null}).eq('id', branch.id)
+    const coordinate = branch.coordinate
+    const {error} = await getSupabase().from('branches').update({
+      name: branch.name.trim(),
+      address: branch.address.trim() || null,
+      phone: branch.phone.trim() || null,
+      // A changed free-text address must never retain a previous branch pin.
+      // A Google place selection always provides both values together.
+      latitude: coordinate?.lat ?? null,
+      longitude: coordinate?.lng ?? null,
+    }).eq('id', branch.id)
     setMessage(error ? error.message : copy.branchSaved)
     setBranchSaving(false)
   }
@@ -88,7 +108,7 @@ export default function Settings() {
   const userInitials = (fullName || email || 'U').split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map(part => part[0]?.toUpperCase()).join('') || 'U'
  return <ManagerShell active="settings" roleLabel={t.managerRole}><div className={`app settings-page ${styles.page}`}><p className="eyebrow">{t.account.toUpperCase()}</p><h1>{t.settings}</h1>
     <section className="card settings-card"><div className="settings-card-heading"><h2>{t.profile}</h2><button className="secondary edit-button" type="button" onClick={() => setEditingProfile(value => !value)}>{copy.edit}</button></div><div className="profile-summary"><div className="profile-avatar">{avatarUrl ? <img src={avatarUrl} alt=""/> : <span>{(fullName || email || 'U').slice(0, 2).toUpperCase()}</span>}</div><div><strong>{fullName || t.profile}</strong><p className="muted">{phone || copy.phone}</p></div></div>{editingProfile && <div className="settings-edit-panel"><label className="secondary photo-picker"><Camera size={17}/>{copy.photo}<input type="file" accept="image/*" onChange={event => choosePhoto(event.target.files?.[0])}/></label><label>{copy.name}<input value={fullName} onChange={event => setFullName(event.target.value)} placeholder={copy.name}/></label><label>{t.signedInEmail}<input value={email} readOnly/></label><label>{copy.phone}<input type="tel" value={phone} onChange={event => setPhone(event.target.value)} placeholder="(000) 000-0000"/></label><button className="primary" disabled={profileSaving} onClick={saveProfile}><Save size={17}/>{profileSaving ? t.saving : copy.save}</button></div>}<button className="secondary" onClick={signOut}>{t.logout}</button></section>
-    {!isCeo && <section className="card settings-card"><div className="settings-card-heading"><h2><Building2 size={19}/> {copy.branch}</h2>{branch && <button className="secondary edit-button" type="button" onClick={() => setEditingBranch(value => !value)}>{copy.edit}</button>}</div>{branch ? <>{!editingBranch ? <div className="branch-summary"><strong>{branch.name || copy.branchName}</strong><p className="muted">{branch.address || t.addressNotConfigured}</p><p className="muted">{branch.phone || copy.branchPhone}</p></div> : <div className="settings-edit-panel"><label>{copy.branchName}<input value={branch.name} onChange={event => setBranch({...branch, name: event.target.value})}/></label><label>{copy.branchAddress}<GoogleAddressInput value={branch.address} autoComplete="street-address" onValueChange={value => setBranch(current => current ? {...current,address:value} : current)} placeholder={t.addressPlaceholder}/></label><label>{copy.branchPhone}<input type="tel" value={branch.phone} onChange={event => setBranch({...branch, phone: event.target.value})} placeholder="(000) 000-0000"/></label><button className="primary" disabled={branchSaving} onClick={saveBranch}><Save size={17}/>{branchSaving ? t.saving : copy.saveBranch}</button></div>}<Link className="secondary" href="/manager/branches">{t.branches}</Link></> : <p className="muted">{copy.noBranch}</p>}</section>}
+    {!isCeo && <section className="card settings-card"><div className="settings-card-heading"><h2><Building2 size={19}/> {copy.branch}</h2>{branch && <button className="secondary edit-button" type="button" onClick={() => setEditingBranch(value => !value)}>{copy.edit}</button>}</div>{branch ? <>{!editingBranch ? <div className="branch-summary"><strong>{branch.name || copy.branchName}</strong><p className="muted">{branch.address || t.addressNotConfigured}</p><p className="muted">{branch.phone || copy.branchPhone}</p></div> : <div className="settings-edit-panel"><label>{copy.branchName}<input value={branch.name} onChange={event => setBranch({...branch, name: event.target.value})}/></label><label>{copy.branchAddress}<GoogleAddressInput value={branch.address} autoComplete="street-address" onValueChange={value => setBranch(current => current ? {...current,address:value,coordinate:null} : current)} onSelectSearchSuggestion={suggestion => setBranch(current => current ? {...current,address:suggestion.label,coordinate:sanitizeCoordinate(suggestion.coordinate)} : current)} placeholder={t.addressPlaceholder}/></label><label>{copy.branchPhone}<input type="tel" value={branch.phone} onChange={event => setBranch({...branch, phone: event.target.value})} placeholder="(000) 000-0000"/></label><button className="primary" disabled={branchSaving} onClick={saveBranch}><Save size={17}/>{branchSaving ? t.saving : copy.saveBranch}</button></div>}<Link className="secondary" href="/manager/branches">{t.branches}</Link></> : <p className="muted">{copy.noBranch}</p>}</section>}
     {isCeo && <section className="card settings-card"><h2>Platform access</h2><div className="branch-summary"><strong>CEO / Platform administrator</strong><p className="muted">Full access to companies, branches, approvals and audit activity.</p></div></section>}
     <section className="card settings-card"><h2>{t.preferences}</h2><label>{t.language}<select value={locale} onChange={event => setLocale(event.target.value)}><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option></select></label></section>
     <DeviceNotificationsSetting/>
