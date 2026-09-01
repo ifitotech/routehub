@@ -29,6 +29,7 @@ export default function History() {
   const {t, locale} = useLocale()
   const [day, setDay] = useState(operationalDate())
   const [section, setSection] = useState<'pending' | 'done'>('pending')
+  const [query, setQuery] = useState('')
   const currentId = (snapshot?.currentOperation?.route as {id?: string} | undefined)?.id
   const scheduledLabel = locale === 'es' ? 'Programada' : locale === 'fr' ? 'Prévue' : 'Scheduled'
 
@@ -54,8 +55,12 @@ export default function History() {
       .filter(r => String(r.status || '') === 'completed')
       .slice()
       .sort(byScheduledTime)
-    return {pending, done, total: dayRoutes.length}
-  }, [routes, day])
+    const matches = (r: any) => {
+      const q = query.trim().toLowerCase()
+      return !q || [routeNumber(r), r.destination_name, r.destination_address, r.order_number].some(v => String(v || '').toLowerCase().includes(q))
+    }
+    return {pending: pending.filter(matches), done: done.filter(matches), total: dayRoutes.length}
+  }, [routes, day, query])
 
   const openMaps = (route: {destination_address?: string; destination_lat?: number; destination_lng?: number; destination_name?: string}) => {
     const url = openNavigation({
@@ -81,6 +86,7 @@ export default function History() {
           onChange={event => setDay(event.target.value || operationalDate())}
           style={{width: '100%', minHeight: 48, border: '1px solid #dde5ee', borderRadius: 12, padding: '0 12px', font: 'inherit'}}
         />
+        <input aria-label="Search routes" value={query} onChange={event => setQuery(event.target.value)} placeholder="Route, customer, address or PO" style={{width: '100%', minHeight: 48, marginTop: 8, border: '1px solid #dde5ee', borderRadius: 12, padding: '0 12px', font: 'inherit'}} />
       </label>
 
       {loading ? (
