@@ -1,27 +1,40 @@
 'use client'
 import dynamic from 'next/dynamic'
-import {useCallback, useState} from 'react'
-import {ArrowRight, CheckCircle2, CornerUpLeft, CornerUpRight, Crosshair, Navigation} from 'lucide-react'
-import type {ActiveRouteManeuver} from '../../../lib/maps/types'
+import {useMemo, useState} from 'react'
+import {useRouter} from 'next/navigation'
+import {CheckCircle2, Navigation} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import styles from '../../../components/driver-v3/driver-v3.module.css'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {markArrived} from '../../../lib/driver-v3/actions'
 import {openNavigation} from '../../../lib/maps/external-navigation'
+import {operationalDate} from '../../../lib/driver-queue'
 
-const LiveRouteMap = dynamic(() => import('../../live-route-map'), {ssr: false})
+const DriverRouteNavigation = dynamic(() => import('../../driver-route-navigation'), {ssr: false})
 
 export default function DriverV3Map() {
-  const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix} = useDriverData()
+  const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix, routes} = useDriverData()
   const {t, locale} = useLocale()
+  const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
-  const [followToken, setFollowToken] = useState(0)
-  const [maneuver, setManeuver] = useState<ActiveRouteManeuver | null>(null)
   const route = snapshot?.currentOperation?.route as any
-  const onManeuver = useCallback((next: ActiveRouteManeuver | null) => setManeuver(next), [])
   const kind = (snapshot?.currentOperation?.kind || 'delivery').toString().toUpperCase()
+  const today = operationalDate()
+  const dayStops = useMemo(() => {
+    const focusDate = (route?.route_date || today).toString().slice(0, 10)
+    return (routes || [])
+      .filter((item: any) => (item.route_date || '').slice(0, 10) === focusDate && item.status !== 'cancelled')
+      .slice()
+      .sort((left: any, right: any) => Number(left.position || 0) - Number(right.position || 0) || String(left.id).localeCompare(String(right.id)))
+  }, [routes, route?.route_date, today])
+
+  const gps = liveFix
+    ? {lat: liveFix.lat, lng: liveFix.lng}
+    : drivingSession?.last_lat != null && drivingSession?.last_lng != null
+      ? {lat: Number(drivingSession.last_lat), lng: Number(drivingSession.last_lng)}
+      : null
 
   const maps = () => {
     if (!route) return
@@ -47,6 +60,7 @@ export default function DriverV3Map() {
       await markArrived({routeId: route.id, driverId, companyId: route.company_id})
       await refresh()
       setMessage(t.drvArrivedOk)
+      router.push(`/driver/stop?id=${encodeURIComponent(route.id)}`)
     } catch (e) {
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
@@ -64,87 +78,16 @@ export default function DriverV3Map() {
             <p role="alert" style={{padding: 24}}>{error}</p>
           ) : route ? (
             <div style={{position: 'absolute', inset: 0}}>
-              <LiveRouteMap
-                destinationAddress={route.destination_address}
-                destinationCoordinate={
-                  route.destination_lat != null && route.destination_lng != null
-                    ? {lat: Number(route.destination_lat), lng: Number(route.destination_lng)}
-                    : null
-                }
-                driverLocation={
-                  liveFix
-                    ? {lat: liveFix.lat, lng: liveFix.lng}
-                    : drivingSession?.last_lat != null && drivingSession?.last_lng != null
-                    ? {lat: Number(drivingSession.last_lat), lng: Number(drivingSession.last_lng)}
-                    : null
-                }
-                driverUpdatedAt={liveFix?.at || drivingSession?.last_updated_at || null}
-                title={t.drvCurrentStop}
-                showHeader={false}
-                showLocationUpdated={false}
-                interactive
-                useDriverAsOrigin
-                followToken={followToken}
+              <DriverRouteNavigation
+                stops={dayStops}
+                activeStopId={route.id}
+                originAddress={route.origin_address}
+                originCoordinate={gps}
                 locale={locale}
-                onManeuver={onManeuver}
+                sharedLocation={gps}
+                onArrive={() => void arrived()}
+                onExit={() => router.push('/driver')}
               />
-              {maneuver && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 12,
-                    left: 12,
-                    right: 72,
-                    zIndex: 12,
-                    background: '#0F1D35',
-                    color: '#fff',
-                    borderRadius: 16,
-                    padding: '12px 14px',
-                    boxShadow: '0 10px 28px rgba(15,29,53,.28)',
-                    display: 'flex',
-                    gap: 12,
-                    alignItems: 'center',
-                    minHeight: 64,
-                  }}
-                >
-                  {String(maneuver.modifier || '').includes('left') ? (
-                    <CornerUpLeft size={28} />
-                  ) : String(maneuver.modifier || '').includes('right') ? (
-                    <CornerUpRight size={28} />
-                  ) : (
-                    <ArrowRight size={28} />
-                  )}
-                  <div style={{minWidth: 0}}>
-                    <strong style={{display: 'block', fontSize: 18, lineHeight: 1.2}}>
-                      {formatGuideDistance(maneuver.distanceToManeuverMeters, locale)}
-                    </strong>
-                    <span style={{display: 'block', color: '#B9C9E2', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
-                      {maneuver.streetName || formatGuideAction(maneuver, locale)}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setFollowToken(t => t + 1)}
-                style={{
-                  position: 'absolute',
-                  top: 12,
-                  right: 12,
-                  width: 'auto',
-                  minHeight: 44,
-                  padding: '0 12px',
-                  zIndex: 10,
-                  boxShadow: '0 4px 14px rgba(15,29,53,.15)',
-                }}
-                aria-label={t.drvRecenter}
-              >
-                <span style={{display: 'inline-flex', alignItems: 'center', gap: 6}}>
-                  <Crosshair size={16} />
-                  {t.drvRecenter}
-                </span>
-              </button>
             </div>
           ) : (
             <div style={{padding: 24}}>
@@ -204,32 +147,4 @@ export default function DriverV3Map() {
       </div>
     </DriverV3Shell>
   )
-}
-
-function formatGuideDistance(meters: number | undefined, locale: string) {
-  const value = Math.max(0, Math.round(meters || 0))
-  if (locale === 'es') return value >= 1000 ? `${(value / 1000).toFixed(1)} km` : `${value} m`
-  if (locale === 'fr') return value >= 1000 ? `${(value / 1000).toFixed(1)} km` : `${value} m`
-  const feet = Math.round(value * 3.281)
-  return feet >= 1000 ? `${(feet / 5280).toFixed(1)} mi` : `${feet} ft`
-}
-
-function formatGuideAction(maneuver: ActiveRouteManeuver, locale: string) {
-  const turn = `${maneuver.type || ''} ${maneuver.modifier || ''}`.toLowerCase()
-  if (locale === 'es') {
-    if (turn.includes('left')) return 'Gira a la izquierda'
-    if (turn.includes('right')) return 'Gira a la derecha'
-    if (turn.includes('arrive')) return 'Llegando'
-    return 'Sigue adelante'
-  }
-  if (locale === 'fr') {
-    if (turn.includes('left')) return 'Tournez à gauche'
-    if (turn.includes('right')) return 'Tournez à droite'
-    if (turn.includes('arrive')) return 'Arrivée'
-    return 'Continuez'
-  }
-  if (turn.includes('left')) return 'Turn left'
-  if (turn.includes('right')) return 'Turn right'
-  if (turn.includes('arrive')) return 'Arriving'
-  return 'Continue'
 }
