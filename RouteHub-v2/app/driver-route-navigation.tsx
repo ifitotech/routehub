@@ -37,6 +37,13 @@ type Props={
   destinationCoordinate?:Coordinate|null
   waypoints?:Waypoint[]
   driverLocation?:Coordinate|null
+  driverUpdatedAt?:string|null
+  title?:string
+  showHeader?:boolean
+  showLocationUpdated?:boolean
+  interactive?:boolean
+  onActivate?:()=>void
+  useDriverAsOrigin?:boolean
   locale?:string
   sharedLocation?:Coordinate|null
   onArrive?:()=>void|Promise<void>
