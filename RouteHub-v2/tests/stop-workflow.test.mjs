@@ -151,7 +151,7 @@ test('database finalization is additive, atomic, and double-submit safe',()=>{
   assert.match(sql,/new\.finalization_method not in \('normal','photo','issue'\)/i)
   assert.match(sql,/Store route completion on the final stop in the queue/i)
   assert.match(readFileSync(new URL('../lib/driver/driver-actions.ts',import.meta.url),'utf8'),/\.is\('finalized_at',null\)\.select\('id,finalized_at,route_completed_at'\)\.maybeSingle\(\)/)
-  assert.match(readFileSync(new URL('../lib/data.ts',import.meta.url),'utf8'),/\.in\('status',\['active','paused'\]\)\.select\(\)\.maybeSingle\(\)/)
+  assert.match(readFileSync(new URL('../lib/data.ts',import.meta.url),'utf8'),/\.in\('status',\['pending','published','active','paused'\]\)\.select\(\)\.maybeSingle\(\)/)
 })
 
 test('cancelled stops do not block a route, but issues do',()=>{

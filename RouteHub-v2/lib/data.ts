@@ -43,7 +43,10 @@ export async function completeMission(id:string,providedLocation?:{lat:number;ln
 
   const completionBase=buildCompletionPatch(location)
   const completion=options?.driverNote===undefined?completionBase:{...completionBase,driver_note:options.driverNote}
-  const update=async(payload:typeof completionBase|typeof completion)=>getSupabase().from('routes').update(payload).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['active','paused']).select().maybeSingle()
+  // A route can remain published while its arrival is being confirmed (for
+  // example after a refresh or a recovered mobile request). Once arrived, it
+  // is still safe to complete it; the persisted status is the authority.
+  const update=async(payload:typeof completionBase|typeof completion)=>getSupabase().from('routes').update(payload).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['pending','published','active','paused']).select().maybeSingle()
   const readCurrentState=()=>getSupabase().from('routes').select().eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).maybeSingle()
   const reportTechnicalReconciliation=async(error:unknown)=>{
     try{
