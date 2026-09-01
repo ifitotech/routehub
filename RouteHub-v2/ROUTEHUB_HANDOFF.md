@@ -12,6 +12,7 @@
 - Pressing Arrived returns to the authoritative current stop and immediately opens the completion flow for Pickup, Delivery, or Return. Return now has its own confirmation sheet.
 - Carry-over selection resumes the newest unfinished operational day first, so an older stale pending route cannot hide the current delivery.
 - Added `lib/driver/driver-state.ts` as the shared persisted-state machine for pending, started, arrived, completed and issue phases plus the next operational action. Today now derives its started/arrived state through that layer.
+- Arrival is idempotent in the full-screen map: repeated taps reuse the persisted arrival and reopen the correct completion sheet until the stop is completed.
 
 ## Files Changed
 - `components/google-route-canvas.tsx`

@@ -39,7 +39,15 @@ export default function DriverV3Map() {
     setBusy(true)
     setMessage('')
     try {
-      await markArrived({routeId: route.id, driverId, companyId: route.company_id})
+      // Arrival is intentionally repeatable: once recorded, tapping Arrived
+      // again should reopen the completion flow instead of showing an error.
+      if (!route.arrived_at) {
+        try {
+          await markArrived({routeId: route.id, driverId, companyId: route.company_id})
+        } catch (error) {
+          if (!/already recorded/i.test(error instanceof Error ? error.message : '')) throw error
+        }
+      }
       await refresh()
       router.push(`/driver?complete=${completionKind}&route=${encodeURIComponent(String(route.id))}`)
     } catch (e) {
