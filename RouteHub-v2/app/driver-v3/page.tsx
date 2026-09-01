@@ -168,7 +168,9 @@ export default function DriverV3Page() {
     setBusy(true)
     setMessage('')
     try{
-      if(!started) await startRoute(ctx(),operationalDate())
+      // A recovered stop may already be arrived or marked issue. Do not try
+      // to restart it; go straight to the guarded completion mutation.
+      if(!started && !route.arrived_at && !['issue','completed'].includes(String(route.status || ''))) await startRoute(ctx(),operationalDate())
       try{await markArrived(ctx())}catch{}
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
