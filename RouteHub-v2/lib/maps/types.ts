@@ -17,6 +17,7 @@ export type RouteEstimate={
   /** First active leg: the current Driver stop, not an invented route-wide ETA. */
   nextStopDistanceMeters?:number
   nextStopDurationSeconds?:number
+  nextStopStaticDurationSeconds?:number
   source:'google'|'fallback'
   maneuvers?:RouteManeuver[]
 }

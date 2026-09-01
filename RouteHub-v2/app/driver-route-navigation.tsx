@@ -46,6 +46,7 @@ type Props={
   useDriverAsOrigin?:boolean
   locale?:string
   sharedLocation?:Coordinate|null
+  disabled?:boolean
   onArrive?:()=>void|Promise<void>
   onExit?:()=>void
 }
@@ -61,6 +62,7 @@ export default function DriverRouteNavigation({
   driverLocation=null,
   locale='en',
   sharedLocation=null,
+  disabled=false,
   onArrive,
   onExit,
 }:Props){
@@ -112,5 +114,5 @@ export default function DriverRouteNavigation({
   const resolvedOrigin=gpsOrigin||storedOrigin
   const resolvedOriginAddress=gpsOrigin?null:originAddress||originFromStops?.origin_address||null
 
-  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice={false} sharedLocation={gpsOrigin||storedOrigin} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
+  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice={false} sharedLocation={gpsOrigin||storedOrigin} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
 }

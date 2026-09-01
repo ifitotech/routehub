@@ -33,14 +33,14 @@ export function nextRouteManeuver(maneuvers:RouteManeuver[]|undefined,route:MapC
   return {...active.maneuver,distanceToManeuverMeters:Math.max(0,distanceToManeuver)}
 }
 
-export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal):Promise<RouteEstimate>{
+export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal,locale='en'):Promise<RouteEstimate>{
   const fallback={coordinates:points,source:'fallback' as const}
   if(points.length<2)return fallback
   try{
     const response=await fetch('/api/routing',{
       method:'POST',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({points:points.slice(0,25)}),
+      body:JSON.stringify({points:points.slice(0,25),locale}),
       signal:signal||AbortSignal.timeout(mapProviderLimits.routeTimeoutMs+2_000),
     })
     if(!response.ok)return fallback
@@ -53,6 +53,7 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal)
         staticDurationSeconds:payload.staticDurationSeconds,
         nextStopDistanceMeters:payload.nextStopDistanceMeters,
         nextStopDurationSeconds:payload.nextStopDurationSeconds,
+        nextStopStaticDurationSeconds:payload.nextStopStaticDurationSeconds,
         source:payload.source==='google'?'google':'fallback',
         maneuvers:payload.maneuvers,
       }

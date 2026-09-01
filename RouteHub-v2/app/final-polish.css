@@ -506,3 +506,38 @@ html[data-theme='light'] .notification-bell__panel { box-shadow: 0 18px 46px rgb
 @media(prefers-reduced-motion:reduce){.route-plan-driver.is-driving,.route-plan-driver.is-driving.is-returning-today{animation:none}}
 ::view-transition-group(driver-map-surface){animation-duration:440ms;animation-timing-function:cubic-bezier(.2,.82,.25,1)}
 ::view-transition-old(driver-map-surface),::view-transition-new(driver-map-surface){height:100%;overflow:clip;mix-blend-mode:normal}
+
+/* Driver turn-by-turn is a dedicated full-screen surface. The normal Driver
+   chrome stays mounted behind it, but never competes with navigation. */
+.driver-navigation-page{position:fixed;inset:0;z-index:20000;width:100%;height:100dvh;overflow:hidden;background:#e8eef5;color:#0f1d35;isolation:isolate}
+.driver-navigation-page>.route-plan-driver.is-driving{z-index:1!important}
+.driver-navigation-state{display:grid;place-content:center;justify-items:center;gap:10px;width:100%;height:100dvh;padding:24px;text-align:center;background:#f7f9fc;color:#0f1d35}
+.driver-navigation-state h1,.driver-navigation-state p{margin:0}.driver-navigation-state p{max-width:34ch;color:#667892}.driver-navigation-state button{min-width:160px;min-height:50px;margin-top:8px;border:0;border-radius:13px;background:#1667f2;color:#fff;font:inherit;font-weight:850}
+.driver-navigation-feedback{position:fixed;z-index:21000;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 146px);margin:0;padding:12px 14px;border-radius:12px;background:#fff0f0;color:#b42318;font-size:14px;font-weight:750;text-align:center;box-shadow:0 8px 24px rgb(15 29 53 / 16%)}
+
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-canvas{inset:0!important;width:100%!important;height:100dvh!important}
+.driver-navigation-page .route-plan-guidance{top:calc(env(safe-area-inset-top,0px) + 10px);left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:64px minmax(0,1fr) 44px;grid-template-rows:auto auto;column-gap:11px;row-gap:3px;min-height:82px;padding:12px;border-radius:16px;background:#071b42;box-shadow:0 8px 24px rgb(7 27 66 / 28%)}
+.driver-navigation-page .route-plan-guidance>b{grid-column:1;grid-row:1 / span 2;align-self:center;color:#fff;font-size:18px;line-height:1.08;text-align:center}
+.driver-navigation-page .route-plan-guidance>strong{grid-column:2;grid-row:1;overflow:visible;color:#fff;font-size:17px;line-height:1.18;text-overflow:clip;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.driver-navigation-page .route-plan-guidance>span{grid-column:2;grid-row:2;color:#c9d8f0;font-size:12px;font-weight:750;line-height:1.25}
+.driver-navigation-page .route-plan-guidance>button{grid-column:3;grid-row:1 / span 2;display:grid;place-items:center;align-self:center;width:44px;height:44px;min-height:44px;padding:0;border:1px solid #4b6b99;border-radius:12px;background:#173b75;color:#fff}
+.driver-navigation-page .route-plan-guidance>button i{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-bottom{left:0!important;right:0!important;bottom:0!important;z-index:7000!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;gap:10px!important;min-height:0!important;padding:18px max(14px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(14px,env(safe-area-inset-left,0px))!important;border-radius:22px 22px 0 0!important;background:#fff!important;box-shadow:0 -5px 24px rgb(7 27 66 / 18%)!important}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-bottom>i{top:7px;width:34px;height:4px}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-summary{gap:1px;padding:0 2px}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-summary strong{overflow:hidden;color:#0f1d35;font-size:clamp(24px,7vw,28px);line-height:1.04;text-overflow:ellipsis;white-space:nowrap}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-summary span{color:#52637a;font-size:13px;line-height:1.2}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-driving-buttons{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;width:100%!important}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-driving-buttons button{width:100%!important;min-width:0!important;min-height:52px!important;padding:0 12px!important;border-radius:14px!important;font-size:15px!important;font-weight:900!important}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-driving-buttons button:first-child{border:2px solid #e84b49!important;background:#fff!important;color:#d63836!important}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-driving-buttons .arrived{min-width:0!important;background:#0aa35b!important;color:#fff!important}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-float-controls{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 142px);z-index:6800}
+.driver-navigation-page .route-plan-driver.is-driving .route-plan-float-controls button{width:48px;height:48px}
+
+@media(max-width:374px){
+ .driver-navigation-page .route-plan-guidance{grid-template-columns:54px minmax(0,1fr) 44px;left:8px;right:8px;padding:10px;column-gap:8px}
+ .driver-navigation-page .route-plan-guidance>b{font-size:16px}
+ .driver-navigation-page .route-plan-guidance>strong{font-size:15px}
+ .driver-navigation-page .route-plan-driver.is-driving .route-plan-bottom{padding-inline:10px!important}
+ .driver-navigation-page .route-plan-driver.is-driving .route-plan-driving-buttons button{min-height:50px!important;font-size:14px!important}
+}

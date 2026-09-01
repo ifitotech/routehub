@@ -52,14 +52,26 @@ function cacheKey(points:MapCoordinate[]){
  return points.map(point=>`${point.lat.toFixed(5)},${point.lng.toFixed(5)}`).join('|')
 }
 
+function routeLocale(value:unknown){
+ const locale=typeof value==='string'?value.trim().toLowerCase():''
+ if(locale.startsWith('es'))return 'es-US'
+ if(locale.startsWith('fr'))return 'fr'
+ return 'en-US'
+}
+
 export async function POST(request:NextRequest){
  let points:MapCoordinate[]=[]
- try{points=validPoints((await request.json() as {points?:unknown}).points)}catch{points=[]}
+ let languageCode='en-US'
+ try{
+  const payload=await request.json() as {points?:unknown;locale?:unknown}
+  points=validPoints(payload.points)
+  languageCode=routeLocale(payload.locale)
+ }catch{points=[]}
  if(points.length<2)return NextResponse.json({coordinates:points,source:'fallback'})
  const key=process.env.GOOGLE_MAPS_SERVER_KEY
  if(!key)return NextResponse.json({coordinates:points,source:'fallback',error:'Routes API is not configured.'},{status:503})
 
- const lookup=cacheKey(points)
+ const lookup=`${languageCode}:${cacheKey(points)}`
  const cached=routeCache.get(lookup)
  if(cached&&cached.expires>Date.now())return NextResponse.json(cached.value,{headers:{'x-routehub-cache':'hit'}})
  const waypoint=(point:MapCoordinate)=>({location:{latLng:{latitude:point.lat,longitude:point.lng}}})
@@ -72,7 +84,7 @@ export async function POST(request:NextRequest){
   // supplies a real ETA while keeping the Driver's authoritative stop order.
   routingPreference:'TRAFFIC_AWARE',
   computeAlternativeRoutes:false,
-  languageCode:'en-US',
+  languageCode,
   units:'IMPERIAL',
   polylineQuality:'OVERVIEW',
   polylineEncoding:'ENCODED_POLYLINE',
@@ -102,6 +114,7 @@ export async function POST(request:NextRequest){
    staticDurationSeconds:seconds(route?.staticDuration),
    nextStopDistanceMeters:firstLeg?.distanceMeters,
    nextStopDurationSeconds:seconds(firstLeg?.duration),
+   nextStopStaticDurationSeconds:seconds(firstLeg?.staticDuration),
    source:encoded?'google':'fallback',
    maneuvers,
   }

@@ -5,7 +5,7 @@ import {loadGoogleMaps} from '../lib/maps/google-maps'
 import {clusterCoordinates, sanitizeCoordinate} from '../lib/maps/coordinates'
 import type {MapCoordinate} from '../lib/maps/types'
 
-type MapObject={setMap:(map:null)=>void;setPosition?:(position:MapCoordinate)=>void}
+type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void}
 type Listener={remove?:()=>void}
 type GoogleMap={
   fitBounds:(bounds:unknown,padding?:number)=>void
@@ -17,6 +17,7 @@ type MapsApi={
   Map:new(element:HTMLElement,options:Record<string,unknown>)=>GoogleMap
   Marker:new(options:Record<string,unknown>)=>MapObject&{addListener?:(event:string,handler:(event:unknown)=>void)=>Listener}
   Polyline:new(options:Record<string,unknown>)=>MapObject
+  TrafficLayer:new()=>MapObject
   LatLngBounds:new()=>{extend:(point:MapCoordinate)=>void}
   SymbolPath:{CIRCLE:unknown;FORWARD_CLOSED_ARROW:unknown}
 }
@@ -40,6 +41,7 @@ type Props={
   followPosition?:MapCoordinate|null
   followToken?:number
   interactive?:boolean
+  showTraffic?:boolean
   onMapClick?:(coordinate:MapCoordinate)=>void
   onMarkerDrag?:(id:string,coordinate:MapCoordinate)=>void
 }
@@ -54,7 +56,7 @@ function coordinateFromEvent(event:unknown):MapCoordinate|null{
 
 /** Shared Google Maps canvas. RouteHub keeps routing data in its own services;
  * this component only renders the real coordinates it receives. */
-export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,interactive=true,onMapClick,onMarkerDrag}:Props){
+export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,interactive=true,showTraffic=false,onMapClick,onMarkerDrag}:Props){
   const containerRef=useRef<HTMLDivElement>(null)
   const mapRef=useRef<GoogleMap|null>(null)
   const objectsRef=useRef<MapObject[]>([])
@@ -98,6 +100,11 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       driverMarkerRef.current=null
       listenersRef.current.forEach(listener=>listener.remove?.())
       listenersRef.current=[]
+      if(showTraffic){
+        const traffic=new maps.TrafficLayer()
+        traffic.setMap(map)
+        objectsRef.current.push(traffic)
+      }
       if(current.safePath.length>1){
         objectsRef.current.push(new maps.Polyline({map,path:current.safePath,strokeColor:'#fff',strokeOpacity:.92,strokeWeight:10,zIndex:1}))
         objectsRef.current.push(new maps.Polyline({map,path:current.safePath,strokeColor:'#1667F2',strokeOpacity:.98,strokeWeight:6,zIndex:2}))
@@ -172,7 +179,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       setError('')
     }).catch(reason=>{if(!cancelled)setError(reason instanceof Error?reason.message:'Google Maps is unavailable.')})
     return()=>{cancelled=true}
-  },[renderKey,interactive,onMapClick,onMarkerDrag])
+  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag])
 
   useEffect(()=>{
     const position=driverMarker?.position||sanitizeCoordinate(followPosition)

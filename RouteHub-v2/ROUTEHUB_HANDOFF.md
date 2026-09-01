@@ -1,13 +1,15 @@
 # RouteHub Handoff
 
 ## Current State
-`/driver` remains the official Driver V3 entry. The map stack is being unified on Google Maps, Google Routes and Google Geocoding; GPS remains one visible-app browser watch during an active Driving Day.
+`/driver` is the official Driver V3 entry. Google Maps, Routes and Geocoding are the only map stack. GPS remains one visible-app browser watch during an active Driving Day.
 
 ## Last Work Completed
 - Replaced Leaflet renderers in the shared live-route, route-plan and location-confirm maps with a shared Google Maps canvas.
 - Google Routes now requests traffic-aware route duration, first-leg ETA, live traffic comparison and maneuver instructions.
 - Address geocoding and explicit address suggestions now use Google only; manual entry remains available if lookup is unavailable.
 - Driver position updates no longer re-fit or reset the map on each GPS fix.
+- Internal navigation is a true full-screen map: no Driver header or bottom tabs, compact Exit/Arrived controls, traffic layer, next maneuver, maneuver distance, traffic-aware ETA, arrival time and an optional voice prompt.
+- Pressing Arrived returns to the authoritative current stop and immediately opens the completion flow for Pickup, Delivery, or Return. Return now has its own confirmation sheet.
 
 ## Files Changed
 - `components/google-route-canvas.tsx`
@@ -19,6 +21,10 @@
 - `app/location-confirm-map.tsx`
 - `lib/maps/*`
 - `tests/maps-provider.test.mjs`
+- `app/driver-v3/map/page.tsx`
+- `app/driver-v3/page.tsx`
+- `app/driver-route-navigation.tsx`
+- `app/final-polish.css`
 
 ## Validation
 - `git diff --check`: pass
@@ -27,14 +33,14 @@
 - `npm run build`: passes; existing unrelated CSS/lint warnings remain.
 
 ## Current Task
-Finish and physically verify the Google map migration with configured browser and server keys, then deploy only after founder authorization.
+Physically verify full-screen turn-by-turn navigation on a phone, then continue Driver work only from current `main`.
 
 ## Next Step
-On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic-aware ETA/maneuver card, voice toggle, and Google address autocomplete.
+On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic overlay, next maneuver/distance, ETA, voice toggle, then press Arrived and confirm the correct completion sheet opens.
 
 ## Known Problems
 - Browser/PWA navigation cannot give continuous background GPS or native turn-by-turn audio after the app is closed; that requires a native wrapper and Google Navigation SDK.
-- Current Google migration is uncommitted locally.
+- No known code blocker. Physical verification requires an active route and Google browser/server keys in Vercel.
 
 ## Do Not Touch
 Schema, migrations, RLS, Storage, Auth, Push/VAPID, service worker, tenancy, route business rules, and Manager workflows without explicit authorization.

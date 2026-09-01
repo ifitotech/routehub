@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useRouter} from 'next/navigation'
+import {useRouter, useSearchParams} from 'next/navigation'
 import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useMemo, useRef, useState} from 'react'
@@ -20,11 +20,12 @@ const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
 
 export default function DriverV3Page() {
   const router=useRouter()
+  const searchParams=useSearchParams()
   const {t}=useLocale()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,routes}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
-  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'info'>(null)
+  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info'>(null)
   const [recipient,setRecipient]=useState('')
   const [photo,setPhoto]=useState<File | null>(null)
   const [signed,setSigned]=useState(false)
@@ -36,6 +37,7 @@ export default function DriverV3Page() {
   const photoRef=useRef<HTMLInputElement>(null)
   const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
+  const openedCompletionRef=useRef('')
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
@@ -79,6 +81,20 @@ export default function DriverV3Page() {
   },[routes])
 
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
+
+  // The full-screen navigator confirms arrival first, then comes back here
+  // with the authoritative route id so the Driver immediately sees the right
+  // completion menu instead of having to find the action again.
+  useEffect(()=>{
+    const requested=searchParams.get('complete')
+    const requestedRoute=searchParams.get('route')
+    const currentKind=kind==='pickup'||kind==='delivery'||kind==='return'?kind:null
+    const key=`${requested || ''}:${requestedRoute || ''}`
+    if(!requested||!route?.id||!arrived||requestedRoute!==String(route.id)||requested!==currentKind||openedCompletionRef.current===key)return
+    openedCompletionRef.current=key
+    setSheet(currentKind)
+    window.history.replaceState(null,'','/driver')
+  },[arrived,kind,route?.id,searchParams])
 
   const openMaps=()=>{
     if(!route)return
@@ -166,6 +182,11 @@ export default function DriverV3Page() {
   const openDelivery=()=>{
     setMessage('')
     setSheet('delivery')
+  }
+
+  const openReturn=()=>{
+    setMessage('')
+    setSheet('return')
   }
 
   const sign=(e: React.PointerEvent<HTMLCanvasElement>)=>{
@@ -259,7 +280,7 @@ export default function DriverV3Page() {
       return {label:startLabel, run:startCurrent}
     }
     if(kind==='pickup') return {label:arrived?t.drvCompletePickup:t.drvArrived, run:arrivePickup}
-    if(kind==='return') return {label:t.drvCompleteReturn, run:completeReturnNow}
+    if(kind==='return') return {label:arrived?t.drvCompleteReturn:t.drvArrived, run:openReturn}
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
   const action=primary()
@@ -393,6 +414,24 @@ export default function DriverV3Page() {
             {message&&<p className={styles.feedback} style={{marginTop:8}}>{message}</p>}
             <button className="primary" disabled={busy} onClick={()=>void confirmPickup()} style={{background:'#16B96B',width:'100%'}}>{busy?t.drvBusy:t.drvConfirmPickup}</button>
             <button type="button" disabled={busy} onClick={()=>setIssueOpen(true)} style={{display:'block',width:'100%',marginTop:12,border:0,background:'transparent',color:'#E11D48',font:'inherit',fontSize:13,fontWeight:700}}>{t.drvReportProblem}</button>
+          </section>
+        </div>
+      )}
+
+      {sheet==='return'&&route&&(
+        <div style={overlay} onTouchMove={e=>e.preventDefault()}>
+          <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <p className="eyebrow" style={{margin:0}}>{t.drvReturn}</p>
+              <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>setSheet(null)} style={{width:32,height:32,border:0,borderRadius:16,background:'#e8eef4',color:'#0f1d35',display:'grid',placeItems:'center',padding:0}}>
+                <X size={16}/>
+              </button>
+            </div>
+            <h2 style={{margin:'0 0 5px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||route.destination_address||t.drvReturn}</h2>
+            {route.destination_address&&<p className="muted" style={{margin:'0 0 12px',fontSize:14}}>{route.destination_address}</p>}
+            <p className="muted" style={{margin:'0 0 16px',fontSize:14,lineHeight:'20px'}}>{t.drvReturnHelp||t.drvReturn}</p>
+            {message&&<p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
+            <button className="primary" disabled={busy} onClick={()=>void completeReturnNow()} style={{background:'#16B96B',width:'100%'}}>{busy?t.drvBusy:t.drvCompleteReturn}</button>
           </section>
         </div>
       )}
