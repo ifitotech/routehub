@@ -94,7 +94,7 @@ export default function DriverV3Page() {
       // Driver V3 can receive the company id from the route snapshot before
       // the membership bootstrap finishes; use the authoritative route value
       // so Start Delivery is not silently rejected during that short window.
-      await startRoute({...ctx(),companyId:companyId||String(route.company_id||'')},operationalDate())
+      await startRoute({...ctx(),companyId:String(route.company_id||companyId||'')},operationalDate())
       if(!drivingSession){
         try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
       }
