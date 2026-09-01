@@ -7,24 +7,29 @@ const toNumber=(value:unknown)=>{
 }
 
 export function sanitizeCoordinate(raw:{lat?:unknown;lng?:unknown}|null|undefined):MapPoint|null{
-  if(!raw)return null
-  let lat=toNumber(raw.lat)
-  let lng=toNumber(raw.lng)
-  if(!Number.isFinite(lat)||!Number.isFinite(lng))return null
-  if(Math.abs(lat)>90&&Math.abs(lng)<=90){
-    const swapped=lat
-    lat=lng
-    lng=swapped
-  }
-  // Longitude stored in the latitude field (common with FL / US points).
-  if(Math.abs(lat)>50&&Math.abs(lng)<=50&&Math.abs(lat)<=180){
-    const swapped=lat
-    lat=lng
-    lng=swapped
-  }
-  if(Math.abs(lat)>90||Math.abs(lng)>180)return null
-  if(lat===0&&lng===0)return null
-  return {lat,lng}
+ if(!raw)return null
+ const lat=toNumber(raw.lat)
+ const lng=toNumber(raw.lng)
+ if(!Number.isFinite(lat)||!Number.isFinite(lng))return null
+
+ const valid=(point:MapPoint)=>Math.abs(point.lat)<=90&&Math.abs(point.lng)<=180&&(point.lat!==0||point.lng!==0)
+ const direct={lat,lng}
+ const swapped={lat:lng,lng:lat}
+ const directValid=valid(direct)
+ const swappedValid=valid(swapped)
+
+ // An out-of-range latitude is always an invalid Google Maps point. When its
+ // inverse is valid, accept the inverse rather than allowing the map to fit a
+ // continent-spanning route.
+ if(!directValid)return swappedValid?swapped:null
+
+ // Both orders can be formally valid (for example -80.19, 25.76). Only swap
+ // that ambiguous form when the inverse is in Florida and the direct value is
+ // not. This corrects legacy Miami branch records without corrupting valid
+ // coordinates such as London (51.5, -0.1).
+ const inFlorida=(point:MapPoint)=>point.lat>=24&&point.lat<=32&&point.lng>=-88&&point.lng<=-79
+ if(swappedValid&&inFlorida(swapped)&&!inFlorida(direct))return swapped
+ return direct
 }
 
 function distanceKm(from:MapPoint,to:MapPoint){

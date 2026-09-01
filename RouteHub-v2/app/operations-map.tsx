@@ -4,6 +4,7 @@ import {useEffect,useMemo,useRef,useState} from 'react'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {loadGoogleMaps} from '../lib/maps/google-maps'
 import {calculateRoute} from '../lib/maps/routing'
+import {sanitizeCoordinate} from '../lib/maps/coordinates'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -48,8 +49,7 @@ type Props={routes:OperationsRoute[];driverLocations?:OperationsDriverLocation[]
 
 const miami:Coordinate={lat:25.857,lng:-80.278}
 const isPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>{
- const nextLat=Number(lat),nextLng=Number(lng)
- return Number.isFinite(nextLat)&&Number.isFinite(nextLng)?{lat:nextLat,lng:nextLng}:null
+ return sanitizeCoordinate({lat,lng})
 }
 const openStatus=(status?:string|null)=>status!=='completed'&&status!=='cancelled'&&status!=='issue'
 
@@ -70,7 +70,7 @@ async function locate(address:string|null|undefined,lat:number|null|undefined,ln
  const known=isPoint(lat,lng)
  if(known)return known
  if(!address)return null
- try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
+ try{return sanitizeCoordinate((await geocodeAddress(address))?.coordinate||null)}catch{return null}
 }
 
 export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,hideFooter=false,onSummary}:Props){
@@ -85,7 +85,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
 
  const ordered=useMemo(()=>routes.slice().sort((a,b)=>Number(a.position||0)-Number(b.position||0)||a.id.localeCompare(b.id)),[routes])
  const routeKey=ordered.map(route=>[route.id,route.status,route.position,route.destination_lat,route.destination_lng,route.destination_address,route.origin_lat,route.origin_lng,route.driver_id].join(':')).join('|')
- const driver=driverLocations.find(item=>Number.isFinite(item.location.lat)&&Number.isFinite(item.location.lng))
+ const driver=driverLocations.map(item=>({...item,location:sanitizeCoordinate(item.location)})).find(item=>Boolean(item.location)) as (OperationsDriverLocation&{location:Coordinate})|undefined
  // Moving GPS fixes update only the marker; paid route calculations run when the route plan or driver changes.
  const routePlanKey=`${routeKey}|${driver?.driver_id||''}`
 

@@ -1,15 +1,18 @@
 import {mapProviderLimits} from './map-config'
+import {sanitizeCoordinate} from './coordinates'
 import type {GeocodedLocation,MapCoordinate} from './types'
 
 type LocationPayload={coordinate?:MapCoordinate|null;label?:string;source?:GeocodedLocation['source'];externalId?:string;name?:string}
 
 export function normalizeLocationPayload(payload:LocationPayload,address:string):GeocodedLocation|null{
-  const coordinate=payload.coordinate
-  if(!coordinate||!Number.isFinite(coordinate.lat)||!Number.isFinite(coordinate.lng))return null
+ const coordinate=payload.coordinate
+ if(!coordinate||!Number.isFinite(coordinate.lat)||!Number.isFinite(coordinate.lng))return null
+ const normalizedCoordinate=sanitizeCoordinate(coordinate)
+ if(!normalizedCoordinate)return null
   return {
     name:payload.name?.trim()||undefined,
     formattedAddress:payload.label?.trim()||address.trim(),
-    coordinate,
+    coordinate:normalizedCoordinate,
     source:payload.source||'manual',
     externalId:payload.externalId
   }

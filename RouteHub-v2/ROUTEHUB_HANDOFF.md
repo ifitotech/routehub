@@ -1,55 +1,33 @@
 # RouteHub Handoff
 
 ## Current State
-`/driver` is the official Driver V3 entry. Google Maps, Routes and Geocoding are the only map stack. GPS remains one visible-app browser watch during an active Driving Day.
+`/driver` remains the official Driver entry. Add Route now uses one canonical `{lat, lng}` contract across saved places, branch selections, preview maps, geocoding, and route publishing.
 
 ## Last Work Completed
-- Added a stable human-readable route reference (`RH-XXXXXXXX`) derived from each route's authoritative UUID, shown in Driver Today and History. Older schemas remain compatible through the existing fallback query.
-- Replaced Leaflet renderers in the shared live-route, route-plan and location-confirm maps with a shared Google Maps canvas.
-- Google Routes now requests traffic-aware route duration, first-leg ETA, live traffic comparison and maneuver instructions.
-- Address geocoding and explicit address suggestions now use Google only; manual entry remains available if lookup is unavailable.
-- Driver position updates no longer re-fit or reset the map on each GPS fix.
-- Internal navigation is a true full-screen map: no Driver header or bottom tabs, compact Exit/Arrived controls, traffic layer, next maneuver, maneuver distance, traffic-aware ETA, arrival time and an optional voice prompt.
-- Pressing Arrived returns to the authoritative current stop and immediately opens the completion flow for Pickup, Delivery, or Return. Return now has its own confirmation sheet.
-- Carry-over selection resumes the newest unfinished operational day first, so an older stale pending route cannot hide the current delivery.
-- Added `lib/driver/driver-state.ts` as the shared persisted-state machine for pending, started, arrived, completed and issue phases plus the next operational action. Today now derives its started/arrived state through that layer.
-- Arrival is idempotent in the full-screen map: repeated taps reuse the persisted arrival and reopen the correct completion sheet until the stop is completed.
+Fixed the Add Route branch-coordinate bug that could draw a Florida branch in Africa. Inverted legacy Miami coordinates are corrected only when their inverse is a Florida location; other valid world coordinates remain unchanged. Return to branch persists the selected branch's real destination coordinates. Custom origin uses an available selected Driver GPS fix.
 
 ## Files Changed
-- `components/google-route-canvas.tsx`
-- `app/api/routing/route.ts`
-- `app/api/geocode/route.ts`
-- `app/api/address-suggestions/route.ts`
-- `app/live-route-map.tsx`
-- `app/route-plan-map.tsx`
-- `app/location-confirm-map.tsx`
-- `lib/maps/*`
-- `tests/maps-provider.test.mjs`
-- `app/driver-v3/map/page.tsx`
-- `app/driver-v3/page.tsx`
-- `app/driver-v3/history/page.tsx`
-- `lib/route-number.ts`
-- `lib/driver-v3/types.ts`
-- `lib/driver-v3/use-driver-data.ts`
-- `lib/driver-app-version.ts`
-- `app/driver-route-navigation.tsx`
-- `app/final-polish.css`
+- `app/routes/page.tsx`
+- `app/operations-map.tsx`
+- `lib/maps/coordinates.ts`
+- `lib/maps/geocoding.ts`
+- `lib/maps/routing.ts`
+- `tests/coordinates.test.mjs`
 
 ## Validation
 - `git diff --check`: pass
 - `npm run typecheck`: pass
-- `npm run typecheck`: pass
-- `npm run build`: passes; existing unrelated CSS/lint warnings remain.
+- `npm test`: 120/120 pass
+- `npm run build`: pass (existing lint/CSS warnings only)
 
 ## Current Task
-Continue consolidating Driver surfaces around the shared queue/state/action controller, then physically verify turn-by-turn navigation on a phone.
+Verify Add Route with the branch `15451 NW 33rd Pl, 33054`: preview and published route must stay in Florida.
 
 ## Next Step
-On a phone: start Driving Day, grant precise location, open `/driver/map`, verify moving driver pin, traffic overlay, next maneuver/distance, ETA, voice toggle, then press Arrived and confirm the correct completion sheet opens. Verify a pending delivery such as 985 W 28th St is selected ahead of older carry-over work.
+After deployment, create one Return to branch and one normal route from the branch, then confirm both marker and route line remain local.
 
 ## Known Problems
-- Browser/PWA navigation cannot give continuous background GPS or native turn-by-turn audio after the app is closed; that requires a native wrapper and Google Navigation SDK.
-- No known code blocker. Physical verification requires an active route and Google browser/server keys in Vercel.
+No known Add Route coordinate blocker.
 
 ## Do Not Touch
-Schema, migrations, RLS, Storage, Auth, Push/VAPID, service worker, tenancy, route business rules, and Manager workflows without explicit authorization.
+Schema, migrations, RLS, Storage, Auth, Push/VAPID, service worker, tenancy, Driver workflow, and unrelated uncommitted workspace files.

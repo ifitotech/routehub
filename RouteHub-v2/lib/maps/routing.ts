@@ -1,4 +1,5 @@
 import {mapProviderLimits} from './map-config'
+import {sanitizeCoordinate} from './coordinates'
 import type {ActiveRouteManeuver,MapCoordinate,RouteEstimate,RouteManeuver} from './types'
 
 export function distanceMeters(a:MapCoordinate,b:MapCoordinate){
@@ -47,7 +48,7 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal,
     const payload=await response.json() as Partial<RouteEstimate>
     if(Array.isArray(payload.coordinates)&&payload.coordinates.length>1){
       return {
-        coordinates:payload.coordinates.filter(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lng)),
+        coordinates:payload.coordinates.map(point=>sanitizeCoordinate(point)).filter((point):point is MapCoordinate=>Boolean(point)),
         distanceMeters:payload.distanceMeters,
         durationSeconds:payload.durationSeconds,
         staticDurationSeconds:payload.staticDurationSeconds,
