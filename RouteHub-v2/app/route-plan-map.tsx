@@ -7,6 +7,7 @@ import {Crosshair,Flag,LocateFixed} from 'lucide-react'
 import {mapTileConfig} from '../lib/maps/map-config'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters} from '../lib/maps/routing'
+import {clusterCoordinates,sanitizeCoordinate} from '../lib/maps/coordinates'
 
 type Coordinate={lat:number;lng:number}
 type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
@@ -29,11 +30,13 @@ type Props={
 
 function Fit({points}:{points:Coordinate[]}){
   const map=useMap()
-  const key=points.map(point=>`${point.lat.toFixed(4)},${point.lng.toFixed(4)}`).join('|')
+  const usable=clusterCoordinates(points)
+  const key=usable.map(point=>`${point.lat.toFixed(4)},${point.lng.toFixed(4)}`).join('|')
   useEffect(()=>{
-    if(points.length>1)map.fitBounds(points.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})
-    else if(points[0])map.setView([points[0].lat,points[0].lng],13)
-  },[map,key,points])
+    if(!usable.length)return
+    if(usable.length>1)map.fitBounds(usable.map(point=>[point.lat,point.lng] as [number,number]),{padding:[28,28],maxZoom:14})
+    else map.setView([usable[0].lat,usable[0].lng],13)
+  },[map,key])
   return null
 }
 
@@ -67,44 +70,49 @@ export default function RoutePlanMap({
   const [loading,setLoading]=useState(true)
   const [arriving,setArriving]=useState(false)
   const watchRef=useRef<number|null>(null)
+  const wakeLock=useRef<{release?:()=>Promise<void>}|null>(null)
 
   const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label||stop.coordinate)),[stops])
+  const safeOrigin=sanitizeCoordinate(originCoordinate)
   const routeKey=useMemo(()=>[
     originAddress||'',
-    originCoordinate?`${originCoordinate.lat},${originCoordinate.lng}`:'',
+    safeOrigin?`${safeOrigin.lat},${safeOrigin.lng}`:'',
     ...validStops.map(stop=>`${stop.id}:${stop.address||''}:${stop.coordinate?.lat||''}:${stop.coordinate?.lng||''}`),
-  ].join('|'),[originAddress,originCoordinate,validStops])
+  ].join('|'),[originAddress,safeOrigin,validStops])
 
   useEffect(()=>{
     let cancelled=false
     setLoading(true)
     const known:Array<{address?:string|null;coordinate?:Coordinate|null}>=[
-      {address:originAddress,coordinate:originCoordinate||null},
-      ...validStops.map(stop=>({address:stop.address,coordinate:stop.coordinate||null})),
+      {address:originAddress,coordinate:safeOrigin},
+      ...validStops.map(stop=>({address:stop.address,coordinate:sanitizeCoordinate(stop.coordinate)})),
     ]
     Promise.all(known.map(async item=>{
-      if(item.coordinate)return item.coordinate
+      const stored=sanitizeCoordinate(item.coordinate)
+      if(stored)return stored
       if(!item.address)return null
-      try{return (await geocodeAddress(item.address))?.coordinate||null}catch{return null}
+      try{return sanitizeCoordinate((await geocodeAddress(item.address))?.coordinate||null)}catch{return null}
     })).then(async resolved=>{
       if(cancelled)return
-      const coordinates=resolved.filter((point):point is Coordinate=>Boolean(point))
+      const coordinates=clusterCoordinates(resolved)
       setPoints(coordinates)
       if(coordinates.length>1)setLine(coordinates)
       setLoading(false)
       if(coordinates.length<2)return
-      const start=deviceLocation||sharedLocation||coordinates[0]
-      const estimate=await calculateRoute([start,...coordinates.slice(1)])
-      if(!cancelled&&estimate.coordinates.length>1)setLine(estimate.coordinates)
+      const start=sanitizeCoordinate(deviceLocation)||sanitizeCoordinate(sharedLocation)||coordinates[0]
+      const rest=coordinates.filter(point=>Math.abs(point.lat-start.lat)>1e-5||Math.abs(point.lng-start.lng)>1e-5)
+      const estimate=await calculateRoute([start,...rest])
+      if(!cancelled&&estimate.coordinates.length>1)setLine(clusterCoordinates(estimate.coordinates,2_000))
     }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setLoading(false)}})
     return()=>{cancelled=true}
   },[routeKey])
 
   useEffect(()=>{
-    if(!sharedLocation)return
+    const next=sanitizeCoordinate(sharedLocation)
+    if(!next)return
     setDeviceLocation(current=>({
-      lat:sharedLocation.lat,
-      lng:sharedLocation.lng,
+      lat:next.lat,
+      lng:next.lng,
       accuracy:current?.accuracy||25,
       updatedAt:Date.now(),
       heading:current?.heading??null,
@@ -114,9 +122,11 @@ export default function RoutePlanMap({
   useEffect(()=>{
     if(!trackDevice||typeof navigator==='undefined'||!navigator.geolocation)return
     watchRef.current=navigator.geolocation.watchPosition(position=>{
+      const next=sanitizeCoordinate({lat:position.coords.latitude,lng:position.coords.longitude})
+      if(!next)return
       setDeviceLocation({
-        lat:position.coords.latitude,
-        lng:position.coords.longitude,
+        lat:next.lat,
+        lng:next.lng,
         accuracy:position.coords.accuracy,
         updatedAt:Date.now(),
         heading:Number.isFinite(position.coords.heading)?position.coords.heading:null,
@@ -124,8 +134,16 @@ export default function RoutePlanMap({
     },()=>{},{enableHighAccuracy:true,maximumAge:0,timeout:12_000})
     return()=>{
       if(watchRef.current!=null)navigator.geolocation.clearWatch(watchRef.current)
+      watchRef.current=null
     }
   },[trackDevice])
+
+  useEffect(()=>()=>{
+    if(watchRef.current!=null&&typeof navigator!=='undefined')navigator.geolocation.clearWatch(watchRef.current)
+    try{if(typeof speechSynthesis!=='undefined')speechSynthesis.cancel()}catch{}
+    void wakeLock.current?.release?.().catch(()=>undefined)
+    wakeLock.current=null
+  },[])
 
   const destination=points[1]||points[0]
   const near=Boolean(deviceLocation&&destination&&distanceMeters(deviceLocation,destination)<75)
@@ -134,7 +152,7 @@ export default function RoutePlanMap({
     :locale==='fr'
       ?{loading:'Préparation du trajet…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',exit:'Quitter',arrived:'Arrivé',recenter:'Recentrer'}
       :{loading:'Preparing route…',unavailable:'We could not locate these stops yet.',exit:'Exit',arrived:'Arrived',recenter:'Re-center'}
-  const center=points[0]||sharedLocation||{lat:25.7617,lng:-80.1918}
+  const center=points[0]||sanitizeCoordinate(sharedLocation)||{lat:25.7617,lng:-80.1918}
 
   const confirmArrival=async()=>{
     if(arriving)return
@@ -158,7 +176,7 @@ export default function RoutePlanMap({
             {line.length>1&&<Polyline positions={line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#176bf2',weight:6,opacity:.96}}/>}
             {points.map((point,index)=>(
               <Marker key={validStops[index]?.id||index} position={[point.lat,point.lng]} icon={stopIcon(index+1)}>
-                <Tooltip direction="top">{validStops[Math.max(0,index-(originCoordinate||originAddress?1:0))]?.label||validStops[index]?.address||`Stop ${index+1}`}</Tooltip>
+                <Tooltip direction="top">{validStops[Math.max(0,index-(safeOrigin||originAddress?1:0))]?.label||validStops[index]?.address||`Stop ${index+1}`}</Tooltip>
               </Marker>
             ))}
             {deviceLocation&&<Marker position={[deviceLocation.lat,deviceLocation.lng]} icon={driverIcon()}><Tooltip direction="top">{locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location'}</Tooltip></Marker>}
