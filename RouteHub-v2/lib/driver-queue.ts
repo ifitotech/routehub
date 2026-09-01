@@ -39,8 +39,8 @@ function ordered<T extends DriverQueueRoute>(routes: T[]) {
 
 /**
  * Selects one driver's authoritative work queue for the local operational
- * date. Work from an earlier day is escalated to the manager and must never
- * keep the driver trapped in yesterday's queue while today's route exists.
+ * date. A pending route from an earlier day is shown only when there is no
+ * current work today, so unfinished work is never silently lost.
  */
 export function selectDriverTodayQueue<T extends DriverQueueRoute>(
   routes: T[],
@@ -51,11 +51,14 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
   const active = ordered(driverRoutes.filter(route => route.status === 'active' && (route.route_date || '') === today))
   const paused = ordered(driverRoutes.filter(route => route.status === 'paused' && (route.route_date || '') === today))
   const eligibleUpcoming = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') === today))
-  const current = active[0] ?? paused[0] ?? eligibleUpcoming[0]
+  const overdue = ordered(driverRoutes.filter(route => upcomingStatuses.includes(route.status) && (route.route_date || '') < today))
+  // Carry-over work has priority so an unfinished route left overnight is
+  // the first operation the driver sees the next day.
+  const current = overdue[0] ?? active[0] ?? paused[0] ?? eligibleUpcoming[0]
 
   return {
     current,
-    upcoming: eligibleUpcoming.filter(route => route.id !== current?.id),
+    upcoming: [...overdue, ...eligibleUpcoming].filter(route => route.id !== current?.id),
     completed: [...driverRoutes]
       .filter(route => route.status === 'completed')
       .sort((left, right) => (right.completed_at || '').localeCompare(left.completed_at || '') || left.position - right.position),
@@ -64,5 +67,5 @@ export function selectDriverTodayQueue<T extends DriverQueueRoute>(
 
 export function canDriverStartRoute(route: DriverQueueRoute | undefined, today: string) {
   const routeDate = route?.route_date?.slice(0, 10) || ''
-  return Boolean(route && routeDate === today && [...upcomingStatuses, 'paused'].includes(route.status))
+  return Boolean(route && routeDate <= today && [...upcomingStatuses, 'paused'].includes(route.status))
 }

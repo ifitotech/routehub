@@ -29,8 +29,8 @@ test('driver queue identifies unfinished work from the authoritative operational
     {id:'done',driver_id:'driver',route_date:'2026-08-30',status:'completed',position:2},
   ]
   const queue=selectDriverTodayQueue(routes,'driver','2026-08-30')
-  assert.equal(queue.current?.id,'today')
-  assert.deepEqual(queue.upcoming.map(route=>route.id),[])
+  assert.equal(queue.current?.id,'yesterday')
+  assert.deepEqual(queue.upcoming.map(route=>route.id),['today'])
 })
 
 test('Driver V3 map keeps the live map mounted while actions return to Today',async()=>{

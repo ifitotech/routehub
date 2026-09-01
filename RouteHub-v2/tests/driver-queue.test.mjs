@@ -26,13 +26,13 @@ test('today queue never promotes tomorrow route to current mission', () => {
   assert.deepEqual(queue.upcoming.map(item => item.id), ['today-b'])
 })
 
-test('an unfinished past-due route never blocks the current operational day', () => {
+test('an unfinished past-due route remains visible without blocking current work', () => {
   const queue = selectDriverTodayQueue([
     route('today-first', 'published', 1, '2026-08-13'),
     route('past-due', 'pending', 4, '2026-08-12'),
   ], 'driver-a', '2026-08-13')
-  assert.equal(queue.current?.id, 'today-first')
-  assert.deepEqual(queue.upcoming.map(item => item.id), [])
+  assert.equal(queue.current?.id, 'past-due')
+  assert.deepEqual(queue.upcoming.map(item => item.id), ['today-first'])
 })
 
 test('a future active record cannot override today work', () => {

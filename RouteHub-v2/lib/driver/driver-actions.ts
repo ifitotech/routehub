@@ -44,7 +44,7 @@ export async function startRoute(ctx:DriverMutationContext, today:string) {
     const client=getSupabase()
     const route=await client.from('routes').select('id,status,route_date,route_started_at').eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).maybeSingle()
     if(route.error) throw route.error
-    if(!route.data || !['pending','published','paused'].includes(route.data.status) || (route.data.route_date||'').slice(0,10)!==today) throw new Error('This route cannot be started.')
+    if(!route.data || !['pending','published','paused'].includes(route.data.status) || (route.data.route_date||'').slice(0,10)>today) throw new Error('This route cannot be started.')
     const result=await client.from('routes').update({status:'active',route_started_at:route.data.route_started_at||new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).select().single()
     if(result.error) throw result.error
     return result.data
@@ -58,7 +58,7 @@ export async function updateRouteStatus(ctx:DriverMutationContext, status:string
     if(current.error) throw current.error
     if(!current.data) throw new Error('Route not found.')
     if(status==='active') {
-      if(!['pending','published','paused'].includes(current.data.status)||(current.data.route_date||'').slice(0,10)!==today) throw new Error('This route cannot be started.')
+      if(!['pending','published','paused'].includes(current.data.status)||(current.data.route_date||'').slice(0,10)>today) throw new Error('This route cannot be started.')
       const others=await client.from('routes').select('id').eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).eq('status','active').neq('id',ctx.routeId)
       if(others.error) throw others.error
       if(others.data?.length){const paused=await client.from('routes').update({status:'paused',updated_version:Date.now()}).in('id',others.data.map(item=>item.id)).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId);if(paused.error)throw paused.error}
