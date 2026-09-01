@@ -65,9 +65,12 @@ export default function Manager() {
     const origin=liveFix?.lat!=null&&liveFix.lng!=null?{lat:liveFix.lat,lng:liveFix.lng}:branchOrigin.lat!=null&&branchOrigin.lng!=null?{lat:branchOrigin.lat,lng:branchOrigin.lng}:null
     if(!origin){setTrafficEstimate(null);return}
     let cancelled=false
-    void calculateRoute([origin,{lat:Number(activeRoute.destination_lat),lng:Number(activeRoute.destination_lng)}],undefined,locale,true).then(result=>{if(!cancelled)setTrafficEstimate(result)}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
-    return()=>{cancelled=true}
-  },[activeRoute?.id,activeRoute?.destination_lat,activeRoute?.destination_lng,branchOrigin.lat,branchOrigin.lng,liveFix?.lat!=null?Number(liveFix.lat.toFixed(2)):null,liveFix?.lng!=null?Number(liveFix.lng.toFixed(2)):null,locale])
+    const points=[origin,{lat:Number(activeRoute.destination_lat),lng:Number(activeRoute.destination_lng)}]
+    const refreshEta=()=>void calculateRoute(points,undefined,locale,true).then(result=>{if(!cancelled)setTrafficEstimate(result)}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
+    refreshEta()
+    const timer=window.setInterval(refreshEta,5*60*1000)
+    return()=>{cancelled=true;window.clearInterval(timer)}
+  },[activeRoute?.id,activeRoute?.destination_lat,activeRoute?.destination_lng,branchOrigin.lat,branchOrigin.lng,locale])
 
   useEffect(() => {
     let cancelled = false
