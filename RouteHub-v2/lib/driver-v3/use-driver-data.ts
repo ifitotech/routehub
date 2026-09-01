@@ -104,10 +104,32 @@ function useDriverDataInternal(): DriverV3Data {
         })
       }
     } catch (e) {
-      // Keep the last authoritative route snapshot visible during a transient
-      // session/map/network failure. Today must remain usable like the legacy
-      // flow; every mutation still revalidates ownership and status server-side.
-      if (!routesRef.current.length) setError(e instanceof Error ? e.message : 'Unable to load Driver workspace.')
+      const message = e instanceof Error ? e.message : 'Unable to load Driver workspace.'
+      const cached = routesRef.current
+      if (cached.length) {
+        // A wide workspace refresh may fail because of an optional field or a
+        // resumed mobile connection. Reconcile the cached rows with a minimal
+        // authoritative query so cancelled/deleted/completed work can never
+        // remain presented as the current operation indefinitely.
+        try {
+          const authority = await getSupabase()
+            .from('routes')
+            .select('id,status,completed_at,finalized_at,updated_version')
+            .in('id', cached.map(route => route.id))
+          if (authority.error) throw authority.error
+          const byId = new Map((authority.data || []).map(row => [row.id, row]))
+          routesRef.current = cached.flatMap(route => {
+            const current = byId.get(route.id)
+            return current ? [{...route, ...current} as DriverV3Route] : []
+          })
+          setRoutes(routesRef.current)
+          setError('')
+        } catch {
+          setError(message)
+        }
+      } else {
+        setError(message)
+      }
     } finally {
       setLoading(false)
     }

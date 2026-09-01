@@ -15,6 +15,7 @@ const driverDataSource = read('../lib/driver-v3/use-driver-data.ts')
 const drivingDaySource = read('../app/driver-v3/driving-day/page.tsx')
 const liveRouteSource = read('../app/routes/live-route.tsx')
 const realtimeSource = read('../lib/realtime-sync.ts')
+const middlewareSource = read('../middleware.ts')
 const atomicSql = read('../supabase/migrations/023_atomic_route_queue_reordering.sql')
 const sessionsSql = read('../supabase/migrations/015_driving_sessions.sql')
 const temporarySql = read('../supabase/migrations/025_primary_driver_and_temporary_route_execution.sql')
@@ -193,6 +194,9 @@ test('Driver refresh reconstructs current work from backend and realtime follows
   assert.match(driverDataSource, /table: 'routes', filter: `driver_id=eq\.\$\{driverId\}`/)
   assert.match(liveRouteSource, /table:'driving_sessions',filter:`company_id=eq\.\$\{companyId\}`/)
   assert.match(liveRouteSource, /table:'routes',filter:`company_id=eq\.\$\{companyId\}`/)
+  assert.match(driverDataSource, /select\('id,status,completed_at,finalized_at,updated_version'\)/)
+  assert.match(driverDataSource, /current \? \[\{\.\.\.route, \.\.\.current\} as DriverV3Route\] : \[\]/)
+  assert.match(middlewareSource, /NextResponse\.rewrite\(url\)[\s\S]*Cache-Control', 'private, no-store/)
 })
 
 test('realtime refresh coalesces bursts and is disposed with the subscription', () => {

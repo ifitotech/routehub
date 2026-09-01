@@ -8,7 +8,13 @@ export function middleware(request: NextRequest) {
     if (!request.nextUrl.pathname.startsWith('/driver-v3')) {
       const url = request.nextUrl.clone()
       url.pathname = request.nextUrl.pathname.replace(/^\/driver(?=\/|$)/, '/driver-v3')
-      return NextResponse.rewrite(url)
+      const response = NextResponse.rewrite(url)
+      response.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+      response.headers.set('X-Content-Type-Options', 'nosniff')
+      response.headers.set('X-Frame-Options', 'DENY')
+      response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+      response.headers.set('Permissions-Policy', 'camera=(self), geolocation=(self), microphone=()')
+      return response
     }
   }
   const response = NextResponse.next()
