@@ -88,6 +88,14 @@ export default function DriverV3Page() {
 
   const startCurrent=async()=>{
     if(!route||busy)return
+    // Open the native navigator while the tap is still a user gesture. If we
+    // wait for Supabase first, Safari/Chrome may block the external launch.
+    const navigationUrl=openNavigation({
+      address:route.destination_address,
+      coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,
+      label:route.destination_name,
+    })
+    const navigationWindow=navigationUrl&&typeof window!=='undefined'?window.open(navigationUrl,'_blank','noopener,noreferrer'):null
     setBusy(true)
     setMessage('')
     try{
@@ -108,7 +116,7 @@ export default function DriverV3Page() {
       // Keep RouteHub Navigation ready for an intentional beta test after the
       // driver returns, while Apple/Google Maps remains the primary navigator.
       void router.prefetch('/driver/map')
-      openMaps()
+      if(!navigationWindow&&navigationUrl)window.location.assign(navigationUrl)
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
