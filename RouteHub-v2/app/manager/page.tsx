@@ -12,6 +12,7 @@ import TemporaryRouteAssignments from '../temporary-route-assignments'
 import ManagerShell from './manager-shell'
 import styles from './manager-dashboard.module.css'
 import todayStyles from './manager-today.module.css'
+import {calculateRoute} from '../../lib/maps/routing'
 
 const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false, loading: () => <div className={todayStyles.opsMap} aria-hidden />})
 
@@ -57,6 +58,16 @@ export default function Manager() {
   const [error, setError] = useState('')
   const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
   const [mapSummary, setMapSummary] = useState<{count:number;distanceMeters?:number;durationSeconds?:number} | null>(null)
+  const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
+  const activeRoute=todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
+  useEffect(()=>{
+    if(!activeRoute?.destination_lat||!activeRoute?.destination_lng){setTrafficEstimate(null);return}
+    const origin=liveFix?.lat!=null&&liveFix.lng!=null?{lat:liveFix.lat,lng:liveFix.lng}:branchOrigin.lat!=null&&branchOrigin.lng!=null?{lat:branchOrigin.lat,lng:branchOrigin.lng}:null
+    if(!origin){setTrafficEstimate(null);return}
+    let cancelled=false
+    void calculateRoute([origin,{lat:Number(activeRoute.destination_lat),lng:Number(activeRoute.destination_lng)}],undefined,locale,true).then(result=>{if(!cancelled)setTrafficEstimate(result)}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
+    return()=>{cancelled=true}
+  },[activeRoute?.id,activeRoute?.destination_lat,activeRoute?.destination_lng,branchOrigin.lat,branchOrigin.lng,liveFix?.lat!=null?Number(liveFix.lat.toFixed(2)):null,liveFix?.lng!=null?Number(liveFix.lng.toFixed(2)):null,locale])
 
   useEffect(() => {
     let cancelled = false
@@ -230,9 +241,10 @@ export default function Manager() {
         {(() => {
           const active = todayRoutes.find(route => ['active','paused'].includes(String(route.status || '')))
           if (!active) return null
-          const eta = mapSummary?.durationSeconds ? Math.max(1, Math.round(mapSummary.durationSeconds / 60)) : null
-          const miles = mapSummary?.distanceMeters ? (mapSummary.distanceMeters / 1609.34).toFixed(1) : null
-          return <section className={todayStyles.sideCard} aria-label="Delivery status"><div className={todayStyles.sideHeading}><h2>{active.destination_name || t.destination}</h2><span className={todayStyles.status}>{statusLabel(active.status)}</span></div><div className={todayStyles.dayList}><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>ETA</strong><span>{eta ? `${eta} min` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Distancia' : 'Distance'}</strong><span>{miles ? `${miles} mi` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Última ubicación GPS' : 'Last GPS update'}</strong><span>{liveFix?.updatedAt ? new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(liveFix.updatedAt)) : '—'}</span></span></div></div></section>
+          const eta = trafficEstimate?.durationSeconds ? Math.max(1, Math.round(trafficEstimate.durationSeconds / 60)) : null
+          const miles = trafficEstimate?.distanceMeters ? (trafficEstimate.distanceMeters / 1609.34).toFixed(1) : null
+          const trafficDelay = trafficEstimate?.durationSeconds && trafficEstimate.staticDurationSeconds ? Math.max(0, Math.round((trafficEstimate.durationSeconds-trafficEstimate.staticDurationSeconds)/60)) : null
+          return <section className={todayStyles.sideCard} aria-label="Delivery status"><div className={todayStyles.sideHeading}><h2>{active.destination_name || t.destination}</h2><span className={todayStyles.status}>{statusLabel(active.status)}</span></div><div className={todayStyles.dayList}><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>ETA</strong><span>{eta ? `${eta} min` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Distancia' : 'Distance'}</strong><span>{miles ? `${miles} mi` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Retraso tráfico' : 'Traffic delay'}</strong><span>{trafficDelay ? `+${trafficDelay} min` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Última ubicación GPS' : 'Last GPS update'}</strong><span>{liveFix?.updatedAt ? new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(liveFix.updatedAt)) : '—'}</span></span></div></div></section>
         })()}
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
           <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
