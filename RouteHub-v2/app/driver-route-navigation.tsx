@@ -26,11 +26,17 @@ export type NavigationStop={
 
 type Coordinate={lat:number;lng:number}
 
+type Waypoint={address?:string|null;label?:string|null;coordinate?:Coordinate|null}
+
 type Props={
-  stops:NavigationStop[]
+  stops?:NavigationStop[]
   activeStopId?:string|null
   originAddress?:string|null
+  destinationAddress?:string|null
   originCoordinate?:Coordinate|null
+  destinationCoordinate?:Coordinate|null
+  waypoints?:Waypoint[]
+  driverLocation?:Coordinate|null
   locale?:string
   sharedLocation?:Coordinate|null
   onArrive?:()=>void|Promise<void>
@@ -41,13 +47,40 @@ export default function DriverRouteNavigation({
   stops,
   activeStopId=null,
   originAddress,
+  destinationAddress,
   originCoordinate=null,
+  destinationCoordinate=null,
+  waypoints=[],
+  driverLocation=null,
   locale='en',
   sharedLocation=null,
   onArrive,
   onExit,
 }:Props){
-  const sorted=stops
+  const synthesized:NavigationStop[]=stops?.length?stops:[
+    ...waypoints.map((point,index)=>({
+      id:`waypoint-${index}`,
+      destination_address:point.address,
+      destination_name:point.label,
+      destination_lat:point.coordinate?.lat??null,
+      destination_lng:point.coordinate?.lng??null,
+      position:index+1,
+      status:'published',
+    })),
+    ...(destinationAddress||destinationCoordinate?[{
+      id:'destination',
+      destination_address:destinationAddress,
+      destination_name:destinationAddress,
+      destination_lat:destinationCoordinate?.lat??null,
+      destination_lng:destinationCoordinate?.lng??null,
+      origin_lat:originCoordinate?.lat??null,
+      origin_lng:originCoordinate?.lng??null,
+      origin_address:originAddress,
+      position:(waypoints.length||0)+1,
+      status:'published',
+    }]:[]),
+  ]
+  const sorted=synthesized
     .filter(stop=>stop.status!=='cancelled')
     .slice()
     .sort((left,right)=>Number(left.position||0)-Number(right.position||0)||left.id.localeCompare(right.id))
@@ -67,7 +100,7 @@ export default function DriverRouteNavigation({
     coordinate:sanitizeCoordinate({lat:stop.destination_lat,lng:stop.destination_lng}),
   }))
   const originFromStops=sorted.find(stop=>sanitizeCoordinate({lat:stop.origin_lat,lng:stop.origin_lng}))
-  const gpsOrigin=sanitizeCoordinate(sharedLocation)
+  const gpsOrigin=sanitizeCoordinate(sharedLocation)||sanitizeCoordinate(driverLocation)
   const storedOrigin=sanitizeCoordinate(originCoordinate)||(originFromStops?sanitizeCoordinate({lat:originFromStops.origin_lat,lng:originFromStops.origin_lng}):null)
   const resolvedOrigin=gpsOrigin||storedOrigin
   const resolvedOriginAddress=gpsOrigin?null:originAddress||originFromStops?.origin_address||null
