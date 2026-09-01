@@ -1,17 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import {useSearchParams} from 'next/navigation'
+import {useRouter, useSearchParams} from 'next/navigation'
 import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
-import {useEffect, useMemo, useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, reportIssue, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigation} from '../../lib/maps/external-navigation'
-import {distanceMeters, getCurrentLocation} from '../../lib/location'
+import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
@@ -20,14 +20,11 @@ import styles from './today.module.css'
 
 const OpenStreetRoutePreview = dynamic(() => import('../../components/openstreet-route-preview'), {ssr: false})
 
-// Temporary safety mode: until internal GPS navigation is reliable, a new
-// route goes straight to the driver's installed map app without mutating it.
-const internalGpsNavigationEnabled=false
-
 export default function DriverV3Page() {
+  const router=useRouter()
   const searchParams=useSearchParams()
   const {t}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,routes}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info'>(null)
@@ -46,6 +43,9 @@ export default function DriverV3Page() {
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
+  const nextRoute=snapshot?.queue.upcoming?.[0] as any
+  const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
+  const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -60,32 +60,6 @@ export default function DriverV3Page() {
   const started=phase==='started'||phase==='arrived'
   const arrived=phase==='arrived'
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
-  const todaySummary=useMemo(()=>{
-    const day=operationalDate()
-    const today=routes.filter(r=>String(r.route_date||'').slice(0,10)===day&&String(r.status||'')!=='cancelled')
-    const done=today.filter(r=>r.status==='completed')
-    let meters=0
-    const points=today
-      .map(r=>r.destination_lat!=null&&r.destination_lng!=null?{lat:Number(r.destination_lat),lng:Number(r.destination_lng)}:null)
-      .filter((p):p is {lat:number;lng:number}=>Boolean(p))
-    for(let i=1;i<points.length;i++) meters+=distanceMeters(points[i-1],points[i])
-    let seconds=0
-    for(const r of done){
-      const start=r.route_started_at
-      const end=r.completed_at||r.route_completed_at
-      if(start&&end){
-        const ms=new Date(end).getTime()-new Date(start).getTime()
-        if(Number.isFinite(ms)&&ms>0) seconds+=Math.floor(ms/1000)
-      }
-    }
-    return {
-      total:today.length,
-      done:done.length,
-      miles:points.length>=2?Math.round((meters/1609.34)*10)/10:null,
-      minutes:seconds?Math.round(seconds/60):null,
-    }
-  },[routes])
-
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
   // The full-screen navigator confirms arrival first, then comes back here
@@ -128,6 +102,9 @@ export default function DriverV3Page() {
         }catch{}
       }
       await refresh()
+      // Keep RouteHub Navigation ready for an intentional beta test after the
+      // driver returns, while Apple/Google Maps remains the primary navigator.
+      void router.prefetch('/driver/map')
       openMaps()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -284,12 +261,11 @@ export default function DriverV3Page() {
 
   const primary=()=>{
     if(!started) {
-      if(!internalGpsNavigationEnabled)return {label:t.drvOpenMaps,run:openMaps}
       const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
       return {label:startLabel, run:startCurrent}
     }
-    if(kind==='pickup') return {label:arrived?t.drvCompletePickup:t.drvArrived, run:arrivePickup}
-    if(kind==='return') return {label:arrived?t.drvCompleteReturn:t.drvArrived, run:openReturn}
+    if(kind==='pickup') return {label:t.drvCompletePickup, run:arrivePickup}
+    if(kind==='return') return {label:t.drvCompleteReturn, run:openReturn}
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
   const action=primary()
@@ -333,7 +309,7 @@ export default function DriverV3Page() {
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
           <div className={styles.divider}/>
-          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenMaps} onClick={openMaps} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openMaps()}}}>
+          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
             <OpenStreetRoutePreview
               destination={route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null}
@@ -354,14 +330,18 @@ export default function DriverV3Page() {
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        <section className={styles.summary}>
-          <p className="eyebrow">{t.drvTodaySummary}</p>
-          <div className={styles.summaryGrid}>
-            <div><strong>{todaySummary.done}/{todaySummary.total}</strong><span>{t.drvStops}</span></div>
-            <div><strong>{todaySummary.miles==null?'—':String(todaySummary.miles)}</strong><span>{t.drvMiles}</span></div>
-            <div><strong>{todaySummary.minutes==null?'—':`${todaySummary.minutes}m`}</strong><span>{t.drvTimeLogged}</span></div>
-            <div><strong>{todaySummary.done}</strong><span>{t.drvCompletedTag}</span></div>
-          </div>
+        <section className={`${styles.summary} ${styles.nextStopSummary}`} aria-label={t.drvNextStop}>
+          <p className="eyebrow">{t.drvNextStop}</p>
+          {nextRoute?(
+            <div className={styles.nextStopContent}>
+              <div>
+                <span className={`${styles.typeBadge} ${styles[nextKind||'return']}`}><Package/>{nextLabel}</span>
+                <strong>{nextRoute.destination_name||nextRoute.destination_address||t.drvCurrentStopName}</strong>
+                {nextRoute.destination_address&&<p>{nextRoute.destination_address}</p>}
+              </div>
+              <ChevronRight aria-hidden="true"/>
+            </div>
+          ):<div className={styles.nextStopEmpty}>{t.drvNoMoreStops}</div>}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 

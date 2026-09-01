@@ -17,7 +17,7 @@ test('Driver entry uses the V3 current operation, quota-safe preview, and real e
   assert.match(entry,/driver-v3\/page/)
   assert.match(source,/snapshot\?\.currentOperation/)
   assert.match(source,/OpenStreetRoutePreview/)
-  assert.match(source,/internalGpsNavigationEnabled=false/)
+  assert.match(source,/router\.prefetch\('\/driver\/map'\)/)
   assert.match(source,/openNavigation\(/)
   assert.match(source,/route\.destination_lat/)
   assert.doesNotMatch(source,/autoStartNavigation/)
