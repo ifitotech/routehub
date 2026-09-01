@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import {useRouter} from 'next/navigation'
 import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useMemo, useRef, useState} from 'react'
@@ -18,6 +19,7 @@ import styles from './today.module.css'
 const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
 
 export default function DriverV3Page() {
+  const router=useRouter()
   const {t}=useLocale()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,routes}=useDriverData()
   const [busy,setBusy]=useState(false)
@@ -300,7 +302,7 @@ export default function DriverV3Page() {
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
           <div className={styles.divider}/>
-          <button type="button" onClick={openMaps} aria-label={t.drvOpenMaps} className={styles.mapPreview}>
+          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
             <LiveRouteMap
               destinationAddress={route.destination_address}
@@ -314,7 +316,7 @@ export default function DriverV3Page() {
               useDriverAsOrigin
             />
             </div>
-          </button>
+          </div>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
             <MapPin/>{busy?t.drvBusy:action.label}
           </button>
