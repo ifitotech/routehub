@@ -1,5 +1,5 @@
 'use client'
-import {createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode} from 'react'
+import {createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode} from 'react'
 import {currentMembership, currentUser} from '../data'
 import {getSupabase} from '../supabase'
 import {operationalDate} from '../driver-queue'
@@ -26,6 +26,7 @@ const DriverV3Context = createContext<DriverV3Data | null>(null)
 
 function useDriverDataInternal(): DriverV3Data {
   const [routes, setRoutes] = useState<DriverV3Route[]>([])
+  const routesRef = useRef<DriverV3Route[]>([])
   const [driverId, setDriverId] = useState('')
   const [companyId, setCompanyId] = useState('')
   const [branchId, setBranchId] = useState<string | null>(null)
@@ -80,7 +81,8 @@ function useDriverDataInternal(): DriverV3Data {
         }
       }
       if (loadError) throw loadError
-      setRoutes((rows || []) as DriverV3Route[])
+      routesRef.current = (rows || []) as DriverV3Route[]
+      setRoutes(routesRef.current)
       // A driving-session/GPS problem must not hide an otherwise valid route.
       // The route remains usable and the session can be recovered on the next
       // focus/refresh once the protected session table is available.
@@ -102,7 +104,10 @@ function useDriverDataInternal(): DriverV3Data {
         })
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unable to load Driver workspace.')
+      // Keep the last authoritative route snapshot visible during a transient
+      // session/map/network failure. Today must remain usable like the legacy
+      // flow; every mutation still revalidates ownership and status server-side.
+      if (!routesRef.current.length) setError(e instanceof Error ? e.message : 'Unable to load Driver workspace.')
     } finally {
       setLoading(false)
     }
