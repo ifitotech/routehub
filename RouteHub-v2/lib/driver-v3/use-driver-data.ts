@@ -68,9 +68,11 @@ function useDriverDataInternal(): DriverV3Data {
       }
       if (loadError) throw loadError
       setRoutes((rows || []) as DriverV3Route[])
+      // A driving-session/GPS problem must not hide an otherwise valid route.
+      // The route remains usable and the session can be recovered on the next
+      // focus/refresh once the protected session table is available.
       let session = await getActiveDrivingSession(user.id)
-      if (session.error) throw session.error
-      if (!session.data) {
+      if (!session.error && !session.data) {
         const started = await startDrivingDay({
           companyId: membership.company_id,
           branchId: membership.branch_id ?? null,
