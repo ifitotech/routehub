@@ -227,6 +227,13 @@ export default function Manager() {
         </p>
       </main>
       <aside className={todayStyles.todaySide}>
+        {(() => {
+          const active = todayRoutes.find(route => ['active','paused'].includes(String(route.status || '')))
+          if (!active) return null
+          const eta = mapSummary?.durationSeconds ? Math.max(1, Math.round(mapSummary.durationSeconds / 60)) : null
+          const miles = mapSummary?.distanceMeters ? (mapSummary.distanceMeters / 1609.34).toFixed(1) : null
+          return <section className={todayStyles.sideCard} aria-label="Delivery status"><div className={todayStyles.sideHeading}><h2>{active.destination_name || t.destination}</h2><span className={todayStyles.status}>{statusLabel(active.status)}</span></div><div className={todayStyles.dayList}><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>ETA</strong><span>{eta ? `${eta} min` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Distancia' : 'Distance'}</strong><span>{miles ? `${miles} mi` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Última ubicación GPS' : 'Last GPS update'}</strong><span>{liveFix?.updatedAt ? new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(liveFix.updatedAt)) : '—'}</span></span></div></div></section>
+        })()}
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
           <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
           {loading ? <div className={todayStyles.loading}>{t.loading}</div> : (() => {
