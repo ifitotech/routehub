@@ -46,7 +46,7 @@ function useDriverDataInternal(): DriverV3Data {
       setBranchId(membership.branch_id ?? null)
       const first = await getSupabase()
         .from('routes')
-        .select('id,route_number,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
+        .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
         .eq('company_id', membership.company_id)
         .eq('driver_id', user.id)
         .order('position', {ascending: true})
@@ -55,7 +55,7 @@ function useDriverDataInternal(): DriverV3Data {
       if (loadError && /route_number|destination_contact_name|schema cache|column/i.test(loadError.message || '')) {
         const second = await getSupabase()
           .from('routes')
-          .select('id,route_number,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
+          .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,destination_name,destination_address,destination_phone,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
           .eq('company_id', membership.company_id)
           .eq('driver_id', user.id)
           .order('position', {ascending: true})
@@ -123,7 +123,16 @@ function useDriverDataInternal(): DriverV3Data {
     const sync = createRealtimeRefresh(() => load(true), 150)
     const channel = client
       .channel('driver-v3-routes')
-      .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `driver_id=eq.${driverId}`}, () => {
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `driver_id=eq.${driverId}`}, payload => {
+        const changed = payload.new as Partial<DriverV3Route> & {id?: string}
+        const removed = payload.old as Partial<DriverV3Route> & {id?: string}
+        if (payload.eventType === 'DELETE' && removed.id) {
+          routesRef.current = routesRef.current.filter(route => route.id !== removed.id)
+          setRoutes(routesRef.current)
+        } else if (changed.id) {
+          routesRef.current = routesRef.current.map(route => route.id === changed.id ? {...route, ...changed} as DriverV3Route : route)
+          setRoutes(routesRef.current)
+        }
         sync.schedule()
       })
       .subscribe()
