@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {ChevronLeft, History, Home, Menu, Settings, Truck} from 'lucide-react'
+import {ChevronLeft, History, Home, Map as MapIcon, Menu, MoreHorizontal, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
 
@@ -64,6 +64,10 @@ export default function DriverV3Shell({
           <Home />
           <span>{t.drvToday}</span>
         </Link>
+        <Link className={active === 'map' ? styles.active : ''} href="/driver/map">
+          <MapIcon />
+          <span>{t.drvMap || 'Map'}</span>
+        </Link>
         <Link className={active === 'history' ? styles.active : ''} href="/driver/history">
           <History />
           <span>{t.drvHistory || t.history || 'History'}</span>
@@ -72,9 +76,9 @@ export default function DriverV3Shell({
           <Truck />
           <span>{t.drvTruck}</span>
         </Link>
-        <Link className={active === 'more' ? styles.active : ''} href="/driver/settings">
-          <Settings />
-          <span>{t.drvSettings}</span>
+        <Link className={active === 'more' ? styles.active : ''} href="/driver/more">
+          <MoreHorizontal />
+          <span>{t.drvMore || 'More'}</span>
         </Link>
       </nav>
     </main>
