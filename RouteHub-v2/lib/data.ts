@@ -64,6 +64,16 @@ export async function completeMission(id:string,providedLocation?:{lat:number;ln
   }
 
   let result=await update(completion)
+  // Database workflow triggers require an execution state before completion.
+  // A recovered return may have arrived_at set while still published; promote
+  // that same stop to active, then retry the authoritative completion.
+  if (result.error || !result.data) {
+    const state = await readCurrentState()
+    if (!state.error && state.data?.arrived_at && ['pending', 'published'].includes(String(state.data.status))) {
+      const promoted = await getSupabase().from('routes').update({status:'active', updated_version:Date.now()}).eq('id',id).eq('driver_id',user.id).eq('company_id',membership.company_id).in('status',['pending','published']).select().maybeSingle()
+      if (!promoted.error && promoted.data) result = await update(completion)
+    }
+  }
   // Recipient details are optional proof. Older beta schemas may not yet have
   // driver_note, so that optional field must never block completing the stop.
   // This also supports existing RLS policies that allow completion but do not
