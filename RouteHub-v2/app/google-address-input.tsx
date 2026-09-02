@@ -60,7 +60,10 @@ export default function GoogleAddressInput({
   const prioritizesLocalSuggestions = localSuggestions.length > 0
   const normalizedQuery = value.trim().toLocaleLowerCase()
   const localQueryTerms = normalizedQuery.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(term => term.length > 1)
-  const matchingLocalSuggestions = localQueryTerms.length === 0 ? [] : localSuggestions.filter(item => {
+  // Make saved contacts discoverable on focus as well as by search. This is
+  // especially important for Delivery, where the field is a searchable input
+  // rather than the explicit Pickup select.
+  const matchingLocalSuggestions = localQueryTerms.length === 0 ? localSuggestions.slice(0, 5) : localSuggestions.filter(item => {
     const searchable = `${item.primary} ${item.secondary || ''} ${item.value}`.toLocaleLowerCase()
     return localQueryTerms.every(term => searchable.includes(term))
   }).slice(0, 5)
