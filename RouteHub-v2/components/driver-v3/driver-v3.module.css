@@ -134,6 +134,21 @@
 .content [role=alert]{color:#b42318;background:#fff0f0;border:1px solid #f3b5b5;border-radius:12px;padding:12px}
 .content [role=status]{background:#eaf9f1;color:#147a4a;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600}
 .content a.secondary{text-decoration:none;box-sizing:border-box}
+.driver-theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.driver-theme-option{min-height:72px;border:1px solid var(--border);border-radius:12px;background:#fff;color:var(--navy);display:grid;place-items:center;align-content:center;gap:6px;font:inherit;font-size:12px;font-weight:800}
+.driver-theme-option.is-selected{border-color:var(--blue);background:#eaf2ff;color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.driver-profile-hero{text-align:center}
+.driver-profile-avatar{width:76px;height:76px;margin:2px auto 14px;border-radius:50%;display:grid;place-items:center;background:#1667f2;color:#fff;font-size:27px;font-weight:850;box-shadow:0 10px 24px rgba(22,103,242,.24)}
+.driver-profile-line{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;overflow-wrap:anywhere}
+.driver-profile-account{display:flex;align-items:center;gap:9px;color:var(--navy);font-size:14px;font-weight:800}
+
+:global(html[data-theme='dark']) .shell{--navy:#f4f7fb;--blue:#6ea5ff;--muted:#b6c4d7;--border:#31445f;background:#101c2d}
+:global(html[data-theme='dark']) .content{background:#101c2d}
+:global(html[data-theme='dark']) .nav{background:#14243a;border-color:#31445f;box-shadow:0 -8px 26px rgba(0,0,0,.2)}
+:global(html[data-theme='dark']) .card,:global(html[data-theme='dark']) .secondary,:global(html[data-theme='dark']) .driver-theme-option{background:#18263b;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .content input,:global(html[data-theme='dark']) .content textarea,:global(html[data-theme='dark']) .content select{background:#102036;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .driver-theme-option.is-selected{background:#17345c;color:#9cc4ff;border-color:#6ea5ff;box-shadow:inset 0 0 0 1px #6ea5ff}
+:global(html[data-theme='dark']) .danger{background:#3a2027;color:#ffb6bd;border-color:#73343d}
 .content> a.muted:first-child{
   display:inline-flex;align-items:center;min-height:44px;color:#1667f2;
   font-size:14px;font-weight:700;text-decoration:none;margin-bottom:8px
