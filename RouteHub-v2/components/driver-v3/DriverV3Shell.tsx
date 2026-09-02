@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname,useRouter} from 'next/navigation'
-import {ChevronLeft, History, Home, Map as MapIcon, Menu, MoreHorizontal, Truck} from 'lucide-react'
+import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
 
@@ -58,7 +58,7 @@ export default function DriverV3Shell({
           <span>RouteHub</span>
         </Link>
         <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
-          <Menu color="#fff" strokeWidth={2.2} />
+          <UserRound color="#fff" strokeWidth={2.2} />
         </Link>
       </header>
 
@@ -78,7 +78,7 @@ export default function DriverV3Shell({
           <span>{t.drvTruck}</span>
         </Link>
         <Link className={active === 'more' ? styles.active : ''} href="/driver/settings">
-          <MoreHorizontal />
+          <Settings />
           <span>{t.drvMore || 'More'}</span>
         </Link>
       </nav>
