@@ -13,6 +13,8 @@ import ManagerShell from './manager-shell'
 import styles from './manager-dashboard.module.css'
 import todayStyles from './manager-today.module.css'
 import {calculateRoute} from '../../lib/maps/routing'
+import {geocodeAddress} from '../../lib/maps/geocoding'
+import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 
 const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false, loading: () => <div className={todayStyles.opsMap} aria-hidden />})
 
@@ -64,6 +66,26 @@ export default function Manager() {
   // after the Driver has started it. Active work remains the authoritative
   // source for live timing and traffic metrics.
   const deliveryRoute=activeRoute||todayRoutes.find(route=>['published','pending','assigned'].includes(String(route.status||'')))
+
+  useEffect(()=>{
+    if(!companyId||!deliveryRoute?.id||!deliveryRoute.destination_address)return
+    if(sanitizeCoordinate({lat:deliveryRoute.destination_lat,lng:deliveryRoute.destination_lng}))return
+    let cancelled=false
+    const near=sanitizeCoordinate({lat:branchOrigin.lat,lng:branchOrigin.lng})
+    void geocodeAddress(deliveryRoute.destination_address,undefined,near).then(async location=>{
+      if(cancelled||!location?.coordinate)return
+      const coordinate=location.coordinate
+      setTodayRoutes(current=>current.map(route=>route.id===deliveryRoute.id?{...route,destination_lat:coordinate.lat,destination_lng:coordinate.lng}:route))
+      await getSupabase().from('routes').update({
+        destination_lat:coordinate.lat,
+        destination_lng:coordinate.lng,
+        destination_location_source:location.source,
+        destination_location_external_id:location.externalId||null,
+      }).eq('id',deliveryRoute.id).eq('company_id',companyId)
+    }).catch(()=>undefined)
+    return()=>{cancelled=true}
+  },[branchOrigin.lat,branchOrigin.lng,companyId,deliveryRoute?.destination_address,deliveryRoute?.destination_lat,deliveryRoute?.destination_lng,deliveryRoute?.id])
+
   useEffect(()=>{
     if(!activeRoute?.destination_lat||!activeRoute?.destination_lng){setTrafficEstimate(null);return}
     const origin=liveFix?.lat!=null&&liveFix.lng!=null?{lat:liveFix.lat,lng:liveFix.lng}:branchOrigin.lat!=null&&branchOrigin.lng!=null?{lat:branchOrigin.lat,lng:branchOrigin.lng}:null
@@ -74,7 +96,7 @@ export default function Manager() {
     refreshEta()
     const timer=window.setInterval(refreshEta,5*60*1000)
     return()=>{cancelled=true;window.clearInterval(timer)}
-  },[activeRoute?.id,activeRoute?.destination_lat,activeRoute?.destination_lng,branchOrigin.lat,branchOrigin.lng,locale])
+  },[activeRoute?.id,activeRoute?.destination_lat,activeRoute?.destination_lng,branchOrigin.lat,branchOrigin.lng,liveFix?.lat,liveFix?.lng,locale])
 
   useEffect(() => {
     let cancelled = false

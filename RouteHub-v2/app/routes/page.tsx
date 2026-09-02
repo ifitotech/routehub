@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
+import {geocodeAddress} from '../../lib/maps/geocoding'
 import {useLocale} from '../../lib/use-preferences'
 import {recordActivity} from '../../lib/activity'
 import {sendRoutePush} from '../../lib/route-push'
@@ -661,18 +662,32 @@ export default function Routes() {
       const destinationName = selected?.company_name || form.destination_label.trim() || form.destination.trim()
       const destinationPhone = form.destination_phone.trim() || selected?.phone || null
       const destinationContactName = form.stop_contact_name.trim() || selected?.contact_name || null
-      const originCoordinate = originMode === 'branch'
+      let originCoordinate = originMode === 'branch'
         ? originBranchCoordinate
         : originMode === 'previous'
           ? previousDestinationCoordinate
+          : originMode === 'contact'
+            ? originContactCoordinate
           : originMode === 'custom'
             ? selectedDriverGps
             : null
-      const destinationCoordinate = form.type === 'return'
+      let destinationCoordinate = form.type === 'return'
         ? returnBranchCoordinate
         : sanitizeCoordinate(selectedDestinationLocation?.coordinate) || savedCoordinate(selected)
       const persistedDestinationAddress = form.type === 'return' ? returnBranch?.address || returnBranch?.name || destinationAddress : destinationAddress
       const persistedDestinationName = form.type === 'return' ? returnBranch?.name || destinationName : destinationName
+      const persistedOriginAddress = originBranch?.address || form.origin.trim() || defaultBranch?.address || defaultBranch?.name || c.branch
+
+      // Older saved contacts may predate canonical latitude/longitude fields.
+      // Resolve them once at assignment time and persist the result with the
+      // route so every OSM preview can draw immediately without geocoding on
+      // each render.
+      if (!originCoordinate && persistedOriginAddress) {
+        originCoordinate = (await geocodeAddress(persistedOriginAddress, undefined, defaultBranch ? savedCoordinate(defaultBranch) : null))?.coordinate || null
+      }
+      if (!destinationCoordinate && persistedDestinationAddress) {
+        destinationCoordinate = (await geocodeAddress(persistedDestinationAddress, undefined, originCoordinate || savedCoordinate(defaultBranch)))?.coordinate || null
+      }
 
       let positionQuery = client
         .from('routes')
@@ -709,7 +724,7 @@ export default function Routes() {
         status: 'published',
         mission_type: form.type,
         origin_name: originMode === 'branch' ? originBranch?.name || c.branch : originMode === 'previous' ? previousRoute?.destination_name || form.origin.trim() : contacts.find(contact => contact.address === form.origin)?.company_name || form.origin.trim(),
-        origin_address: originBranch?.address || form.origin.trim() || defaultBranch?.address || defaultBranch?.name || c.branch,
+        origin_address: persistedOriginAddress,
         origin_lat: originCoordinate?.lat ?? null,
         origin_lng: originCoordinate?.lng ?? null,
         destination_name: persistedDestinationName,
