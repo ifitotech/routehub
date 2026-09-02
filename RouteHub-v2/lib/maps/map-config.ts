@@ -1,7 +1,10 @@
-/** Google is RouteHub's single provider for maps, route calculation and address lookup. */
+/** Google is first for maps, route calculation and address lookup. Open providers are geocoding fallback only. */
 export const geocodingConfig={
+  censusEndpoint:'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress',
+  nominatimEndpoint:'https://nominatim.openstreetmap.org/search',
   googleGeocodeEndpoint:'https://maps.googleapis.com/maps/api/geocode/json',
-  googleKey:process.env.GOOGLE_MAPS_SERVER_KEY||'',
+  googleKey:process.env.GOOGLE_MAPS_SERVER_KEY||process.env.GOOGLE_MAPS_API_KEY||process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY||'',
+  userAgent:'RouteHub operations geocoding',
   requestTimeoutMs:5000
 } as const
 
