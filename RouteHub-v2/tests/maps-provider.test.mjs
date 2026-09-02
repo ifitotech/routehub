@@ -8,7 +8,8 @@ test('navigation uses coordinates before a human-readable address',()=>{
   const destination={address:'Wrong address',coordinate:{lat:25.9,lng:-80.3},label:'RouteHub destination'}
   assert.match(googleMapsNavigationUrl(destination),/destination=25.9%2C-80.3/)
   assert.match(appleMapsNavigationUrl(destination),/daddr=25.9%2C-80.3/)
-  assert.match(openNavigation(destination,'iPhone'),/maps\.apple\.com/)
+  assert.match(openNavigation(destination,'iPhone'),/^maps:\/\//)
+  assert.match(openNavigation(destination,'Android'),/^google\.navigation:/)
 })
 
 test('Driver entry uses the V3 current operation, quota-safe preview, and real external navigation',async()=>{
@@ -79,7 +80,8 @@ test('routing adapter uses the Google Routes API with a safe coordinate-only fal
   assert.match(source,/distanceToManeuverMeters/)
   assert.match(source,/item\.index>=currentIndex/)
   assert.doesNotMatch(source,/project-osrm|normalizeOsrmRoute|routeRequestUrl/)
-  assert.match(api,/routingPreference:'TRAFFIC_AWARE'/)
+  assert.match(api,/trafficAware=Boolean\(payload\.trafficAware\)/)
+  assert.match(api,/routingPreference:trafficAware\?'TRAFFIC_AWARE':'TRAFFIC_UNAWARE'/)
   assert.match(api,/routes\.staticDuration/)
   assert.match(api,/routes\.legs\.steps\.navigationInstruction\.instructions/)
   assert.match(api,/function isCompatibleRoute/)
