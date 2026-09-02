@@ -193,40 +193,39 @@ export default function Manager() {
   }, [liveFix, copy.lastSeen, copy.noFix, copy.ago, locale])
 
   const deliveryCopy = locale === 'es' ? {
-    title: 'Estado del delivery', onRoute: 'En ruta', estimatedArrival: 'Llegada estimada', distance: 'Distancia', driveTime: 'Tiempo de manejo', trafficDelay: 'Retraso por tráfico', started: 'Comenzó', lastGps: 'Último GPS', share: 'Compartir actualización', unavailable: 'No disponible', critical: 'Retraso crítico', delayed: 'Ligeramente demorado',
+    title: 'Estado del delivery', onRoute: 'En ruta', noActive: 'Sin ruta activa', estimatedArrival: 'Llegada estimada', distance: 'Distancia', driveTime: 'Tiempo de manejo', trafficDelay: 'Retraso por tráfico', started: 'Comenzó', lastGps: 'Último GPS', share: 'Compartir actualización', unavailable: 'No disponible', critical: 'Retraso crítico', delayed: 'Ligeramente demorado',
   } : locale === 'fr' ? {
-    title: 'Statut de livraison', onRoute: 'En route', estimatedArrival: 'Arrivée estimée', distance: 'Distance', driveTime: 'Temps de conduite', trafficDelay: 'Retard trafic', started: 'Départ', lastGps: 'Dernier GPS', share: 'Partager', unavailable: 'Indisponible', critical: 'Retard critique', delayed: 'Légèrement retardé',
+    title: 'Statut de livraison', onRoute: 'En route', noActive: 'Aucun itinéraire actif', estimatedArrival: 'Arrivée estimée', distance: 'Distance', driveTime: 'Temps de conduite', trafficDelay: 'Retard trafic', started: 'Départ', lastGps: 'Dernier GPS', share: 'Partager', unavailable: 'Indisponible', critical: 'Retard critique', delayed: 'Légèrement retardé',
   } : {
-    title: 'Delivery status', onRoute: 'On route', estimatedArrival: 'Estimated arrival', distance: 'Distance', driveTime: 'Drive time', trafficDelay: 'Traffic delay', started: 'Started', lastGps: 'Last GPS update', share: 'Share update', unavailable: 'Unavailable', critical: 'Critical delay', delayed: 'Slightly delayed',
+    title: 'Delivery status', onRoute: 'On route', noActive: 'No active route', estimatedArrival: 'Estimated arrival', distance: 'Distance', driveTime: 'Drive time', trafficDelay: 'Traffic delay', started: 'Started', lastGps: 'Last GPS update', share: 'Share update', unavailable: 'Unavailable', critical: 'Critical delay', delayed: 'Slightly delayed',
   }
 
   const deliveryStatus = (() => {
-    if (!deliveryRoute) return null
-    const isLiveRoute=deliveryRoute.id===activeRoute?.id
+    const isLiveRoute=Boolean(deliveryRoute && deliveryRoute.id===activeRoute?.id)
     const etaMinutes = trafficEstimate?.durationSeconds ? Math.max(1, Math.round(trafficEstimate.durationSeconds / 60)) : null
     const driveMinutes = trafficEstimate?.staticDurationSeconds ? Math.max(1, Math.round(trafficEstimate.staticDurationSeconds / 60)) : null
     const miles = trafficEstimate?.distanceMeters ? (trafficEstimate.distanceMeters / 1609.34).toFixed(1) : null
     const trafficDelay = trafficEstimate?.durationSeconds && trafficEstimate.staticDurationSeconds
       ? Math.max(0, Math.round((trafficEstimate.durationSeconds - trafficEstimate.staticDurationSeconds) / 60))
       : null
-    const elapsed = deliveryRoute.route_started_at
+    const elapsed = deliveryRoute?.route_started_at
       ? Math.max(0, Math.round((Date.now() - new Date(deliveryRoute.route_started_at).getTime()) / 60000))
       : 0
-    const operationalDelay = trafficEstimate?.durationSeconds && initialDurationRef.current[deliveryRoute.id]
+    const operationalDelay = deliveryRoute && trafficEstimate?.durationSeconds && initialDurationRef.current[deliveryRoute.id]
       ? Math.round((elapsed + trafficEstimate.durationSeconds / 60) - initialDurationRef.current[deliveryRoute.id] / 60)
       : 0
     const delayBadge = operationalDelay > 20 ? deliveryCopy.critical : operationalDelay > 10 ? deliveryCopy.delayed : null
     const arrival = etaMinutes
       ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(Date.now() + etaMinutes * 60000))
       : null
-    const started = deliveryRoute.route_started_at
+    const started = deliveryRoute?.route_started_at
       ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(deliveryRoute.route_started_at))
       : null
     const lastGps = liveFix?.updatedAt
       ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(liveFix.updatedAt))
       : null
     const share = () => {
-      const destination = deliveryRoute.destination_name || t.destination
+      const destination = deliveryRoute?.destination_name || t.destination
       const text = `${destination}: ${arrival ? `ETA ${arrival}` : deliveryCopy.unavailable}`
       if (typeof navigator !== 'undefined' && navigator.share) void navigator.share({text}).catch(() => undefined)
       else if (typeof navigator !== 'undefined') void navigator.clipboard?.writeText(text)
@@ -245,7 +244,7 @@ export default function Manager() {
       <div className={todayStyles.deliveryStatusRow}>
         <div className={todayStyles.onRoute}>
           <Truck size={19}/>
-          <span><strong>{isLiveRoute ? deliveryCopy.onRoute : copy.assignment}</strong>{delayBadge && <small>{delayBadge}</small>}</span>
+          <span><strong>{isLiveRoute ? deliveryCopy.onRoute : deliveryRoute ? copy.assignment : deliveryCopy.noActive}</strong>{delayBadge && <small>{delayBadge}</small>}</span>
         </div>
         <div className={todayStyles.deliveryMetrics}>
           {metrics.map(({label, value, icon: Icon, alert}) => <div className={todayStyles.deliveryMetric} data-alert={alert || undefined} key={label}>
