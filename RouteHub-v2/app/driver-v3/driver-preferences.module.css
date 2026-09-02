@@ -1,13 +1,13 @@
-.page{display:grid;gap:14px;padding:4px 0 12px}
-.pageHeader{padding:0 2px 2px}
-.pageHeader h1{margin:3px 0 0;color:#0f1d35;font-size:30px;line-height:1.12;letter-spacing:-.04em}
-.pageHeader p{margin:0;color:#667892;font-size:13px;line-height:1.45}
+.page{display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:4px 0 12px}
+.pageHeader{min-height:0!important;padding:0 2px 2px!important;background:transparent!important}
+.pageHeader h1{margin:3px 0 0;color:#0f1d35;font-size:24px;line-height:1.16;letter-spacing:-.035em}
+.pageHeader p{margin:0;color:#667892;font-size:11px;line-height:1.4;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
 .eyebrow{margin:0 0 5px;color:#667892;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
 .section{overflow:hidden;border:1px solid #dde5ee;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06)}
 .sectionHeader{padding:14px 15px 7px}
 .sectionHeader h2{margin:0;color:#0f1d35;font-size:15px;letter-spacing:-.01em}
 .sectionHeader p{margin:4px 0 0;color:#667892;font-size:13px;line-height:1.42}
-.row{display:flex;align-items:center;gap:12px;min-height:62px;padding:11px 15px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5}
+.row{display:flex;align-items:center;gap:12px;min-height:72px;padding:11px 15px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5}
 .row:first-of-type{border-top:0}
 .rowIcon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#eaf2ff;color:#1667f2}
 .rowCopy{min-width:0;flex:1;display:grid;gap:2px}
