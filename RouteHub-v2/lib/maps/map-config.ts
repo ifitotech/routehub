@@ -22,3 +22,14 @@ export function isInFlorida(lat:number,lng:number){
 export function withFloridaQuery(query:string){
   return /(?:^|,\s*)(?:fl|florida)\b/i.test(query)?query:`${query.trim()}, FL, USA`
 }
+
+/**
+ * URLSearchParams#get returns null for an omitted value. Number(null) is 0,
+ * which previously made an absent geocoding bias look like a real point at
+ * 0,0 and caused every Florida result to be rejected as too far away.
+ */
+export function optionalCoordinateNumber(value:string|null){
+  if(value===null||value.trim()==='')return null
+  const parsed=Number(value)
+  return Number.isFinite(parsed)?parsed:null
+}

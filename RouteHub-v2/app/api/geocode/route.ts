@@ -1,5 +1,5 @@
 import {NextRequest,NextResponse} from 'next/server'
-import {geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQuery} from '../../../lib/maps/map-config'
+import {geocodingConfig,isInFlorida,mapProviderLimits,optionalCoordinateNumber,withFloridaQuery} from '../../../lib/maps/map-config'
 
 type GoogleResult={formatted_address?:string;geometry?:{location?:{lat?:number;lng?:number}}}
 
@@ -14,9 +14,9 @@ function tooFar(lat:number,lng:number,nearLat:number,nearLng:number){
 
 export async function GET(request:NextRequest){
  const address=withFloridaQuery(request.nextUrl.searchParams.get('address')?.trim()||'')
- const nearLat=Number(request.nextUrl.searchParams.get('nearLat'))
- const nearLng=Number(request.nextUrl.searchParams.get('nearLng'))
- const hasNear=Number.isFinite(nearLat)&&Number.isFinite(nearLng)
+ const nearLat=optionalCoordinateNumber(request.nextUrl.searchParams.get('nearLat'))
+ const nearLng=optionalCoordinateNumber(request.nextUrl.searchParams.get('nearLng'))
+ const near=nearLat!==null&&nearLng!==null?{lat:nearLat,lng:nearLng}:null
  if(address.length<mapProviderLimits.minimumSearchCharacters||address.length>mapProviderLimits.maximumSearchCharacters)return NextResponse.json({coordinate:null},{status:400})
  if(!geocodingConfig.googleKey)return NextResponse.json({coordinate:null})
  try{
@@ -31,7 +31,7 @@ export async function GET(request:NextRequest){
    const match=payload.results?.[0]
    const lat=Number(match?.geometry?.location?.lat)
    const lng=Number(match?.geometry?.location?.lng)
-   if(payload.status==='OK'&&Number.isFinite(lat)&&Number.isFinite(lng)&&isInFlorida(lat,lng)&&!(hasNear&&tooFar(lat,lng,nearLat,nearLng)))return response(lat,lng,match?.formatted_address||address)
+   if(payload.status==='OK'&&Number.isFinite(lat)&&Number.isFinite(lng)&&isInFlorida(lat,lng)&&!(near&&tooFar(lat,lng,near.lat,near.lng)))return response(lat,lng,match?.formatted_address||address)
   }
  }catch{}
  return NextResponse.json({coordinate:null})

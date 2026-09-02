@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises'
 import {androidNavigationUrls,appleMapsNavigationUrl,googleMapsNavigationUrl,openNavigation,openNavigationWithFallback} from '../lib/maps/external-navigation.ts'
 import {selectDriverTodayQueue} from '../lib/driver-queue.ts'
 import {buildOperationsSequence} from '../lib/maps/operations-sequence.ts'
+import {optionalCoordinateNumber} from '../lib/maps/map-config.ts'
 
 test('navigation uses coordinates before a human-readable address',()=>{
   const destination={address:'Wrong address',coordinate:{lat:25.9,lng:-80.3},label:'RouteHub destination'}
@@ -153,6 +154,14 @@ test('address lookup uses Google as the single centralized provider',async()=>{
   assert.match(geocode,/geocodingConfig\.googleKey/)
   assert.doesNotMatch(suggestions,/censusEndpoint|nominatimEndpoint|openstreetmap/)
   assert.doesNotMatch(geocode,/censusEndpoint|nominatimEndpoint|openstreetmap/)
+})
+
+test('geocoding does not turn an omitted nearby coordinate into null island',()=>{
+  assert.equal(optionalCoordinateNumber(null),null)
+  assert.equal(optionalCoordinateNumber(''),null)
+  assert.equal(optionalCoordinateNumber('not-a-coordinate'),null)
+  assert.equal(optionalCoordinateNumber('25.9017'),25.9017)
+  assert.equal(optionalCoordinateNumber('-80.3078'),-80.3078)
 })
 
 test('address suggestions discard provider results without usable coordinates',async()=>{
