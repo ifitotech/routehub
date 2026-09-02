@@ -135,9 +135,35 @@ export default function Manager() {
     // Keep Today in sync when dispatch assigns or completes work in another
     // tab/device. The map then receives the authoritative queue and redraws
     // its full sequence without a manual browser refresh.
-    const refreshTimer = window.setInterval(() => { void load() }, 15_000)
+    const refreshTimer = window.setInterval(() => { void load() }, 5 * 60_000)
     return () => { cancelled = true; window.clearInterval(refreshTimer) }
   }, [t.unableLoadReports])
+
+  useEffect(() => {
+    if (!companyId) return
+    const client = getSupabase()
+    let disposed = false
+    const refreshRoutes = async () => {
+      try {
+        const dashboard = await loadManagerDashboard({
+          companyId,
+          branchId: dashboardBranchId,
+          routeDate: managerOperationalDate(),
+        })
+        if (disposed) return
+        setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0)))
+        setSummary(dashboard.summary)
+      } catch {
+        // The five-minute refresh remains the recovery path for transient
+        // realtime or network failures; do not replace visible data here.
+      }
+    }
+    const channel = client
+      .channel(`manager-route-queue-${companyId}-${dashboardBranchId || 'all'}`)
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `company_id=eq.${companyId}`}, () => { void refreshRoutes() })
+      .subscribe()
+    return () => { disposed = true; void client.removeChannel(channel) }
+  }, [companyId, dashboardBranchId])
 
   useEffect(() => {
     if (!companyId) return
