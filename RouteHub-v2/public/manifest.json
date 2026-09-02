@@ -16,7 +16,7 @@
     {"src": "/routehub-regular-new.jpg", "sizes": "1024x1024", "type": "image/jpeg", "purpose": "any maskable"}
   ],
   "shortcuts": [
-    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-app.jpg", "sizes": "1024x1024", "type": "image/jpeg"}]},
+    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-new.jpg", "sizes": "1024x1024", "type": "image/jpeg"}]},
     {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-regular-new.jpg", "sizes": "1024x1024", "type": "image/jpeg"}]}
   ]
 }

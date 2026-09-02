@@ -6,6 +6,7 @@ import {useRouter} from 'next/navigation'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {markArrived} from '../../../lib/driver-v3/actions'
+import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 
 const DriverRouteNavigation = dynamic(() => import('../../driver-route-navigation'), {ssr: false})
 
@@ -56,7 +57,8 @@ export default function DriverV3Map() {
   }
 
   return (
-    <main className="driver-navigation-page">
+    <DriverV3Shell active="map" flush>
+      <main className="driver-navigation-page">
       {loading ? (
         <div className="driver-navigation-state">{t.drvLoadingMap}</div>
       ) : error ? (
@@ -83,7 +85,8 @@ export default function DriverV3Map() {
         </section>
       )}
       {message && <p className="driver-navigation-feedback" role="alert">{message}</p>}
-    </main>
+      </main>
+    </DriverV3Shell>
   )
 }
 

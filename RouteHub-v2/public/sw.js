@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'routehub-static-v16'
-const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-app.jpg']
+const STATIC_CACHE = 'routehub-static-v17'
+const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-new.jpg']
 
 self.addEventListener('install', event => {
   self.skipWaiting()
@@ -29,8 +29,8 @@ self.addEventListener('push', event => {
   const title = data.title || 'RouteHub'
   const options = {
     body: data.body || 'You have a new route update.',
-    icon: '/routehub-driver-app.jpg',
-    badge: '/routehub-driver-app.jpg',
+    icon: '/routehub-driver-new.jpg',
+    badge: '/routehub-driver-new.jpg',
     tag: data.tag || 'routehub-update',
     renotify: true,
     data: {href: data.href || '/driver'},

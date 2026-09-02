@@ -37,6 +37,7 @@ export default function DriverV3Shell({
   const pathname = usePathname()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
+  const menuHref = profileOpen ? '/driver' : '/driver/more'
 
   return (
     <main className={styles.shell}>
@@ -46,13 +47,15 @@ export default function DriverV3Shell({
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
         ) : (
-          <span className={styles.headerIcon} aria-hidden="true" />
+          <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
+            <MapIcon color="#fff" strokeWidth={2.2} />
+          </Link>
         )}
         <Link href="/driver" className={styles.headerBrand}>
-          <img src="/routehub-driver-app.jpg" alt="" width={32} height={32} />
+          <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
           <span>RouteHub</span>
         </Link>
-        <Link href={profileOpen ? '/driver' : '/driver/more'} className={styles.headerIcon} aria-label={t.drvProfile}>
+        <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
           <Menu color="#fff" strokeWidth={2.2} />
         </Link>
       </header>

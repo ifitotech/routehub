@@ -1,6 +1,7 @@
 import './globals.css'
 import './final-polish.css'
 import './driver-v3/v3-app.css'
+import 'leaflet/dist/leaflet.css'
 import PwaRegister from './pwa-register'
 import ThemeBoot from './theme-boot'
 import GlobalChrome from './global-chrome'

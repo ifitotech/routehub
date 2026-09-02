@@ -82,6 +82,9 @@ test('routing adapter uses the Google Routes API with a safe coordinate-only fal
   assert.match(api,/routingPreference:'TRAFFIC_AWARE'/)
   assert.match(api,/routes\.staticDuration/)
   assert.match(api,/routes\.legs\.steps\.navigationInstruction\.instructions/)
+  assert.match(api,/function isCompatibleRoute/)
+  assert.match(api,/const routeCoordinates=isCompatibleRoute\(decoded,points\)\?decoded:points/)
+  assert.match(source,/function geometryMatchesEndpoints/)
 })
 
 test('geocoding adapter rejects incomplete queries and invalid coordinates',async()=>{

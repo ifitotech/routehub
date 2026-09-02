@@ -4,10 +4,10 @@
   --blue:#1667f2;
   --muted:#667892;
   --border:#dde5ee;
-  height:100dvh;
   height:100svh;
-  max-height:100dvh;
+  height:100dvh;
   max-height:100svh;
+  max-height:100dvh;
   background:#f7f9fc;
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
@@ -290,7 +290,32 @@
 .stackTitles small{color:#b9c9e2;font-size:11px;font-weight:600;line-height:14px}
 .stackSpacer{width:44px;height:44px}
 
-.contentFlush{padding:0!important;max-width:none}
+.contentFlush{position:relative;padding:0!important;max-width:none;overflow:hidden}
+.contentFlush :global(.driver-navigation-page){
+  position:relative!important;
+  inset:auto!important;
+  z-index:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.contentFlush :global(.driver-navigation-state){height:100%!important;min-height:0!important}
+.contentFlush :global(.driver-navigation-page > .route-plan-driver.is-driving){
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+}
+.contentFlush :global(.driver-navigation-page .route-plan-driver.is-driving .route-plan-canvas){
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+}
+.contentFlush :global(.driver-navigation-page .route-plan-guidance){top:10px!important}
 .mapScreen{display:flex;flex-direction:column;min-height:100%;height:100%}
 .mapCanvas{flex:1;min-height:240px;position:relative;background:#e8edf3}
 .mapSheet{

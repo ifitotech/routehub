@@ -31,6 +31,20 @@
   text-align: center;
 }
 
+.emptyOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 450;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(248 250 252 / 76%);
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+
 .legend {
   position: absolute;
   z-index: 500;
