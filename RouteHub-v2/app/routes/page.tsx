@@ -416,11 +416,13 @@ export default function Routes() {
     .filter(route => route.driver_id === form.driver_id && route.route_date === form.date)
     .sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0], [routes, form.driver_id, form.date])
   const branchForValue = (value:string) => branches.find(branch => (branch.address || branch.name) === value) || null
+  const originContact = originMode === 'contact' ? contacts.find(contact => contact.address === form.origin) || null : null
   const originBranch = originMode === 'branch' ? branchForValue(form.origin) || defaultBranch : null
   const returnBranch = form.type === 'return' ? branchForValue(form.destination) || defaultBranch : null
   const selectedDriverGps = storedCoordinate(driverLocations[form.driver_id])
   const previousDestinationCoordinate = sanitizeCoordinate({lat:previousRoute?.destination_lat,lng:previousRoute?.destination_lng})
   const originBranchCoordinate = savedCoordinate(originBranch)
+  const originContactCoordinate = sanitizeCoordinate({lat:originContact?.latitude,lng:originContact?.longitude})
   const returnBranchCoordinate = savedCoordinate(returnBranch)
   const searchContext = defaultBranch?.address || ''
   const todayValue = localSchedule().date
@@ -454,12 +456,20 @@ export default function Routes() {
       })
       .map(route => ({id: route.id, mission_type: route.mission_type, origin_address: route.origin_address, origin_lat: route.origin_lat, origin_lng: route.origin_lng, destination_address: route.destination_address, destination_name: route.destination_name, destination_lat: route.destination_lat, destination_lng: route.destination_lng, status: route.status, driver_id: route.driver_id, position: route.position}))
     if(form.destination.trim()) {
-      const origin=originMode === 'branch' ? originBranchCoordinate : originMode === 'previous' ? previousDestinationCoordinate : originMode === 'custom' ? selectedDriverGps : null
+      const origin=originMode === 'branch'
+        ? originBranchCoordinate
+        : originMode === 'previous'
+          ? previousDestinationCoordinate
+          : originMode === 'contact'
+            ? originContactCoordinate
+            : originMode === 'custom'
+              ? selectedDriverGps
+              : null
       const destination=form.type === 'return' ? returnBranchCoordinate : sanitizeCoordinate(selectedDestinationLocation?.coordinate || {lat:selectedContact?.latitude,lng:selectedContact?.longitude})
       configured.push({
         id:'draft-preview',
         mission_type:form.type,
-        origin_address:originBranch?.address || form.origin,
+        origin_address:originMode === 'branch' ? originBranch?.address || form.origin : form.origin,
         origin_lat:origin?.lat ?? null,
         origin_lng:origin?.lng ?? null,
         destination_address:returnBranch?.address || form.destination,
@@ -472,7 +482,7 @@ export default function Routes() {
       })
     }
     return configured
-  }, [branchId, form.destination, form.destination_label, form.driver_id, form.origin, form.type, originBranch?.address, originBranchCoordinate, originMode, previousDestinationCoordinate, returnBranch?.address, returnBranch?.name, returnBranchCoordinate, routes, selectedContact?.company_name, selectedContact?.latitude, selectedContact?.longitude, selectedDestinationLocation, selectedDriverGps, todayValue])
+  }, [branchId, form.destination, form.destination_label, form.driver_id, form.origin, form.type, originBranch?.address, originBranchCoordinate, originContactCoordinate, originMode, previousDestinationCoordinate, returnBranch?.address, returnBranch?.name, returnBranchCoordinate, routes, selectedContact?.company_name, selectedContact?.latitude, selectedContact?.longitude, selectedDestinationLocation, selectedDriverGps, todayValue])
 
   useEffect(() => {
     if (originMode !== 'previous') return
@@ -910,7 +920,7 @@ export default function Routes() {
             <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>3</span><div><h3>{locale==='es' ? 'Ubicaciones' : locale==='fr' ? 'Emplacements' : 'Locations'}</h3><p>{locale==='es' ? 'Define el inicio y el destino.' : locale==='fr' ? 'Définissez le départ et la destination.' : 'Set the starting point and destination.'}</p></div></div>
             <fieldset className={styles.fieldset}>
               <legend>{c.startingPoint}</legend>
-              <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
+              <div className={styles.segmented}>{(['branch','previous','contact','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
               {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{branches.map(branch => <option key={branch.id} value={branch.address || branch.name}>{branch.name}{branch.address ? ` - ${branch.address}` : ''}</option>)}</select></div>}
               {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
               {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm(current => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{contacts.map(contact => <option key={contact.id} value={contact.address}>{contact.company_name} - {contact.address}</option>)}</select></div>}
