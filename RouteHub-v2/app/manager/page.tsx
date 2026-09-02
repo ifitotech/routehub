@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useEffect, useMemo, useRef, useState} from 'react'
-import {AlertTriangle, ArrowRight, History, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {AlertTriangle, ArrowRight, Car, Clock, Flag, History, Home, MapPin, MoreHorizontal, PlayCircle, Plus, Radio, Route as RouteIcon, Share2, Timer, Truck, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
@@ -57,7 +57,6 @@ export default function Manager() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
-  const [mapSummary, setMapSummary] = useState<{count:number;distanceMeters?:number;durationSeconds?:number} | null>(null)
   const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
   const initialDurationRef=useRef<Record<string,number>>({})
   const activeRoute=todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
@@ -189,6 +188,71 @@ export default function Manager() {
     return `${copy.lastSeen} · ${copy.ago} ${minutes}m`
   }, [liveFix, copy.lastSeen, copy.noFix, copy.ago, locale])
 
+  const deliveryCopy = locale === 'es' ? {
+    title: 'Estado del delivery', onRoute: 'En ruta', estimatedArrival: 'Llegada estimada', distance: 'Distancia', driveTime: 'Tiempo de manejo', trafficDelay: 'Retraso por tráfico', started: 'Comenzó', lastGps: 'Último GPS', share: 'Compartir actualización', unavailable: 'No disponible', critical: 'Retraso crítico', delayed: 'Ligeramente demorado',
+  } : locale === 'fr' ? {
+    title: 'Statut de livraison', onRoute: 'En route', estimatedArrival: 'Arrivée estimée', distance: 'Distance', driveTime: 'Temps de conduite', trafficDelay: 'Retard trafic', started: 'Départ', lastGps: 'Dernier GPS', share: 'Partager', unavailable: 'Indisponible', critical: 'Retard critique', delayed: 'Légèrement retardé',
+  } : {
+    title: 'Delivery status', onRoute: 'On route', estimatedArrival: 'Estimated arrival', distance: 'Distance', driveTime: 'Drive time', trafficDelay: 'Traffic delay', started: 'Started', lastGps: 'Last GPS update', share: 'Share update', unavailable: 'Unavailable', critical: 'Critical delay', delayed: 'Slightly delayed',
+  }
+
+  const deliveryStatus = (() => {
+    if (!activeRoute) return null
+    const etaMinutes = trafficEstimate?.durationSeconds ? Math.max(1, Math.round(trafficEstimate.durationSeconds / 60)) : null
+    const driveMinutes = trafficEstimate?.staticDurationSeconds ? Math.max(1, Math.round(trafficEstimate.staticDurationSeconds / 60)) : null
+    const miles = trafficEstimate?.distanceMeters ? (trafficEstimate.distanceMeters / 1609.34).toFixed(1) : null
+    const trafficDelay = trafficEstimate?.durationSeconds && trafficEstimate.staticDurationSeconds
+      ? Math.max(0, Math.round((trafficEstimate.durationSeconds - trafficEstimate.staticDurationSeconds) / 60))
+      : null
+    const elapsed = activeRoute.route_started_at
+      ? Math.max(0, Math.round((Date.now() - new Date(activeRoute.route_started_at).getTime()) / 60000))
+      : 0
+    const operationalDelay = trafficEstimate?.durationSeconds && initialDurationRef.current[activeRoute.id]
+      ? Math.round((elapsed + trafficEstimate.durationSeconds / 60) - initialDurationRef.current[activeRoute.id] / 60)
+      : 0
+    const delayBadge = operationalDelay > 20 ? deliveryCopy.critical : operationalDelay > 10 ? deliveryCopy.delayed : null
+    const arrival = etaMinutes
+      ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(Date.now() + etaMinutes * 60000))
+      : null
+    const started = activeRoute.route_started_at
+      ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(activeRoute.route_started_at))
+      : null
+    const lastGps = liveFix?.updatedAt
+      ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(liveFix.updatedAt))
+      : null
+    const share = () => {
+      const destination = activeRoute.destination_name || t.destination
+      const text = `${destination}: ${arrival ? `ETA ${arrival}` : deliveryCopy.unavailable}`
+      if (typeof navigator !== 'undefined' && navigator.share) void navigator.share({text}).catch(() => undefined)
+      else if (typeof navigator !== 'undefined') void navigator.clipboard?.writeText(text)
+    }
+    const metrics = [
+      {label: 'ETA', value: etaMinutes ? `${etaMinutes} min` : '—', icon: Clock},
+      {label: deliveryCopy.estimatedArrival, value: arrival || '—', icon: Flag},
+      {label: deliveryCopy.distance, value: miles ? `${miles} mi` : '—', icon: MapPin},
+      {label: deliveryCopy.driveTime, value: driveMinutes ? `${driveMinutes} min` : '—', icon: Timer},
+      {label: deliveryCopy.trafficDelay, value: trafficDelay == null ? '—' : trafficDelay > 0 ? `+${trafficDelay} min` : '0 min', icon: Car, alert: trafficDelay != null && trafficDelay > 0},
+      {label: deliveryCopy.started, value: started || '—', icon: PlayCircle},
+      {label: deliveryCopy.lastGps, value: lastGps || '—', icon: Radio},
+    ]
+    return <section className={todayStyles.deliveryStatus} aria-label={deliveryCopy.title}>
+      <div className={todayStyles.deliveryTitle}>{deliveryCopy.title}</div>
+      <div className={todayStyles.deliveryStatusRow}>
+        <div className={todayStyles.onRoute}>
+          <Truck size={19}/>
+          <span><strong>{deliveryCopy.onRoute}</strong>{delayBadge && <small>{delayBadge}</small>}</span>
+        </div>
+        <div className={todayStyles.deliveryMetrics}>
+          {metrics.map(({label, value, icon: Icon, alert}) => <div className={todayStyles.deliveryMetric} data-alert={alert || undefined} key={label}>
+            <Icon size={18}/>
+            <span><small>{label}</small><strong>{value}</strong></span>
+          </div>)}
+        </div>
+        <button type="button" className={todayStyles.shareUpdate} onClick={share}><Share2 size={16}/>{deliveryCopy.share}</button>
+      </div>
+    </section>
+  })()
+
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.updated}: {new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
@@ -200,7 +264,6 @@ export default function Manager() {
         <div className={todayStyles.opsMap}>
           <OperationsMap
             hideFooter
-            onSummary={setMapSummary}
             routes={todayRoutes.filter(route => String(route.status || '') !== 'cancelled').map(route => ({
               id: route.id,
               mission_type: route.mission_type,
@@ -229,32 +292,9 @@ export default function Manager() {
             locale={locale}
           />
         </div>
-        <p className={todayStyles.mapStrip}>
-          {(() => {
-            const open = todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).length
-            const count = mapSummary?.count ?? open
-            const base = locale === 'es' ? `${count} rutas abiertas` : locale === 'fr' ? `${count} itinéraires ouverts` : `${count} open routes`
-            if (!mapSummary?.durationSeconds || !mapSummary?.distanceMeters) return base
-            const minutes = Math.max(1, Math.round(mapSummary.durationSeconds / 60))
-            const miles = Math.max(1, Math.round(mapSummary.distanceMeters / 1609.34))
-            return `${base} · ${minutes} min · ${miles} mi`
-          })()}
-        </p>
+        {deliveryStatus}
       </main>
       <aside className={todayStyles.todaySide}>
-        {(() => {
-          const active = todayRoutes.find(route => ['active','paused'].includes(String(route.status || '')))
-          if (!active) return null
-          const eta = trafficEstimate?.durationSeconds ? Math.max(1, Math.round(trafficEstimate.durationSeconds / 60)) : null
-          const miles = trafficEstimate?.distanceMeters ? (trafficEstimate.distanceMeters / 1609.34).toFixed(1) : null
-          const trafficDelay = trafficEstimate?.durationSeconds && trafficEstimate.staticDurationSeconds ? Math.max(0, Math.round((trafficEstimate.durationSeconds-trafficEstimate.staticDurationSeconds)/60)) : null
-          const elapsed = active.route_started_at ? Math.max(0, Math.round((Date.now()-new Date(active.route_started_at).getTime())/60000)) : 0
-          const operationalDelay = trafficEstimate?.durationSeconds && initialDurationRef.current[active.id] ? Math.round((elapsed + trafficEstimate.durationSeconds/60) - initialDurationRef.current[active.id]/60) : 0
-          const badge = operationalDelay > 20 ? 'Retraso crítico' : operationalDelay > 10 ? 'Ligeramente demorado' : null
-          const arrival = eta ? new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(Date.now()+eta*60000)) : null
-          const share = () => { const text=`${active.destination_name || t.destination}: ${arrival ? `ETA ${arrival}` : 'ETA no disponible'}`; if(typeof navigator!=='undefined'&&navigator.share) void navigator.share({text}).catch(()=>undefined); else if(typeof navigator!=='undefined') void navigator.clipboard?.writeText(text) }
-          return <section className={todayStyles.sideCard} aria-label="Delivery status"><div className={todayStyles.sideHeading}><h2>{active.destination_name || t.destination}</h2><span className={todayStyles.status}>{badge || statusLabel(active.status)}</span></div><div className={todayStyles.dayList}><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>ETA</strong><span>{eta ? `${eta} min` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Llegada estimada' : 'Estimated arrival'}</strong><span>{arrival || '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Distancia' : 'Distance'}</strong><span>{miles ? `${miles} mi` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Retraso tráfico' : 'Traffic delay'}</strong><span>{trafficDelay ? `+${trafficDelay} min` : '—'}</span></span></div><div className={todayStyles.dayRow}><span className={todayStyles.routeInfo}><strong>{locale === 'es' ? 'Última ubicación GPS' : 'Last GPS update'}</strong><span>{liveFix?.updatedAt ? new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(liveFix.updatedAt)) : '—'}</span></span></div></div><button type="button" className={todayStyles.seeMore} onClick={share}>{locale === 'es' ? 'Compartir actualización' : 'Share update'}</button></section>
-        })()}
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
           <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
           {loading ? <div className={todayStyles.loading}>{t.loading}</div> : (() => {

@@ -77,7 +77,7 @@ function routeColor(status?:string|null){
  if(status==='issue')return '#E11D48'
  if(status==='completed')return '#94a3b8'
  if(status==='active'||status==='paused')return '#1667F2'
- return '#F59E0B'
+ return '#1667F2'
 }
 
 function routeTypeLabel(type:string|null|undefined,locale:string){
@@ -270,13 +270,13 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     <TileLayer attribution='© OpenStreetMap contributors' url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'/>
     <FitBounds points={allPoints}/>
     {sequences.map(sequence=><Fragment key={`sequence-${sequence.key}`}>
-     {sequence.street&&sequence.line.length>1&&<>
-      <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.92,lineCap:'round',lineJoin:'round'}}/>
-      <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:sequence.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round'}}/>
-     </>}
+     {sequence.line.length>1&&<>
+       <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.92,lineCap:'round',lineJoin:'round'}}/>
+       <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:sequence.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>
+      </>}
      {sequence.start&&!driverLocations.some(driver=>driver.driver_id===sequence.driverId&&driver.status!=='unavailable')&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
-    {resolved.map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='active'||route.status==='paused'?500:route.status==='completed'?80:300}>
+    {resolved.filter(route=>isRemaining(route.status)).map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={route.status==='active'||route.status==='paused'?500:300}>
      <Tooltip direction="top" offset={[0,-20]}>{`${route.number}. ${routeTypeLabel(route.mission_type,locale)} · ${route.destination_name||route.destination_address||copy.driver} · ${statusLabel(route.status,locale)}`}</Tooltip>
     </Marker>)}
     {driverLocations.map(driver=><Fragment key={driver.id}>
