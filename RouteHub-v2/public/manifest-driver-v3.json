@@ -21,21 +21,21 @@
   ],
   "icons": [
     {
-      "src": "/routehub-driver-new.jpg",
-      "sizes": "774x774",
-      "type": "image/png",
+      "src": "/routehub-driver-new.jpg?v=19",
+      "sizes": "1254x1254",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/routehub-driver-new.jpg",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/routehub-driver-new.jpg?v=19",
+      "sizes": "1254x1254",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/routehub-driver-new.jpg",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/routehub-driver-new.jpg?v=19",
+      "sizes": "1254x1254",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ],
@@ -46,9 +46,9 @@
       "url": "/driver",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg",
-          "sizes": "774x774",
-          "type": "image/png"
+          "src": "/routehub-driver-new.jpg?v=19",
+          "sizes": "1254x1254",
+          "type": "image/jpeg"
         }
       ]
     },
@@ -58,9 +58,9 @@
       "url": "/driver/map",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg",
-          "sizes": "774x774",
-          "type": "image/png"
+          "src": "/routehub-driver-new.jpg?v=19",
+          "sizes": "1254x1254",
+          "type": "image/jpeg"
         }
       ]
     },
@@ -70,9 +70,9 @@
       "url": "/driver/route",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg",
-          "sizes": "774x774",
-          "type": "image/png"
+          "src": "/routehub-driver-new.jpg?v=19",
+          "sizes": "1254x1254",
+          "type": "image/jpeg"
         }
       ]
     }

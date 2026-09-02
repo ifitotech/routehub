@@ -21,8 +21,8 @@
   ],
   "icons": [
     {
-      "src": "/routehub-driver-new.jpg",
-      "sizes": "1024x1024",
+      "src": "/routehub-driver-new.jpg?v=19",
+      "sizes": "1254x1254",
       "type": "image/jpeg",
       "purpose": "any"
     }
@@ -34,8 +34,8 @@
       "url": "/driver",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg",
-          "sizes": "1024x1024",
+          "src": "/routehub-driver-new.jpg?v=19",
+          "sizes": "1254x1254",
           "type": "image/jpeg"
         }
       ]
@@ -46,8 +46,8 @@
       "url": "/driver/history",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg",
-          "sizes": "1024x1024",
+          "src": "/routehub-driver-new.jpg?v=19",
+          "sizes": "1254x1254",
           "type": "image/jpeg"
         }
       ]
