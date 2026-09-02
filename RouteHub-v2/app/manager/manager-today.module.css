@@ -216,9 +216,21 @@
 /* Desktop refresh: the operational state is the hero, not another dense
    dashboard. Kept scoped to Today so mobile and shared live data stay intact. */
 @media (min-width: 1024px) {
+  /* Keep the Today operation, map and status strip visible together on a
+     normal desktop viewport. The content remains spacious, but removes the
+     excess vertical breathing room that pushed the lower sections below fold. */
+  .todayLayout { gap: 12px; }
+  .todayMain { gap: 10px; }
+  .opsMap {
+    min-height: 300px;
+    --operations-map-height: min(380px, calc(100dvh - 455px));
+  }
+  .deliveryTitle { padding-top: 7px; }
+  .deliveryStatusRow { padding-bottom: 7px; }
+
   .summary {
-    gap: 12px;
-    margin: 6px 0 12px;
+    gap: 10px;
+    margin: 3px 0 8px;
   }
 
   .summaryCard {
@@ -265,9 +277,7 @@
   .hideOnFit { display: none; }
   .todayNav { display: none; }
 
-  .todayMain {
-    gap: 16px;
-  }
+  .todayMain { gap: 10px; }
 
   .sectionHeading {
     margin: 0 3px 4px;
