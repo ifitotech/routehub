@@ -77,7 +77,7 @@ export default function DriverV3Shell({
           <Truck />
           <span>{t.drvTruck}</span>
         </Link>
-        <Link className={active === 'more' ? styles.active : ''} href="/driver/more">
+        <Link className={active === 'more' ? styles.active : ''} href="/driver/settings">
           <MoreHorizontal />
           <span>{t.drvMore || 'More'}</span>
         </Link>
