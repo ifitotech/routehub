@@ -13,6 +13,28 @@
   min-height: var(--operations-map-height, 360px);
 }
 
+.map :global(.leaflet-container) {
+  width: 100%;
+  height: 100%;
+  background: #eaf2fb;
+  font: inherit;
+}
+
+.map :global(.leaflet-pane),
+.map :global(.leaflet-tile-pane),
+.map :global(.leaflet-map-pane),
+.map :global(.leaflet-layer),
+.map :global(.leaflet-zoom-animated) {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.map :global(.leaflet-container img),
+.map :global(.leaflet-tile) {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 .googleMap {
   position: absolute;
   inset: 0;

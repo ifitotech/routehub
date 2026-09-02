@@ -17,6 +17,30 @@ export default function DriverV3Truck() {
   const [error, setError] = useState('')
   const truck = trucks.find(item => item.id === truckId) || trucks[0] || null
 
+  const loadTrucks = async () => {
+    const db = getSupabase()
+    let truckQuery = db
+      .from('trucks')
+      .select('id,name,unit_number,branch_id')
+      .eq('company_id', companyId)
+      .eq('active', true)
+    if (branchId) truckQuery = truckQuery.eq('branch_id', branchId)
+    const primary = await truckQuery
+    if (!primary.error) return primary
+    if (!/unit_number|schema cache|column/i.test(primary.error.message || '')) return primary
+    let fallbackQuery = db
+      .from('trucks')
+      .select('id,name,branch_id')
+      .eq('company_id', companyId)
+      .eq('active', true)
+    if (branchId) fallbackQuery = fallbackQuery.eq('branch_id', branchId)
+    const fallback = await fallbackQuery
+    return {
+      ...fallback,
+      data: (fallback.data || []).map(item => ({...item, unit_number: null})),
+    }
+  }
+
   useEffect(() => {
     let gone = false
     const load = async () => {
@@ -25,16 +49,7 @@ export default function DriverV3Truck() {
         return
       }
       const db = getSupabase()
-      let truckQuery = db
-        .from('trucks')
-        .select('id,name,unit_number,branch_id')
-        .eq('company_id', companyId)
-        .eq('active', true)
-      // Drivers with company-wide membership may not have a branch_id on
-      // their membership. RLS already scopes the rows they can see; in that
-      // case do not send an `eq(..., null)` filter that hides every truck.
-      if (branchId) truckQuery = truckQuery.eq('branch_id', branchId)
-      const truckResult = await truckQuery
+      const truckResult = await loadTrucks()
       if (gone) return
       if (truckResult.error) {
         setError(t.drvOpFailed)

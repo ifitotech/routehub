@@ -46,7 +46,7 @@ export default function DriverProfile() {
   }
 
   return (
-    <DriverV3Shell active="more" title={t.drvProfile}>
+    <DriverV3Shell active="more" mode="stack" backHref="/driver" backLabel={t.drvToday} title={t.drvProfile}>
       <div className={styles.page}>
       <section className={styles.profileHero}>
         <div className={styles.avatar} aria-hidden="true">{(fullName || email || 'RH').split(/\s+|@/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase()}</div>

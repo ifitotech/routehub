@@ -52,3 +52,9 @@ test('driver settings keep natural scroll height and internal headers remain uns
   assert.match(appStyles, /\.driver-v3-root\s*>\s*main\s*>\s*header/)
   assert.match(preferences, /\.section\{flex:0 0 auto;/)
 })
+
+test('driving day returns to settings instead of opening driver profile', () => {
+  const source = read('../app/driver-v3/driving-day/page.tsx')
+  assert.match(source, /backHref="\/driver\/settings"/)
+  assert.doesNotMatch(source, /backHref="\/driver\/more"/)
+})

@@ -206,6 +206,8 @@ test('Driver Truck remains available to a company-wide driver and logs use the t
   for (const source of [driverTruckSource, driverTruckFuelSource, driverTruckMaintenanceSource]) {
     assert.doesNotMatch(source, /!companyId\s*\|\|\s*!branchId/)
     assert.match(source, /select\('id,name,unit_number,branch_id'\)/)
+    assert.match(source, /select\('id,name,branch_id'\)/)
+    assert.match(source, /unit_number\|schema cache\|column/i)
   }
   assert.match(driverTruckSource, /if \(branchId\) truckQuery = truckQuery\.eq\('branch_id', branchId\)/)
   assert.match(driverTruckFuelSource, /if \(branchId\) query = query\.eq\('branch_id', branchId\)/)

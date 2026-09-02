@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
-import {appleMapsNavigationUrl,googleMapsNavigationUrl,openNavigation} from '../lib/maps/external-navigation.ts'
+import {androidNavigationUrls,appleMapsNavigationUrl,googleMapsNavigationUrl,openNavigation,openNavigationWithFallback} from '../lib/maps/external-navigation.ts'
 import {selectDriverTodayQueue} from '../lib/driver-queue.ts'
 
 test('navigation uses coordinates before a human-readable address',()=>{
@@ -10,6 +10,14 @@ test('navigation uses coordinates before a human-readable address',()=>{
   assert.match(appleMapsNavigationUrl(destination),/daddr=25.9%2C-80.3/)
   assert.match(openNavigation(destination,'iPhone'),/^maps:\/\//)
   assert.match(openNavigation(destination,'Android'),/^google\.navigation:/)
+  assert.deepEqual(androidNavigationUrls(destination).map(url=>url.split(':')[0]),['google.navigation','geo','https'])
+})
+
+test('android external navigation keeps a native fallback chain while non-browser platforms stay direct',()=>{
+  const destination={coordinate:{lat:25.9,lng:-80.3}}
+  assert.equal(openNavigationWithFallback(destination),false)
+  assert.match(openNavigation(destination,'Android 14; Pixel'),/^google\.navigation:/)
+  assert.match(openNavigation(destination,'iPhone OS 18_0'),/^maps:\/\//)
 })
 
 test('Driver entry uses the V3 current operation, quota-safe preview, and real external navigation',async()=>{
@@ -19,8 +27,11 @@ test('Driver entry uses the V3 current operation, quota-safe preview, and real e
   assert.match(source,/snapshot\?\.currentOperation/)
   assert.match(source,/OpenStreetRoutePreview/)
   assert.match(source,/router\.prefetch\('\/driver\/map'\)/)
-  assert.match(source,/openNavigation\(/)
-  assert.match(source,/route\.destination_lat/)
+  assert.match(source,/openNavigationWithFallback\(/)
+  assert.match(source,/sheet==='next'/)
+  assert.match(source,/setSheet\('next'\)/)
+  assert.match(source,/router\.push\('\/driver\/history'\)/)
+  assert.match(source,/target\.destination_lat!=null&&target\.destination_lng!=null/)
   assert.doesNotMatch(source,/autoStartNavigation/)
 })
 

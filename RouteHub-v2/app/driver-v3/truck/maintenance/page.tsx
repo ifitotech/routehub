@@ -30,8 +30,7 @@ export default function Maintenance() {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'ok' | 'err'>('ok')
 
-  useEffect(() => {
-    if (!companyId) return
+  const loadTruck = async () => {
     let query = getSupabase()
       .from('trucks')
       .select('id,name,unit_number,branch_id')
@@ -39,7 +38,26 @@ export default function Maintenance() {
       .eq('active', true)
       .limit(1)
     if (branchId) query = query.eq('branch_id', branchId)
-    void query.then(r => setTruck(r.data?.[0] || null))
+    const primary = await query
+    if (!primary.error) return primary
+    if (!/unit_number|schema cache|column/i.test(primary.error.message || '')) return primary
+    let fallback = getSupabase()
+      .from('trucks')
+      .select('id,name,branch_id')
+      .eq('company_id', companyId)
+      .eq('active', true)
+      .limit(1)
+    if (branchId) fallback = fallback.eq('branch_id', branchId)
+    const result = await fallback
+    return {
+      ...result,
+      data: (result.data || []).map(item => ({...item, unit_number: null})),
+    }
+  }
+
+  useEffect(() => {
+    if (!companyId) return
+    void loadTruck().then(r => setTruck(r.data?.[0] || null))
   }, [companyId, branchId])
 
   const submit = async () => {

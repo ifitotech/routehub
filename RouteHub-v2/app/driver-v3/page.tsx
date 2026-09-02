@@ -10,7 +10,7 @@ import {operationalDate} from '../../lib/driver-queue'
 import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, reportIssue, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
-import {openNavigation} from '../../lib/maps/external-navigation'
+import {openNavigationWithFallback} from '../../lib/maps/external-navigation'
 import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
@@ -28,7 +28,7 @@ export default function DriverV3Page() {
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
-  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info'>(null)
+  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
   const [recipient,setRecipient]=useState('')
   const [photo,setPhoto]=useState<File | null>(null)
   const [signed,setSigned]=useState(false)
@@ -77,15 +77,16 @@ export default function DriverV3Page() {
     window.history.replaceState(null,'','/driver')
   },[arrived,kind,route?.id,searchParams])
 
-  const openMaps=()=>{
-    if(!route)return
-    const url=openNavigation({
-      address:route.destination_address,
-      coordinate:route.destination_lat!=null&&route.destination_lng!=null?{lat:Number(route.destination_lat),lng:Number(route.destination_lng)}:null,
-      label:route.destination_name,
+  const openMapsForRoute=(target:any)=>{
+    if(!target)return
+    openNavigationWithFallback({
+      address:target.destination_address,
+      coordinate:target.destination_lat!=null&&target.destination_lng!=null?{lat:Number(target.destination_lat),lng:Number(target.destination_lng)}:null,
+      label:target.destination_name,
     })
-    if(url)window.location.assign(url)
   }
+
+  const openMaps=()=>openMapsForRoute(route)
 
   const startCurrent=async()=>{
     if(!route||busy)return
@@ -336,6 +337,7 @@ export default function DriverV3Page() {
         <section className={`${styles.summary} ${styles.nextStopSummary}`} aria-label={t.drvNextStop}>
           <p className="eyebrow">{t.drvNextStop}</p>
           {nextRoute?(
+            <button type="button" className={styles.nextStopButton} onClick={()=>setSheet('next')}>
             <div className={styles.nextStopContent}>
               <div>
                 <span className={`${styles.typeBadge} ${styles[nextKind||'return']}`}><Package/>{nextLabel}</span>
@@ -344,6 +346,7 @@ export default function DriverV3Page() {
               </div>
               <ChevronRight aria-hidden="true"/>
             </div>
+            </button>
           ):<div className={styles.nextStopEmpty}>{t.drvNoMoreStops}</div>}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
@@ -419,6 +422,36 @@ export default function DriverV3Page() {
             <p className="muted" style={{margin:'0 0 16px',fontSize:14,lineHeight:'20px'}}>{t.drvReturnHelp||t.drvReturn}</p>
             {message&&<p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
             <button className="primary" disabled={busy} onClick={()=>void completeReturnNow()} style={{background:'#16B96B',width:'100%'}}>{busy?t.drvBusy:t.drvCompleteReturn}</button>
+          </section>
+        </div>
+      )}
+
+      {sheet==='next'&&nextRoute&&(
+        <div style={overlay} onTouchMove={e=>e.preventDefault()}>
+          <section className="card" style={dialog} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+              <p className="eyebrow" style={{margin:0}}>{t.drvNextStop}</p>
+              <button type="button" aria-label={t.drvCancel||t.cancel} onClick={()=>setSheet(null)} style={{width:32,height:32,border:0,borderRadius:16,background:'#e8eef4',color:'#0f1d35',display:'grid',placeItems:'center',padding:0}}>
+                <X size={16}/>
+              </button>
+            </div>
+            <span className={`${styles.typeBadge} ${styles[nextKind||'return']}`} style={{marginBottom:12}}><Package/>{nextLabel}</span>
+            <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{nextRoute.destination_name||nextRoute.destination_address||t.drvCurrentStopName}</h2>
+            {nextRoute.destination_address&&<p className="muted" style={{margin:'0 0 10px'}}>{nextRoute.destination_address}</p>}
+            {nextKind!=='return'&&nextRoute.order_number?<p style={{margin:'0 0 12px',fontSize:22,fontWeight:800}}>PO {nextRoute.order_number}</p>:null}
+            <p style={{margin:'0 0 14px',fontSize:14,lineHeight:1.45,color:'#334155'}}>
+              {nextKind==='pickup'?t.drvPickupHelp:nextKind==='delivery'?t.drvDeliveryHelp:(t.drvReturnHelp||t.drvReturn)}
+            </p>
+            {nextRoute.notes||nextRoute.driver_note?<p className="muted" style={{margin:'0 0 14px'}}>{nextRoute.notes||nextRoute.driver_note}</p>:null}
+            {nextRoute.destination_phone?(
+              <a href={`tel:${String(nextRoute.destination_phone).replace(/[^\d+]/g,'')}`} className="primary" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,textDecoration:'none',marginBottom:10}}>
+                <Phone size={18}/>{t.drvCall||'Call'} {nextRoute.destination_phone}
+              </a>
+            ):null}
+            <div style={{display:'grid',gap:10}}>
+              <button className="secondary" type="button" onClick={()=>openMapsForRoute(nextRoute)}>{t.drvOpenMaps}</button>
+              <button className="secondary" type="button" onClick={()=>router.push('/driver/history')}>{t.routes||'Routes'}</button>
+            </div>
           </section>
         </div>
       )}

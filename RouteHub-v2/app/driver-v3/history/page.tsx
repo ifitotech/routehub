@@ -6,7 +6,7 @@ import {ChevronRight, Map} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {operationalDate} from '../../../lib/driver-queue'
-import {openNavigation} from '../../../lib/maps/external-navigation'
+import {openNavigationWithFallback} from '../../../lib/maps/external-navigation'
 import {useLocale} from '../../../lib/use-preferences'
 import {routeNumber} from '../../../lib/route-number'
 
@@ -63,7 +63,7 @@ export default function History() {
   }, [routes, day, query])
 
   const openMaps = (route: {destination_address?: string; destination_lat?: number; destination_lng?: number; destination_name?: string}) => {
-    const url = openNavigation({
+    openNavigationWithFallback({
       address: route.destination_address,
       coordinate:
         route.destination_lat != null && route.destination_lng != null
@@ -71,9 +71,6 @@ export default function History() {
           : null,
       label: route.destination_name,
     })
-    if (!url) return
-    const opened = window.open(url, '_blank', 'noopener,noreferrer')
-    if (!opened) window.location.assign(url)
   }
 
   return (

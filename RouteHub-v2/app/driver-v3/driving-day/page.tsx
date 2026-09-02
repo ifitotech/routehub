@@ -64,7 +64,7 @@ export default function DrivingDayPage() {
   }
 
   return (
-    <DriverV3Shell active="more" mode="stack" title={t.drvDrivingDay} backHref="/driver/more" backLabel={t.drvMore} hideNav={confirmEnd}>
+    <DriverV3Shell active="more" mode="stack" title={t.drvDrivingDay} backHref="/driver/settings" backLabel={t.drvSettings} hideNav={confirmEnd}>
       
 
       {loading ? (
