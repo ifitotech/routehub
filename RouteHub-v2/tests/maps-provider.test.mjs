@@ -101,7 +101,7 @@ test('routing adapter uses the Google Routes API with a safe coordinate-only fal
   assert.match(source,/function geometryMatchesEndpoints/)
 })
 
-test('operations preview starts at the live Driver and connects the authoritative remaining queue',()=>{
+test('operations preview keeps the stored starting point and connects the authoritative queue',()=>{
   const branch={lat:25.9017,lng:-80.3078}
   const driver={lat:25.925,lng:-80.29}
   const first={lat:25.94,lng:-80.25}
@@ -110,8 +110,8 @@ test('operations preview starts at the live Driver and connects the authoritativ
     {id:'active',position:1,status:'active',origin:branch,destination:first},
     {id:'next',position:2,status:'published',origin:branch,destination:second},
   ],driver)
-  assert.deepEqual(sequence.points,[driver,first,second])
-  assert.deepEqual(sequence.start,driver)
+  assert.deepEqual(sequence.points,[branch,first,second])
+  assert.deepEqual(sequence.start,branch)
 })
 
 test('operations preview repairs a one-point legacy route with the live Driver start',()=>{
@@ -121,6 +121,19 @@ test('operations preview repairs a one-point legacy route with the live Driver s
     {id:'return',position:1,status:'published',origin:destination,destination},
   ],driver)
   assert.deepEqual(sequence.points,[driver,destination])
+})
+
+test('operations map keeps completed and issue stops in the full assigned route',()=>{
+  const branch={lat:25.9017,lng:-80.3078}
+  const completed={lat:25.92,lng:-80.28}
+  const issue={lat:25.94,lng:-80.25}
+  const pending={lat:25.88,lng:-80.20}
+  const sequence=buildOperationsSequence([
+    {id:'done',position:1,status:'completed',origin:branch,destination:completed},
+    {id:'problem',position:2,status:'issue',origin:completed,destination:issue},
+    {id:'next',position:3,status:'published',origin:issue,destination:pending},
+  ])
+  assert.deepEqual(sequence.points,[branch,completed,issue,pending])
 })
 
 test('geocoding adapter rejects incomplete queries and invalid coordinates',async()=>{

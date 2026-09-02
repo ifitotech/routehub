@@ -20,7 +20,7 @@ const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false, lo
 
 const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRoutes: 0, completedRoutes: 0, openIssues: 0}
 
-type LiveFix = {driverId: string; updatedAt: string | null; lat: number | null; lng: number | null}
+type LiveFix = {driverId: string; updatedAt: string | null; lat: number | null; lng: number | null; label?: string}
 
 export default function Manager() {
   const {locale,t} = useLocale()
@@ -75,7 +75,7 @@ export default function Manager() {
   const deliveryRoute=activeRoute||todayRoutes.find(route=>['published','pending','assigned'].includes(String(route.status||'')))
 
   const missingCoordinateKey=todayRoutes
-    .filter(route=>!['completed','cancelled','issue'].includes(String(route.status||'')))
+    .filter(route=>String(route.status||'')!=='cancelled')
     .filter(route=>Boolean(route.destination_address)&&!sanitizeCoordinate({lat:route.destination_lat,lng:route.destination_lng}))
     .map(route=>`${route.id}:${route.destination_address}`).join('|')
 
@@ -86,7 +86,7 @@ export default function Manager() {
     const missing=todayRoutes.filter(route=>{
       const key=`${route.id}:${route.destination_address||''}`
       return Boolean(route.destination_address)
-        && !['completed','cancelled','issue'].includes(String(route.status||''))
+        && String(route.status||'')!=='cancelled'
         && !sanitizeCoordinate({lat:route.destination_lat,lng:route.destination_lng})
         && !coordinateRepairRef.current.has(key)
     })
@@ -161,6 +161,10 @@ export default function Manager() {
           .limit(8)
         if (branchId) sessionQuery = sessionQuery.eq('branch_id', branchId)
         const {data: sessions} = await sessionQuery
+        const session = (sessions || []).find(row => row.last_lat != null && row.last_lng != null) || sessions?.[0] || null
+        const {data: driverProfile} = session?.driver_id
+          ? await client.from('users').select('name,email').eq('id', session.driver_id).maybeSingle()
+          : {data: null}
         if (cancelled) return
         const metadata = userData.user?.user_metadata as Record<string, unknown> | undefined
         const name = String(metadata?.full_name || metadata?.name || userData.user?.email || '')
@@ -173,12 +177,12 @@ export default function Manager() {
         })
         setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0)))
         setSummary(dashboard.summary)
-        const session = (sessions || []).find(row => row.last_lat != null && row.last_lng != null) || sessions?.[0] || null
         setLiveFix(session ? {
           driverId: String(session.driver_id || ''),
           updatedAt: session.last_updated_at || null,
           lat: session.last_lat == null ? null : Number(session.last_lat),
           lng: session.last_lng == null ? null : Number(session.last_lng),
+          label: String(driverProfile?.name || driverProfile?.email || 'Driver'),
         } : null)
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : t.unableLoadReports)
@@ -232,12 +236,13 @@ export default function Manager() {
           setLiveFix(current => current?.driverId === row.driver_id ? null : current)
           return
         }
-        setLiveFix({
-          driverId: row.driver_id,
+        setLiveFix(current=>({
+          driverId: row.driver_id!,
           updatedAt: row.last_updated_at || new Date().toISOString(),
           lat: Number(row.last_lat),
           lng: Number(row.last_lng),
-        })
+          label: current?.driverId===row.driver_id?current?.label:undefined,
+        }))
       })
       .subscribe()
     return () => { void client.removeChannel(channel) }
@@ -373,6 +378,7 @@ export default function Manager() {
               driver_id: liveFix.driverId,
               location: {lat: liveFix.lat, lng: liveFix.lng},
               updatedAt: liveFix.updatedAt,
+              label: liveFix.label,
               status: 'on_route',
               nextStop: todayRoutes.find(route => route.driver_id === liveFix.driverId && ['active', 'paused'].includes(String(route.status || '')))?.destination_name
                 || todayRoutes.find(route => ['active', 'paused'].includes(String(route.status || '')))?.destination_name

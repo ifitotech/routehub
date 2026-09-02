@@ -6,6 +6,9 @@ export type DriverV3Route = {
   status: string
   position: number
   mission_type?: string | null
+  origin_address?: string | null
+  origin_lat?: number | null
+  origin_lng?: number | null
   destination_name?: string | null
   destination_address?: string | null
   destination_lat?: number | null

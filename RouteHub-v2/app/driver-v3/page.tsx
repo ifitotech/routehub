@@ -319,7 +319,7 @@ export default function DriverV3Page() {
           <div className={styles.divider}/>
           <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            {previewRoutes.length?<OperationsMap routes={previewRoutes} locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
+            {previewRoutes.length?<OperationsMap routes={previewRoutes} driverLocations={liveFix?[{id:driverId||'driver',driver_id:driverId,location:{lat:liveFix.lat,lng:liveFix.lng},status:'on_route'}]:[]} locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
             </div>
           </div>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>

@@ -7,7 +7,7 @@ import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {sanitizeCoordinate} from '../lib/maps/coordinates'
 import {calculateOperationsRoute} from '../lib/maps/routing'
-import {buildOperationsSequence,isRemainingOperationsRoute} from '../lib/maps/operations-sequence'
+import {buildOperationsSequence,isDrawableOperationsRoute,isRemainingOperationsRoute} from '../lib/maps/operations-sequence'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -32,6 +32,7 @@ export type OperationsDriverLocation={
  driver_id:string
  location:Coordinate
  label?:string
+ avatarUrl?:string|null
  updatedAt?:string|null
  status?:'driving'|'on_route'|'available'|'unavailable'
  nextStop?:string|null
@@ -86,7 +87,7 @@ function statusLabel(status:string|undefined|null,locale:string){
 function routeMarker(number:number,color:string,completed=false){
  return L.divIcon({
   className:'operations-route-marker-wrap',
-  html:`<span class="operations-route-marker${completed?' is-completed':''}" style="--marker-color:${color}">${completed?'✓':number}</span>`,
+  html:`<span class="operations-route-marker${completed?' is-completed':''}" style="--marker-color:${color}">${number}</span>`,
   iconSize:[36,42],
   iconAnchor:[18,38],
  })
@@ -101,12 +102,14 @@ function originMarker(color:string){
  })
 }
 
-function driverMarker(){
+function driverMarker(driver:OperationsDriverLocation){
+ const initials=String(driver.label||'DR').split(/\s+|@/).filter(Boolean).map(part=>part[0]).join('').replace(/[^a-z0-9]/gi,'').slice(0,2).toUpperCase()||'DR'
+ const status=driver.status==='unavailable'?'is-offline':'is-online'
  return L.divIcon({
   className:'operations-driver-marker-wrap',
-  html:'<span class="operations-driver-marker" aria-hidden="true"><i></i></span>',
-  iconSize:[42,42],
-  iconAnchor:[21,21],
+  html:`<span class="operations-driver-marker ${status}" aria-hidden="true"><strong>${initials}</strong><i></i></span>`,
+  iconSize:[46,46],
+  iconAnchor:[23,23],
  })
 }
 
@@ -131,7 +134,7 @@ function sortRoutes(routes:OperationsRoute[]){
 }
 
 function withNumbers(routes:Array<OperationsRoute&{origin:Coordinate|null;destination:Coordinate|null}>):ResolvedRoute[]{
- const remaining=routes.filter(route=>isRemaining(route.status)&&route.destination)
+ const remaining=routes.filter(route=>isDrawableOperationsRoute(route.status)&&route.destination)
  const numbers=new Map<string,number>()
  remaining.forEach((route,index)=>numbers.set(route.id,index+1))
  return routes.map((route,index)=>({...route,number:numbers.get(route.id)||(Number(route.position)>0?Number(route.position):index+1)}))
@@ -233,22 +236,19 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   .map(driver=>({...driver,location:sanitizeCoordinate(driver.location)}))
   .filter((driver):driver is OperationsDriverLocation&{location:Coordinate}=>Boolean(driver.location)),[driverLocations])
  const allPoints=useMemo(()=>{
-  const operational=[
-   ...visibleDriverLocations.map(driver=>driver.location),
+ const operational=[
    ...sequences.map(sequence=>sequence.start),
-   ...resolved.filter(route=>isRemaining(route.status)||route.status==='issue').map(route=>route.destination),
+   ...resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination),
   ].filter((point):point is Coordinate=>Boolean(point))
-  return operational.length?operational:resolved.map(route=>route.destination).filter((point):point is Coordinate=>Boolean(point))
+  return operational.length?operational:visibleDriverLocations.map(driver=>driver.location)
  },[resolved,sequences,visibleDriverLocations])
  const fitPoints=useMemo(()=>{
-  const remaining=[
-   ...visibleDriverLocations.map(driver=>driver.location),
-   ...resolved.filter(route=>isRemaining(route.status)).flatMap(route=>[route.origin,route.destination]),
+  const assigned=[
+   ...sequences.map(sequence=>sequence.start),
+   ...resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination),
   ].filter((point):point is Coordinate=>Boolean(point))
-  if(remaining.length)return remaining
-  const configured=resolved.flatMap(route=>[route.origin,route.destination]).filter((point):point is Coordinate=>Boolean(point))
-  return configured
- },[resolved,visibleDriverLocations])
+  return assigned.length?assigned:visibleDriverLocations.map(driver=>driver.location)
+ },[resolved,sequences,visibleDriverLocations])
  const center=(fitPoints[0]||allPoints[0]||miamiCenter)
  const copy=locale==='es'
   ?{label:'Mapa operativo de rutas',unavailable:'No hay paradas con ubicación todavía.',current:'En curso',pending:'Pendiente',completed:'Completada',issue:'Incidencia',driver:'Conductor',start:'Inicio'}
@@ -270,10 +270,10 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
       </>}
       {sequence.start&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
-    {resolved.filter(route=>isRemaining(route.status)).map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status))} zIndexOffset={route.status==='active'||route.status==='paused'?500:300}>
+    {resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='active'||route.status==='paused'?500:300}>
      <Tooltip direction="top" offset={[0,-20]}>{`${route.number}. ${routeTypeLabel(route.mission_type,locale)} · ${route.destination_name||route.destination_address||copy.driver} · ${statusLabel(route.status,locale)}`}</Tooltip>
     </Marker>)}
-    {visibleDriverLocations.map(driver=><Marker key={`driver-${driver.id}`} position={[driver.location.lat,driver.location.lng]} icon={driverMarker()} zIndexOffset={700}>
+    {visibleDriverLocations.map(driver=><Marker key={`driver-${driver.id}`} position={[driver.location.lat,driver.location.lng]} icon={driverMarker(driver)} zIndexOffset={700}>
       <Tooltip direction="top" offset={[0,-24]}>{driver.label||driver.nextStop||copy.driver}</Tooltip>
     </Marker>)}
     </MapContainer>
