@@ -132,7 +132,11 @@ export default function Manager() {
       }
     }
     load()
-    return () => { cancelled = true }
+    // Keep Today in sync when dispatch assigns or completes work in another
+    // tab/device. The map then receives the authoritative queue and redraws
+    // its full sequence without a manual browser refresh.
+    const refreshTimer = window.setInterval(() => { void load() }, 15_000)
+    return () => { cancelled = true; window.clearInterval(refreshTimer) }
   }, [t.unableLoadReports])
 
   useEffect(() => {
