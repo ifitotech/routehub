@@ -41,3 +41,14 @@ test('tour dialog supports keyboard dismissal and keeps keyboard focus inside', 
   assert.match(gate, /event\.key !== 'Tab'/)
   assert.match(gate, /ref=\{dialogRef\}/)
 })
+
+test('driver settings keep natural scroll height and internal headers remain unstyled by app chrome', () => {
+  const shellStyles = read('../components/driver-v3/driver-v3.module.css')
+  const appStyles = read('../app/driver-v3/v3-app.css')
+  const preferences = read('../app/driver-v3/driver-preferences.module.css')
+
+  assert.doesNotMatch(shellStyles, /content\s*>\s*div:first-child\s*\{\s*height:\s*100%/)
+  assert.doesNotMatch(appStyles, /\.driver-v3-root\s+header[,\s{]/)
+  assert.match(appStyles, /\.driver-v3-root\s*>\s*main\s*>\s*header/)
+  assert.match(preferences, /\.section\{flex:0 0 auto;/)
+})

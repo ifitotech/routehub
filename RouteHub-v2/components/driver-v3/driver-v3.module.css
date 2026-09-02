@@ -412,4 +412,4 @@
 .headerIcon svg{color:#fff;stroke:#fff;width:22px;height:22px}
 
 
-.content > .page, .content > div:first-child{height:100%;min-height:0;}
+.content > div:first-child{min-height:100%;}

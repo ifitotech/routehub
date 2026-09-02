@@ -1,13 +1,13 @@
-.page{display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:4px 0 12px}
+.page{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:2px 0 12px}
 .pageHeader{min-height:0!important;padding:0 2px 2px!important;background:transparent!important}
-.pageHeader h1{margin:3px 0 0;color:#0f1d35;font-size:24px;line-height:1.16;letter-spacing:-.035em}
+.pageHeader h1{margin:2px 0 0;color:#0f1d35;font-size:26px;line-height:1.16;letter-spacing:-.035em}
 .pageHeader p{margin:0;color:#667892;font-size:11px;line-height:1.4;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
 .eyebrow{margin:0 0 5px;color:#667892;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
-.section{overflow:hidden;border:1px solid #dde5ee;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06)}
-.sectionHeader{padding:14px 15px 7px}
+.section{flex:0 0 auto;overflow:hidden;border:1px solid #dde5ee;border-radius:15px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06)}
+.sectionHeader{padding:12px 14px 5px}
 .sectionHeader h2{margin:0;color:#0f1d35;font-size:15px;letter-spacing:-.01em}
 .sectionHeader p{margin:4px 0 0;color:#667892;font-size:13px;line-height:1.42}
-.row{display:flex;align-items:center;gap:12px;min-height:72px;padding:11px 15px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5}
+.row{display:flex;align-items:center;gap:11px;min-height:64px;padding:10px 14px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5}
 .row:first-of-type{border-top:0}
 .rowIcon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#eaf2ff;color:#1667f2}
 .rowCopy{min-width:0;flex:1;display:grid;gap:2px}
@@ -18,19 +18,19 @@
 .status[data-state='inactive']{background:#fff5e8;color:#a96800}
 .actionRow{padding:0 15px 14px;border-top:1px solid #edf1f5}
 .actionRow button{margin-top:12px}
-.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 12px 13px}
-.choice{min-height:66px;display:grid;place-items:center;align-content:center;gap:5px;border:1px solid #dde5ee;border-radius:12px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:7px 11px 11px}
+.choice{min-height:50px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid #dde5ee;border-radius:11px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
 .choiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2;box-shadow:inset 0 0 0 1px #1667f2}
-.languageChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:8px 12px 13px}
-.languageChoice{min-height:44px;border:1px solid #dde5ee;border-radius:10px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
+.languageChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:7px 11px 11px}
+.languageChoice{min-height:40px;border:1px solid #dde5ee;border-radius:10px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
 .languageChoiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2}
 .footer{margin:0;padding:2px 2px 0;color:#8a9ab0;font-size:11px;text-align:center}
 
-.page :global(.settings-card){margin:0!important;padding:14px 15px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
+.page :global(.settings-card){margin:0!important;padding:12px 14px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
 .page :global(.settings-card + .settings-card){border-top:1px solid #edf1f5!important}
 .page :global(.settings-card h2){display:flex;align-items:center;gap:8px;margin:0;color:#0f1d35;font-size:15px}
 .page :global(.settings-card p){margin:6px 0 0;font-size:12px;line-height:1.42}
-.page :global(.settings-card .primary){min-height:46px;margin-top:12px;font-size:14px}
+.page :global(.settings-card .primary){display:inline-flex!important;width:auto!important;max-width:100%;min-height:40px;margin-top:10px;padding:0 14px;font-size:13px}
 .page :global(.settings-card-heading){display:flex;align-items:center;justify-content:space-between;gap:8px}
 .page :global(.notification-settings-status){font-size:10px}
 

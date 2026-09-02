@@ -137,9 +137,7 @@ body:has(.driver-v3-root) .global-chrome {
   -webkit-backdrop-filter: none !important;
   background: transparent !important;
 }
-.driver-v3-root header,
-html[data-driver-app='v3'] header,
-html[data-driver-app='v3'] .header {
+.driver-v3-root > main > header {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
@@ -229,17 +227,16 @@ html[data-driver-app='v3'] .header {
   display: none !important;
 }
 
-.driver-v3-root header,
-.driver-v3-root header * {
+.driver-v3-root > main > header,
+.driver-v3-root > main > header * {
   filter: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   text-shadow: none !important;
 }
 
-.driver-v3-root header button,
-.driver-v3-root header a,
-html[data-driver-app='v3'] header button {
+.driver-v3-root > main > header button,
+.driver-v3-root > main > header a {
   appearance: none !important;
   -webkit-appearance: none !important;
   background: transparent !important;
@@ -254,15 +251,15 @@ html[data-driver-app='v3'] header button {
   opacity: 1 !important;
   color: #fff !important;
 }
-.driver-v3-root header,
-.driver-v3-root header * {
+.driver-v3-root > main > header,
+.driver-v3-root > main > header * {
   filter: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   text-shadow: none !important;
   -webkit-font-smoothing: antialiased;
 }
-.driver-v3-root header img {
+.driver-v3-root > main > header img {
   filter: none !important;
   image-rendering: auto;
 }
