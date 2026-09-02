@@ -38,6 +38,8 @@ export default function DriverV3Shell({
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
+  const mapOpen = pathname === '/driver/map' || pathname.startsWith('/driver/map/')
+  const mapHref = mapOpen ? '/driver' : '/driver/map'
 
   return (
     <main className={styles.shell}>
@@ -47,7 +49,7 @@ export default function DriverV3Shell({
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
         ) : (
-          <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
+          <Link href={mapHref} className={styles.headerIcon} aria-label={mapOpen ? t.drvToday : (t.drvMap || 'Map')} aria-pressed={mapOpen}>
             <MapIcon color="#fff" strokeWidth={2.2} />
           </Link>
         )}
