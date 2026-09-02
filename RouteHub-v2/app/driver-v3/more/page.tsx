@@ -4,6 +4,7 @@ import {Edit3, LogOut, Mail, Phone, UserRound} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useLocale} from '../../../lib/use-preferences'
+import styles from '../driver-preferences.module.css'
 
 export default function DriverProfile() {
   const {t, locale} = useLocale()
@@ -46,17 +47,18 @@ export default function DriverProfile() {
 
   return (
     <DriverV3Shell active="more" title={t.drvProfile}>
-      <section className="card driver-profile-hero">
-        <div className="driver-profile-avatar" aria-hidden="true">{(fullName || email || 'RH').split(/\s+|@/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase()}</div>
-        <p className="eyebrow">{t.drvProfile}</p>
+      <div className={styles.page}>
+      <section className={styles.profileHero}>
+        <div className={styles.avatar} aria-hidden="true">{(fullName || email || 'RH').split(/\s+|@/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase()}</div>
         {!editing ? (
           <>
-            <h2 style={{margin: '4px 0 8px', fontSize: 24}}>{fullName || 'RouteHub Driver'}</h2>
-            <p className="muted driver-profile-line"><Mail size={16}/>{email}</p>
-            <p className="muted driver-profile-line"><Phone size={16}/>{phone || t.drvPhone}</p>
+            <p className={styles.eyebrow}>{t.drvProfile}</p>
+            <h1>{fullName || 'RouteHub Driver'}</h1>
+            <p><Mail size={16}/>{email}</p>
+            <p><Phone size={16}/>{phone || t.drvPhone}</p>
           </>
         ) : (
-          <>
+          <div className={styles.editForm}>
             <label>
               {t.drvFullName}
               <input value={fullName} onChange={e => setFullName(e.target.value)} />
@@ -72,18 +74,21 @@ export default function DriverProfile() {
             <button type="button" className="primary" disabled={saving} onClick={() => void saveProfile()}>
               {saving ? t.drvSaving : t.drvSaveProfile}
             </button>
-          </>
+          </div>
         )}
-        <button type="button" className="secondary" style={{marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center'}} onClick={() => setEditing(v => !v)}>
-          {editing ? null : <Edit3 size={17}/>} {editing ? t.drvCancel : t.drvEditProfile}
-        </button>
         {profileMsg && <p className="muted" role="status">{profileMsg}</p>}
       </section>
-
-      <section className="card" style={{marginTop: 12}}>
-        <div className="driver-profile-account"><UserRound size={18}/><span>{locale === 'es' ? 'Cuenta del conductor' : locale === 'fr' ? 'Compte conducteur' : 'Driver account'}</span></div>
+      {!editing && <section className={styles.profileSection}>
+        <div className={styles.profileSectionHeader}><h2>{locale === 'es' ? 'Información personal' : locale === 'fr' ? 'Informations personnelles' : 'Personal information'}</h2><button type="button" className={styles.editButton} onClick={() => setEditing(true)}><Edit3 size={16}/>{t.drvEditProfile}</button></div>
+        <div className={styles.infoRow}><UserRound size={18}/><span><small>{t.drvFullName}</small><strong>{fullName || '—'}</strong></span></div>
+        <div className={styles.infoRow}><Mail size={18}/><span><small>{locale === 'es' ? 'Correo' : 'Email'}</small><strong>{email || '—'}</strong></span></div>
+        <div className={styles.infoRow}><Phone size={18}/><span><small>{t.drvPhone}</small><strong>{phone || '—'}</strong></span></div>
+      </section>}
+      {editing && <button type="button" className="secondary" onClick={() => setEditing(false)}>{t.drvCancel}</button>}
+      <section className={styles.profileSection}>
+        <div className={styles.profileAccount}><UserRound size={18}/><span>{locale === 'es' ? 'Cuenta del conductor' : locale === 'fr' ? 'Compte conducteur' : 'Driver account'}</span></div>
         <button
-          className="danger"
+          className={`danger ${styles.profileSignout}`}
           disabled={busy}
           onClick={() => void signOut()}
           style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 12, minHeight: 52}}
@@ -92,6 +97,7 @@ export default function DriverProfile() {
           {busy ? t.drvSigningOut : t.drvSignOut}
         </button>
       </section>
+      </div>
     </DriverV3Shell>
   )
 }

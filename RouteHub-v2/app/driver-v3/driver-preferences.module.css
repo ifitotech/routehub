@@ -1,0 +1,63 @@
+.page{display:grid;gap:14px;padding:4px 0 12px}
+.pageHeader{padding:0 2px 2px}
+.pageHeader h1{margin:3px 0 0;color:#0f1d35;font-size:30px;line-height:1.12;letter-spacing:-.04em}
+.pageHeader p{margin:0;color:#667892;font-size:13px;line-height:1.45}
+.eyebrow{margin:0 0 5px;color:#667892;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+.section{overflow:hidden;border:1px solid #dde5ee;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06)}
+.sectionHeader{padding:14px 15px 7px}
+.sectionHeader h2{margin:0;color:#0f1d35;font-size:15px;letter-spacing:-.01em}
+.sectionHeader p{margin:4px 0 0;color:#667892;font-size:13px;line-height:1.42}
+.row{display:flex;align-items:center;gap:12px;min-height:62px;padding:11px 15px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5}
+.row:first-of-type{border-top:0}
+.rowIcon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#eaf2ff;color:#1667f2}
+.rowCopy{min-width:0;flex:1;display:grid;gap:2px}
+.rowCopy strong{font-size:14px;line-height:18px}
+.rowCopy small{color:#667892;font-size:12px;line-height:16px}
+.rowChevron{color:#8da0b9}
+.status{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;border-radius:999px;padding:5px 8px;background:#eaf9f1;color:#147a4a;font-size:11px;font-weight:800}
+.status[data-state='inactive']{background:#fff5e8;color:#a96800}
+.actionRow{padding:0 15px 14px;border-top:1px solid #edf1f5}
+.actionRow button{margin-top:12px}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 12px 13px}
+.choice{min-height:66px;display:grid;place-items:center;align-content:center;gap:5px;border:1px solid #dde5ee;border-radius:12px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
+.choiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2;box-shadow:inset 0 0 0 1px #1667f2}
+.languageChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:8px 12px 13px}
+.languageChoice{min-height:44px;border:1px solid #dde5ee;border-radius:10px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
+.languageChoiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2}
+.footer{margin:0;padding:2px 2px 0;color:#8a9ab0;font-size:11px;text-align:center}
+
+.page :global(.settings-card){margin:0!important;padding:14px 15px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
+.page :global(.settings-card + .settings-card){border-top:1px solid #edf1f5!important}
+.page :global(.settings-card h2){display:flex;align-items:center;gap:8px;margin:0;color:#0f1d35;font-size:15px}
+.page :global(.settings-card p){margin:6px 0 0;font-size:12px;line-height:1.42}
+.page :global(.settings-card .primary){min-height:46px;margin-top:12px;font-size:14px}
+.page :global(.settings-card-heading){display:flex;align-items:center;justify-content:space-between;gap:8px}
+.page :global(.notification-settings-status){font-size:10px}
+
+.profileHero{padding:22px 16px 18px;text-align:center}
+.avatar{display:grid;place-items:center;width:74px;height:74px;margin:0 auto 13px;border-radius:50%;background:#1667f2;box-shadow:0 10px 24px rgba(22,103,242,.23);color:#fff;font-size:26px;font-weight:850}
+.profileHero h1{margin:0;color:#0f1d35;font-size:26px;line-height:1.14;letter-spacing:-.035em}
+.profileHero p{display:flex;align-items:center;justify-content:center;gap:7px;margin:7px 0 0;color:#667892;font-size:13px;overflow-wrap:anywhere}
+.profileSection{overflow:hidden;border:1px solid #dde5ee;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06)}
+.profileSectionHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px 8px}
+.profileSectionHeader h2{margin:0;color:#0f1d35;font-size:15px}
+.editButton{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:#1667f2;font:inherit;font-size:13px;font-weight:800}
+.infoRow{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:8px;min-height:52px;padding:9px 15px;border-top:1px solid #edf1f5;color:#0f1d35}
+.infoRow svg{color:#667892}
+.infoRow span{display:grid;gap:2px;min-width:0}
+.infoRow small{color:#667892;font-size:11px}
+.infoRow strong{overflow:hidden;font-size:14px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.editForm{display:grid;gap:11px;padding:4px 15px 15px}
+.editForm label{display:grid;gap:6px;margin:0;color:#0f1d35;font-size:12px;font-weight:800}
+.editForm input{width:100%;min-height:46px;border:1px solid #dde5ee;border-radius:11px;padding:10px 12px;background:#fff;color:#0f1d35;font:inherit;font-size:16px}
+.editActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
+.profileAccount{display:flex;align-items:center;gap:9px;padding:14px 15px;color:#0f1d35;font-size:14px;font-weight:800}
+.profileSignout{margin:0 15px 15px!important}
+
+:global(html[data-theme='dark']) .pageHeader h1,:global(html[data-theme='dark']) .sectionHeader h2,:global(html[data-theme='dark']) .row,:global(html[data-theme='dark']) .page :global(.settings-card h2),:global(html[data-theme='dark']) .profileHero h1,:global(html[data-theme='dark']) .profileSectionHeader h2,:global(html[data-theme='dark']) .infoRow,:global(html[data-theme='dark']) .profileAccount{color:#f4f7fb}
+:global(html[data-theme='dark']) .section,:global(html[data-theme='dark']) .profileSection,:global(html[data-theme='dark']) .page :global(.settings-card){background:#18263b!important;border-color:#31445f}
+:global(html[data-theme='dark']) .row,:global(html[data-theme='dark']) .infoRow,:global(html[data-theme='dark']) .page :global(.settings-card + .settings-card),:global(html[data-theme='dark']) .actionRow{border-color:#31445f}
+:global(html[data-theme='dark']) .choice,:global(html[data-theme='dark']) .languageChoice,:global(html[data-theme='dark']) .editForm input{background:#102036;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .choiceSelected,:global(html[data-theme='dark']) .languageChoiceSelected{background:#17345c;color:#9cc4ff;border-color:#6ea5ff}
+
+@media(max-width:360px){.choices,.languageChoices{gap:5px;padding-left:9px;padding-right:9px}.choice{font-size:11px}.languageChoice{font-size:11px}.row{padding-left:12px;padding-right:12px}.avatar{width:66px;height:66px}}
