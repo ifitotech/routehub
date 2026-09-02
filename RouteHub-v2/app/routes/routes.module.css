@@ -320,6 +320,22 @@
   font-size:11px;
 }
 
+.builderSection .segmented{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.builderSection .segmented button{
+  flex:0 1 auto;
+  min-width:132px;
+  white-space:nowrap;
+}
+
+.builderSection .segmented button[aria-pressed="true"]{
+  font-weight:850;
+}
+
 .segmented button:hover{
   border-color:#9bbcf1;
   background:#f2f7ff;
@@ -546,7 +562,7 @@
   .builderHeader h2 { font-size: 26px; }
   .builderSubtitle { font-size: 12px; }
   .builderBody {
-    grid-template-columns: minmax(540px, 1.22fr) minmax(390px, .78fr);
+    grid-template-columns: minmax(620px, 1.32fr) minmax(340px, .68fr);
     gap: 20px;
     padding: 20px 22px 22px;
     min-height: 0;
@@ -574,11 +590,12 @@
     height: 100%;
     grid-template-rows: minmax(0, 1fr) auto;
   }
-  .builderSection { gap: 12px; padding: 15px 16px; border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 8px 18px rgb(15 29 53 / 4%); }
+  .builderSection { gap: 10px; padding: 13px 14px; border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 8px 18px rgb(15 29 53 / 4%); }
   .builderSectionHeader h3 { font-size: 16px; }
   .sectionNumber { width: 29px; height: 29px; border-radius: 9px; }
   .field input, .field select, .field textarea { min-height: 44px; border-radius: 12px; }
-  .segmented button { min-height: 40px; border-radius: 12px; font-size: 11px; }
+  .segmented button { min-height: 36px; border-radius: 12px; font-size: 10px; padding: 5px 10px; }
+  .builderSection .segmented button{min-width:118px}
   .previewCard, .assignmentSummary { border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 10px 24px rgb(33 56 90 / 7%); }
   .previewCard { position: relative; top: auto; min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
   .previewCard .route-plan-canvas { height: auto; min-height: 0; }
@@ -630,10 +647,8 @@
     font-size: 10px;
   }
 
-  .segmented button {
-    min-height: 36px;
-    font-size: 10px;
-  }
+  .segmented button { min-height: 34px; font-size: 10px; }
+  .builderSection .segmented button{min-width:110px}
 
   .field input,.field select,.field textarea,
   .fieldset .inputWrap input,.fieldset .inputWrap select {
@@ -711,14 +726,22 @@
     box-shadow:0 6px 16px rgb(15 29 53 / 4%);
   }
 
-  .segmented{
-    gap:5px;
-  }
+  .segmented{gap:5px}
 
   .segmented button{
     min-height:38px;
     font-size:10px;
     border-radius:12px;
+  }
+
+  .builderSection .segmented{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .builderSection .segmented button{
+    min-width:0;
+    width:100%;
   }
 
   .field input,.field select,.field textarea,
@@ -744,6 +767,10 @@
   .builderFooter .secondaryButton,
   .builderFooter .publishButton{
     min-height:46px;
+  }
+
+  .primaryRouteTypes .segmented{
+    grid-template-columns:repeat(3,minmax(0,1fr));
   }
 }
 
