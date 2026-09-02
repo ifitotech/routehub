@@ -328,8 +328,11 @@
 
 .builderSection .segmented button{
   flex:0 1 auto;
-  min-width:132px;
-  white-space:nowrap;
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
+  line-height:1.15;
+  text-align:center;
 }
 
 .builderSection .segmented button[aria-pressed="true"]{
@@ -567,7 +570,7 @@
     padding: 20px 22px 22px;
     min-height: 0;
     height: calc(100% - 72px);
-    overflow: hidden;
+    overflow: visible;
   }
 
   .formColumn {
@@ -590,12 +593,12 @@
     height: 100%;
     grid-template-rows: minmax(0, 1fr) auto;
   }
-  .builderSection { gap: 10px; padding: 13px 14px; border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 8px 18px rgb(15 29 53 / 4%); }
+  .builderSection { gap: 10px; padding: 13px 14px; border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 8px 18px rgb(15 29 53 / 4%); overflow: visible; }
   .builderSectionHeader h3 { font-size: 16px; }
   .sectionNumber { width: 29px; height: 29px; border-radius: 9px; }
   .field input, .field select, .field textarea { min-height: 44px; border-radius: 12px; }
   .segmented button { min-height: 36px; border-radius: 12px; font-size: 10px; padding: 5px 10px; }
-  .builderSection .segmented button{min-width:118px}
+  .builderSection .segmented button{min-width:96px}
   .previewCard, .assignmentSummary { border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 10px 24px rgb(33 56 90 / 7%); }
   .previewCard { position: relative; top: auto; min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
   .previewCard .route-plan-canvas { height: auto; min-height: 0; }
@@ -648,7 +651,7 @@
   }
 
   .segmented button { min-height: 34px; font-size: 10px; }
-  .builderSection .segmented button{min-width:110px}
+  .builderSection .segmented button{min-width:88px}
 
   .field input,.field select,.field textarea,
   .fieldset .inputWrap input,.fieldset .inputWrap select {
