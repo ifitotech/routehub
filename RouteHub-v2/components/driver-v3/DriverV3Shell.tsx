@@ -69,13 +69,9 @@ export default function DriverV3Shell({
           <Home />
           <span>{t.drvToday}</span>
         </Link>
-        <Link className={active === 'map' ? styles.active : ''} href="/driver/map">
-          <MapIcon />
-          <span>{t.drvMap || 'Map'}</span>
-        </Link>
-        <Link className={active === 'history' ? styles.active : ''} href="/driver/history">
+        <Link className={active === 'history' || active === 'route' ? styles.active : ''} href="/driver/history">
           <History />
-          <span>{t.drvHistory || t.history || 'History'}</span>
+          <span>{t.routes || 'Routes'}</span>
         </Link>
         <Link className={active === 'truck' ? styles.active : ''} href="/driver/truck">
           <Truck />
