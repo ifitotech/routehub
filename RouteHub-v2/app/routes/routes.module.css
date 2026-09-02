@@ -554,11 +554,10 @@
   .backdrop { padding: 28px; }
   .builder {
     width: min(1420px, calc(100vw - 80px));
-    height: min(860px, calc(100dvh - 56px));
     max-height: calc(100dvh - 56px);
     border-radius: 30px;
     background: linear-gradient(180deg,#fbfdff 0%,#f3f7fd 100%);
-    overflow: hidden;
+    overflow: auto;
   }
 
   .builderHeader { padding: 18px 22px; background: rgb(255 255 255 / 95%); }
@@ -569,7 +568,6 @@
     gap: 20px;
     padding: 20px 22px 22px;
     min-height: 0;
-    height: calc(100% - 72px);
     overflow: visible;
   }
 
@@ -582,16 +580,12 @@
     box-shadow: none;
     background: transparent;
     min-height: 0;
-    overflow: auto;
-    overscroll-behavior: contain;
-    padding-right: 4px;
+    overflow: visible;
   }
   .mapColumn {
     order: 2;
     top: auto;
     min-height: 0;
-    height: 100%;
-    grid-template-rows: minmax(0, 1fr) auto;
   }
   .builderSection { gap: 10px; padding: 13px 14px; border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 8px 18px rgb(15 29 53 / 4%); overflow: visible; }
   .builderSectionHeader h3 { font-size: 16px; }
@@ -600,11 +594,8 @@
   .segmented button { min-height: 36px; border-radius: 12px; font-size: 10px; padding: 5px 10px; }
   .builderSection .segmented button{min-width:96px}
   .previewCard, .assignmentSummary { border: 1px solid #e1e8f0; border-radius: 18px; box-shadow: 0 10px 24px rgb(33 56 90 / 7%); }
-  .previewCard { position: relative; top: auto; min-height: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .previewCard .route-plan-canvas { height: auto; min-height: 0; }
-  .previewCard :global(.map),
-  .previewCard :global(.canvas) { height: 100%; min-height: 0; }
-  .previewCard :global(.leaflet-container) { height: 100%; }
+  .previewCard { position: relative; top: auto; }
+  .previewCard .route-plan-canvas { height: min(46dvh, 430px); min-height: 280px; }
   .previewCardHeader { padding: 13px 14px 10px; }
   .assignmentSummary { padding: 13px 14px; }
   .builderFooter { position: sticky; bottom: 0; z-index: 4; margin: 0; padding: 8px 0 0; border-top: 0; background: linear-gradient(180deg,rgb(246 249 253 / 0) 0%,rgb(246 249 253 / 90%) 24%,rgb(246 249 253 / 98%) 100%); backdrop-filter: blur(14px); }
@@ -618,10 +609,6 @@
   .routePath { grid-column: 2; }
 }
 @media (min-width: 1024px) and (max-height: 860px) {
-  .builder {
-    height: calc(100dvh - 40px);
-  }
-
   .builderHeader {
     min-height: 64px;
     padding: 14px 18px;
@@ -634,7 +621,6 @@
   .builderBody {
     gap: 16px;
     padding: 16px 18px 18px;
-    height: calc(100% - 64px);
   }
 
   .builderSection {
