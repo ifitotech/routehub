@@ -25,12 +25,16 @@ export default function DriverV3Truck() {
         return
       }
       const db = getSupabase()
-      const truckResult = await db
+      let truckQuery = db
         .from('trucks')
         .select('id,name,unit_number')
         .eq('company_id', companyId)
-        .eq('branch_id', branchId)
         .eq('active', true)
+      // Drivers with company-wide membership may not have a branch_id on
+      // their membership. RLS already scopes the rows they can see; in that
+      // case do not send an `eq(..., null)` filter that hides every truck.
+      if (branchId) truckQuery = truckQuery.eq('branch_id', branchId)
+      const truckResult = await truckQuery
       if (gone) return
       if (truckResult.error) {
         setError(t.drvOpFailed)
@@ -51,7 +55,6 @@ export default function DriverV3Truck() {
           .from('truck_fuel_logs')
           .select('id,odometer,amount,filled_at,truck_id')
           .eq('company_id', companyId)
-          .eq('branch_id', branchId)
           .eq('truck_id', selected)
           .order('filled_at', {ascending: false})
           .limit(8),
@@ -59,7 +62,6 @@ export default function DriverV3Truck() {
           .from('truck_maintenance_logs')
           .select('id,maintenance_type,odometer,amount,serviced_at,truck_id')
           .eq('company_id', companyId)
-          .eq('branch_id', branchId)
           .eq('truck_id', selected)
           .order('serviced_at', {ascending: false})
           .limit(8),
