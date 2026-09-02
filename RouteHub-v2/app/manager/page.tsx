@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useEffect, useMemo, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {AlertTriangle, ArrowRight, History, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
@@ -59,6 +59,7 @@ export default function Manager() {
   const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
   const [mapSummary, setMapSummary] = useState<{count:number;distanceMeters?:number;durationSeconds?:number} | null>(null)
   const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
+  const initialDurationRef=useRef<Record<string,number>>({})
   const activeRoute=todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
   useEffect(()=>{
     if(!activeRoute?.destination_lat||!activeRoute?.destination_lng){setTrafficEstimate(null);return}
@@ -66,7 +67,7 @@ export default function Manager() {
     if(!origin){setTrafficEstimate(null);return}
     let cancelled=false
     const points=[origin,{lat:Number(activeRoute.destination_lat),lng:Number(activeRoute.destination_lng)}]
-    const refreshEta=()=>void calculateRoute(points,undefined,locale,true).then(result=>{if(!cancelled)setTrafficEstimate(result)}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
+    const refreshEta=()=>void calculateRoute(points,undefined,locale,true).then(result=>{if(!cancelled){if(result.durationSeconds&&initialDurationRef.current[activeRoute.id]==null)initialDurationRef.current[activeRoute.id]=result.durationSeconds;setTrafficEstimate(result)}}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
     refreshEta()
     const timer=window.setInterval(refreshEta,5*60*1000)
     return()=>{cancelled=true;window.clearInterval(timer)}
