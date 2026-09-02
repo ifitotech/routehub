@@ -22,6 +22,7 @@ export type DashboardRoute = {
   status: string
   driver_id?: string | null
   position?: number | null
+  route_started_at?: string | null
 }
 
 export type DashboardRequest = {
