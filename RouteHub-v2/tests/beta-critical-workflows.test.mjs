@@ -12,6 +12,9 @@ const createRouteSource = read('../app/routes/page.tsx')
 const dataSource = read('../lib/data.ts')
 const driverSource = read('../app/driver-v3/page.tsx')
 const driverDataSource = read('../lib/driver-v3/use-driver-data.ts')
+const driverTruckSource = read('../app/driver-v3/truck/page.tsx')
+const driverTruckFuelSource = read('../app/driver-v3/truck/fuel/page.tsx')
+const driverTruckMaintenanceSource = read('../app/driver-v3/truck/maintenance/page.tsx')
 const drivingDaySource = read('../app/driver-v3/driving-day/page.tsx')
 const liveRouteSource = read('../app/routes/live-route.tsx')
 const realtimeSource = read('../lib/realtime-sync.ts')
@@ -197,6 +200,18 @@ test('Driver refresh reconstructs current work from backend and realtime follows
   assert.match(driverDataSource, /select\('id,status,completed_at,finalized_at,updated_version'\)/)
   assert.match(driverDataSource, /current \? \[\{\.\.\.route, \.\.\.current\} as DriverV3Route\] : \[\]/)
   assert.match(middlewareSource, /NextResponse\.rewrite\(url\)[\s\S]*Cache-Control', 'private, no-store/)
+})
+
+test('Driver Truck remains available to a company-wide driver and logs use the truck branch', () => {
+  for (const source of [driverTruckSource, driverTruckFuelSource, driverTruckMaintenanceSource]) {
+    assert.doesNotMatch(source, /!companyId\s*\|\|\s*!branchId/)
+    assert.match(source, /select\('id,name,unit_number,branch_id'\)/)
+  }
+  assert.match(driverTruckSource, /if \(branchId\) truckQuery = truckQuery\.eq\('branch_id', branchId\)/)
+  assert.match(driverTruckFuelSource, /if \(branchId\) query = query\.eq\('branch_id', branchId\)/)
+  assert.match(driverTruckMaintenanceSource, /if \(branchId\) query = query\.eq\('branch_id', branchId\)/)
+  assert.match(driverTruckFuelSource, /branchId: truck\.branch_id/)
+  assert.match(driverTruckMaintenanceSource, /branchId: truck\.branch_id/)
 })
 
 test('realtime refresh coalesces bursts and is disposed with the subscription', () => {

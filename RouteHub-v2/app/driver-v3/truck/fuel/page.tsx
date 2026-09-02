@@ -22,15 +22,15 @@ export default function Fuel() {
   const [messageType, setMessageType] = useState<'ok' | 'err'>('ok')
 
   useEffect(() => {
-    if (!companyId || !branchId) return
-    void getSupabase()
+    if (!companyId) return
+    let query = getSupabase()
       .from('trucks')
-      .select('id,name,unit_number')
+      .select('id,name,unit_number,branch_id')
       .eq('company_id', companyId)
-      .eq('branch_id', branchId)
       .eq('active', true)
       .limit(1)
-      .then(r => setTruck(r.data?.[0] || null))
+    if (branchId) query = query.eq('branch_id', branchId)
+    void query.then(r => setTruck(r.data?.[0] || null))
   }, [companyId, branchId])
 
   const submit = async () => {
@@ -40,7 +40,7 @@ export default function Fuel() {
     try {
       await saveFuel({
         truckId: truck.id,
-        branchId: branchId || '',
+        branchId: truck.branch_id,
         driverId,
         companyId,
         routeId: 'truck',

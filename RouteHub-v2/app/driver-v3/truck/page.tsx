@@ -20,14 +20,14 @@ export default function DriverV3Truck() {
   useEffect(() => {
     let gone = false
     const load = async () => {
-      if (!companyId || !branchId) {
+      if (!companyId) {
         setLoading(false)
         return
       }
       const db = getSupabase()
       let truckQuery = db
         .from('trucks')
-        .select('id,name,unit_number')
+        .select('id,name,unit_number,branch_id')
         .eq('company_id', companyId)
         .eq('active', true)
       // Drivers with company-wide membership may not have a branch_id on
