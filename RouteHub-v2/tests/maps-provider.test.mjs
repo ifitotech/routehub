@@ -145,15 +145,25 @@ test('geocoding adapter rejects incomplete queries and invalid coordinates',asyn
   assert.match(source,/maximumSearchCharacters/)
 })
 
-test('address lookup uses Google as the single centralized provider',async()=>{
+test('address lookup uses Google first and keeps open geocoding fallback',async()=>{
   const suggestions=await readFile(new URL('../app/api/address-suggestions/route.ts',import.meta.url),'utf8')
   const geocode=await readFile(new URL('../app/api/geocode/route.ts',import.meta.url),'utf8')
   assert.match(suggestions,/geocodingConfig\.googleGeocodeEndpoint/)
   assert.match(suggestions,/geocodingConfig\.googleKey/)
   assert.match(geocode,/geocodingConfig\.googleGeocodeEndpoint/)
   assert.match(geocode,/geocodingConfig\.googleKey/)
+  assert.match(geocode,/geocodingConfig\.censusEndpoint/)
+  assert.match(geocode,/geocodingConfig\.nominatimEndpoint/)
+  assert.match(geocode,/source:'google'\|'census'\|'nominatim'/)
   assert.doesNotMatch(suggestions,/censusEndpoint|nominatimEndpoint|openstreetmap/)
-  assert.doesNotMatch(geocode,/censusEndpoint|nominatimEndpoint|openstreetmap/)
+})
+
+test('geocode route still prefers Google before Census or Nominatim',async()=>{
+  const geocode=await readFile(new URL('../app/api/geocode/route.ts',import.meta.url),'utf8')
+  const googleAt=geocode.indexOf('googleGeocodeEndpoint')
+  const censusAt=geocode.indexOf('censusEndpoint')
+  const nominatimAt=geocode.indexOf('nominatimEndpoint')
+  assert.ok(googleAt>0 && censusAt>googleAt && nominatimAt>censusAt)
 })
 
 test('geocoding does not turn an omitted nearby coordinate into null island',()=>{
