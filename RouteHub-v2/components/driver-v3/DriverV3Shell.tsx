@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {usePathname} from 'next/navigation'
+import {usePathname,useRouter} from 'next/navigation'
 import {ChevronLeft, History, Home, Map as MapIcon, Menu, MoreHorizontal, Truck} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
@@ -35,11 +35,11 @@ export default function DriverV3Shell({
 }: Props) {
   const {t} = useLocale()
   const pathname = usePathname()
+  const router = useRouter()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
   const mapOpen = pathname === '/driver/map' || pathname.startsWith('/driver/map/')
-  const mapHref = mapOpen ? '/driver' : '/driver/map'
 
   return (
     <main className={styles.shell}>
@@ -49,9 +49,9 @@ export default function DriverV3Shell({
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
         ) : (
-          <Link href={mapHref} className={styles.headerIcon} aria-label={mapOpen ? t.drvToday : (t.drvMap || 'Map')} aria-pressed={mapOpen}>
+          <button type="button" className={styles.headerIcon} aria-label={mapOpen ? (t.drvToday || 'Close map') : (t.drvMap || 'Map')} aria-pressed={mapOpen} onClick={() => mapOpen ? router.back() : router.push('/driver/map')}>
             <MapIcon color="#fff" strokeWidth={2.2} />
-          </Link>
+          </button>
         )}
         <Link href="/driver" className={styles.headerBrand}>
           <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
