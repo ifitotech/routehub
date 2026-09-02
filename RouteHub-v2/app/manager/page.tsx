@@ -60,6 +60,10 @@ export default function Manager() {
   const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
   const initialDurationRef=useRef<Record<string,number>>({})
   const activeRoute=todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
+  // A dispatcher needs the status strip as soon as work is assigned, not only
+  // after the Driver has started it. Active work remains the authoritative
+  // source for live timing and traffic metrics.
+  const deliveryRoute=activeRoute||todayRoutes.find(route=>['published','pending','assigned'].includes(String(route.status||'')))
   useEffect(()=>{
     if(!activeRoute?.destination_lat||!activeRoute?.destination_lng){setTrafficEstimate(null);return}
     const origin=liveFix?.lat!=null&&liveFix.lng!=null?{lat:liveFix.lat,lng:liveFix.lng}:branchOrigin.lat!=null&&branchOrigin.lng!=null?{lat:branchOrigin.lat,lng:branchOrigin.lng}:null
@@ -197,31 +201,32 @@ export default function Manager() {
   }
 
   const deliveryStatus = (() => {
-    if (!activeRoute) return null
+    if (!deliveryRoute) return null
+    const isLiveRoute=deliveryRoute.id===activeRoute?.id
     const etaMinutes = trafficEstimate?.durationSeconds ? Math.max(1, Math.round(trafficEstimate.durationSeconds / 60)) : null
     const driveMinutes = trafficEstimate?.staticDurationSeconds ? Math.max(1, Math.round(trafficEstimate.staticDurationSeconds / 60)) : null
     const miles = trafficEstimate?.distanceMeters ? (trafficEstimate.distanceMeters / 1609.34).toFixed(1) : null
     const trafficDelay = trafficEstimate?.durationSeconds && trafficEstimate.staticDurationSeconds
       ? Math.max(0, Math.round((trafficEstimate.durationSeconds - trafficEstimate.staticDurationSeconds) / 60))
       : null
-    const elapsed = activeRoute.route_started_at
-      ? Math.max(0, Math.round((Date.now() - new Date(activeRoute.route_started_at).getTime()) / 60000))
+    const elapsed = deliveryRoute.route_started_at
+      ? Math.max(0, Math.round((Date.now() - new Date(deliveryRoute.route_started_at).getTime()) / 60000))
       : 0
-    const operationalDelay = trafficEstimate?.durationSeconds && initialDurationRef.current[activeRoute.id]
-      ? Math.round((elapsed + trafficEstimate.durationSeconds / 60) - initialDurationRef.current[activeRoute.id] / 60)
+    const operationalDelay = trafficEstimate?.durationSeconds && initialDurationRef.current[deliveryRoute.id]
+      ? Math.round((elapsed + trafficEstimate.durationSeconds / 60) - initialDurationRef.current[deliveryRoute.id] / 60)
       : 0
     const delayBadge = operationalDelay > 20 ? deliveryCopy.critical : operationalDelay > 10 ? deliveryCopy.delayed : null
     const arrival = etaMinutes
       ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(Date.now() + etaMinutes * 60000))
       : null
-    const started = activeRoute.route_started_at
-      ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(activeRoute.route_started_at))
+    const started = deliveryRoute.route_started_at
+      ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(deliveryRoute.route_started_at))
       : null
     const lastGps = liveFix?.updatedAt
       ? new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date(liveFix.updatedAt))
       : null
     const share = () => {
-      const destination = activeRoute.destination_name || t.destination
+      const destination = deliveryRoute.destination_name || t.destination
       const text = `${destination}: ${arrival ? `ETA ${arrival}` : deliveryCopy.unavailable}`
       if (typeof navigator !== 'undefined' && navigator.share) void navigator.share({text}).catch(() => undefined)
       else if (typeof navigator !== 'undefined') void navigator.clipboard?.writeText(text)
@@ -240,7 +245,7 @@ export default function Manager() {
       <div className={todayStyles.deliveryStatusRow}>
         <div className={todayStyles.onRoute}>
           <Truck size={19}/>
-          <span><strong>{deliveryCopy.onRoute}</strong>{delayBadge && <small>{delayBadge}</small>}</span>
+          <span><strong>{isLiveRoute ? deliveryCopy.onRoute : copy.assignment}</strong>{delayBadge && <small>{delayBadge}</small>}</span>
         </div>
         <div className={todayStyles.deliveryMetrics}>
           {metrics.map(({label, value, icon: Icon, alert}) => <div className={todayStyles.deliveryMetric} data-alert={alert || undefined} key={label}>
