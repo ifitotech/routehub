@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {androidNavigationUrls,appleMapsNavigationUrl,googleMapsNavigationUrl,openNavigation,openNavigationWithFallback} from '../lib/maps/external-navigation.ts'
 import {selectDriverTodayQueue} from '../lib/driver-queue.ts'
+import {buildOperationsSequence} from '../lib/maps/operations-sequence.ts'
 
 test('navigation uses coordinates before a human-readable address',()=>{
   const destination={address:'Wrong address',coordinate:{lat:25.9,lng:-80.3},label:'RouteHub destination'}
@@ -98,6 +99,28 @@ test('routing adapter uses the Google Routes API with a safe coordinate-only fal
   assert.match(api,/function isCompatibleRoute/)
   assert.match(api,/const routeCoordinates=isCompatibleRoute\(decoded,points\)\?decoded:points/)
   assert.match(source,/function geometryMatchesEndpoints/)
+})
+
+test('operations preview starts at the live Driver and connects the authoritative remaining queue',()=>{
+  const branch={lat:25.9017,lng:-80.3078}
+  const driver={lat:25.925,lng:-80.29}
+  const first={lat:25.94,lng:-80.25}
+  const second={lat:25.88,lng:-80.20}
+  const sequence=buildOperationsSequence([
+    {id:'active',position:1,status:'active',origin:branch,destination:first},
+    {id:'next',position:2,status:'published',origin:branch,destination:second},
+  ],driver)
+  assert.deepEqual(sequence.points,[driver,first,second])
+  assert.deepEqual(sequence.start,driver)
+})
+
+test('operations preview repairs a one-point legacy route with the live Driver start',()=>{
+  const driver={lat:25.925,lng:-80.29}
+  const destination={lat:25.9017,lng:-80.3078}
+  const sequence=buildOperationsSequence([
+    {id:'return',position:1,status:'published',origin:destination,destination},
+  ],driver)
+  assert.deepEqual(sequence.points,[driver,destination])
 })
 
 test('geocoding adapter rejects incomplete queries and invalid coordinates',async()=>{

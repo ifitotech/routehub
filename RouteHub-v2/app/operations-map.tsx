@@ -6,23 +6,11 @@ import {MapContainer,Marker,Polyline,TileLayer,Tooltip,useMap} from 'react-leafl
 import {Truck} from 'lucide-react'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {sanitizeCoordinate} from '../lib/maps/coordinates'
+import {calculateOperationsRoute} from '../lib/maps/routing'
+import {buildOperationsSequence,isRemainingOperationsRoute} from '../lib/maps/operations-sequence'
 import styles from './operations-map.module.css'
 
 type Coordinate={lat:number;lng:number}
-
-async function osrmRoute(points:Coordinate[]){
-  if(points.length<2)return null
-  const response=await fetch('/api/operations-routing',{
-   method:'POST',
-   headers:{'content-type':'application/json'},
-   body:JSON.stringify({points}),
-   signal:AbortSignal.timeout(10_000),
-  })
-  if(!response.ok)throw new Error('OSRM route failed')
-  const payload=await response.json() as {coordinates?:Coordinate[];distanceMeters?:number;durationSeconds?:number}
-  const coordinates=(payload.coordinates||[]).map(point=>sanitizeCoordinate(point)).filter((point):point is Coordinate=>Boolean(point))
-  return {coordinates,distanceMeters:payload.distanceMeters,durationSeconds:payload.durationSeconds}
-}
 
 export type OperationsRoute={
  id:string
@@ -73,7 +61,7 @@ type Props={
 
 const miamiCenter:Coordinate={lat:25.9017,lng:-80.3078}
 const asPoint=(lat:number|null|undefined,lng:number|null|undefined):Coordinate|null=>sanitizeCoordinate({lat,lng})
-const isRemaining=(status?:string|null)=>status!=='completed'&&status!=='cancelled'&&status!=='issue'
+const isRemaining=isRemainingOperationsRoute
 const sequenceColors=['#1667F2','#7c3aed','#0891b2','#ea580c','#16a34a']
 
 function routeColor(status?:string|null){
@@ -149,34 +137,9 @@ function withNumbers(routes:Array<OperationsRoute&{origin:Coordinate|null;destin
  return routes.map((route,index)=>({...route,number:numbers.get(route.id)||(Number(route.position)>0?Number(route.position):index+1)}))
 }
 
-function samePoint(left:Coordinate|null|undefined,right:Coordinate|null|undefined){
- if(!left||!right)return false
- return left.lat===right.lat&&left.lng===right.lng
-}
-
-function buildSequence(groupRoutes:ResolvedRoute[],color:string,key:string,driverId:string|null){
- const ordered=groupRoutes.slice().sort((a,b)=>Number(a.position||Number.MAX_SAFE_INTEGER)-Number(b.position||Number.MAX_SAFE_INTEGER)||a.id.localeCompare(b.id))
- const remaining=ordered.filter(route=>isRemaining(route.status)&&route.destination)
- let previousDestination:Coordinate|null=null
- const points:Coordinate[]=[]
- let start:Coordinate|null=null
-
- for(const route of ordered){
-  if(!isRemaining(route.status)||!route.destination){
-   if(route.destination)previousDestination=route.destination
-   continue
-  }
-  const routeStart:Coordinate|null=route.origin||start||previousDestination
-  if(routeStart&&!samePoint(points[points.length-1],routeStart))points.push(routeStart)
-  if(!samePoint(points[points.length-1],route.destination))points.push(route.destination)
-  start=start||routeStart||route.destination
-  previousDestination=route.destination
- }
-
- const safeStart=start||remaining[0]?.origin||remaining[0]?.destination||ordered[0]?.origin||ordered[0]?.destination||null
- const safeLine=points.length?points:(safeStart?[safeStart]:[])
-
- return {key,driverId,routes:ordered,start:safeStart,line:safeLine,color,points:safeLine,distanceMeters:undefined,durationSeconds:undefined}
+function buildSequence(groupRoutes:ResolvedRoute[],color:string,key:string,driverId:string|null,driverStart:Coordinate|null=null){
+ const sequence=buildOperationsSequence(groupRoutes,driverStart)
+ return {key,driverId,routes:sequence.ordered,start:sequence.start,line:sequence.points,color,points:sequence.points,distanceMeters:undefined,durationSeconds:undefined}
 }
 
 async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
@@ -191,7 +154,9 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
  const [sequences,setSequences]=useState<ResolvedSequence[]>([])
  const summaryRef=useRef(onSummary)
  const operationsDataRef=useRef([] as OperationsRoute[])
+ const driverLocationsRef=useRef(driverLocations)
  summaryRef.current=onSummary
+ driverLocationsRef.current=driverLocations
 
  const visibleRoutes=useMemo(()=>sortRoutes(routes.filter(route=>route.origin_address||route.destination_address||asPoint(route.origin_lat,route.origin_lng)||asPoint(route.destination_lat,route.destination_lng))),[routes])
  const routeKey=visibleRoutes.map(route=>[route.id,route.mission_type,route.origin_address,route.destination_address,route.origin_lat,route.origin_lng,route.destination_lat,route.destination_lng,route.status,route.driver_id,route.position].join(':')).join('|')
@@ -210,7 +175,11 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    const key=route.driver_id||'unassigned'
    grouped.set(key,[...(grouped.get(key)||[]),route])
   }
-  const draft:Array<ResolvedSequence&{points:Coordinate[]}>=[...grouped.entries()].map(([key,groupRoutes],index)=>buildSequence(groupRoutes,sequenceColors[index%sequenceColors.length],key,key==='unassigned'?null:key))
+  const driverStartById=new Map(driverLocationsRef.current.flatMap(driver=>{
+   const location=sanitizeCoordinate(driver.location)
+   return location?[[driver.driver_id,location] as const]:[]
+  }))
+  const draft:Array<ResolvedSequence&{points:Coordinate[]}>=[...grouped.entries()].map(([key,groupRoutes],index)=>buildSequence(groupRoutes,sequenceColors[index%sequenceColors.length],key,key==='unassigned'?null:key,driverStartById.get(key)||null))
   setResolved(instant)
   setSequences(draft.map(({points: _points,...sequence})=>sequence))
   summaryRef.current?.({count:draft.reduce((total,sequence)=>total+sequence.routes.filter(route=>isRemaining(route.status)).length,0)})
@@ -229,12 +198,12 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     const key=route.driver_id||'unassigned'
     nextGroups.set(key,[...(nextGroups.get(key)||[]),route])
    }
-   const ready:Array<ResolvedSequence&{points:Coordinate[]}>=[...nextGroups.entries()].map(([key,groupRoutes],index)=>buildSequence(groupRoutes,sequenceColors[index%sequenceColors.length],key,key==='unassigned'?null:key))
+   const ready:Array<ResolvedSequence&{points:Coordinate[]}>=[...nextGroups.entries()].map(([key,groupRoutes],index)=>buildSequence(groupRoutes,sequenceColors[index%sequenceColors.length],key,key==='unassigned'?null:key,driverStartById.get(key)||null))
    setResolved(hydrated)
    setSequences(ready.map(({points: _points,...sequence})=>sequence))
    const built=await Promise.all(ready.map(async sequence=>{
     try{
-     const estimate=sequence.points.length>1?await osrmRoute(sequence.points):null
+     const estimate=sequence.points.length>1?await calculateOperationsRoute(sequence.points,undefined,locale,false):null
      const routed=estimate?.coordinates
      const street=!!routed&&routed.length>sequence.points.length
      return {
@@ -258,7 +227,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
   })()
 
   return()=>{cancelled=true}
- },[routeKey])
+ },[locale,routeKey])
 
  const visibleDriverLocations=useMemo(()=>driverLocations
   .map(driver=>({...driver,location:sanitizeCoordinate(driver.location)}))

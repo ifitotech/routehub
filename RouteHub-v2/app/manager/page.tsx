@@ -12,7 +12,7 @@ import TemporaryRouteAssignments from '../temporary-route-assignments'
 import ManagerShell from './manager-shell'
 import styles from './manager-dashboard.module.css'
 import todayStyles from './manager-today.module.css'
-import {calculateRoute} from '../../lib/maps/routing'
+import {calculateOperationsRoute} from '../../lib/maps/routing'
 import {geocodeAddress} from '../../lib/maps/geocoding'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 
@@ -61,42 +61,75 @@ export default function Manager() {
   const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
   const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
   const initialDurationRef=useRef<Record<string,number>>({})
+  const coordinateRepairRef=useRef(new Set<string>())
+  const liveFixRef=useRef(liveFix)
+  liveFixRef.current=liveFix
   const activeRoute=todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
+  const activeRouteId=activeRoute?.id
+  const activeDestination=sanitizeCoordinate({lat:activeRoute?.destination_lat,lng:activeRoute?.destination_lng})
+  const activeDestinationLat=activeDestination?.lat
+  const activeDestinationLng=activeDestination?.lng
   // A dispatcher needs the status strip as soon as work is assigned, not only
   // after the Driver has started it. Active work remains the authoritative
   // source for live timing and traffic metrics.
   const deliveryRoute=activeRoute||todayRoutes.find(route=>['published','pending','assigned'].includes(String(route.status||'')))
 
+  const missingCoordinateKey=todayRoutes
+    .filter(route=>!['completed','cancelled','issue'].includes(String(route.status||'')))
+    .filter(route=>Boolean(route.destination_address)&&!sanitizeCoordinate({lat:route.destination_lat,lng:route.destination_lng}))
+    .map(route=>`${route.id}:${route.destination_address}`).join('|')
+
   useEffect(()=>{
-    if(!companyId||!deliveryRoute?.id||!deliveryRoute.destination_address)return
-    if(sanitizeCoordinate({lat:deliveryRoute.destination_lat,lng:deliveryRoute.destination_lng}))return
+    if(!companyId||!missingCoordinateKey)return
     let cancelled=false
     const near=sanitizeCoordinate({lat:branchOrigin.lat,lng:branchOrigin.lng})
-    void geocodeAddress(deliveryRoute.destination_address,undefined,near).then(async location=>{
-      if(cancelled||!location?.coordinate)return
+    const missing=todayRoutes.filter(route=>{
+      const key=`${route.id}:${route.destination_address||''}`
+      return Boolean(route.destination_address)
+        && !['completed','cancelled','issue'].includes(String(route.status||''))
+        && !sanitizeCoordinate({lat:route.destination_lat,lng:route.destination_lng})
+        && !coordinateRepairRef.current.has(key)
+    })
+    if(!missing.length)return
+    missing.forEach(route=>coordinateRepairRef.current.add(`${route.id}:${route.destination_address||''}`))
+    void Promise.all(missing.map(async route=>{
+      const repairKey=`${route.id}:${route.destination_address||''}`
+      const location=await geocodeAddress(route.destination_address||'',undefined,near)
+      if(!location?.coordinate){coordinateRepairRef.current.delete(repairKey);return null}
       const coordinate=location.coordinate
-      setTodayRoutes(current=>current.map(route=>route.id===deliveryRoute.id?{...route,destination_lat:coordinate.lat,destination_lng:coordinate.lng}:route))
-      await getSupabase().from('routes').update({
+      const {error}=await getSupabase().from('routes').update({
         destination_lat:coordinate.lat,
         destination_lng:coordinate.lng,
         destination_location_source:location.source,
         destination_location_external_id:location.externalId||null,
-      }).eq('id',deliveryRoute.id).eq('company_id',companyId)
+      }).eq('id',route.id).eq('company_id',companyId)
+      if(error){coordinateRepairRef.current.delete(repairKey);return null}
+      return {id:route.id,coordinate}
+    })).then(repaired=>{
+      if(cancelled)return
+      const updates=new Map(repaired.filter((item):item is NonNullable<typeof item>=>Boolean(item)).map(item=>[item.id,item.coordinate]))
+      if(updates.size)setTodayRoutes(current=>current.map(route=>{
+        const coordinate=updates.get(route.id)
+        return coordinate?{...route,destination_lat:coordinate.lat,destination_lng:coordinate.lng}:route
+      }))
     }).catch(()=>undefined)
     return()=>{cancelled=true}
-  },[branchOrigin.lat,branchOrigin.lng,companyId,deliveryRoute?.destination_address,deliveryRoute?.destination_lat,deliveryRoute?.destination_lng,deliveryRoute?.id])
+  },[branchOrigin.lat,branchOrigin.lng,companyId,missingCoordinateKey,todayRoutes])
 
   useEffect(()=>{
-    if(!activeRoute?.destination_lat||!activeRoute?.destination_lng){setTrafficEstimate(null);return}
-    const origin=liveFix?.lat!=null&&liveFix.lng!=null?{lat:liveFix.lat,lng:liveFix.lng}:branchOrigin.lat!=null&&branchOrigin.lng!=null?{lat:branchOrigin.lat,lng:branchOrigin.lng}:null
-    if(!origin){setTrafficEstimate(null);return}
+    if(!activeRouteId||activeDestinationLat==null||activeDestinationLng==null){setTrafficEstimate(null);return}
+    const destination={lat:activeDestinationLat,lng:activeDestinationLng}
     let cancelled=false
-    const points=[origin,{lat:Number(activeRoute.destination_lat),lng:Number(activeRoute.destination_lng)}]
-    const refreshEta=()=>void calculateRoute(points,undefined,locale,true).then(result=>{if(!cancelled){if(result.durationSeconds&&initialDurationRef.current[activeRoute.id]==null)initialDurationRef.current[activeRoute.id]=result.durationSeconds;setTrafficEstimate(result)}}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
+    const refreshEta=()=>{
+      const fix=liveFixRef.current
+      const origin=fix?.lat!=null&&fix.lng!=null?{lat:fix.lat,lng:fix.lng}:branchOrigin.lat!=null&&branchOrigin.lng!=null?{lat:branchOrigin.lat,lng:branchOrigin.lng}:null
+      if(!origin){if(!cancelled)setTrafficEstimate(null);return}
+      void calculateOperationsRoute([origin,destination],undefined,locale,true).then(result=>{if(!cancelled){if(result.durationSeconds&&initialDurationRef.current[activeRouteId]==null)initialDurationRef.current[activeRouteId]=result.durationSeconds;setTrafficEstimate(result)}}).catch(()=>{if(!cancelled)setTrafficEstimate(null)})
+    }
     refreshEta()
     const timer=window.setInterval(refreshEta,5*60*1000)
     return()=>{cancelled=true;window.clearInterval(timer)}
-  },[activeRoute?.id,activeRoute?.destination_lat,activeRoute?.destination_lng,branchOrigin.lat,branchOrigin.lng,liveFix?.lat,liveFix?.lng,locale])
+  },[activeDestinationLat,activeDestinationLng,activeRouteId,branchOrigin.lat,branchOrigin.lng,locale])
 
   useEffect(() => {
     let cancelled = false

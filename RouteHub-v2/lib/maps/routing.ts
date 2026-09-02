@@ -72,6 +72,38 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal,
   }catch{return fallback}
 }
 
+/**
+ * Route previews prefer Google's road geometry when it is configured, while
+ * retaining the quota-free OSRM service as an operational fallback. Both
+ * endpoints cache by coordinate sequence, so a React render does not create a
+ * new provider request.
+ */
+export async function calculateOperationsRoute(points:MapCoordinate[],signal?:AbortSignal,locale='en',trafficAware=false):Promise<RouteEstimate>{
+  const google=await calculateRoute(points,signal,locale,trafficAware)
+  if(google.source==='google')return google
+  if(points.length<2)return google
+  try{
+    const response=await fetch('/api/operations-routing',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({points:points.slice(0,mapProviderLimits.maximumRoutePoints)}),
+      signal:signal||AbortSignal.timeout(mapProviderLimits.routeTimeoutMs+2_000),
+    })
+    if(!response.ok)return google
+    const payload=await response.json() as Partial<RouteEstimate>
+    const coordinates=Array.isArray(payload.coordinates)
+      ?payload.coordinates.map(point=>sanitizeCoordinate(point)).filter((point):point is MapCoordinate=>Boolean(point))
+      :[]
+    const safeCoordinates=geometryMatchesEndpoints(coordinates,points)?coordinates:points
+    return {
+      coordinates:safeCoordinates,
+      distanceMeters:payload.distanceMeters,
+      durationSeconds:payload.durationSeconds,
+      source:'fallback',
+    }
+  }catch{return google}
+}
+
 export function formatRouteEstimate(estimate:Pick<RouteEstimate,'distanceMeters'|'durationSeconds'>,locale='en'):string|null{
   if(!Number.isFinite(estimate.distanceMeters)||!Number.isFinite(estimate.durationSeconds))return null
   const miles=(estimate.distanceMeters!/1609.344).toFixed(estimate.distanceMeters!>=16093.44?0:1)
