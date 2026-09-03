@@ -1,11 +1,11 @@
 .routeTypeDriverRow{display:grid;gap:14px;align-items:start}
-.typeCards{display:flex;flex-wrap:wrap;gap:8px}
-.typeCard,.typeCardActive{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;height:44px;min-height:44px;padding:0 16px;border-radius:11px;border:1px solid #DCE3EE;background:#fff;cursor:pointer;color:#475569}
+.typeCards{display:flex;flex-wrap:nowrap;gap:8px}
+.typeCard,.typeCardActive{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;height:44px;min-height:44px;padding:0 12px;border-radius:11px;border:1px solid #DCE3EE;background:#fff;cursor:pointer;color:#475569;white-space:nowrap}
 .typeCard:hover{border-color:#A9B8F7}
 .typeCardActive{background:#F4F7FF;border:1.5px solid #7692F8;color:#3157E8}
 .typeCardIcon{display:inline-flex}
-.typeCardTitle{font-size:13px;font-weight:650;line-height:1}
+.typeCardTitle{font-size:13px;font-weight:650;line-height:1;white-space:nowrap}
 .typeCardDesc{display:none}
 .detailsToggleLeft{display:inline-flex;align-items:center;gap:8px;font-weight:700}
 .detailsToggleSummary{display:inline-flex;align-items:center;gap:8px;margin-left:auto;margin-right:8px;color:#64748B;font-size:13px;font-weight:650}
-@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.6fr) minmax(240px,.8fr)}}
+@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.6fr) minmax(220px,.8fr)}}
