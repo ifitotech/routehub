@@ -1,4 +1,4 @@
-/* Desktop Add Route: keep current sections, use mockup type buttons. */
+/* Desktop Add Route: type cards + Schedule under the map. */
 @media (min-width: 1024px) {
   [aria-labelledby='new-route-title'] {
     width: min(1080px, calc(100vw - 28px)) !important;
@@ -9,67 +9,43 @@
     overflow: hidden !important;
     border-radius: 16px !important;
     background: #fff !important;
-    box-shadow: 0 18px 48px rgb(15 29 53 / 20%) !important;
-    --operations-map-height: calc(100dvh - 132px);
+    --operations-map-height: min(42vh, 360px);
   }
 
   [aria-labelledby='new-route-title'] > div:first-child {
     display: flex !important;
     align-items: center !important;
-    min-height: 52px !important;
     height: 52px !important;
     padding: 6px 16px !important;
     border-bottom: 1px solid #e7edf4;
   }
 
-  [aria-labelledby='new-route-title'] h2 {
-    font-size: 17px !important;
-    line-height: 1.1 !important;
-    margin: 0 !important;
-  }
-
-  [aria-labelledby='new-route-title'] > div:first-child p:last-of-type {
-    display: none !important;
-  }
+  [aria-labelledby='new-route-title'] h2 { font-size: 17px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] > div:first-child p:last-of-type { display: none !important; }
 
   [aria-labelledby='new-route-title'] > div:last-child {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 360px) !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    align-items: stretch !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 380px) !important;
+    grid-template-rows: minmax(0, 1fr) auto auto !important;
     gap: 10px !important;
     min-height: 0 !important;
-    padding: 8px 12px 8px !important;
+    padding: 8px 12px !important;
     overflow: hidden !important;
   }
 
-  [aria-labelledby='new-route-title'] > div:last-child > button {
-    display: none !important;
-  }
-
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(2) {
-    grid-column: 2;
-    grid-row: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) {
-    grid-column: 1;
-    grid-row: 1;
-    min-height: 0;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding-bottom: 8px;
-  }
+  [aria-labelledby='new-route-title'] > div:last-child > button { display: none !important; }
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) { display: contents !important; }
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(2) { grid-column: 2; grid-row: 1; min-height: 0; overflow: hidden; }
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-child(1) { grid-column: 1; grid-row: 1; min-height: 0; overflow: auto; }
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-child(2) { grid-column: 2; grid-row: 2; }
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-child(3) { grid-column: 1; grid-row: 2; min-height: 0; overflow: auto; }
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-child(4),
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > [class*='builderFooter'] { grid-column: 1; grid-row: 3; }
 
   [aria-label='Assignment summary'],
   [aria-label='Resumen de asignación'],
-  [aria-label='Résumé de l’affectation'] {
-    display: none !important;
-  }
+  [aria-label='Résumé de l’affectation'],
+  [aria-labelledby='new-route-title'] [class*='previewSummary'] { display: none !important; }
 
   [aria-label='Route preview'],
   [aria-label='Vista previa de la ruta'],
@@ -82,20 +58,19 @@
     border-radius: 14px !important;
   }
 
-  [aria-labelledby='new-route-title'] h3 {
-    font-size: 13px !important;
-    margin: 0 !important;
+  [aria-labelledby='new-route-title'] h3 { font-size: 13px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] h3 + p { display: none !important; }
+  [aria-labelledby='new-route-title'] [class*='builderSection'] { padding: 8px 0 10px !important; gap: 8px !important; }
+
+  [aria-labelledby='new-route-title'] .leaflet-container,
+  [aria-labelledby='new-route-title'] [class*='route-plan'] {
+    flex: 1 1 auto;
+    min-height: 180px !important;
+    height: var(--operations-map-height) !important;
   }
 
-  [aria-labelledby='new-route-title'] h3 + p {
-    display: none !important;
-  }
-
-  [aria-labelledby='new-route-title'] [class*='builderSection'] {
-    padding: 8px 0 10px !important;
-    gap: 8px !important;
-    margin: 0 !important;
-  }
+  [aria-labelledby='new-route-title'] input,
+  [aria-labelledby='new-route-title'] select { min-height: 36px !important; }
 
   [aria-labelledby='new-route-title'] fieldset:first-of-type > div,
   [aria-labelledby='new-route-title'] fieldset:first-of-type [class*='segmented'] {
@@ -111,14 +86,12 @@
     justify-content: center !important;
     gap: 8px !important;
     min-height: 84px !important;
-    padding: 12px 8px 10px !important;
     border-radius: 14px !important;
     border: 2px solid #16B96B !important;
     background: #fff !important;
     color: #16B96B !important;
     font-size: 13px !important;
     font-weight: 800 !important;
-    box-shadow: none !important;
   }
 
   [aria-labelledby='new-route-title'] fieldset:first-of-type button::before {
@@ -134,34 +107,17 @@
     -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='M12 22V12'/></svg>");
     mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='M12 22V12'/></svg>");
   }
-
   [aria-labelledby='new-route-title'] fieldset:first-of-type button:nth-child(2)::before {
-    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2'/><path d='M15 18H9'/><path d='M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14'/><circle cx='17' cy='18' r='2'/><circle cx='7' cy='18' r='2'/></svg>");
-    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2'/><path d='M15 18H9'/><path d='M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14'/><circle cx='17' cy='18' r='2'/><circle cx='7' cy='18' r='2'/></svg>");
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2'/><circle cx='17' cy='18' r='2'/><circle cx='7' cy='18' r='2'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2'/><circle cx='17' cy='18' r='2'/><circle cx='7' cy='18' r='2'/></svg>");
   }
-
   [aria-labelledby='new-route-title'] fieldset:first-of-type button:nth-child(3)::before {
     -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M3 7v6h6'/><path d='M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.7 3L3 13'/></svg>");
     mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24'><path d='M3 7v6h6'/><path d='M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.7 3L3 13'/></svg>");
   }
-
   [aria-labelledby='new-route-title'] fieldset:first-of-type button[aria-pressed='true'] {
     background: #1667F2 !important;
     border-color: #1667F2 !important;
     color: #fff !important;
-  }
-
-  [aria-labelledby='new-route-title'] input,
-  [aria-labelledby='new-route-title'] select {
-    min-height: 36px !important;
-  }
-
-  [aria-labelledby='new-route-title'] [class*='builderFooter'] {
-    position: sticky !important;
-    bottom: 0 !important;
-    z-index: 4 !important;
-    margin-top: auto !important;
-    padding: 8px 0 2px !important;
-    background: linear-gradient(180deg, transparent, #fff 28%) !important;
   }
 }
