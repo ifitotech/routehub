@@ -10,6 +10,7 @@ import {getCurrentLocation} from '../../../lib/location'
 import {updateDrivingLocation} from '../../../lib/driving-session'
 import {registerPushNotifications} from '../../../lib/push-notifications'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
+import {settingsCopy} from '../../../lib/drv-settings-copy'
 import styles from '../driver-preferences.module.css'
 import confirmStyles from '../../../components/driver-v3/driver-v3.module.css'
 
@@ -21,6 +22,7 @@ const LANGS = [
 
 export default function DriverV3Settings() {
   const {locale, setLocale, t} = useLocale()
+  const copy = settingsCopy(locale)
   const {theme, setTheme} = useThemePreference()
   const {drivingSession, driverId, companyId, branchId, refresh} = useDriverData()
   const [dayBusy, setDayBusy] = useState(false)
@@ -72,14 +74,14 @@ export default function DriverV3Settings() {
     if (notifyBusy) return
     if (!wantOn) {
       setNotify('off')
-      setMessage(t.drvNotificationsOffHelp)
+      setMessage(copy.notificationsOffHelp)
       return
     }
     setNotifyBusy(true)
     try {
       await registerPushNotifications()
       setNotify('on')
-      setMessage(t.drvNotificationsOn)
+      setMessage(copy.notificationsOn)
     } catch (e) {
       setNotify(typeof Notification !== 'undefined' && Notification.permission === 'granted' ? 'on' : 'off')
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)
@@ -112,50 +114,50 @@ export default function DriverV3Settings() {
           </div>
           <div className={`${styles.choices} ${styles.twoChoices}`}>
             <button type="button" className={`${styles.choice} ${!dayOn ? styles.choiceSelected : ''}`} disabled={dayBusy} onClick={() => void toggleDay(false)}>
-              {t.drvOff}
+              {copy.off}
             </button>
             <button type="button" className={`${styles.choice} ${dayOn ? styles.choiceSelected : ''}`} disabled={dayBusy} onClick={() => void toggleDay(true)}>
-              {t.drvOn}
+              {copy.on}
             </button>
           </div>
           <div className={styles.row}>
             <span className={styles.rowIcon}><MapPin size={18} /></span>
             <span className={styles.rowCopy}>
-              <strong>{t.drvShareLocation}</strong>
+              <strong>{copy.shareLocation}</strong>
               <small>{t.drvConsentBody}</small>
             </span>
             <span className={styles.status} data-state={dayOn ? 'active' : 'inactive'}>
-              {dayOn ? t.drvActive : t.drvOff}
+              {dayOn ? t.drvActive : copy.off}
             </span>
           </div>
         </section>
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2>{t.drvAlerts}</h2>
-            <p>{t.drvNotificationsHelp}</p>
+            <h2>{copy.alerts}</h2>
+            <p>{copy.notificationsHelp}</p>
           </div>
           <div className={styles.row}>
             <span className={styles.rowIcon}><Bell size={18} /></span>
             <span className={styles.rowCopy}>
-              <strong>{t.drvDeviceNotifications}</strong>
+              <strong>{copy.deviceNotifications}</strong>
             </span>
           </div>
           <div className={`${styles.choices} ${styles.twoChoices}`}>
             <button type="button" className={`${styles.choice} ${notify === 'off' ? styles.choiceSelected : ''}`} disabled={notifyBusy} onClick={() => void toggleNotify(false)}>
-              {t.drvOff}
+              {copy.off}
             </button>
             <button type="button" className={`${styles.choice} ${notify === 'on' ? styles.choiceSelected : ''}`} disabled={notifyBusy} onClick={() => void toggleNotify(true)}>
-              {t.drvOn}
+              {copy.on}
             </button>
           </div>
         </section>
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2>{t.drvAppearance}</h2>
+            <h2>{copy.appearance}</h2>
           </div>
-          <div className={styles.choices} role="radiogroup" aria-label={t.drvAppearance}>
+          <div className={styles.choices} role="radiogroup" aria-label={copy.appearance}>
             {themes.map(({id, label, icon: Icon}) => (
               <button
                 key={id}
@@ -190,12 +192,12 @@ export default function DriverV3Settings() {
         <section className={styles.section}>
           <Link href="/terms" className={styles.row}>
             <span className={styles.rowIcon}><FileText size={18} /></span>
-            <span className={styles.rowCopy}><strong>{t.drvTerms}</strong></span>
+            <span className={styles.rowCopy}><strong>{copy.terms}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
           <Link href="/privacy" className={styles.row}>
             <span className={styles.rowIcon}><Shield size={18} /></span>
-            <span className={styles.rowCopy}><strong>{t.drvPrivacy}</strong></span>
+            <span className={styles.rowCopy}><strong>{copy.privacy}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
           <Link href="/settings/contact" className={styles.row}>
@@ -206,7 +208,7 @@ export default function DriverV3Settings() {
         </section>
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
-        <p className={styles.footer}>RouteHub Driver · {t.drvVersionLabel} {DRIVER_APP_VERSION}</p>
+        <p className={styles.footer}>RouteHub Driver · {copy.versionLabel} {DRIVER_APP_VERSION}</p>
       </div>
 
       {confirmEnd && (
