@@ -3,30 +3,41 @@
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
-    align-content: start !important;
     height: auto !important;
   }
   [aria-labelledby='new-route-title'] [class*='builderSection'] {
     flex: 0 0 auto !important;
     height: auto !important;
   }
-  [aria-labelledby='new-route-title'] [class*='routeTypeDriverRow'] {
-    align-items: start !important;
-    align-content: start !important;
-  }
   [aria-labelledby='new-route-title'] [class*='typeCards'] {
-    grid-auto-rows: min-content !important;
-    align-items: start !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
     height: auto !important;
   }
   [aria-labelledby='new-route-title'] [class*='typeCard'],
   [aria-labelledby='new-route-title'] [class*='typeCardActive'] {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    align-self: start !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    padding: 12px 8px 10px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    padding: 0 16px !important;
+    border-radius: 11px !important;
+    flex: 0 0 auto !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='typeCardDesc'] {
+    display: none !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='typeCardTitle'] {
+    font-size: 13px !important;
+    font-weight: 650 !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='typeCardIcon'] svg {
+    width: 16px !important;
+    height: 16px !important;
   }
 }
