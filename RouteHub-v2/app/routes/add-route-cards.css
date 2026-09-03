@@ -1,0 +1,32 @@
+@media (min-width: 1024px) {
+  [aria-labelledby='new-route-title'] [class*='formColumn'] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-content: start !important;
+    height: auto !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='builderSection'] {
+    flex: 0 0 auto !important;
+    height: auto !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='routeTypeDriverRow'] {
+    align-items: start !important;
+    align-content: start !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='typeCards'] {
+    grid-auto-rows: min-content !important;
+    align-items: start !important;
+    height: auto !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='typeCard'],
+  [aria-labelledby='new-route-title'] [class*='typeCardActive'] {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-self: start !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    padding: 12px 8px 10px !important;
+  }
+}
