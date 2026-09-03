@@ -195,12 +195,12 @@ export default function DriverV3Settings() {
             <span className={styles.rowCopy}><strong>{copy.terms}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
-          <Link href="/privacy" className={styles.row}>
+          <Link href="/driver/privacy" className={styles.row}>
             <span className={styles.rowIcon}><Shield size={18} /></span>
             <span className={styles.rowCopy}><strong>{copy.privacy}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
-          <Link href="/settings/contact" className={styles.row}>
+          <Link href="/driver/help" className={styles.row}>
             <span className={styles.rowIcon}><CircleHelp size={18} /></span>
             <span className={styles.rowCopy}><strong>{t.drvHelp}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
