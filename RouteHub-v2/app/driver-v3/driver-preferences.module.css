@@ -21,11 +21,11 @@
 .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:7px 11px 11px}
 .choice{min-height:50px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid #dde5ee;border-radius:11px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
 .choiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2;box-shadow:inset 0 0 0 1px #1667f2}
+.twoChoices{grid-template-columns:repeat(2,minmax(0,1fr))}
 .languageChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:7px 11px 11px}
 .languageChoice{min-height:40px;border:1px solid #dde5ee;border-radius:10px;background:#fff;color:#42526a;font:inherit;font-size:12px;font-weight:800}
 .languageChoiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2}
 .footer{margin:0;padding:2px 2px 0;color:#8a9ab0;font-size:11px;text-align:center}
-
 .page :global(.settings-card){margin:0!important;padding:12px 14px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
 .page :global(.settings-card + .settings-card){border-top:1px solid #edf1f5!important}
 .page :global(.settings-card h2){display:flex;align-items:center;gap:8px;margin:0;color:#0f1d35;font-size:15px}
@@ -33,7 +33,6 @@
 .page :global(.settings-card .primary){display:inline-flex!important;width:auto!important;max-width:100%;min-height:40px;margin-top:10px;padding:0 14px;font-size:13px}
 .page :global(.settings-card-heading){display:flex;align-items:center;justify-content:space-between;gap:8px}
 .page :global(.notification-settings-status){font-size:10px}
-
 .profileHero{padding:22px 16px 18px;text-align:center}
 .avatar{display:grid;place-items:center;width:74px;height:74px;margin:0 auto 13px;border-radius:50%;background:#1667f2;box-shadow:0 10px 24px rgba(22,103,242,.23);color:#fff;font-size:26px;font-weight:850}
 .profileHero h1{margin:0;color:#0f1d35;font-size:26px;line-height:1.14;letter-spacing:-.035em}
@@ -53,11 +52,9 @@
 .editActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
 .profileAccount{display:flex;align-items:center;gap:9px;padding:14px 15px;color:#0f1d35;font-size:14px;font-weight:800}
 .profileSignout{margin:0 15px 15px!important}
-
 :global(html[data-theme='dark']) .pageHeader h1,:global(html[data-theme='dark']) .sectionHeader h2,:global(html[data-theme='dark']) .row,:global(html[data-theme='dark']) .page :global(.settings-card h2),:global(html[data-theme='dark']) .profileHero h1,:global(html[data-theme='dark']) .profileSectionHeader h2,:global(html[data-theme='dark']) .infoRow,:global(html[data-theme='dark']) .profileAccount{color:#f4f7fb}
 :global(html[data-theme='dark']) .section,:global(html[data-theme='dark']) .profileSection,:global(html[data-theme='dark']) .page :global(.settings-card){background:#18263b!important;border-color:#31445f}
 :global(html[data-theme='dark']) .row,:global(html[data-theme='dark']) .infoRow,:global(html[data-theme='dark']) .page :global(.settings-card + .settings-card),:global(html[data-theme='dark']) .actionRow{border-color:#31445f}
 :global(html[data-theme='dark']) .choice,:global(html[data-theme='dark']) .languageChoice,:global(html[data-theme='dark']) .editForm input{background:#102036;color:#f4f7fb;border-color:#31445f}
 :global(html[data-theme='dark']) .choiceSelected,:global(html[data-theme='dark']) .languageChoiceSelected{background:#17345c;color:#9cc4ff;border-color:#6ea5ff}
-
 @media(max-width:360px){.choices,.languageChoices{gap:5px;padding-left:9px;padding-right:9px}.choice{font-size:11px}.languageChoice{font-size:11px}.row{padding-left:12px;padding-right:12px}.avatar{width:66px;height:66px}}
