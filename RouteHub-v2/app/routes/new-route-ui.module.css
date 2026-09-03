@@ -1,11 +1,13 @@
-.routeTypeDriverRow{display:grid;gap:14px;align-items:start}
-.typeCards{display:flex;flex-wrap:nowrap;gap:8px}
-.typeCard,.typeCardActive{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;height:44px;min-height:44px;padding:0 12px;border-radius:11px;border:1px solid #DCE3EE;background:#fff;cursor:pointer;color:#475569;white-space:nowrap}
+.routeTypeDriverRow{display:grid;gap:12px;align-items:start}
+.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;height:108px;min-height:108px;max-height:108px;padding:12px 8px 10px;border-radius:14px;border:1px solid #DCE3EE;background:#fff;cursor:pointer;color:#172033;text-align:center}
 .typeCard:hover{border-color:#A9B8F7}
-.typeCardActive{background:#F4F7FF;border:1.5px solid #7692F8;color:#3157E8}
-.typeCardIcon{display:inline-flex}
-.typeCardTitle{font-size:13px;font-weight:650;line-height:1;white-space:nowrap}
-.typeCardDesc{display:none}
+.typeCardActive{background:#F4F7FF;border:1.5px solid #4263EB;color:#3157E8}
+.typeCardIcon{display:inline-flex;margin-top:2px}
+.typeCardTitle{font-size:13px;font-weight:700;line-height:1.2}
+.typeCardDesc{display:block;font-size:11px;font-weight:500;color:#64748B;line-height:1.25}
+.typeCheck{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:99px;background:#4263EB;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+.driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 10px;border-radius:999px;background:#ECFDF3;color:#027A48;font-size:12px;font-weight:650}
 .detailsToggleLeft{display:inline-flex;align-items:center;gap:8px;font-weight:700}
 .detailsToggleSummary{display:inline-flex;align-items:center;gap:8px;margin-left:auto;margin-right:8px;color:#64748B;font-size:13px;font-weight:650}
-@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.6fr) minmax(220px,.8fr)}}
+@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.7fr) minmax(240px,.85fr)}}

@@ -2,7 +2,7 @@
   [aria-labelledby='new-route-title'] [class*='formColumn'] {
     display: flex !important;
     flex-direction: column !important;
-    gap: 14px !important;
+    gap: 12px !important;
     overflow: visible !important;
   }
   [aria-labelledby='new-route-title'] [class*='builderSection'] {
@@ -10,38 +10,49 @@
     height: auto !important;
     overflow: visible !important;
   }
+  [aria-labelledby='new-route-title'] [class*='routeTypeDriverRow'] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1.7fr) minmax(240px,.85fr) !important;
+    align-items: start !important;
+    gap: 12px !important;
+  }
   [aria-labelledby='new-route-title'] [class*='typeCards'] {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    width: 100% !important;
-    overflow: visible !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+    gap: 10px !important;
+    height: 108px !important;
   }
   [aria-labelledby='new-route-title'] [class*='typeCard'],
   [aria-labelledby='new-route-title'] [class*='typeCardActive'] {
-    display: inline-flex !important;
-    flex-direction: row !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    max-height: 44px !important;
-    padding: 0 12px !important;
-    border-radius: 11px !important;
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    width: 100% !important;
+    height: 108px !important;
+    min-height: 108px !important;
+    max-height: 108px !important;
+    padding: 12px 8px 10px !important;
+    border-radius: 14px !important;
+    white-space: normal !important;
   }
   [aria-labelledby='new-route-title'] [class*='typeCardDesc'] {
-    display: none !important;
+    display: block !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    color: #64748B !important;
+    font-weight: 500 !important;
+    text-align: center !important;
   }
   [aria-labelledby='new-route-title'] [class*='typeCardTitle'] {
     font-size: 13px !important;
-    font-weight: 650 !important;
+    font-weight: 700 !important;
     white-space: nowrap !important;
   }
   [aria-labelledby='new-route-title'] [class*='typeCardIcon'] svg {
-    width: 16px !important;
-    height: 16px !important;
+    width: 22px !important;
+    height: 22px !important;
   }
 }
