@@ -1,0 +1,12 @@
+.routeTypeDriverRow{display:grid;gap:14px}
+.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.typeCard,.typeCardActive{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:108px;padding:14px 14px 16px;border-radius:14px;border:1px solid #DCE3EE;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.03);text-align:left;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease;color:#172033}
+.typeCard:hover{transform:translateY(-1px);border-color:#A9B8F7;box-shadow:0 4px 12px rgba(15,23,42,.07)}
+.typeCardActive{background:linear-gradient(180deg,#F8FAFF 0%,#F1F5FF 100%);border:1.5px solid #4263EB;box-shadow:0 0 0 3px rgba(66,99,235,.08),0 4px 12px rgba(66,99,235,.08);color:#3157E8}
+.typeCardIcon{display:inline-flex;color:inherit}
+.typeCardTitle{font-size:14px;font-weight:700;line-height:1.2}
+.typeCardDesc{font-size:12px;font-weight:500;color:#64748B;line-height:1.35}
+.detailsToggleLeft{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.detailsToggleSummary{display:inline-flex;align-items:center;gap:8px;margin-left:auto;margin-right:8px;color:#64748B;font-size:13px;font-weight:650}
+@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.55fr) minmax(220px,.85fr);align-items:start}}
+@media(max-width:720px){.typeCards{grid-template-columns:1fr}.typeCard,.typeCardActive{min-height:84px}}
