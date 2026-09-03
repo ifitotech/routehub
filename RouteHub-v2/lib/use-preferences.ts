@@ -3,19 +3,16 @@
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {getLocale, isLocale, translations, type Locale} from './i18n'
 
-// Older dictionary entries were saved with a UTF-8/Latin-1 mismatch. Repair
-// them at the presentation boundary so every screen (including cached PWAs)
-// renders real accents without changing the stored language preference.
 function repairMojibake(value: string): string {
   return value
     .replaceAll('ÃƒÂ', 'Ã')
-    .replaceAll('Ãƒâ€°', 'É')
-    .replaceAll('ÃƒÂ©', 'é')
-    .replaceAll('ÃƒÂ¡', 'á')
-    .replaceAll('ÃƒÂ­', 'í')
-    .replaceAll('ÃƒÂ³', 'ó')
-    .replaceAll('ÃƒÂº', 'ú')
-    .replaceAll('ÃƒÂ±', 'ñ')
+    .replaceAll('Ãƒâ€‰', 'É')
+    .replaceAll('ÃƒÂé', 'é')
+    .replaceAll('ÃƒÂá', 'á')
+    .replaceAll('ÃƒÂí', 'í')
+    .replaceAll('ÃƒÂó', 'ó')
+    .replaceAll('ÃƒÂú', 'ú')
+    .replaceAll('ÃƒÂñ', 'ñ')
     .replaceAll('Ã¡', 'á').replaceAll('Ã©', 'é').replaceAll('Ã­', 'í')
     .replaceAll('Ã³', 'ó').replaceAll('Ãº', 'ú').replaceAll('Ã±', 'ñ')
     .replaceAll('Ã‰', 'É').replaceAll('Ãš', 'Ú').replaceAll('Ã‘', 'Ñ')
@@ -55,9 +52,9 @@ export function setLocalePreference(locale: Locale) {
 }
 
 export function themePreference(): ThemePreference {
-  if (typeof window === 'undefined') return 'light'
+  if (typeof window === 'undefined') return 'dark'
   const saved = window.localStorage.getItem('routehub_theme')
-  return saved === 'dark' || saved === 'system' || saved === 'light' ? saved : 'light'
+  return saved === 'dark' || saved === 'system' || saved === 'light' ? saved : 'dark'
 }
 
 export function resolvedTheme(preference: ThemePreference): 'light' | 'dark' {
@@ -67,7 +64,7 @@ export function resolvedTheme(preference: ThemePreference): 'light' | 'dark' {
   return preference
 }
 
-export function applyThemePreference(preference: ThemePreference = 'light') {
+export function applyThemePreference(preference: ThemePreference = 'dark') {
   window.localStorage.setItem('routehub_theme', preference)
   window.localStorage.removeItem('rh2-theme')
   const resolved = resolvedTheme(preference)
@@ -101,15 +98,12 @@ export function useLocale() {
     if (isLocale(value)) setLocalePreference(value)
   }, [])
 
-  // Keep translated labels referentially stable. Screens use the dictionary
-  // in data-loading callback dependencies; recreating it on every render can
-  // restart those effects indefinitely and leave a page stuck loading.
   const dictionary = useMemo(() => repairedDictionary(locale), [locale])
   return {locale, t: dictionary, setLocale: changeLocale}
 }
 
 export function useThemePreference() {
-  const [theme, setTheme] = useState<ThemePreference>('light')
+  const [theme, setTheme] = useState<ThemePreference>('dark')
 
   useEffect(() => {
     const sync = () => {
