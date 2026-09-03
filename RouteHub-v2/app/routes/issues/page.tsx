@@ -73,8 +73,8 @@ export default function IssueRoutes() {
         <p><Link href="/routes/manage">{copy.back}</Link></p>
         <h1>{copy.title}</h1>
         <p>{copy.help}</p>
-        {error && <p role="status">{error}</p>
-        {!rows.length && !error && <p>{copy.empty}</p>}
+        {error ? <p role="status">{error}</p> : null}
+        {!rows.length && !error ? <p>{copy.empty}</p> : null}
         <div style={{display: 'grid', gap: 10, marginTop: 16}}>
           {rows.map(route => (
             <IssueReschedule
