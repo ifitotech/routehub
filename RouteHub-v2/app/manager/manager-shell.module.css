@@ -284,18 +284,18 @@
   .mobileNav {
     position: fixed;
     z-index: 20;
-    left: 12px;
-    right: 12px;
-    bottom: env(safe-area-inset-bottom);
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     align-items: end;
-    gap: 4px;
-    min-height: 72px;
-    padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+    gap: 2px;
+    min-height: 64px;
+    padding: 6px 6px 8px;
     border: 1px solid var(--rh-border);
-    border-radius: 22px;
-    background: rgb(255 255 255 / 94%);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--rh-card) 88%, transparent);
     box-shadow: 0 12px 30px rgb(15 29 53 / 16%);
     backdrop-filter: blur(16px);
   }
@@ -322,4 +322,30 @@
   .profile {
     transition: none;
   }
+}
+
+:global(html[data-theme='dark']) .shell {
+  --rh-page-bg: #0b1628;
+  --rh-card: #18263b;
+  --rh-text: #f4f7fb;
+  --rh-muted: #9aabc0;
+  --rh-soft-blue: #17345c;
+  --rh-success-soft: #123528;
+  --rh-warning-soft: #3a2c12;
+  --rh-error-soft: #3a2027;
+  --rh-border: #31445f;
+  --rh-divider: #2a3d56;
+}
+:global(html[data-theme='dark']) .sidebar {
+  background: #102036;
+}
+:global(html[data-theme='dark']) .nav a:hover {
+  background: #17345c;
+}
+:global(html[data-theme='dark']) .profile:hover {
+  background: #17345c;
+}
+:global(html[data-theme='dark']) .avatar {
+  background: #17345c;
+  color: #9cc4ff;
 }
