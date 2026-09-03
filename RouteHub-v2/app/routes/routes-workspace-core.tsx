@@ -89,8 +89,9 @@ export function useRoutesCore() {
 
       const availableBranches = (branchResult.data || []) as Branch[]
       const defaultBranch = availableBranches.find(branch => branch.id === membership.branch_id) || availableBranches[0]
-      const profileById = new Map((profileResult.data || []).map((profile: {id: string}) => [profile.id, profile]))
-      const availableDrivers = ((driverResult.data || []) as Driver[]).map(driver => ({...driver, users: profileById.get(driver.user_id) || driver.users})).sort((a,b) => Number(b.user_id === defaultBranch?.primary_driver_id) - Number(a.user_id === defaultBranch?.primary_driver_id) || Number(b.role === 'driver') - Number(a.role === 'driver'))
+      const profileById = new Map((profileResult.data || []).map((profile: {id: string; name?: string | null; email?: string | null}) => [profile.id, profile]))
+      const availableDrivers = ((driverResult.data || []) as Driver[]).map(driver => ({...driver, users: profileById.get(driver.user_id) || driver.users})) as Driver[]
+      availableDrivers.sort((a,b) => Number(b.user_id === defaultBranch?.primary_driver_id) - Number(a.user_id === defaultBranch?.primary_driver_id) || Number(b.role === 'driver') - Number(a.role === 'driver'))
       const preferredDriver = chooseDefaultAssignee(availableDrivers, defaultBranch?.primary_driver_id)
       setContacts((contactResult.data || []) as Contact[])
       setDrivers(availableDrivers)
