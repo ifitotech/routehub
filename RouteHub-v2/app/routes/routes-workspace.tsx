@@ -1,36 +1,22 @@
 'use client'
 
-import Link from 'next/link'
-import {ArrowRight, CalendarDays, ChevronRight, CircleDot, MapPin, PackageCheck, UserRound} from 'lucide-react'
-import {getSupabase} from '../../lib/supabase'
-import {sanitizeCoordinate} from '../../lib/maps/coordinates'
-import {geocodeAddress} from '../../lib/maps/geocoding'
-import {recordActivity} from '../../lib/activity'
-import {sendRoutePush} from '../../lib/route-push'
 import {chooseDefaultAssignee} from '../../lib/route-assignment'
-import styles from './routes.module.css'
-import {useRoutesCore} from './routes-workspace-core'
-import type {Contact, FormState, RouteRecord} from './routes-model'
-import {driverDetails, initialForm, routeDate, routeStatuses, routeTime, savedCoordinate, statusLabel, typeLabel} from './routes-model'
+import {getSupabase} from '../../lib/supabase'
+import type {Contact, FormState} from './routes-model'
+import {initialForm} from './routes-model'
+import {useRoutesDerived} from './routes-workspace-derived'
+import {useRoutesSave} from './routes-workspace-save'
 
 export function useRoutesWorkspace() {
-  const core = useRoutesCore()
+  const derived = useRoutesDerived()
   const {
-    locale, t, c, form, setForm, contacts, setContacts, companyId, currentUserId, branchId,
-    message, setMessage, saving, setSaving, open, setOpen, detailsOpen, setDetailsOpen,
-    justCreated, setJustCreated, originMode, setOriginMode, insertBeforeId, setInsertBeforeId,
-    previewOpen, setPreviewOpen, selectedDestinationLocation, setSelectedDestinationLocation,
-    pendingLocation, setPendingLocation, saveContactOpen, setSaveContactOpen, newContactName,
-    setNewContactName, savingContact, setSavingContact, contactSaveMessage, setContactSaveMessage,
-    defaultBranch, todayValue, oc, selectedContact, destinationSuggestions, searchContext,
-    selectDestinationContact, selectExternalDestination, updateDestination, useConfirmedDestination,
-    setOriginSource, loadWorkspace, scheduledTodayRoutes, upcomingRoutes, completedTodayRoutes,
-    issueTodayRoutes, planningMapRoutes, todayRoutes, inProgressRoutes, priorityRoutes,
-    drivers, branches, routes, setRoutes, loading, searchParams,
-    originBranchCoordinate, previousDestinationCoordinate, originContactCoordinate,
-    selectedDriverGps, returnBranchCoordinate, returnBranch, originBranch, previousRoute,
-    driverIndex, routeSort,
-  } = core
+    searchParams, form, setForm, drivers, defaultBranch, routes, setOriginMode,
+    setMessage, setDetailsOpen, setJustCreated, setSelectedDestinationLocation,
+    setPendingLocation, setSaveContactOpen, setNewContactName, setContactSaveMessage,
+    setInsertBeforeId, setOpen, contacts, setContacts, companyId, branchId,
+    selectedDestinationLocation, newContactName, savingContact, setSavingContact,
+    c,
+  } = derived
 
   const saveDestinationAsContact = async () => {
     const address = (selectedDestinationLocation?.formattedAddress || form.destination).trim()
@@ -95,9 +81,6 @@ export function useRoutesWorkspace() {
     setOpen(true)
   }
 
-  return {
-    ...core,
-    saveDestinationAsContact,
-    openBuilder,
-  }
+  const {save, renderRouteCards} = useRoutesSave(derived)
+  return {...derived, saveDestinationAsContact, openBuilder, save, renderRouteCards, loadError: derived.message}
 }
