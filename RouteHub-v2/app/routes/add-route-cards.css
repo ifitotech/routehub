@@ -1,70 +1,25 @@
 @media (min-width: 1024px) {
-  [aria-labelledby='new-route-title'] [class*='routeTypeDriverRow'] {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1.65fr) minmax(250px, .9fr) !important;
-    align-items: start !important;
-    gap: 14px !important;
-  }
   [aria-labelledby='new-route-title'] [class*='typeCards'] {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    margin-top: 9px !important;
-    height: 92px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    height: auto !important;
   }
   [aria-labelledby='new-route-title'] [class*='typeCard'],
   [aria-labelledby='new-route-title'] [class*='typeCardActive'] {
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 0 !important;
-    width: 100% !important;
-    height: 92px !important;
-    min-height: 92px !important;
-    max-height: 92px !important;
-    padding: 9px 8px !important;
-    border-radius: 12px !important;
-    white-space: normal !important;
-    overflow: hidden !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='typeCard'] {
-    background: #FFFFFF !important;
-    border: 1px solid #DCE3EE !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='typeCardActive'] {
-    background: linear-gradient(180deg, #F9FAFF, #F2F5FF) !important;
-    border: 1.5px solid #4263EB !important;
-    box-shadow: 0 0 0 2px rgba(66, 99, 235, 0.08) !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='typeCardDesc'] {
-    display: block !important;
-    font-size: 11px !important;
-    line-height: 14px !important;
-    margin-top: 2px !important;
-    color: #64748B !important;
-    font-weight: 500 !important;
-    text-align: center !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='typeCardTitle'] {
-    font-size: 13px !important;
-    line-height: 17px !important;
-    font-weight: 700 !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 12px !important;
+    border-radius: 9px !important;
     white-space: nowrap !important;
   }
-  [aria-labelledby='new-route-title'] [class*='typeCardIcon'] {
-    margin-bottom: 5px !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='typeCardIcon'] svg {
-    width: 24px !important;
-    height: 24px !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='driverAvail'] {
-    height: 26px !important;
-    margin-top: 8px !important;
-    padding: 0 10px !important;
-    font-size: 11.5px !important;
-    border-radius: 7px !important;
-  }
+  [aria-labelledby='new-route-title'] [class*='typeCardDesc'] { display: none !important; }
+  [aria-labelledby='new-route-title'] [class*='typeCardTitle'] { font-size: 12px !important; }
+  [aria-labelledby='new-route-title'] [class*='typeCardIcon'] svg { width: 15px !important; height: 15px !important; }
 }
