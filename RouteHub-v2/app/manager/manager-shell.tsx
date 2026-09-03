@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {ChevronDown, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Settings, Truck, Users} from 'lucide-react'
-import {useLocale} from '../../lib/use-preferences'
+import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import styles from './manager-shell.module.css'
 
 type ManagerSection = 'today' | 'routes' | 'map' | 'truck' | 'contacts' | 'history' | 'reports' | 'settings'
@@ -18,6 +18,7 @@ type ManagerShellProps = {
 
 export default function ManagerShell({children, active = 'today', branchName, displayName, roleLabel}: ManagerShellProps) {
   const {locale, t} = useLocale()
+  useThemePreference()
   const copy = locale === 'es'
     ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
@@ -50,7 +51,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
       <div className={styles.workspaceMeta}><span>{copy.workspace}</span><strong>{branchName || t.mainBranch}</strong></div>
       <Link href="/manager/more" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
     </aside>
-    <section className={styles.content}><div className={styles.workspace}>{children}</div></section>
+    <section className={styles.content}>{children}</section>
     <nav className={styles.mobileNav} aria-label="Mobile manager navigation">
       <Link href="/manager" data-active={active === 'today' ? 'true' : 'false'}><Home size={18}/><span>{copy.today}</span></Link>
       <Link href="/routes" data-active={active === 'routes' ? 'true' : 'false'}><RouteIcon size={18}/><span>{t.routes}</span></Link>

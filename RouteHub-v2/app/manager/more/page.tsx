@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import {ChevronRight, FileText, Send, Settings, Users} from 'lucide-react'
 import {useLocale} from '../../../lib/use-preferences'
-import styles from './more.module.css'
 import ManagerShell from '../manager-shell'
+import styles from './more.module.css'
 
 const copy = {
   en: {eyebrow: 'WORKSPACE', title: 'More', subtitle: 'Team, branch tools and account settings.', team: 'Team', teamHelp: 'Invite members and manage roles.', branches: 'Branches', branchesHelp: 'Manage branch locations and details.', invitations: 'Invitations', invitationsHelp: 'Review sent invitations.', reports: 'Reports', reportsHelp: 'Review route activity and delivery history.', settings: 'Settings', settingsHelp: 'Profile, language, theme and support.'},
@@ -21,18 +21,24 @@ export default function ManagerMorePage() {
     {href: '/reports', label: c.reports, help: c.reportsHelp, Icon: FileText},
     {href: '/settings', label: c.settings, help: c.settingsHelp, Icon: Settings},
   ]
-  return <ManagerShell active="settings"><div className={styles.page}>
-    <header className={styles.header}>
-      <p>{c.eyebrow}</p>
-      <h1>{c.title}</h1>
-      <span>{c.subtitle}</span>
-    </header>
-    <section className={styles.list} aria-label={c.title}>
-      {links.map(({href, label, help, Icon}) => <Link key={href} href={href} className={styles.item}>
-        <span className={styles.icon}><Icon size={21} aria-hidden="true" /></span>
-        <span className={styles.copy}><strong>{label}</strong><small>{help}</small></span>
-        <ChevronRight size={21} aria-hidden="true" />
-      </Link>)}
-    </section>
-  </div></ManagerShell>
+  return (
+    <ManagerShell active="settings" roleLabel={c.settings}>
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <p>{c.eyebrow}</p>
+          <h1>{c.title}</h1>
+          <span>{c.subtitle}</span>
+        </header>
+        <section className={styles.list} aria-label={c.title}>
+          {links.map(({href, label, help, Icon}) => (
+            <Link key={href} href={href} className={styles.item}>
+              <span className={styles.icon}><Icon size={21} aria-hidden="true" /></span>
+              <span className={styles.copy}><strong>{label}</strong><small>{help}</small></span>
+              <ChevronRight size={21} aria-hidden="true" />
+            </Link>
+          ))}
+        </section>
+      </div>
+    </ManagerShell>
+  )
 }
