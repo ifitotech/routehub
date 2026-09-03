@@ -1,12 +1,12 @@
-.routeTypeDriverRow{display:grid;gap:12px;align-items:start}
-.typeCards{display:flex;flex-wrap:nowrap;gap:8px}
-.typeCard,.typeCardActive{display:inline-flex;flex-direction:row;align-items:center;gap:6px;height:36px;min-height:36px;padding:0 12px;border-radius:9px;border:1px solid #DCE3EE;background:#fff;cursor:pointer;color:#475569;white-space:nowrap}
-.typeCardActive{background:#F4F7FF;border:1.5px solid #7692F8;color:#3157E8}
-.typeCardIcon{display:inline-flex}
-.typeCardTitle{font-size:12px;font-weight:650}
-.typeCardDesc{display:none}
-.typeCheck{display:none}
-.driverAvail{display:inline-flex;margin-top:6px;height:22px;padding:0 8px;border-radius:7px;background:#ECFDF3;color:#18A566;font-size:11px}
-.detailsToggleLeft{display:inline-flex;align-items:center;gap:8px;font-weight:700}
-.detailsToggleSummary{display:inline-flex;align-items:center;gap:8px;margin-left:auto;color:#64748B;font-size:12px}
-@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.6fr) minmax(220px,.8fr)}}
+.routeTypeDriverRow{display:grid;gap:14px;align-items:start}
+.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:9px}
+.typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:92px;min-height:92px;max-height:92px;padding:9px 8px;border-radius:12px;border:1px solid #DCE3EE;background:#fff;cursor:pointer;color:#172033;text-align:center;overflow:hidden}
+.typeCardActive{background:linear-gradient(180deg,#F9FAFF,#F2F5FF);border:1.5px solid #4263EB;box-shadow:0 0 0 2px rgba(66,99,235,.08);color:#3157E8}
+.typeCardIcon{display:inline-flex;margin-bottom:5px}
+.typeCardTitle{font-size:13px;font-weight:700;line-height:17px}
+.typeCardDesc{display:block;font-size:11px;font-weight:500;color:#64748B;line-height:14px;margin-top:2px}
+.typeCheck{position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:99px;background:#4263EB;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px}
+.driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:26px;padding:0 10px;border-radius:7px;background:#ECFDF3;color:#18A566;font-size:11.5px;font-weight:650}
+.detailsToggleLeft{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:13px}
+.detailsToggleSummary{display:inline-flex;align-items:center;gap:8px;margin-left:auto;margin-right:8px;color:#64748B;font-size:11.5px}
+@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.65fr) minmax(250px,.9fr)}}

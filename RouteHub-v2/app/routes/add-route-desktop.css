@@ -3,89 +3,136 @@
   inset: 0 !important;
   display: grid !important;
   place-items: center !important;
-  padding: 16px !important;
+  padding: 12px 20px !important;
   background: rgba(15, 23, 42, 0.28) !important;
+  overflow: hidden !important;
 }
 @media (min-width: 1024px) {
   [aria-labelledby='new-route-title'] {
-    width: 1040px !important;
-    height: 640px !important;
-    max-width: calc(100vw - 48px) !important;
-    max-height: calc(100dvh - 32px) !important;
+    width: 1220px !important;
+    height: 740px !important;
+    max-width: calc(100vw - 40px) !important;
+    max-height: calc(100dvh - 24px) !important;
     display: grid !important;
-    grid-template-rows: 58px minmax(0, 1fr) !important;
+    grid-template-rows: 70px minmax(0, 1fr) !important;
     overflow: hidden !important;
     margin: 0 !important;
     border: 1px solid #E3E8F0 !important;
     border-radius: 16px !important;
-    background: #fff !important;
+    background: #FFFFFF !important;
     box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18) !important;
-    --operations-map-height: 240px;
+    --operations-map-height: 290px;
   }
   [aria-labelledby='new-route-title'] > div:first-child {
-    height: 58px !important;
-    min-height: 58px !important;
-    max-height: 58px !important;
-    padding: 8px 16px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+    height: 70px !important;
+    min-height: 70px !important;
+    max-height: 70px !important;
+    padding: 12px 18px 12px 20px !important;
+    border-bottom: 1px solid #E7EBF2 !important;
+    background: #FFFFFF !important;
   }
-  [aria-labelledby='new-route-title'] h2 { font-size: 20px !important; line-height: 24px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] h2 {
+    font-size: 24px !important;
+    line-height: 28px !important;
+    font-weight: 750 !important;
+    color: #111827 !important;
+    margin: 0 !important;
+  }
   [aria-labelledby='new-route-title'] [class*='eyebrow'] {
-    height: 20px !important; font-size: 10px !important; padding: 0 8px !important; margin: 0 0 2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 24px !important;
+    margin: 0 0 2px !important;
+    padding: 0 9px !important;
+    border-radius: 6px !important;
+    background: #EEF2FF !important;
+    color: #3157E8 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
   }
-  [aria-labelledby='new-route-title'] [class*='builderSubtitle'] { font-size: 12px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] [class*='builderSubtitle'] {
+    margin: 2px 0 0 !important;
+    font-size: 12.5px !important;
+    line-height: 17px !important;
+    color: #64748B !important;
+  }
   [aria-labelledby='new-route-title'] [class*='closeButton'] {
-    width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 10px !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 12px !important;
   }
   [aria-labelledby='new-route-title'] > div:last-child {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 320px !important;
-    gap: 12px !important;
-    padding: 12px !important;
+    grid-template-columns: minmax(0, 1fr) 380px !important;
+    gap: 14px !important;
     min-height: 0 !important;
+    padding: 14px 16px 16px !important;
     overflow: hidden !important;
     background: #F8FAFC !important;
   }
   [aria-labelledby='new-route-title'] > div:last-child > button { display: none !important; }
   [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(2) {
-    grid-column: 2; grid-row: 1; min-height: 0; overflow: hidden;
+    grid-column: 2; grid-row: 1; width: 380px; min-width: 0; min-height: 0; overflow: hidden;
   }
   [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3),
   [aria-labelledby='new-route-title'] [class*='formColumn'] {
     grid-column: 1; grid-row: 1; min-height: 0; overflow-y: auto;
-    display: flex !important; flex-direction: column !important; gap: 8px !important;
+    display: flex !important; flex-direction: column !important; gap: 10px !important;
     padding: 0 !important; background: transparent !important; border: 0 !important;
   }
+  [aria-labelledby='new-route-title'] [class*='previewSummary'] { display: none !important; }
+  [aria-labelledby='new-route-title'] [class*='previewCard'] {
+    height: 100% !important; min-height: 0 !important;
+    display: flex !important; flex-direction: column !important; overflow: hidden !important;
+    border: 1px solid #E5EAF2 !important; border-radius: 14px !important; background: #FFFFFF !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='previewCardHeader'] {
+    height: 42px !important; min-height: 42px !important; padding: 0 12px !important;
+  }
   [aria-labelledby='new-route-title'] [class*='builderSection'] {
-    padding: 10px 12px !important; gap: 8px !important; flex: 0 0 auto !important;
-    border: 1px solid #E5EAF2 !important; border-radius: 12px !important; background: #fff !important;
+    padding: 12px 14px !important; gap: 8px !important; flex: 0 0 auto !important;
+    border: 1px solid #E5EAF2 !important; border-radius: 14px !important; background: #FFFFFF !important;
   }
   [aria-labelledby='new-route-title'] [class*='sectionNumber'] {
-    width: 22px !important; height: 22px !important; font-size: 11px !important; border-radius: 6px !important;
+    width: 24px !important; height: 24px !important; font-size: 12px !important; border-radius: 7px !important;
   }
-  [aria-labelledby='new-route-title'] h3 { font-size: 13px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] h3 { font-size: 13.5px !important; margin: 0 !important; }
   [aria-labelledby='new-route-title'] h3 + p { display: none !important; }
   [aria-labelledby='new-route-title'] input,
   [aria-labelledby='new-route-title'] select {
-    height: 40px !important; min-height: 40px !important; border-radius: 10px !important; font-size: 13px !important;
+    height: 44px !important; min-height: 44px !important; border-radius: 10px !important; font-size: 12.5px !important;
   }
+  [aria-labelledby='new-route-title'] [class*='segmented'] { display: flex !important; flex-wrap: wrap !important; gap: 7px !important; }
   [aria-labelledby='new-route-title'] [class*='segmented'] button {
-    height: 36px !important; min-height: 36px !important; padding: 0 12px !important; border-radius: 9px !important; font-size: 12px !important;
+    height: 38px !important; min-height: 38px !important; padding: 0 13px !important; border-radius: 9px !important; font-size: 12px !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='segmented'] button[aria-pressed='true'],
+  [aria-labelledby='new-route-title'] [class*='segmentActive'] {
+    background: #F3F6FF !important; border: 1.5px solid #7892F7 !important; color: #3157E8 !important;
   }
   [aria-labelledby='new-route-title'] [class*='detailsToggle'] {
-    height: 48px !important; min-height: 48px !important; max-height: 48px !important; padding: 6px 10px !important;
+    height: 58px !important; min-height: 58px !important; max-height: 58px !important; padding: 8px 12px !important;
   }
   [aria-labelledby='new-route-title'] [class*='builderFooter'] {
-    display: flex !important; gap: 8px !important; height: 52px !important; padding-top: 4px !important;
+    position: sticky !important; bottom: 0 !important; display: flex !important; gap: 10px !important;
+    height: 62px !important; padding: 6px 0 0 !important;
   }
-  [aria-labelledby='new-route-title'] [class*='builderFooter'] [class*='secondaryButton'],
+  [aria-labelledby='new-route-title'] [class*='builderFooter'] [class*='secondaryButton'] {
+    width: 38% !important; height: 50px !important; min-height: 50px !important; border-radius: 11px !important;
+  }
   [aria-labelledby='new-route-title'] [class*='builderFooter'] [class*='publishButton'] {
-    height: 44px !important; min-height: 44px !important; border-radius: 10px !important;
+    flex: 1 !important; height: 50px !important; min-height: 50px !important; border-radius: 11px !important;
+    background: linear-gradient(135deg, #4165F5, #3157E8) !important; color: #fff !important;
+    box-shadow: 0 5px 14px rgba(49, 87, 232, 0.20) !important;
   }
-  [aria-labelledby='new-route-title'] [class*='previewSummary'] { display: none !important; }
   [aria-labelledby='new-route-title'] .leaflet-container {
-    height: 240px !important; min-height: 240px !important; max-height: 240px !important;
+    height: 290px !important; min-height: 290px !important; max-height: 290px !important; flex: none !important;
   }
+}
+@media (min-width: 1024px) and (max-width: 1100px) {
+  [aria-labelledby='new-route-title'] > div:last-child { grid-template-columns: minmax(0, 1fr) 340px !important; }
 }
