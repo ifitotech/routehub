@@ -1,0 +1,9 @@
+html[data-theme='dark'] .driver-v3-root [class*='hero'],
+html[data-theme='dark'] .driver-v3-root [class*='Card'],
+html[data-theme='dark'] .driver-v3-root [class*='card'],
+html[data-theme='dark'] .driver-v3-root [class*='section'],
+html[data-theme='dark'] .driver-v3-root [class*='state'] {
+  background: #18263b;
+  border-color: #31445f;
+  color: #f4f7fb;
+}
