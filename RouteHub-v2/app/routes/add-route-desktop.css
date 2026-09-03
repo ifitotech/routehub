@@ -1,4 +1,4 @@
-/* Add Route desktop: form left, map right, schedule under map. No type-card buttons. */
+/* Desktop Add Route: keep Assignment / Schedule / Locations, fit one screen. */
 @media (min-width: 1024px) {
   [aria-labelledby='new-route-title'] {
     width: min(1080px, calc(100vw - 28px)) !important;
@@ -9,72 +9,175 @@
     overflow: hidden !important;
     border-radius: 16px !important;
     background: #fff !important;
-    --operations-map-height: min(38vh, 320px);
+    box-shadow: 0 18px 48px rgb(15 29 53 / 20%) !important;
+    --operations-map-height: calc(100dvh - 132px);
   }
 
   [aria-labelledby='new-route-title'] > div:first-child {
     display: flex !important;
     align-items: center !important;
+    min-height: 52px !important;
     height: 52px !important;
     padding: 6px 16px !important;
     border-bottom: 1px solid #e7edf4;
   }
 
-  [aria-labelledby='new-route-title'] h2 { font-size: 17px !important; margin: 0 !important; }
-  [aria-labelledby='new-route-title'] > div:first-child p:last-of-type { display: none !important; }
+  [aria-labelledby='new-route-title'] h2 {
+    font-size: 17px !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+  }
+
+  [aria-labelledby='new-route-title'] > div:first-child p:last-of-type {
+    display: none !important;
+  }
 
   [aria-labelledby='new-route-title'] > div:last-child {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 380px) !important;
-    grid-template-rows: minmax(0, 1fr) auto auto !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 360px) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    align-items: stretch !important;
     gap: 10px !important;
     min-height: 0 !important;
-    padding: 8px 12px !important;
+    padding: 8px 12px 8px !important;
     overflow: hidden !important;
   }
 
-  [aria-labelledby='new-route-title'] > div:last-child > button { display: none !important; }
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) { display: contents !important; }
+  [aria-labelledby='new-route-title'] > div:last-child > button {
+    display: none !important;
+  }
+
   [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(2) {
-    grid-column: 2; grid-row: 1; min-height: 0; overflow: hidden;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+    overflow: hidden;
   }
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-of-type(1) {
-    grid-column: 1; grid-row: 1; min-height: 0; overflow: auto; background: #fff;
-  }
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-of-type(2) {
-    grid-column: 2; grid-row: 2; background: #fff;
-  }
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-of-type(3) {
-    grid-column: 1; grid-row: 2; min-height: 0; overflow: auto; background: #fff;
-  }
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > section:nth-of-type(4),
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) > [class*='builderFooter'] {
-    grid-column: 1; grid-row: 3; background: #fff;
+
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 8px;
   }
 
   [aria-label='Assignment summary'],
   [aria-label='Resumen de asignación'],
-  [aria-label='Résumé de l’affectation'],
-  [aria-labelledby='new-route-title'] [class*='previewSummary'] { display: none !important; }
+  [aria-label='Résumé de l’affectation'] {
+    display: none !important;
+  }
 
   [aria-label='Route preview'],
   [aria-label='Vista previa de la ruta'],
   [aria-label='Aperçu de l’itinéraire'] {
-    height: 100% !important; min-height: 0 !important;
-    display: flex !important; flex-direction: column !important;
-    overflow: hidden !important; border-radius: 14px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border-radius: 14px !important;
   }
 
-  [aria-labelledby='new-route-title'] h3 { font-size: 13px !important; margin: 0 !important; }
-  [aria-labelledby='new-route-title'] h3 + p { display: none !important; }
-  [aria-labelledby='new-route-title'] [class*='builderSection'] { padding: 8px 0 10px !important; gap: 8px !important; margin: 0 !important; }
-  [aria-labelledby='new-route-title'] input,
-  [aria-labelledby='new-route-title'] select { min-height: 36px !important; }
+  [aria-label='Route preview'] > div:first-child,
+  [aria-label='Vista previa de la ruta'] > div:first-child,
+  [aria-label='Aperçu de l’itinéraire'] > div:first-child {
+    padding: 8px 10px 6px !important;
+  }
+
+  [aria-labelledby='new-route-title'] h3 {
+    font-size: 13px !important;
+    margin: 0 !important;
+  }
+
+  [aria-labelledby='new-route-title'] h3 + p {
+    display: none !important;
+  }
+
+  [aria-labelledby='new-route-title'] [class*='builderSection'] {
+    padding: 8px 0 10px !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+
+  [aria-labelledby='new-route-title'] [class*='builderSectionHeader'] {
+    margin-bottom: 2px !important;
+    gap: 8px !important;
+  }
+
+  [aria-labelledby='new-route-title'] [class*='sectionNumber'] {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 11px !important;
+  }
+
+  [aria-labelledby='new-route-title'] [class*='field'] {
+    gap: 4px !important;
+  }
+
+  [aria-labelledby='new-route-title'] [class*='field'] > span {
+    font-size: 11px !important;
+  }
+
+  [aria-labelledby='new-route-title'] fieldset {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 6px !important;
+  }
+
   [aria-labelledby='new-route-title'] .leaflet-container,
   [aria-labelledby='new-route-title'] [class*='route-plan'] {
-    flex: 1 1 auto; min-height: 180px !important; height: var(--operations-map-height) !important;
+    flex: 1 1 auto;
+    min-height: 200px !important;
+    height: var(--operations-map-height) !important;
   }
+
+  [aria-labelledby='new-route-title'] input,
+  [aria-labelledby='new-route-title'] select,
+  [aria-labelledby='new-route-title'] textarea {
+    min-height: 36px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  [aria-labelledby='new-route-title'] textarea {
+    min-height: 52px !important;
+  }
+
+  [aria-labelledby='new-route-title'] fieldset:first-of-type button,
+  [aria-labelledby='new-route-title'] [class*='segmented'] button {
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
   [aria-labelledby='new-route-title'] [class*='builderFooter'] {
-    position: sticky !important; bottom: 0 !important; z-index: 4 !important; padding: 8px 0 2px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 4 !important;
+    margin-top: auto !important;
+    padding: 8px 0 2px !important;
+    background: linear-gradient(180deg, transparent, #fff 28%) !important;
+  }
+
+  [aria-labelledby='new-route-title'] [class*='builderFooter'] button {
+    min-height: 42px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] {
+    background: #142238 !important;
+  }
+
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] > div:first-child {
+    border-color: #31445f;
+  }
+
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='builderFooter'] {
+    background: linear-gradient(180deg, transparent, #142238 28%) !important;
   }
 }
