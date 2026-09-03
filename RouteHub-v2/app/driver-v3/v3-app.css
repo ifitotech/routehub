@@ -41,8 +41,6 @@ body[data-driver-app='v3'] {
   background: #0f1d35;
   overscroll-behavior: none;
   height: 100%;
-  /* Allow the shell's internal scroll; do not use overflow:hidden on html
-     in a way that breaks iOS touch scrolling inside .content */
 }
 
 body:has(.driver-v3-root),
@@ -112,7 +110,6 @@ body[data-driver-app='v3'] {
   text-decoration: none;
 }
 
-/* Kill website leftovers from globals.css */
 .driver-v3-root a {
   text-decoration: none !important;
   color: inherit;
@@ -128,7 +125,6 @@ body[data-driver-app='v3'] {
   transform: none !important;
 }
 
-/* No frosted/blur status or header on Driver — beat GPT global-chrome rules */
 html[data-driver-app='v3'] .global-chrome,
 body[data-driver-app='v3'] .global-chrome,
 body:has(.driver-v3-root) .global-chrome {
@@ -227,14 +223,6 @@ body:has(.driver-v3-root) .global-chrome {
   display: none !important;
 }
 
-.driver-v3-root > main > header,
-.driver-v3-root > main > header * {
-  filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  text-shadow: none !important;
-}
-
 .driver-v3-root > main > header button,
 .driver-v3-root > main > header a {
   appearance: none !important;
@@ -245,23 +233,13 @@ body:has(.driver-v3-root) .global-chrome {
   border-radius: 0 !important;
   box-shadow: none !important;
   filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  text-shadow: none !important;
-  opacity: 1 !important;
   color: #fff !important;
 }
 .driver-v3-root > main > header,
 .driver-v3-root > main > header * {
   filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   text-shadow: none !important;
   -webkit-font-smoothing: antialiased;
-}
-.driver-v3-root > main > header img {
-  filter: none !important;
-  image-rendering: auto;
 }
 
 html[data-driver-app='v3'],
@@ -269,4 +247,49 @@ body[data-driver-app='v3'],
 body:has(.driver-v3-root) {
   background: #0F1D35 !important;
   background-color: #0F1D35 !important;
+}
+
+html[data-theme='dark'] .driver-v3-root {
+  background: #0b1628;
+  color: #f4f7fb;
+}
+html[data-theme='dark'] .driver-v3-root h1,
+html[data-theme='dark'] .driver-v3-root h2,
+html[data-theme='dark'] .driver-v3-root strong {
+  color: #f4f7fb;
+}
+html[data-theme='dark'] .driver-v3-root p,
+html[data-theme='dark'] .driver-v3-root small,
+html[data-theme='dark'] .driver-v3-root span {
+  color: #c5d0de;
+}
+html[data-theme='dark'] .driver-v3-root a {
+  color: #8cbcff;
+}
+html[data-theme='dark'] .driver-v3-root button.primary,
+html[data-theme='dark'] .driver-v3-root a.primary {
+  color: #fff;
+}
+html[data-theme='dark'] .driver-v3-root > main > header,
+html[data-theme='dark'] .driver-v3-root > main > header * {
+  color: #fff !important;
+}
+html[data-theme='dark'] .driver-v3-root .card {
+  background: #18263b;
+  border-color: #31445f;
+  color: #f4f7fb;
+}
+html[data-theme='dark'] .driver-v3-root .eyebrow,
+html[data-theme='dark'] .driver-v3-root .muted {
+  color: #9aabc0;
+}
+html[data-theme='dark'] .driver-v3-root label {
+  color: #f4f7fb;
+}
+html[data-theme='dark'] .driver-v3-root input,
+html[data-theme='dark'] .driver-v3-root select,
+html[data-theme='dark'] .driver-v3-root textarea {
+  background: #102036;
+  color: #f4f7fb;
+  border-color: #31445f;
 }
