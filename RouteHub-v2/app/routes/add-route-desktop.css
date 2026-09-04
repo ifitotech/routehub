@@ -1,79 +1,98 @@
-/* Desktop Add Route morning layout: Assignment / Schedule / Locations, form+map. */
+[class*='backdrop']:has([aria-labelledby='new-route-title']) {
+  position: fixed !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 16px !important;
+  background: rgba(15, 23, 42, 0.28) !important;
+}
 @media (min-width: 1024px) {
   [aria-labelledby='new-route-title'] {
-    width: min(1080px, calc(100vw - 28px)) !important;
-    height: calc(100dvh - 20px) !important;
-    max-height: calc(100dvh - 20px) !important;
+    width: min(1180px, calc(100vw - 32px)) !important;
+    height: min(820px, calc(100dvh - 32px)) !important;
     display: grid !important;
-    grid-template-rows: 52px minmax(0, 1fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
     overflow: hidden !important;
-    border-radius: 16px !important;
+    margin: 0 !important;
+    border: 1px solid #E5EAF2 !important;
+    border-radius: 18px !important;
     background: #fff !important;
-    box-shadow: 0 18px 48px rgb(15 29 53 / 20%) !important;
-    --operations-map-height: calc(100dvh - 132px);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16) !important;
+    --operations-map-height: 240px;
   }
   [aria-labelledby='new-route-title'] > div:first-child {
     display: flex !important;
     align-items: center !important;
-    min-height: 52px !important;
-    height: 52px !important;
-    padding: 6px 16px !important;
-    border-bottom: 1px solid #e7edf4;
+    justify-content: space-between !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #EEF1F5 !important;
   }
-  [aria-labelledby='new-route-title'] h2 { font-size: 17px !important; line-height: 1.1 !important; margin: 0 !important; }
-  [aria-labelledby='new-route-title'] > div:first-child p:last-of-type { display: none !important; }
+  [aria-labelledby='new-route-title'] h2 { font-size: 22px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] [class*='eyebrow'] {
+    display: inline-flex !important; height: 22px !important; padding: 0 8px !important;
+    border-radius: 6px !important; background: #EEF2FF !important; color: #3157E8 !important;
+    font-size: 10px !important; font-weight: 700 !important; margin: 0 0 4px !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='builderSubtitle'] { font-size: 13px !important; color: #64748B !important; margin: 2px 0 0 !important; }
+  [aria-labelledby='new-route-title'] [class*='closeButton'] {
+    width: 40px !important; height: 40px !important; min-width: 40px !important; border-radius: 12px !important;
+  }
   [aria-labelledby='new-route-title'] > div:last-child {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 360px) !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    gap: 10px !important;
+    grid-template-columns: minmax(0, 1fr) 360px !important;
+    gap: 14px !important;
     min-height: 0 !important;
-    padding: 8px 12px !important;
+    padding: 14px 16px !important;
     overflow: hidden !important;
+    background: #F8FAFC !important;
   }
   [aria-labelledby='new-route-title'] > div:last-child > button { display: none !important; }
   [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(2) {
-    grid-column: 2; grid-row: 1; min-height: 0; overflow: hidden;
+    grid-column: 2; grid-row: 1; min-height: 0; overflow: auto;
   }
-  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3) {
-    grid-column: 1; grid-row: 1; min-height: 0; overflow: auto;
-    display: flex; flex-direction: column; gap: 0; padding-bottom: 8px;
+  [aria-labelledby='new-route-title'] > div:last-child > div:nth-child(3),
+  [aria-labelledby='new-route-title'] [class*='formColumn'] {
+    grid-column: 1; grid-row: 1; min-height: 0; overflow-y: auto;
+    display: flex !important; flex-direction: column !important; gap: 12px !important;
+    padding: 0 !important; background: transparent !important; border: 0 !important;
   }
-  [aria-label='Assignment summary'],
-  [aria-label='Resumen de asignación'],
-  [aria-label='Résumé de l’affectation'] { display: none !important; }
-  [aria-label='Route preview'],
-  [aria-label='Vista previa de la ruta'],
-  [aria-label='Aperçu de l’itinéraire'] {
-    height: 100% !important; min-height: 0 !important;
-    display: flex !important; flex-direction: column !important; overflow: hidden !important; border-radius: 14px !important;
-  }
-  [aria-labelledby='new-route-title'] h3 { font-size: 13px !important; margin: 0 !important; }
-  [aria-labelledby='new-route-title'] h3 + p { display: none !important; }
   [aria-labelledby='new-route-title'] [class*='builderSection'] {
-    padding: 8px 0 10px !important; gap: 8px !important; margin: 0 !important;
+    padding: 14px !important; border: 1px solid #E5EAF2 !important; border-radius: 14px !important; background: #fff !important;
   }
   [aria-labelledby='new-route-title'] [class*='sectionNumber'] {
-    width: 22px !important; height: 22px !important; font-size: 11px !important;
+    width: 24px !important; height: 24px !important; border-radius: 7px !important;
+    background: #EEF2FF !important; color: #3157E8 !important; font-size: 12px !important;
+  }
+  [aria-labelledby='new-route-title'] h3 { font-size: 14px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] h3 + p { display: none !important; }
+  [aria-labelledby='new-route-title'] [class*='segmented'] { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
+  [aria-labelledby='new-route-title'] [class*='segmented'] button {
+    height: 36px !important; min-height: 36px !important; padding: 0 12px !important; border-radius: 9px !important; font-size: 12px !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='segmentActive'],
+  [aria-labelledby='new-route-title'] [class*='segmented'] button[aria-pressed='true'] {
+    background: #F3F6FF !important; border: 1.5px solid #7892F7 !important; color: #3157E8 !important;
   }
   [aria-labelledby='new-route-title'] input,
   [aria-labelledby='new-route-title'] select {
-    min-height: 36px !important;
+    min-height: 44px !important; border-radius: 10px !important;
   }
-  [aria-labelledby='new-route-title'] [class*='primaryRouteTypes'] [class*='typeCards'],
-  [aria-labelledby='new-route-title'] [class*='typeCards'] {
-    display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important;
-  }
-  [aria-labelledby='new-route-title'] [class*='typeCard'],
-  [aria-labelledby='new-route-title'] [class*='typeCardActive'] {
-    min-height: 32px !important; height: 32px !important; padding: 0 8px !important;
-    flex-direction: row !important; gap: 6px !important;
+  [aria-labelledby='new-route-title'] [class*='detailsToggle'] {
+    display: flex !important; align-items: center !important; min-height: 52px !important; padding: 8px 12px !important;
+    border: 1px solid #E5EAF2 !important; border-radius: 12px !important; background: #fff !important; width: 100% !important;
   }
   [aria-labelledby='new-route-title'] [class*='builderFooter'] {
-    position: sticky !important; bottom: 0 !important; margin-top: auto !important; padding: 8px 0 2px !important;
+    display: flex !important; gap: 10px !important; position: sticky !important; bottom: 0 !important; padding-top: 8px !important;
   }
-  [aria-labelledby='new-route-title'] [class*='builderFooter'] button { min-height: 42px !important; }
+  [aria-labelledby='new-route-title'] [class*='builderFooter'] [class*='secondaryButton'],
+  [aria-labelledby='new-route-title'] [class*='builderFooter'] [class*='publishButton'] {
+    min-height: 48px !important; border-radius: 12px !important;
+  }
+  [aria-labelledby='new-route-title'] [class*='previewSummary'] { display: none !important; }
+  [aria-labelledby='new-route-title'] [class*='previewCard'] {
+    border: 1px solid #E5EAF2 !important; border-radius: 14px !important; background: #fff !important; overflow: hidden !important;
+  }
   [aria-labelledby='new-route-title'] .leaflet-container {
-    flex: 1 1 auto; min-height: 200px !important; height: var(--operations-map-height) !important;
+    height: 240px !important; min-height: 240px !important; max-height: 240px !important;
   }
 }
