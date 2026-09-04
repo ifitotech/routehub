@@ -1,6 +1,6 @@
 'use client'
 
-import {CheckCircle2, MapPin, Package, Plus, Route as RouteIcon, Truck, Undo2, UserRound, Users, X} from 'lucide-react'
+import {CheckCircle2, MapPin, Package, Plus, Route as RouteIcon, Store, Truck, Undo2, UserRound, Users, X} from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
@@ -14,11 +14,14 @@ export default function NewRouteDialog(d: any) {
   const p = d
   if (!p.open) return null
   const {saving, setOpen, justCreated, locale, c, openBuilder, previewOpen, setPreviewOpen, form, setForm, selectedContact, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, planningMapRoutes, setSelectedDestinationLocation} = p
+  const typeDesc = (value: string) => value==='pickup' ? (locale==='es'?'Recoger en un punto':'Pick up items from a location') : value==='return' ? (locale==='es'?'Regresar a la tienda':'Return to store') : (locale==='es'?'Entregar al cliente':'Deliver to customer')
+  const routes = planningMapRoutes || []
+  const statusOf = (list: string[]) => routes.filter((route: {status?: string}) => list.includes(route.status || '')).length
   return (
     <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">
         <div className={`${styles.builderHeader} ${contrast.header}`}>
-          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itin\u00e9raire' : 'New route'}</h2><p className={styles.builderSubtitle}>{locale==='es' ? 'Crea y asigna una nueva ruta' : locale==='fr' ? 'Cr\u00e9er et assigner un nouvel itin\u00e9raire' : 'Create and assign a new route'}</p></div>
+          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itin\u00e9raire' : 'New route'}</h2><p className={styles.builderSubtitle}>{locale==='es' ? 'Crea y asigna una nueva ruta' : 'Create and assign a new route'}</p></div>
           <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
         </div>
         {justCreated ? <div className={styles.successPanel}>
@@ -34,31 +37,43 @@ export default function NewRouteDialog(d: any) {
           <div className={`${styles.mapColumn} ${previewOpen ? styles.mapColumnOpen : ''}`}>
             <section className={styles.previewCard}>
               <div className={styles.previewCardHeader}>
-                <div><span className={styles.previewEyebrow}>ROUTE PREVIEW</span><h3>{locale==='es' ? 'Confirma las ubicaciones' : 'Confirm locations'}</h3></div>
-                <MapPin size={19}/>
+                <div><span className={styles.previewEyebrow}>ROUTE PREVIEW</span><h3>{locale==='es' ? 'Vista previa' : 'Route preview'}</h3></div>
+                <MapPin size={18}/>
               </div>
-              <OperationsMap routes={planningMapRoutes} locale={locale} interactive/>
+              <OperationsMap routes={routes} locale={locale} interactive/>
+              <div className={ui.statusGrid}>
+                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['active','in_progress'])}</span><span className={ui.statusLabel}>In Progress</span></div>
+                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['published','pending'])}</span><span className={ui.statusLabel}>Pending</span></div>
+                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['completed'])}</span><span className={ui.statusLabel}>Completed</span></div>
+                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['issue'])}</span><span className={ui.statusLabel}>Issues</span></div>
+              </div>
+              <div className={ui.stopsEmpty}>
+                <MapPin size={20}/>
+                <strong>{locale==='es' ? 'Agrega una ubicaci\u00f3n' : 'Add a location to build this route'}</strong>
+                <span>{locale==='es' ? 'Las paradas aparecen aqu\u00ed en orden' : 'Locations will appear here in order'}</span>
+              </div>
             </section>
           </div>
           <div className={`${styles.formColumn} ${contrast.form}`}>
             <section className={styles.builderSection}>
-              <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Asignaci\u00f3n' : 'Assignment'}</h3></div></div>
-              <fieldset className={`${styles.fieldset} ${styles.primaryRouteTypes}`}>
-                <legend>{c.routeType}</legend>
-                <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
-                  if(type.value === 'return') {
-                    setSelectedDestinationLocation(branchLocation(defaultBranch))
-                    setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
-                    return
-                  }
-                  setForm((current: any) => ({...current, type:type.value}))
-                }}><span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={16}/>:type.value==='return'?<Undo2 size={16}/>:<Truck size={16}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span></button>)}</div>
-              </fieldset>
+              <div className={ui.routeTypeDriverRow}>
+                <div>
+                  <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Tipo de ruta' : 'Route type'}</h3></div></div>
+                  <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
+                    if(type.value === 'return') {
+                      setSelectedDestinationLocation(branchLocation(defaultBranch))
+                      setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
+                      return
+                    }
+                    setForm((current: any) => ({...current, type:type.value}))
+                  }}>{form.type === type.value ? <span className={ui.typeCheck}>\u2713</span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={22}/>:type.value==='return'?<Store size={22}/>:<Truck size={22}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{typeDesc(type.value)}</span></button>)}</div>
+                </div>
+                <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm((current: any) => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{(drivers||[]).map((driver: any,index: number) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; return <option key={driver.user_id} value={driver.user_id}>{`${details.name||fallback}${isPrimary?' \u2014 Primary Driver':''}`}</option> })}</select></div>{form.driver_id ? <span className={ui.driverAvail}>\u25cf {locale==='es'?'Conductor disponible':'Driver is available'}</span> : null}</label>
+              </div>
               {selectedContact && <section className={styles.selectedContactCard}>
                 <div className={styles.selectedContactIcon}><Users size={18}/></div>
                 <div className={styles.selectedContactInfo}><strong>{selectedContact.company_name}</strong><span>{selectedContact.address}</span></div>
               </section>}
-              <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm((current: any) => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{(drivers||[]).map((driver: any,index: number) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); return <option key={driver.user_id} value={driver.user_id}>{details.name||fallback}</option> })}</select></div></label>
               {form.driver_id && form.date === todayValue && priorityRoutes?.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Posici\u00f3n en la ruta' : 'Position in route'}</span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : 'Add to end'}</option>{priorityRoutes.map((route: any) => <option key={route.id} value={route.id}>{route.destination_name || route.destination_address}</option>)}</select></div></label>}
             </section>
             <NewRouteFields {...p} />
