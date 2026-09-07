@@ -11,6 +11,7 @@ import {updateDrivingLocation} from '../../../lib/driving-session'
 import {registerPushNotifications} from '../../../lib/push-notifications'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {settingsCopy} from '../../../lib/drv-settings-copy'
+import {requestOnboardingReplay} from '../../../lib/onboarding'
 import styles from '../driver-preferences.module.css'
 import confirmStyles from '../../../components/driver-v3/driver-v3.module.css'
 
@@ -171,6 +172,16 @@ export default function DriverV3Settings() {
               </button>
             ))}
           </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>{copy.tour}</h2>
+            <p>{copy.tourHelp}</p>
+          </div>
+          <button className={styles.choice} type="button" onClick={requestOnboardingReplay}>
+            {copy.tourAction}
+          </button>
         </section>
 
         <section className={styles.section}>

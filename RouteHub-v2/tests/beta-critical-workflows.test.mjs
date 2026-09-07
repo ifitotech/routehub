@@ -8,7 +8,7 @@ import {chooseDefaultAssignee, isTemporaryRouteAssignee} from '../lib/route-assi
 import {groupRouteQueues} from '../lib/route-queue.ts'
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
-const createRouteSource = read('../app/routes/page.tsx')
+const createRouteSource = read('../app/routes/routes-workspace-save.tsx')
 const dataSource = read('../lib/data.ts')
 const driverSource = read('../app/driver-v3/page.tsx')
 const driverDataSource = read('../lib/driver-v3/use-driver-data.ts')

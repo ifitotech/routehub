@@ -76,7 +76,7 @@ test('Driver V3 GPS uses a fresh high-accuracy watch and persists accepted fixes
   const gps=await readFile(new URL('../lib/driver-v3/use-driver-live-location.ts',import.meta.url),'utf8')
   assert.match(gps,/enableHighAccuracy: true/)
   assert.match(gps,/maximumAge: 0/)
-  assert.match(gps,/timeout: 20000/)
+  assert.match(gps,/timeout:\s*(?:20_000|20000)/)
   assert.match(gps,/materiallyMorePrecise/)
   assert.match(gps,/next\.accuracy \+ 15 < previous\.accuracy/)
   assert.match(gps,/updateDrivingLocation\(drivingSession\.id, driverId, next\)/)

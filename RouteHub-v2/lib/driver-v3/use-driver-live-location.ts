@@ -83,7 +83,7 @@ export function useDriverLiveLocation() {
           void updateDrivingLocation(drivingSession.id, driverId, next).catch(() => {})
         },
         () => undefined,
-        {enableHighAccuracy: true, maximumAge: 15_000, timeout: 20_000},
+        {enableHighAccuracy: true, maximumAge: 0, timeout: 20_000},
       )
     }
 

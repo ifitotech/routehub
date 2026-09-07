@@ -8,7 +8,7 @@ const driverPage=()=>readFileSync(new URL('../app/driver-v3/page.tsx',import.met
 const completedPage=()=>readFileSync(new URL('../app/driver-v3/completed/page.tsx',import.meta.url),'utf8')
 const driverData=()=>readFileSync(new URL('../lib/driver-v3/use-driver-data.ts',import.meta.url),'utf8')
 const driverActions=()=>readFileSync(new URL('../lib/driver/driver-actions.ts',import.meta.url),'utf8')
-const routesPage=()=>readFileSync(new URL('../app/routes/page.tsx',import.meta.url),'utf8')
+const routesPage=()=>readFileSync(new URL('../app/routes/new-route-fields.tsx',import.meta.url),'utf8')
 const managePage=()=>readFileSync(new URL('../app/routes/manage/page.tsx',import.meta.url),'utf8')
 const migration=()=>readFileSync(new URL('../supabase/migrations/026_stop_workflow_and_finalization.sql',import.meta.url),'utf8')
 

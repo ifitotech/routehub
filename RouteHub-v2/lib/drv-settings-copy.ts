@@ -14,6 +14,9 @@ export function settingsCopy(locale: Locale) {
       terms: 'Términos de uso',
       privacy: 'Política de privacidad',
       appearance: 'Tema de la app',
+      tour: 'Recorrido de la app',
+      tourHelp: 'Vuelve a ver la guía rápida de RouteHub.',
+      tourAction: 'Ver recorrido',
       versionLabel: 'Versión',
     }
   }
@@ -30,6 +33,9 @@ export function settingsCopy(locale: Locale) {
       terms: 'Conditions d’utilisation',
       privacy: 'Politique de confidentialité',
       appearance: 'Thème de l’app',
+      tour: 'Visite de l’application',
+      tourHelp: 'Revoir le guide rapide de RouteHub.',
+      tourAction: 'Voir la visite',
       versionLabel: 'Version',
     }
   }
@@ -43,8 +49,11 @@ export function settingsCopy(locale: Locale) {
     notificationsOffHelp: 'Turn notifications off in iPhone Settings → RouteHub if they stay on.',
     shareLocation: 'Share location',
     terms: 'Terms of Use',
-    privacy: 'Privacy Policy',
-    appearance: 'App theme',
-    versionLabel: 'Version',
+      privacy: 'Privacy Policy',
+      appearance: 'App theme',
+      tour: 'App tour',
+      tourHelp: 'See the RouteHub quick guide again.',
+      tourAction: 'View tour',
+      versionLabel: 'Version',
   }
 }
