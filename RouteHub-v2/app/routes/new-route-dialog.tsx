@@ -1,6 +1,6 @@
 'use client'
 
-import {CheckCircle2, MapPin, Package, Plus, Route as RouteIcon, Store, Truck, Undo2, UserRound, Users, X} from 'lucide-react'
+import {Check, CheckCircle2, MapPin, Package, Plus, Route as RouteIcon, Store, Truck, Undo2, UserRound, Users, X} from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
@@ -66,9 +66,9 @@ export default function NewRouteDialog(d: any) {
                       return
                     }
                     setForm((current: any) => ({...current, type:type.value}))
-                  }}>{form.type === type.value ? <span className={ui.typeCheck}>\u2713</span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={22}/>:type.value==='return'?<Store size={22}/>:<Truck size={22}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{typeDesc(type.value)}</span></button>)}</div>
+                  }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={22}/>:type.value==='return'?<Store size={22}/>:<Truck size={22}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{typeDesc(type.value)}</span></button>)}</div>
                 </div>
-                <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm((current: any) => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{(drivers||[]).map((driver: any,index: number) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; return <option key={driver.user_id} value={driver.user_id}>{`${details.name||fallback}${isPrimary?' \u2014 Primary Driver':''}`}</option> })}</select></div>{form.driver_id ? <span className={ui.driverAvail}>\u25cf {locale==='es'?'Conductor disponible':'Driver is available'}</span> : null}</label>
+                <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm((current: any) => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{(drivers||[]).map((driver: any,index: number) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; return <option key={driver.user_id} value={driver.user_id}>{`${details.name||fallback}${isPrimary?' \u2014 Primary Driver':''}`}</option> })}</select></div></label>
               </div>
               {selectedContact && <section className={styles.selectedContactCard}>
                 <div className={styles.selectedContactIcon}><Users size={18}/></div>
