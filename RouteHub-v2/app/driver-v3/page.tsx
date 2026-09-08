@@ -111,10 +111,10 @@ export default function DriverV3Page() {
         }catch{}
       }
       await refresh()
-      // Keep RouteHub Navigation ready for an intentional beta test after the
-      // driver returns, while Apple/Google Maps remains the primary navigator.
+      // Start the in-app navigation experience. The external Maps action
+      // remains available from the stop details as a fallback.
       void router.prefetch('/driver/map')
-      openMaps()
+      router.push('/driver/map')
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
