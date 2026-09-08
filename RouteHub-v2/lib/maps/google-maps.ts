@@ -3,7 +3,7 @@
 export type GoogleLatLng={lat:number;lng:number}
 
 type GoogleMapsWindow=Window&{
- google?:{maps?:Record<string,unknown>}
+ google?:{maps?:Record<string,unknown>&{importLibrary?:(name:string)=>Promise<Record<string,unknown>>}}
  __routeHubGoogleMaps?:Promise<Record<string,unknown>>
 }
 
@@ -11,7 +11,11 @@ type GoogleMapsWindow=Window&{
 export function loadGoogleMaps():Promise<Record<string,unknown>>{
  if(typeof window==='undefined')return Promise.reject(new Error('Google Maps is only available in the browser.'))
  const browserWindow=window as GoogleMapsWindow
- if(browserWindow.google?.maps)return Promise.resolve(browserWindow.google.maps)
+ const existing=browserWindow.google?.maps
+ if(existing){
+  if(typeof existing.Map==='function')return Promise.resolve(existing)
+  if(typeof existing.importLibrary==='function')return existing.importLibrary('maps').then(library=>({...existing,...library}))
+ }
  if(browserWindow.__routeHubGoogleMaps)return browserWindow.__routeHubGoogleMaps
  const key=process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY
  if(!key)return Promise.reject(new Error('Google Maps browser key is not configured.'))
@@ -24,7 +28,8 @@ export function loadGoogleMaps():Promise<Record<string,unknown>>{
    window.clearTimeout(timer)
    delete callbackWindow[callback]
    const maps=(window as GoogleMapsWindow).google?.maps
-   if(maps)resolve(maps)
+   if(maps&&typeof maps.Map==='function')resolve(maps)
+   else if(maps&&typeof maps.importLibrary==='function')maps.importLibrary('maps').then(library=>resolve({...maps,...library})).catch(()=>reject(new Error('Google Maps did not initialize.')))
    else reject(new Error('Google Maps did not initialize.'))
   }
   const script=document.createElement('script')
