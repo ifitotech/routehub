@@ -121,7 +121,10 @@ function FitBounds({points}:{points:Coordinate[]}){
  const pointKey=points.map(point=>`${point.lat.toFixed(4)},${point.lng.toFixed(4)}`).join('|')
  useEffect(()=>{
   const currentPoints=pointsRef.current
-  const frame=window.requestAnimationFrame(()=>map.invalidateSize())
+  const frame=window.requestAnimationFrame(()=>{
+   map.invalidateSize()
+   window.requestAnimationFrame(()=>map.invalidateSize())
+  })
   if(!currentPoints.length){map.setView([miamiCenter.lat,miamiCenter.lng],12);return ()=>window.cancelAnimationFrame(frame)}
   if(currentPoints.length===1){map.setView([currentPoints[0].lat,currentPoints[0].lng],14);return ()=>window.cancelAnimationFrame(frame)}
   map.fitBounds(currentPoints.map(point=>[point.lat,point.lng] as [number,number]),{padding:[36,36],maxZoom:14})
@@ -286,6 +289,7 @@ export default function OperationsMap({routes,driverLocations=[],fitDriverLocati
   const assigned=[
    ...sequences.map(sequence=>sequence.start),
    ...resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination),
+   ...sequences.flatMap(sequence=>sequence.line),
   ].filter((point):point is Coordinate=>Boolean(point))
   if(!assigned.length)return visibleDriverLocations.map(driver=>driver.location)
   return fitDriverLocations?[...assigned,...visibleDriverLocations.map(driver=>driver.location)]:assigned
