@@ -31,6 +31,8 @@ export default function DriverV3Settings() {
   const [message, setMessage] = useState('')
   const [notify, setNotify] = useState<'on' | 'off'>('off')
   const [notifyBusy, setNotifyBusy] = useState(false)
+  const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'current' | 'available' | 'error'>('idle')
+  const [latestVersion, setLatestVersion] = useState('')
 
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') setNotify('on')
@@ -88,6 +90,20 @@ export default function DriverV3Settings() {
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)
     } finally {
       setNotifyBusy(false)
+    }
+  }
+
+  const checkForUpdates = async () => {
+    setUpdateState('checking')
+    try {
+      const response = await fetch(`/routehub-version.json?ts=${Date.now()}`, {cache: 'no-store'})
+      if (!response.ok) throw new Error('version check failed')
+      const payload = await response.json() as {version?: string}
+      const version = typeof payload.version === 'string' ? payload.version : ''
+      setLatestVersion(version)
+      setUpdateState(version && version !== DRIVER_APP_VERSION ? 'available' : 'current')
+    } catch {
+      setUpdateState('error')
     }
   }
 
@@ -227,14 +243,14 @@ export default function DriverV3Settings() {
             <span className={styles.rowCopy}><strong>{t.drvHelp}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
-          <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
+          <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
             <span className={styles.rowIcon}><Download size={18} /></span>
             <span className={styles.rowCopy}>
-              <strong>{locale === 'es' ? 'Descargar app Android' : locale === 'fr' ? 'Télécharger l’app Android' : 'Download Android app'}</strong>
-              <small>{locale === 'es' ? 'Instala la versión de prueba' : locale === 'fr' ? 'Installer la version de test' : 'Install the test version'}</small>
+              <strong>{locale === 'es' ? 'Buscar actualizaciones' : locale === 'fr' ? 'Rechercher des mises à jour' : 'Check for updates'}</strong>
+              <small>{updateState === 'checking' ? (locale === 'es' ? 'Comprobando…' : 'Checking…') : updateState === 'available' ? `${locale === 'es' ? 'Nueva versión disponible' : 'New version available'}: ${latestVersion}` : updateState === 'current' ? (locale === 'es' ? 'Tienes la versión más reciente' : 'You have the latest version') : locale === 'es' ? `Versión instalada ${DRIVER_APP_VERSION}` : `Installed version ${DRIVER_APP_VERSION}`}</small>
             </span>
             <ChevronRight className={styles.rowChevron} size={19} />
-          </a>
+          </button>
         </section>
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
