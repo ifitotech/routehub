@@ -42,6 +42,10 @@ export default function NewRouteFields(p: any) {
           </div>}
           {contactSaveMessage && <small className={styles.contactSaveMessage}>{contactSaveMessage}</small>}
           {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm((current: any) => ({...current, order_number:event.target.value}))}/></label>}
+          {form.type==='delivery'&&<div className={ui.deliveryDetailsRow}>
+            <label className={styles.field}><span>{locale==='es'?'Nombre del contacto':'Contact name'} <em>{c.optional}</em></span><input value={form.stop_contact_name} placeholder={locale==='es'?'Quién recibe':'Who receives it'} onChange={event => setForm((current: any) => ({...current, stop_contact_name:event.target.value}))}/></label>
+            <label className={styles.field}><span>{locale==='es'?'PO / referencia':'PO / reference'} <em>{c.optional}</em></span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm((current: any) => ({...current, order_number:event.target.value}))}/></label>
+          </div>}
         </>}
       </section>
       <section className={styles.builderSection}>
@@ -55,7 +59,7 @@ export default function NewRouteFields(p: any) {
             <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm((current: any) => ({...current, date: event.target.value}))}/></div></label>
             <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm((current: any) => ({...current, time: event.target.value}))}/></div></label>
           </div>
-          {form.type!=='pickup'&&<label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
+          {form.type!=='pickup'&&form.type!=='delivery'&&<label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
           <label className={styles.field}><span>{c.notes} <em>{c.optional}</em></span><textarea rows={3} value={form.notes} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/></label>
         </div>}
       </section>

@@ -17,7 +17,10 @@
 .originPrimary{padding-bottom:4px}
 .originPrimary .segmented{margin-bottom:2px}
 .originPrimary + .field{margin-top:2px}
+.deliveryDetailsRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
+.deliveryDetailsRow .field{min-width:0}
 .builderSection .field:has(.inputWrap input){gap:4px}
 .builderSection .field:has(.inputWrap input) .inputWrap{min-height:42px}
 @media(max-width:480px){.originCompact{grid-template-columns:1fr}.detailsToggleSummary{font-size:11px;gap:4px;flex-wrap:wrap}.typeCardDesc{display:none}}
+@media(max-width:640px){.deliveryDetailsRow{grid-template-columns:1fr}}
 @media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.7fr) minmax(240px,.8fr)}}
