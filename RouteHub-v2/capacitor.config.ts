@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.routehub.driver',
   appName: 'RouteHub Driver',
   webDir: 'www',
-  bundledWebRuntime: false,
   server: process.env.CAPACITOR_SERVER_URL
     ? {url: process.env.CAPACITOR_SERVER_URL, cleartext: false}
     : undefined,
