@@ -12,6 +12,7 @@
   "dependencies": {
     "@capacitor/android": "^8.5.1",
     "@capacitor/core": "^8.5.1",
+    "@capacitor/push-notifications": "^8.1.2",
     "@supabase/supabase-js": "^2.45.4",
     "@types/leaflet": "^1.9.22",
     "leaflet": "^1.9.4",
