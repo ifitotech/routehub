@@ -54,24 +54,33 @@ export default function RoutePlanMap({
   const watchRef=useRef<number|null>(null)
   const wakeLock=useRef<{release?:()=>Promise<void>}|null>(null)
   const lastSpokenInstruction=useRef('')
+  const [rerouteToken,setRerouteToken]=useState(0)
+  const lastReroute=useRef(0)
+  const offRouteFixes=useRef(0)
+  const loadedRouteKey=useRef('')
 
   const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label||stop.coordinate)),[stops])
   const safeOrigin=sanitizeCoordinate(originCoordinate)
   const routeKey=useMemo(()=>[
     originAddress||'',
-    safeOrigin?`${safeOrigin.lat},${safeOrigin.lng}`:'',
+    !navigationOnly&&safeOrigin?`${safeOrigin.lat},${safeOrigin.lng}`:'',
     ...validStops.map(stop=>`${stop.id}:${stop.address||''}:${stop.coordinate?.lat||''}:${stop.coordinate?.lng||''}`),
-  ].join('|'),[originAddress,safeOrigin,validStops])
-  // A rounded key keeps the line useful as the Driver moves without asking
-  // Google Routes for a fresh route on every GPS sample.
-  // Keep the GPS marker live without charging for a new route on every fix.
-  // Re-route only after roughly 1 km of movement (or when the plan changes).
-  const sharedLocationKey=sharedLocation?`${sharedLocation.lat.toFixed(2)},${sharedLocation.lng.toFixed(2)}`:''
+  ].join('|'),[originAddress,safeOrigin,validStops,navigationOnly])
+  // GPS availability triggers the initial route; subsequent fixes move the
+  // marker. Only confirmed deviation or a changed destination reroutes.
+  const sharedLocationKey=Boolean(sharedLocation||deviceLocation)
+  const routingInput=useRef({originAddress,safeOrigin,validStops,sharedLocation,deviceLocation})
+  routingInput.current={originAddress,safeOrigin,validStops,sharedLocation,deviceLocation}
 
   useEffect(()=>{
     let cancelled=false
-    setLoading(true)
-    setEstimate(null)
+    const {originAddress,safeOrigin,validStops,sharedLocation,deviceLocation}=routingInput.current
+    if(loadedRouteKey.current!==routeKey){
+      loadedRouteKey.current=routeKey
+      setLine([])
+      setEstimate(null)
+      setLoading(true)
+    }
     const known:Array<{address?:string|null;coordinate?:Coordinate|null}>=[
       {address:originAddress,coordinate:safeOrigin},
       ...validStops.map(stop=>({address:stop.address,coordinate:sanitizeCoordinate(stop.coordinate)})),
@@ -85,19 +94,42 @@ export default function RoutePlanMap({
       if(cancelled)return
       const coordinates=clusterCoordinates(resolved)
       setPoints(coordinates)
-      if(coordinates.length>1)setLine(coordinates)
       setLoading(false)
-      if(coordinates.length<2){setEstimate(null);return}
-      const start=sanitizeCoordinate(sharedLocation)||sanitizeCoordinate(deviceLocation)||coordinates[0]
-      const rest=coordinates.filter(point=>Math.abs(point.lat-start.lat)>1e-5||Math.abs(point.lng-start.lng)>1e-5)
+      const start=sanitizeCoordinate(sharedLocation)||sanitizeCoordinate(deviceLocation)||sanitizeCoordinate(resolved[0])
+      const rest=clusterCoordinates(resolved.slice(1))
+      if(!start||!rest.length){setEstimate(null);setLine([]);return}
+      // The saved origin must never become a waypoint behind the moving driver.
+      lastReroute.current=Date.now()
       const estimate=await calculateRoute([start,...rest],undefined,locale)
       if(!cancelled){
         setEstimate(estimate)
-        if(estimate.coordinates.length>1)setLine(clusterCoordinates(estimate.coordinates,2_000))
+        setLine(estimate.source==='google'?clusterCoordinates(estimate.coordinates,2_000):[])
       }
     }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setEstimate(null);setLoading(false)}})
     return()=>{cancelled=true}
-  },[routeKey,sharedLocationKey,locale])
+  },[routeKey,sharedLocationKey,locale,rerouteToken])
+
+  useEffect(()=>{
+    const fix=deviceLocation
+    if(!fix||fix.accuracy>80||estimate?.source!=='google'||line.length<2)return
+    // Distance to segments, rather than sparse vertices, avoids false reroutes
+    // on long straight roads. Require three fixes and a 30-second cooldown.
+    const scale=Math.cos(fix.lat*Math.PI/180)
+    let nearest=Infinity
+    for(let i=1;i<line.length;i++){
+      const a=line[i-1],b=line[i]
+      const ax=(a.lng-fix.lng)*scale*111320,ay=(a.lat-fix.lat)*111320
+      const dx=(b.lng-a.lng)*scale*111320,dy=(b.lat-a.lat)*111320
+      const t=Math.max(0,Math.min(1,-(ax*dx+ay*dy)/(dx*dx+dy*dy||1)))
+      nearest=Math.min(nearest,Math.hypot(ax+t*dx,ay+t*dy))
+    }
+    offRouteFixes.current=nearest>Math.max(60,fix.accuracy*2)?offRouteFixes.current+1:0
+    if(offRouteFixes.current>=3&&Date.now()-lastReroute.current>30000){
+      offRouteFixes.current=0
+      lastReroute.current=Date.now()
+      setRerouteToken(value=>value+1)
+    }
+  },[deviceLocation,estimate?.source,line])
 
   useEffect(()=>{
     const next=sanitizeCoordinate(sharedLocation)
@@ -208,6 +240,7 @@ export default function RoutePlanMap({
     <section className="route-plan-map route-plan-navigate route-plan-driver is-driving" aria-label="Navigation map">
       <div className="route-plan-canvas">
         {loading?<div className="live-route-loading">{copy.loading}</div>:!points.length?<div className="live-route-loading">{copy.unavailable}</div>:<GoogleRouteCanvas className="route-plan-google-canvas" ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={deviceLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic/>}
+        {estimate?.source==='fallback'&&<aside className="route-plan-guidance" role="status"><strong>{locale==='es'?'No se pudo calcular el recorrido por calles.':locale==='fr'?'Le trajet routier est indisponible.':'Street routing is unavailable.'}</strong><button type="button" onClick={()=>setRerouteToken(value=>value+1)}>{locale==='es'?'Reintentar':locale==='fr'?'Réessayer':'Retry'}</button></aside>}
         {(nextManeuver||eta) && <aside className="route-plan-guidance" aria-live="polite">
           {nextManeuver&&<b>{formatDistance(nextManeuver.distanceToManeuverMeters)}</b>}
           {nextManeuver?.instruction&&<strong>{nextManeuver.instruction}</strong>}

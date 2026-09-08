@@ -8,6 +8,7 @@ import type {MapCoordinate} from '../lib/maps/types'
 type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void;setPath?:(path:MapCoordinate[])=>void;setIcon?:(icon:Record<string,unknown>)=>void}
 type Listener={remove?:()=>void}
 type GoogleMap={
+  addListener?:(event:string,handler:()=>void)=>Listener
   fitBounds:(bounds:unknown,padding?:number)=>void
   panTo:(point:MapCoordinate)=>void
   setCenter:(point:MapCoordinate)=>void
@@ -90,6 +91,9 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
   const animationFrameRef=useRef<number|null>(null)
   const routeLinesRef=useRef<{traveled:MapObject|null;pending:MapObject|null}>({traveled:null,pending:null})
   const [error,setError]=useState('')
+  const exploringRef=useRef(false)
+  const lastFollowToken=useRef(followToken)
+  const cameraInitialized=useRef(false)
   const safePath=useMemo(()=>clusterCoordinates(path),[path])
   const safeMarkers=useMemo(()=>markers.flatMap(marker=>{
     const position=sanitizeCoordinate(marker.position)
@@ -120,14 +124,17 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         mapTypeControl:false,
         streetViewControl:false,
         fullscreenControl:false,
-        gestureHandling:interactive?'auto':'none',
+        gestureHandling:interactive?(followDevice?'greedy':'auto'):'none',
       }))
       objectsRef.current.forEach(object=>object.setMap(null))
+      if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
       objectsRef.current=[]
       driverMarkerRef.current=null
       routeLinesRef.current={traveled:null,pending:null}
       listenersRef.current.forEach(listener=>listener.remove?.())
       listenersRef.current=[]
+      const dragListener=map.addListener?.('dragstart',()=>{exploringRef.current=true})
+      if(dragListener)listenersRef.current.push(dragListener)
       if(showTraffic){
         const traffic=new maps.TrafficLayer()
         traffic.setMap(map)
@@ -138,8 +145,8 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         const splitIndex=progressPosition?nearestPathIndex(current.safePath,progressPosition):0
         const traveled=current.safePath.slice(0,splitIndex+1)
         const pending=current.safePath.slice(splitIndex)
-        if(traveled.length>1){const line=new maps.Polyline({map,path:traveled,strokeColor:'#94a3b8',strokeOpacity:.98,strokeWeight:6,zIndex:1});routeLinesRef.current.traveled=line;objectsRef.current.push(line)}
-        if(pending.length>1){const line=new maps.Polyline({map,path:pending,strokeColor:'#1667F2',strokeOpacity:.98,strokeWeight:6,zIndex:2});routeLinesRef.current.pending=line;objectsRef.current.push(line)}
+        {const line=new maps.Polyline({map,path:traveled,strokeColor:'#94a3b8',strokeOpacity:.98,strokeWeight:6,zIndex:1});routeLinesRef.current.traveled=line;objectsRef.current.push(line)}
+        {const line=new maps.Polyline({map,path:pending,strokeColor:'#1667F2',strokeOpacity:.98,strokeWeight:6,zIndex:2});routeLinesRef.current.pending=line;objectsRef.current.push(line)}
       }
       for(const marker of current.fixedMarkers){
         const item=new maps.Marker({
@@ -191,6 +198,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         if(listener)listenersRef.current.push(listener)
       }
       const boundsPoints=current.safeFit.length?current.safeFit:clusterCoordinates([...current.safePath,...current.fixedMarkers.map(marker=>marker.position)])
+      if(!cameraInitialized.current||!followDevice){
       if(boundsPoints.length>1){
         const bounds=new maps.LatLngBounds()
         boundsPoints.forEach(point=>bounds.extend(point))
@@ -199,16 +207,20 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         map.setCenter(boundsPoints[0])
         map.setZoom(15)
       }
+      if(followDevice&&current.driverMarker){map.setCenter(current.driverMarker.position);map.setZoom(17)}
+      cameraInitialized.current=true
+      }
       setError('')
     }).catch(reason=>{if(!cancelled)setError(reason instanceof Error?reason.message:'Google Maps is unavailable.')})
     return()=>{cancelled=true}
-  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag])
+  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag,followDevice])
 
   useEffect(()=>{
     const position=driverMarker?.position||sanitizeCoordinate(followPosition)
     if(!position)return
     const marker=driverMarkerRef.current
     const previous=lastDriverPositionRef.current
+    if(animationFrameRef.current!==null){cancelAnimationFrame(animationFrameRef.current);animationFrameRef.current=null}
     const updateRouteProgress=(point:MapCoordinate)=>{
       if(!safePath.length)return
       const index=nearestPathIndex(safePath,point)
@@ -225,6 +237,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           lat:previous.lat+(position.lat-previous.lat)*progress,
           lng:previous.lng+(position.lng-previous.lng)*progress,
         })
+        lastDriverPositionRef.current={lat:previous.lat+(position.lat-previous.lat)*progress,lng:previous.lng+(position.lng-previous.lng)*progress}
         updateRouteProgress({
           lat:previous.lat+(position.lat-previous.lat)*progress,
           lng:previous.lng+(position.lng-previous.lng)*progress,
@@ -242,14 +255,19 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         ...driverTruckIcon(driverMarker.tone||'#0F1D35'),
       })
     }
-    if(followDevice||followToken){
+    const recenter=lastFollowToken.current!==followToken
+    lastFollowToken.current=followToken
+    if(recenter)exploringRef.current=false
+    if((followDevice&&!exploringRef.current)||recenter){
       mapRef.current?.panTo(position)
-      mapRef.current?.setZoom(followDevice?17:16)
+      if(recenter)mapRef.current?.setZoom(followDevice?17:16)
     }
-  },[followDevice,followToken,followPosition,driverMarker?.position,safePath])
+  },[followDevice,followToken,followPosition,driverMarker,safePath])
 
   useEffect(()=>()=>{
     if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
+    objectsRef.current.forEach(object=>object.setMap(null))
+    listenersRef.current.forEach(listener=>listener.remove?.())
   },[])
 
   return <div ref={containerRef} className={className} aria-label={ariaLabel}>{error&&<div className="live-route-loading" role="alert">{error}</div>}</div>
