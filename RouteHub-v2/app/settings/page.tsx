@@ -77,15 +77,32 @@ export default function Settings() {
 
   const signOut = async () => { await getSupabase().auth.signOut(); window.location.assign('/') }
   const saveProfile = async () => {
+    if (profileSaving) return
     setProfileSaving(true)
     const {error} = await getSupabase().auth.updateUser({data: {full_name: fullName.trim(), phone: phone.trim(), avatar_url: avatarUrl || null}})
     setMessage(error ? error.message : copy.profileSaved)
+    if (!error) setEditingProfile(false)
     setProfileSaving(false)
   }
   const choosePhoto = (file?: File) => {
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => { if (typeof reader.result === 'string') setAvatarUrl(reader.result) }
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') return
+      const image = new Image()
+      image.onload = () => {
+        const size = 320
+        const scale = Math.min(1, size / Math.max(image.width, image.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.max(1, Math.round(image.width * scale))
+        canvas.height = Math.max(1, Math.round(image.height * scale))
+        const context = canvas.getContext('2d')
+        if (!context) return
+        context.drawImage(image, 0, 0, canvas.width, canvas.height)
+        setAvatarUrl(canvas.toDataURL('image/jpeg', 0.78))
+      }
+      image.src = reader.result
+    }
     reader.readAsDataURL(file)
   }
   const saveBranch = async () => {
