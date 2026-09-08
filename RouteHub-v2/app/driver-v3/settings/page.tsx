@@ -77,10 +77,6 @@ export default function DriverV3Settings() {
 
   const toggleNotify = async (wantOn: boolean) => {
     if (notifyBusy) return
-    if (wantOn && Capacitor.getPlatform() === 'android') {
-      setMessage(locale === 'es' ? 'Las alertas con la app cerrada requieren configurar el servicio de notificaciones Android. Aún no está disponible en esta beta.' : 'Alerts while the app is closed require Android notification service setup. This is not available in this beta yet.')
-      return
-    }
     if (!wantOn) {
       setNotify('off')
       setMessage(copy.notificationsOffHelp)
