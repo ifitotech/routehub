@@ -45,12 +45,12 @@ export default function NewRouteFields(p: any) {
         </>}
       </section>
       <section className={styles.builderSection}>
-        <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((value: boolean) => !value)}>
+        <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} aria-controls="route-more-details" onClick={event => { event.stopPropagation(); setDetailsOpen((value: boolean) => { const next = !value; if (next) window.setTimeout(() => document.getElementById('route-more-details')?.scrollIntoView({behavior:'smooth', block:'nearest'}), 0); return next }) }}>
           <span className={ui.detailsToggleLeft}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : 'More details'}</span>
           <span className={ui.detailsToggleSummary}><CalendarDays size={14}/>{form.date}<Clock3 size={14}/>{form.time || '--:--'}</span>
           <ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/>
         </button>
-        {detailsOpen && <div className={styles.optionalDetails}>
+        {detailsOpen && <div id="route-more-details" className={styles.optionalDetails}>
           <div className={styles.splitFields}>
             <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm((current: any) => ({...current, date: event.target.value}))}/></div></label>
             <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm((current: any) => ({...current, time: event.target.value}))}/></div></label>
