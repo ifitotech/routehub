@@ -5,7 +5,6 @@ import {Bell, CalendarDays, ChevronRight, CircleHelp, Download, FileText, MapPin
 import {useLocale, useThemePreference, type ThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
-import {Capacitor} from '@capacitor/core'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
 import {getCurrentLocation} from '../../../lib/location'
@@ -245,18 +244,18 @@ export default function DriverV3Settings() {
             <span className={styles.rowCopy}><strong>{t.drvHelp}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
-          <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
-            <span className={styles.rowIcon}><Download size={18} /></span>
-            <span className={styles.rowCopy}>
-              <strong>{locale === 'es' ? 'Buscar actualizaciones' : locale === 'fr' ? 'Rechercher des mises à jour' : 'Check for updates'}</strong>
-              <small>{updateState === 'checking' ? (locale === 'es' ? 'Comprobando…' : 'Checking…') : updateState === 'available' ? `${locale === 'es' ? 'Nueva versión disponible' : 'New version available'}: ${latestVersion}` : updateState === 'current' ? (locale === 'es' ? 'Tienes la versión más reciente' : 'You have the latest version') : locale === 'es' ? `Versión instalada ${DRIVER_APP_VERSION}` : `Installed version ${DRIVER_APP_VERSION}`}</small>
-            </span>
-            <ChevronRight className={styles.rowChevron} size={19} />
-          </button>
         </section>
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
         <DevicePermissions locale={locale} />
+        <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
+          <span className={styles.rowIcon}><Download size={18} /></span>
+          <span className={styles.rowCopy}>
+            <strong>{locale === 'es' ? 'Buscar actualizaciones' : locale === 'fr' ? 'Rechercher des mises à jour' : 'Check for updates'}</strong>
+            <small>{updateState === 'checking' ? (locale === 'es' ? 'Comprobando…' : 'Checking…') : updateState === 'available' ? `${locale === 'es' ? 'Nueva versión disponible' : 'New version available'}: ${latestVersion}` : updateState === 'current' ? (locale === 'es' ? 'Tienes la versión más reciente' : 'You have the latest version') : locale === 'es' ? `Versión instalada ${DRIVER_APP_VERSION}` : `Installed version ${DRIVER_APP_VERSION}`}</small>
+          </span>
+          <ChevronRight className={styles.rowChevron} size={19} />
+        </button>
         <p className={styles.footer}>RouteHub Driver · {copy.versionLabel} {DRIVER_APP_VERSION}</p>
       </div>
 
