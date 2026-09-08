@@ -227,6 +227,14 @@ export default function DriverV3Settings() {
             <span className={styles.rowCopy}><strong>{t.drvHelp}</strong></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
+          <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
+            <span className={styles.rowIcon}><Download size={18} /></span>
+            <span className={styles.rowCopy}>
+              <strong>{locale === 'es' ? 'Descargar app Android' : locale === 'fr' ? 'Télécharger l’app Android' : 'Download Android app'}</strong>
+              <small>{locale === 'es' ? 'Instala la versión de prueba' : locale === 'fr' ? 'Installer la version de test' : 'Install the test version'}</small>
+            </span>
+            <ChevronRight className={styles.rowChevron} size={19} />
+          </a>
         </section>
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
