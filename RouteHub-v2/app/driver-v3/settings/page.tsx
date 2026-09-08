@@ -4,6 +4,8 @@ import {useEffect, useState} from 'react'
 import {Bell, CalendarDays, ChevronRight, CircleHelp, Download, FileText, MapPin, Monitor, Moon, Shield, Sun} from 'lucide-react'
 import {useLocale, useThemePreference, type ThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
+import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
+import {Capacitor} from '@capacitor/core'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
 import {getCurrentLocation} from '../../../lib/location'
@@ -75,6 +77,10 @@ export default function DriverV3Settings() {
 
   const toggleNotify = async (wantOn: boolean) => {
     if (notifyBusy) return
+    if (wantOn && Capacitor.getPlatform() === 'android') {
+      setMessage(locale === 'es' ? 'Las alertas con la app cerrada requieren configurar el servicio de notificaciones Android. Aún no está disponible en esta beta.' : 'Alerts while the app is closed require Android notification service setup. This is not available in this beta yet.')
+      return
+    }
     if (!wantOn) {
       setNotify('off')
       setMessage(copy.notificationsOffHelp)
@@ -254,6 +260,7 @@ export default function DriverV3Settings() {
         </section>
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
+        <DevicePermissions locale={locale} />
         <p className={styles.footer}>RouteHub Driver · {copy.versionLabel} {DRIVER_APP_VERSION}</p>
       </div>
 

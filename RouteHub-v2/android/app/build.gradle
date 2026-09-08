@@ -1,14 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
+    buildFeatures { buildConfig true }
     namespace = "com.routehub.driver"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.routehub.driver"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
-        versionName "0.4.10"
+        versionCode 11
+        versionName "0.4.11"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
