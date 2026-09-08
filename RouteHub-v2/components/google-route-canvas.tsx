@@ -5,7 +5,7 @@ import {loadGoogleMaps} from '../lib/maps/google-maps'
 import {clusterCoordinates, sanitizeCoordinate} from '../lib/maps/coordinates'
 import type {MapCoordinate} from '../lib/maps/types'
 
-type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void;setIcon?:(icon:Record<string,unknown>)=>void}
+type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void;setPath?:(path:MapCoordinate[])=>void;setIcon?:(icon:Record<string,unknown>)=>void}
 type Listener={remove?:()=>void}
 type GoogleMap={
   fitBounds:(bounds:unknown,padding?:number)=>void
@@ -61,6 +61,23 @@ function coordinateFromEvent(event:unknown):MapCoordinate|null{
   return sanitizeCoordinate({lat,lng})
 }
 
+function distanceKm(a:MapCoordinate,b:MapCoordinate){
+  const radius=6371
+  const lat1=a.lat*Math.PI/180,lat2=b.lat*Math.PI/180
+  const dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180
+  const value=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2
+  return radius*2*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
+}
+
+function nearestPathIndex(path:MapCoordinate[],position:MapCoordinate){
+  let index=0,best=Number.POSITIVE_INFINITY
+  path.forEach((point,candidate)=>{
+    const distance=distanceKm(point,position)
+    if(distance<best){best=distance;index=candidate}
+  })
+  return index
+}
+
 /** Shared Google Maps canvas. RouteHub keeps routing data in its own services;
  * this component only renders the real coordinates it receives. */
 export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,onMapClick,onMarkerDrag}:Props){
@@ -69,6 +86,9 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
   const objectsRef=useRef<MapObject[]>([])
   const driverMarkerRef=useRef<MapObject|null>(null)
   const listenersRef=useRef<Listener[]>([])
+  const lastDriverPositionRef=useRef<MapCoordinate|null>(null)
+  const animationFrameRef=useRef<number|null>(null)
+  const routeLinesRef=useRef<{traveled:MapObject|null;pending:MapObject|null}>({traveled:null,pending:null})
   const [error,setError]=useState('')
   const safePath=useMemo(()=>clusterCoordinates(path),[path])
   const safeMarkers=useMemo(()=>markers.flatMap(marker=>{
@@ -105,6 +125,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       objectsRef.current.forEach(object=>object.setMap(null))
       objectsRef.current=[]
       driverMarkerRef.current=null
+      routeLinesRef.current={traveled:null,pending:null}
       listenersRef.current.forEach(listener=>listener.remove?.())
       listenersRef.current=[]
       if(showTraffic){
@@ -113,8 +134,12 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         objectsRef.current.push(traffic)
       }
       if(current.safePath.length>1){
-        objectsRef.current.push(new maps.Polyline({map,path:current.safePath,strokeColor:'#fff',strokeOpacity:.92,strokeWeight:10,zIndex:1}))
-        objectsRef.current.push(new maps.Polyline({map,path:current.safePath,strokeColor:'#1667F2',strokeOpacity:.98,strokeWeight:6,zIndex:2}))
+        const progressPosition=current.driverMarker?.position
+        const splitIndex=progressPosition?nearestPathIndex(current.safePath,progressPosition):0
+        const traveled=current.safePath.slice(0,splitIndex+1)
+        const pending=current.safePath.slice(splitIndex)
+        if(traveled.length>1){const line=new maps.Polyline({map,path:traveled,strokeColor:'#94a3b8',strokeOpacity:.98,strokeWeight:6,zIndex:1});routeLinesRef.current.traveled=line;objectsRef.current.push(line)}
+        if(pending.length>1){const line=new maps.Polyline({map,path:pending,strokeColor:'#1667F2',strokeOpacity:.98,strokeWeight:6,zIndex:2});routeLinesRef.current.pending=line;objectsRef.current.push(line)}
       }
       for(const marker of current.fixedMarkers){
         const item=new maps.Marker({
@@ -156,6 +181,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         })
         objectsRef.current.push(item)
         driverMarkerRef.current=item
+        lastDriverPositionRef.current=current.driverMarker.position
       }
       if(onMapClick){
         const listener=(map as unknown as {addListener?:(event:string,handler:(event:unknown)=>void)=>Listener}).addListener?.('click',event=>{
@@ -181,7 +207,36 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
   useEffect(()=>{
     const position=driverMarker?.position||sanitizeCoordinate(followPosition)
     if(!position)return
-    driverMarkerRef.current?.setPosition?.(position)
+    const marker=driverMarkerRef.current
+    const previous=lastDriverPositionRef.current
+    const updateRouteProgress=(point:MapCoordinate)=>{
+      if(!safePath.length)return
+      const index=nearestPathIndex(safePath,point)
+      routeLinesRef.current.traveled?.setPath?.(safePath.slice(0,index+1))
+      routeLinesRef.current.pending?.setPath?.(safePath.slice(index))
+    }
+    updateRouteProgress(position)
+    if(marker&&previous&&distanceKm(previous,position)<=2){
+      if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
+      const started=performance.now()
+      const animate=(now:number)=>{
+        const progress=Math.min(1,(now-started)/1000)
+        marker.setPosition?.({
+          lat:previous.lat+(position.lat-previous.lat)*progress,
+          lng:previous.lng+(position.lng-previous.lng)*progress,
+        })
+        updateRouteProgress({
+          lat:previous.lat+(position.lat-previous.lat)*progress,
+          lng:previous.lng+(position.lng-previous.lng)*progress,
+        })
+        if(progress<1)animationFrameRef.current=requestAnimationFrame(animate)
+        else {animationFrameRef.current=null;lastDriverPositionRef.current=position}
+      }
+      animationFrameRef.current=requestAnimationFrame(animate)
+    }else{
+      marker?.setPosition?.(position)
+      lastDriverPositionRef.current=position
+    }
     if(driverMarker){
       driverMarkerRef.current?.setIcon?.({
         ...driverTruckIcon(driverMarker.tone||'#0F1D35'),
@@ -191,7 +246,11 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       mapRef.current?.panTo(position)
       mapRef.current?.setZoom(followDevice?17:16)
     }
-  },[followDevice,followToken,followPosition,driverMarker?.position])
+  },[followDevice,followToken,followPosition,driverMarker?.position,safePath])
+
+  useEffect(()=>()=>{
+    if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
+  },[])
 
   return <div ref={containerRef} className={className} aria-label={ariaLabel}>{error&&<div className="live-route-loading" role="alert">{error}</div>}</div>
 }
