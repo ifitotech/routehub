@@ -42,7 +42,7 @@
     grid-template-columns: minmax(0, 1fr) 360px !important;
     gap: 14px !important;
     min-height: 0 !important;
-    padding: 14px 16px !important;
+    padding: 10px 12px !important;
     overflow: auto !important;
     background: #F8FAFC !important;
   }
@@ -57,17 +57,17 @@
     padding: 0 !important; background: transparent !important; border: 0 !important;
   }
   [aria-labelledby='new-route-title'] [class*='builderSection'] {
-    padding: 11px 12px !important; gap: 8px !important; border: 1px solid #E5EAF2 !important; border-radius: 14px !important; background: #fff !important;
+    padding: 8px 10px !important; gap: 6px !important; border: 1px solid #E5EAF2 !important; border-radius: 12px !important; background: #fff !important;
   }
   [aria-labelledby='new-route-title'] [class*='sectionNumber'] {
     width: 24px !important; height: 24px !important; border-radius: 7px !important;
     background: #EEF2FF !important; color: #3157E8 !important; font-size: 12px !important;
   }
-  [aria-labelledby='new-route-title'] h3 { font-size: 14px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] h3 { font-size: 13px !important; margin: 0 !important; }
   [aria-labelledby='new-route-title'] h3 + p { display: none !important; }
   [aria-labelledby='new-route-title'] [class*='segmented'] { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
   [aria-labelledby='new-route-title'] [class*='segmented'] button {
-    height: 32px !important; min-height: 32px !important; padding: 0 10px !important; border-radius: 9px !important; font-size: 11px !important;
+    height: 30px !important; min-height: 30px !important; padding: 0 9px !important; border-radius: 8px !important; font-size: 10px !important;
   }
   [aria-labelledby='new-route-title'] [class*='segmentActive'],
   [aria-labelledby='new-route-title'] [class*='segmented'] button[aria-pressed='true'] {
@@ -75,7 +75,7 @@
   }
   [aria-labelledby='new-route-title'] input,
   [aria-labelledby='new-route-title'] select {
-    min-height: 40px !important; border-radius: 10px !important;
+    min-height: 36px !important; border-radius: 9px !important;
   }
   [aria-labelledby='new-route-title'] [class*='detailsToggle'] {
     display: flex !important; align-items: center !important; min-height: 34px !important; padding: 4px 10px !important;
@@ -100,7 +100,7 @@
     border: 1px solid #E5EAF2 !important; border-radius: 14px !important; background: #fff !important; overflow: hidden !important;
   }
   [aria-labelledby='new-route-title'] .leaflet-container {
-    height: 240px !important; min-height: 240px !important; max-height: 240px !important;
+    height: 210px !important; min-height: 210px !important; max-height: 210px !important;
   }
   [aria-labelledby='new-route-title'] [class*='formColumn'] { overscroll-behavior: contain; scrollbar-gutter: stable; }
 }
