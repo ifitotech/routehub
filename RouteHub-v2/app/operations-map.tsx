@@ -54,6 +54,7 @@ type Summary={count:number;distanceMeters?:number;durationSeconds?:number}
 type Props={
  routes:OperationsRoute[]
  driverLocations?:OperationsDriverLocation[]
+ fitDriverLocations?:boolean
  locale?:string
  interactive?:boolean
  hideFooter?:boolean
@@ -191,7 +192,7 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function OperationsMap({routes,driverLocations=[],locale='en',interactive=true,hideFooter=false,onSummary}:Props){
+export default function OperationsMap({routes,driverLocations=[],fitDriverLocations=false,locale='en',interactive=true,hideFooter=false,onSummary}:Props){
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [sequences,setSequences]=useState<ResolvedSequence[]>([])
  const summaryRef=useRef(onSummary)
@@ -286,8 +287,9 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
    ...sequences.map(sequence=>sequence.start),
    ...resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination),
   ].filter((point):point is Coordinate=>Boolean(point))
-  return assigned.length?assigned:visibleDriverLocations.map(driver=>driver.location)
- },[resolved,sequences,visibleDriverLocations])
+  if(!assigned.length)return visibleDriverLocations.map(driver=>driver.location)
+  return fitDriverLocations?[...assigned,...visibleDriverLocations.map(driver=>driver.location)]:assigned
+ },[fitDriverLocations,resolved,sequences,visibleDriverLocations])
  const center=(fitPoints[0]||allPoints[0]||miamiCenter)
  const copy=locale==='es'
   ?{label:'Mapa operativo de rutas',unavailable:'No hay paradas con ubicación todavía.',current:'En curso',pending:'Pendiente',completed:'Completada',issue:'Incidencia',driver:'Conductor',start:'Inicio'}

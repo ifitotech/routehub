@@ -47,6 +47,10 @@ export default function DriverV3Page() {
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
+  const previewDriverLocation=liveFix
+    ||(drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null
+      ?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}
+      :null)
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -319,7 +323,7 @@ export default function DriverV3Page() {
           <div className={styles.divider}/>
           <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            {previewRoutes.length?<OperationsMap routes={previewRoutes} driverLocations={liveFix?[{id:driverId||'driver',driver_id:driverId,location:{lat:liveFix.lat,lng:liveFix.lng},status:'on_route'}]:[]} locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
+            {previewRoutes.length?<OperationsMap routes={previewRoutes} driverLocations={previewDriverLocation?[{id:driverId||'driver',driver_id:driverId,location:previewDriverLocation,status:'on_route'}]:[]} fitDriverLocations locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
             </div>
           </div>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
