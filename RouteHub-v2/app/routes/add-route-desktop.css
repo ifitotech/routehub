@@ -24,18 +24,18 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 14px 20px !important;
+    min-height: 54px !important; padding: 8px 16px !important;
     border-bottom: 1px solid #EEF1F5 !important;
   }
-  [aria-labelledby='new-route-title'] h2 { font-size: 22px !important; margin: 0 !important; }
+  [aria-labelledby='new-route-title'] h2 { font-size: 18px !important; line-height: 1.1 !important; margin: 0 !important; }
   [aria-labelledby='new-route-title'] [class*='eyebrow'] {
-    display: inline-flex !important; height: 22px !important; padding: 0 8px !important;
+    display: inline-flex !important; height: 18px !important; padding: 0 7px !important;
     border-radius: 6px !important; background: #EEF2FF !important; color: #3157E8 !important;
-    font-size: 10px !important; font-weight: 700 !important; margin: 0 0 4px !important;
+    font-size: 9px !important; font-weight: 700 !important; margin: 0 0 2px !important;
   }
-  [aria-labelledby='new-route-title'] [class*='builderSubtitle'] { font-size: 13px !important; color: #64748B !important; margin: 2px 0 0 !important; }
+  [aria-labelledby='new-route-title'] [class*='builderSubtitle'] { font-size: 11px !important; color: #64748B !important; margin: 0 !important; }
   [aria-labelledby='new-route-title'] [class*='closeButton'] {
-    width: 40px !important; height: 40px !important; min-width: 40px !important; border-radius: 12px !important;
+    width: 32px !important; height: 32px !important; min-width: 32px !important; border-radius: 9px !important;
   }
   [aria-labelledby='new-route-title'] > div:last-child {
     display: grid !important;
