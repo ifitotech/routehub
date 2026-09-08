@@ -5,7 +5,7 @@ export const metadata:Metadata={
   title:'RouteHub Driver',
   manifest:'/manifest-driver.json',
   appleWebApp:{capable:true,title:'RouteHub Driver',statusBarStyle:'default'},
-  icons:{icon:'/routehub-driver-new.jpg?v=19',apple:'/routehub-driver-new.jpg?v=19'},
+  icons:{icon:'/routehub-driver-icon.png?v=20',apple:'/routehub-driver-icon.png?v=20'},
 }
 
 export default function DriverLayout({children}:{children:React.ReactNode}){

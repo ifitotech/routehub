@@ -6,10 +6,7 @@
   "start_url": "/driver?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": [
-    "standalone",
-    "minimal-ui"
-  ],
+  "display_override": ["standalone"],
   "orientation": "any",
   "background_color": "#0F1D35",
   "theme_color": "#0F1D35",
@@ -21,9 +18,9 @@
   ],
   "icons": [
     {
-      "src": "/routehub-driver-new.jpg?v=19",
-      "sizes": "1254x1254",
-      "type": "image/jpeg",
+      "src": "/routehub-driver-icon.png?v=20",
+      "sizes": "1024x1024",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
@@ -34,9 +31,9 @@
       "url": "/driver",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg?v=19",
-          "sizes": "1254x1254",
-          "type": "image/jpeg"
+      "src": "/routehub-driver-icon.png?v=20",
+      "sizes": "1024x1024",
+      "type": "image/png"
         }
       ]
     },
