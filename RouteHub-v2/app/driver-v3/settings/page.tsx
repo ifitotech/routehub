@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, CalendarDays, ChevronRight, CircleHelp, FileText, MapPin, Monitor, Moon, Shield, Sun} from 'lucide-react'
+import {Bell, CalendarDays, ChevronRight, CircleHelp, Download, FileText, MapPin, Monitor, Moon, Shield, Sun} from 'lucide-react'
 import {useLocale, useThemePreference, type ThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -152,6 +152,17 @@ export default function DriverV3Settings() {
               {copy.on}
             </button>
           </div>
+        </section>
+
+        <section className={styles.section}>
+          <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
+            <span className={styles.rowIcon}><Download size={18} /></span>
+            <span className={styles.rowCopy}>
+              <strong>{locale === 'es' ? 'Descargar app Android' : locale === 'fr' ? 'Télécharger l’app Android' : 'Download Android app'}</strong>
+              <small>{locale === 'es' ? 'Instala la versión de prueba en cualquier Android' : locale === 'fr' ? 'Installer la version de test sur Android' : 'Install the test build on any Android device'}</small>
+            </span>
+            <ChevronRight className={styles.rowChevron} size={19} />
+          </a>
         </section>
 
         <section className={styles.section}>
