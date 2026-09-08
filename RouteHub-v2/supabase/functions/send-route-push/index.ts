@@ -1,5 +1,6 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
+import {JWT} from 'npm:google-auth-library@9.15.1'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,18 @@ const cors = {
 
 const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.stringify(body), {status, headers: {...cors, 'content-type': 'application/json'}})
 const managerRoles = ['branch_manager', 'operations_manager', 'sales_representative', 'counter_sales']
+
+async function sendNativePush(tokens: string[], title: string, body: string, routeId: string) {
+  const projectId = Deno.env.get('FIREBASE_PROJECT_ID')
+  const email = Deno.env.get('FIREBASE_CLIENT_EMAIL')
+  const privateKey = Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n')
+  if (!projectId || !email || !privateKey || !tokens.length) return 0
+  const auth = new JWT({email, key: privateKey, scopes: ['https://www.googleapis.com/auth/firebase.messaging']})
+  const {token} = await auth.getAccessToken()
+  if (!token) return 0
+  const results = await Promise.allSettled(tokens.map(deviceToken => fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {method: 'POST', headers: {'content-type': 'application/json', authorization: `Bearer ${token}`}, body: JSON.stringify({message: {token: deviceToken, notification: {title, body}, data: {href: '/driver', routeId}}})})))
+  return results.filter(result => result.status === 'fulfilled' && result.value.ok).length
+}
 
 Deno.serve(async request => {
   if (request.method === 'OPTIONS') return new Response('ok', {headers: cors})
@@ -57,6 +70,9 @@ Deno.serve(async request => {
     const {data: subscriptions, error: subscriptionError} = await service.from('push_subscriptions')
       .select('id,endpoint,p256dh,auth').eq('user_id', route.driver_id)
     if (subscriptionError) throw subscriptionError
+    const {data: nativeTokens, error: nativeTokenError} = await service.from('native_push_tokens')
+      .select('token').eq('user_id', route.driver_id).eq('platform', 'android')
+    if (nativeTokenError) throw nativeTokenError
 
     const kind = String(route.mission_type || 'delivery').toLowerCase()
     const isReturn = kind === 'return' || kind === 'branch'
@@ -86,9 +102,10 @@ Deno.serve(async request => {
       tag: `route:${route.id}`,
     })
     const results = await Promise.allSettled((subscriptions || []).map(subscription => webpush.sendNotification({endpoint: subscription.endpoint, keys: {p256dh: subscription.p256dh, auth: subscription.auth}}, payload)))
+    const nativeDelivered = await sendNativePush((nativeTokens || []).map(item => item.token), title, body, route.id)
     const staleIds = results.flatMap((result, index) => result.status === 'rejected' && (result.reason?.statusCode === 404 || result.reason?.statusCode === 410) ? [subscriptions![index].id] : [])
     if (staleIds.length) await service.from('push_subscriptions').delete().in('id', staleIds)
-    return json({ok: true, delivered: results.filter(result => result.status === 'fulfilled').length, subscriptions: subscriptions?.length || 0})
+    return json({ok: true, delivered: results.filter(result => result.status === 'fulfilled').length + nativeDelivered, subscriptions: subscriptions?.length || 0, nativeTokens: nativeTokens?.length || 0})
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Unable to send route notification'
     console.error(detail)
