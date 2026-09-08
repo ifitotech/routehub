@@ -102,5 +102,8 @@
   [aria-labelledby='new-route-title'] .leaflet-container {
     height: 210px !important; min-height: 210px !important; max-height: 210px !important;
   }
+  [aria-labelledby='new-route-title'] [class*='previewCard'] [class*='canvas'] {
+    height: 210px !important; min-height: 210px !important; max-height: 210px !important;
+  }
   [aria-labelledby='new-route-title'] [class*='formColumn'] { overscroll-behavior: contain; scrollbar-gutter: stable; }
 }
