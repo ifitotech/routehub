@@ -145,6 +145,45 @@ function buildSequence(groupRoutes:ResolvedRoute[],color:string,key:string,drive
  return {key,driverId,routes:sequence.ordered,start:sequence.start,line:sequence.points,color,points:sequence.points,distanceMeters:undefined,durationSeconds:undefined}
 }
 
+type RouteLineSegment={key:string;points:Coordinate[];color:string}
+
+function nearestLinePoint(line:Coordinate[],target:Coordinate,startAt:number){
+ let index=startAt
+ let best=Number.POSITIVE_INFINITY
+ for(let candidate=startAt;candidate<line.length;candidate++){
+  const point=line[candidate]
+  const distance=(point.lat-target.lat)**2+(point.lng-target.lng)**2
+  if(distance<best){best=distance;index=candidate}
+ }
+ return index
+}
+
+/**
+ * A driver's assignment is one ordered route. Render it as non-overlapping
+ * status segments so the operations map never stacks duplicate blue lines.
+ * Completed work stays gray only while there is work still pending; a fully
+ * completed assignment disappears from the route drawing altogether.
+ */
+function routeLineSegments(sequence:ResolvedSequence):RouteLineSegment[]{
+ if(sequence.line.length<2||!sequence.routes.some(route=>isRemaining(route.status)))return []
+ const segments:RouteLineSegment[]=[]
+ let startAt=0
+ for(const route of sequence.routes){
+  if(!route.destination)continue
+  const endAt=nearestLinePoint(sequence.line,route.destination,startAt)
+  if(endAt<=startAt)continue
+  const color=route.status==='completed'?'#94a3b8':isRemaining(route.status)?sequence.color:null
+  if(color){
+   const points=sequence.line.slice(startAt,endAt+1)
+   const previous=segments[segments.length-1]
+   if(previous?.color===color)previous.points.push(...points.slice(1))
+   else segments.push({key:`${route.id}-${startAt}-${endAt}`,points,color})
+  }
+  startAt=endAt
+ }
+ return segments
+}
+
 async function resolveCoordinate(address:string|null|undefined,lat:number|null|undefined,lng:number|null|undefined){
  const known=asPoint(lat,lng)
  if(known)return known
@@ -264,10 +303,7 @@ export default function OperationsMap({routes,driverLocations=[],locale='en',int
     <TileLayer attribution='© OpenStreetMap contributors' url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'/>
     <FitBounds points={fitPoints}/>
     {sequences.map(sequence=><Fragment key={`sequence-${sequence.key}`}>
-     {sequence.line.length>1&&<>
-       <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:'#ffffff',weight:10,opacity:.92,lineCap:'round',lineJoin:'round'}}/>
-       <Polyline positions={sequence.line.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:sequence.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>
-      </>}
+     {routeLineSegments(sequence).map(segment=><Polyline key={segment.key} positions={segment.points.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:segment.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>)}
       {sequence.start&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
     {resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='active'||route.status==='paused'?500:300}>
