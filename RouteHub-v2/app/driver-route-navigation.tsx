@@ -3,9 +3,9 @@
 import dynamic from 'next/dynamic'
 import {stopKind} from '../lib/stop-workflow'
 import {sanitizeCoordinate} from '../lib/maps/coordinates'
-import type {PlannedStop} from './route-plan-map'
+import type {PlannedStop} from './driver-navigation-map'
 
-const RoutePlanMap=dynamic(()=>import('./route-plan-map'),{ssr:false})
+const RoutePlanMap=dynamic(()=>import('./driver-navigation-map'),{ssr:false})
 
 export type NavigationStop={
   id:string
@@ -116,7 +116,8 @@ export default function DriverRouteNavigation({
   const resolvedOrigin=gpsOrigin||storedOrigin
   const resolvedOriginAddress=gpsOrigin?null:originAddress||originFromStops?.origin_address||null
 
-  const liveLocation=safeSharedLocation?{...safeSharedLocation,accuracy:sharedLocation?.accuracy,heading:sharedLocation?.heading??null,at:sharedLocation?.at}:gpsOrigin||storedOrigin
+  // A saved route origin is a planning point, never a live GPS fix.
+  const liveLocation=safeSharedLocation?{...safeSharedLocation,accuracy:sharedLocation?.accuracy,heading:sharedLocation?.heading??null,at:sharedLocation?.at}:null
 
   return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice={false} sharedLocation={liveLocation} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
 }

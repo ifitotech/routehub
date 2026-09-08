@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from 'react'
 import {loadGoogleMaps} from '../lib/maps/google-maps'
 import {clusterCoordinates, sanitizeCoordinate} from '../lib/maps/coordinates'
 import type {MapCoordinate} from '../lib/maps/types'
+import {interpolateHeading,splitNavigationPath,type NavigationProgress} from '../lib/maps/navigation-progress'
 
 type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void;setPath?:(path:MapCoordinate[])=>void;setIcon?:(icon:Record<string,unknown>)=>void}
 type Listener={remove?:()=>void}
@@ -13,6 +14,10 @@ type GoogleMap={
   panTo:(point:MapCoordinate)=>void
   setCenter:(point:MapCoordinate)=>void
   setZoom:(zoom:number)=>void
+  moveCamera?:(camera:{center?:MapCoordinate;zoom?:number;heading?:number;tilt?:number})=>void
+  getHeading?:()=>number
+  getCenter?:()=>unknown
+  getRenderingType?:()=>string
 }
 type MapsApi={
   Map:new(element:HTMLElement,options:Record<string,unknown>)=>GoogleMap
@@ -21,6 +26,8 @@ type MapsApi={
   TrafficLayer:new()=>MapObject
   LatLngBounds:new()=>{extend:(point:MapCoordinate)=>void}
   SymbolPath:{CIRCLE:unknown;FORWARD_CLOSED_ARROW:unknown}
+  RenderingType?:{VECTOR:string}
+  event?:{trigger:(target:unknown,event:string)=>void}
 }
 
 function driverTruckIcon(color:string){
@@ -50,6 +57,12 @@ type Props={
   followDevice?:boolean
   interactive?:boolean
   showTraffic?:boolean
+  navigation?:boolean
+  cameraMode?:'follow'|'overview'|'explore'
+  onCameraModeChange?:(mode:'follow'|'overview'|'explore')=>void
+  navigationProgress?:NavigationProgress|null
+  navigationHeading?:number|null
+  navigationZoom?:number
   onMapClick?:(coordinate:MapCoordinate)=>void
   onMarkerDrag?:(id:string,coordinate:MapCoordinate)=>void
 }
@@ -81,7 +94,7 @@ function nearestPathIndex(path:MapCoordinate[],position:MapCoordinate){
 
 /** Shared Google Maps canvas. RouteHub keeps routing data in its own services;
  * this component only renders the real coordinates it receives. */
-export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,onMapClick,onMarkerDrag}:Props){
+export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,navigation=false,cameraMode='follow',onCameraModeChange,navigationProgress=null,navigationHeading=null,navigationZoom=17.5,onMapClick,onMarkerDrag}:Props){
   const containerRef=useRef<HTMLDivElement>(null)
   const mapRef=useRef<GoogleMap|null>(null)
   const objectsRef=useRef<MapObject[]>([])
@@ -94,7 +107,12 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
   const exploringRef=useRef(false)
   const lastFollowToken=useRef(followToken)
   const cameraInitialized=useRef(false)
-  const safePath=useMemo(()=>clusterCoordinates(path),[path])
+  const [ready,setReady]=useState(0)
+  const cameraHeading=useRef(0)
+  const lastNavigationSample=useRef('')
+  const navigationRef=useRef({cameraMode,onCameraModeChange,navigationProgress,navigationHeading,navigationZoom})
+  navigationRef.current={cameraMode,onCameraModeChange,navigationProgress,navigationHeading,navigationZoom}
+  const safePath=useMemo(()=>navigation?path.flatMap(point=>{const safe=sanitizeCoordinate(point);return safe?[safe]:[]}):clusterCoordinates(path),[path,navigation])
   const safeMarkers=useMemo(()=>markers.flatMap(marker=>{
     const position=sanitizeCoordinate(marker.position)
     return position?[{...marker,position}]:[]
@@ -125,6 +143,12 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         streetViewControl:false,
         fullscreenControl:false,
         gestureHandling:interactive?(followDevice?'greedy':'auto'):'none',
+        ...(navigation?{
+          renderingType:maps.RenderingType?.VECTOR||'VECTOR',
+          disableDefaultUI:true,clickableIcons:false,isFractionalZoomEnabled:true,
+          headingInteractionEnabled:true,tiltInteractionEnabled:true,
+          styles:[{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'off'}]}],
+        }:{}),
       }))
       objectsRef.current.forEach(object=>object.setMap(null))
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
@@ -133,7 +157,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       routeLinesRef.current={traveled:null,pending:null}
       listenersRef.current.forEach(listener=>listener.remove?.())
       listenersRef.current=[]
-      const dragListener=map.addListener?.('dragstart',()=>{exploringRef.current=true})
+      const dragListener=map.addListener?.('dragstart',()=>{exploringRef.current=true;if(navigation)navigationRef.current.onCameraModeChange?.('explore')})
       if(dragListener)listenersRef.current.push(dragListener)
       if(showTraffic){
         const traffic=new maps.TrafficLayer()
@@ -143,8 +167,9 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       if(current.safePath.length>1){
         const progressPosition=current.driverMarker?.position
         const splitIndex=progressPosition?nearestPathIndex(current.safePath,progressPosition):0
-        const traveled=current.safePath.slice(0,splitIndex+1)
-        const pending=current.safePath.slice(splitIndex)
+        const segments=navigation?splitNavigationPath(current.safePath,navigationRef.current.navigationProgress):null
+        const traveled=segments?.traveled||current.safePath.slice(0,splitIndex+1)
+        const pending=segments?.pending||current.safePath.slice(splitIndex)
         {const line=new maps.Polyline({map,path:traveled,strokeColor:'#94a3b8',strokeOpacity:.98,strokeWeight:6,zIndex:1});routeLinesRef.current.traveled=line;objectsRef.current.push(line)}
         {const line=new maps.Polyline({map,path:pending,strokeColor:'#1667F2',strokeOpacity:.98,strokeWeight:6,zIndex:2});routeLinesRef.current.pending=line;objectsRef.current.push(line)}
       }
@@ -181,7 +206,11 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           map,
           position:current.driverMarker.position,
           title:current.driverMarker.title,
-          icon:{
+          icon:navigation?{
+            path:'M 0,-16 L 12,13 L 0,7 L -12,13 Z',scale:1,
+            fillColor:'#1667F2',fillOpacity:1,strokeColor:'#fff',strokeWeight:3,
+            rotation:navigationRef.current.navigationHeading??0,
+          }:{
             ...driverTruckIcon(current.driverMarker.tone||'#0F1D35'),
           },
           zIndex:1000,
@@ -198,7 +227,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         if(listener)listenersRef.current.push(listener)
       }
       const boundsPoints=current.safeFit.length?current.safeFit:clusterCoordinates([...current.safePath,...current.fixedMarkers.map(marker=>marker.position)])
-      if(!cameraInitialized.current||!followDevice){
+      if(!cameraInitialized.current||!followDevice||(navigation&&!current.driverMarker)){
       if(boundsPoints.length>1){
         const bounds=new maps.LatLngBounds()
         boundsPoints.forEach(point=>bounds.extend(point))
@@ -210,24 +239,83 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       if(followDevice&&current.driverMarker){map.setCenter(current.driverMarker.position);map.setZoom(17)}
       cameraInitialized.current=true
       }
+      setReady(value=>value+1)
       setError('')
     }).catch(reason=>{if(!cancelled)setError(reason instanceof Error?reason.message:'Google Maps is unavailable.')})
     return()=>{cancelled=true}
-  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag,followDevice])
+  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag,followDevice,navigation])
+
+  useEffect(()=>{
+    const element=containerRef.current
+    if(!navigation||!element)return
+    const explore=()=>{exploringRef.current=true;navigationRef.current.onCameraModeChange?.('explore')}
+    const touch=(event:TouchEvent)=>{if(event.touches.length>1)explore()}
+    element.addEventListener('wheel',explore,{passive:true})
+    element.addEventListener('touchstart',touch,{passive:true})
+    let disposed=false
+    const observer=new ResizeObserver(()=>{
+      void loadGoogleMaps().then(raw=>{
+        if(disposed||!mapRef.current)return
+        ;(raw as unknown as MapsApi).event?.trigger(mapRef.current,'resize')
+        setReady(value=>value+1)
+      }).catch(()=>undefined)
+    })
+    observer.observe(element)
+    return()=>{disposed=true;observer.disconnect();element.removeEventListener('wheel',explore);element.removeEventListener('touchstart',touch)}
+  },[navigation])
+
+  useEffect(()=>{
+    if(!navigation||!mapRef.current)return
+    exploringRef.current=cameraMode!=='follow'
+    if(cameraMode==='overview'){
+      void loadGoogleMaps().then(raw=>{
+        if(navigationRef.current.cameraMode!=='overview'||!mapRef.current)return
+        const maps=raw as unknown as MapsApi
+        const data=renderDataRef.current
+        const bounds=new maps.LatLngBounds()
+        ;[...data.safePath,...data.safeFit,...(data.driverMarker?[data.driverMarker.position]:[])].forEach(point=>bounds.extend(point))
+        mapRef.current.moveCamera?.({heading:0,tilt:0})
+        mapRef.current.fitBounds(bounds,48)
+      }).catch(()=>undefined)
+    }
+  },[cameraMode,navigation,ready])
 
   useEffect(()=>{
     const position=driverMarker?.position||sanitizeCoordinate(followPosition)
     if(!position)return
     const marker=driverMarkerRef.current
     const previous=lastDriverPositionRef.current
+    // Parent clocks/ETA renders must not restart the camera animation at rest.
+    const sample=`${position.lat}:${position.lng}:${navigationHeading}:${cameraMode}:${followToken}:${ready}`
+    if(navigation&&lastNavigationSample.current===sample)return
+    lastNavigationSample.current=sample
     if(animationFrameRef.current!==null){cancelAnimationFrame(animationFrameRef.current);animationFrameRef.current=null}
     const updateRouteProgress=(point:MapCoordinate)=>{
       if(!safePath.length)return
+      if(navigation){
+        const segments=splitNavigationPath(safePath,navigationRef.current.navigationProgress)
+        routeLinesRef.current.traveled?.setPath?.(segments.traveled)
+        routeLinesRef.current.pending?.setPath?.(segments.pending)
+        return
+      }
       const index=nearestPathIndex(safePath,point)
       routeLinesRef.current.traveled?.setPath?.(safePath.slice(0,index+1))
       routeLinesRef.current.pending?.setPath?.(safePath.slice(index))
     }
     updateRouteProgress(position)
+    const fromHeading=cameraHeading.current
+    const targetHeading=navigationHeading??fromHeading
+    const updateCamera=(point:MapCoordinate,fraction:number)=>{
+      if(!navigation)return
+      const map=mapRef.current
+      const heading=interpolateHeading(fromHeading,targetHeading,fraction)
+      cameraHeading.current=heading
+      if(navigationRef.current.cameraMode==='follow'&&!exploringRef.current){
+        if(map?.moveCamera)map.moveCamera({center:point,heading,tilt:45,zoom:navigationRef.current.navigationZoom})
+        else map?.panTo(point)
+      }
+      marker?.setIcon?.({path:'M 0,-16 L 12,13 L 0,7 L -12,13 Z',scale:1,fillColor:'#1667F2',fillOpacity:1,strokeColor:'#fff',strokeWeight:3,rotation:heading-(map?.getHeading?.()||0)})
+    }
     if(marker&&previous&&distanceKm(previous,position)<=2){
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
       const started=performance.now()
@@ -238,6 +326,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           lng:previous.lng+(position.lng-previous.lng)*progress,
         })
         lastDriverPositionRef.current={lat:previous.lat+(position.lat-previous.lat)*progress,lng:previous.lng+(position.lng-previous.lng)*progress}
+        updateCamera(lastDriverPositionRef.current,progress)
         updateRouteProgress({
           lat:previous.lat+(position.lat-previous.lat)*progress,
           lng:previous.lng+(position.lng-previous.lng)*progress,
@@ -249,8 +338,9 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
     }else{
       marker?.setPosition?.(position)
       lastDriverPositionRef.current=position
+      updateCamera(position,1)
     }
-    if(driverMarker){
+    if(driverMarker&&!navigation){
       driverMarkerRef.current?.setIcon?.({
         ...driverTruckIcon(driverMarker.tone||'#0F1D35'),
       })
@@ -258,11 +348,11 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
     const recenter=lastFollowToken.current!==followToken
     lastFollowToken.current=followToken
     if(recenter)exploringRef.current=false
-    if((followDevice&&!exploringRef.current)||recenter){
+    if(!navigation&&((followDevice&&!exploringRef.current)||recenter)){
       mapRef.current?.panTo(position)
       if(recenter)mapRef.current?.setZoom(followDevice?17:16)
     }
-  },[followDevice,followToken,followPosition,driverMarker,safePath])
+  },[followDevice,followToken,followPosition,driverMarker,safePath,navigation,navigationHeading,navigationProgress,cameraMode,ready])
 
   useEffect(()=>()=>{
     if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
