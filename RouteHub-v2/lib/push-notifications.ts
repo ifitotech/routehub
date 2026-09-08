@@ -1,4 +1,8 @@
 import { getSupabase } from './supabase'
+import {Capacitor, registerPlugin} from '@capacitor/core'
+
+type NativePush = {requestPermissions(): Promise<{receive: string}>; register(): Promise<void>; addListener(event: 'registration', cb: (token: {value: string}) => void): Promise<{remove(): Promise<void>}>}
+const nativePush = registerPlugin<NativePush>('PushNotifications')
 
 async function getVapidPublicKey() {
   const configured = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
@@ -11,6 +15,21 @@ async function getVapidPublicKey() {
 }
 
 export async function registerPushNotifications(vapidPublicKey?: string) {
+  if (Capacitor.isNativePlatform()) {
+    const permission = await nativePush.requestPermissions()
+    if (permission.receive !== 'granted') throw new Error('Notification permission was not granted.')
+    const {data: {user}} = await getSupabase().auth.getUser()
+    if (!user) throw new Error('Sign in before enabling notifications.')
+    const token = await new Promise<string>((resolve, reject) => {
+      let handle: {remove(): Promise<void>} | undefined
+      const timeout = window.setTimeout(() => { void handle?.remove(); reject(new Error('Unable to register this device for notifications.')) }, 15000)
+      void nativePush.addListener('registration', value => { window.clearTimeout(timeout); void handle?.remove(); resolve(value.value) }).then(value => { handle = value }).catch(reject)
+      void nativePush.register().catch(reject)
+    })
+    const {error} = await getSupabase().from('native_push_tokens').upsert({user_id: user.id, platform: Capacitor.getPlatform(), token, user_agent: navigator.userAgent, updated_at: new Date().toISOString()}, {onConflict: 'user_id,platform,token'})
+    if (error) throw error
+    return token
+  }
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Push notifications are not supported in this browser.')
   const key = vapidPublicKey || await getVapidPublicKey()
   const permission = await Notification.requestPermission()
