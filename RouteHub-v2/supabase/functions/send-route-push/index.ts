@@ -15,7 +15,8 @@ async function sendNativePush(tokens: string[], title: string, body: string, rou
   const projectId = Deno.env.get('FIREBASE_PROJECT_ID')
   const email = Deno.env.get('FIREBASE_CLIENT_EMAIL')
   const privateKey = Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n')
-  if (!projectId || !email || !privateKey || !tokens.length) return 0
+  if (!tokens.length) return 0
+  if (!projectId || !email || !privateKey) throw new Error('Firebase Cloud Messaging secrets are not configured')
   const auth = new JWT({email, key: privateKey, scopes: ['https://www.googleapis.com/auth/firebase.messaging']})
   const {token} = await auth.getAccessToken()
   if (!token) return 0
@@ -61,12 +62,6 @@ Deno.serve(async request => {
     if (!callerMembership || !managerRoles.includes(callerMembership.role)) return json({error: 'Manager access required'}, 403)
     if (callerMembership.role === 'branch_manager' && callerMembership.branch_id && route.branch_id && callerMembership.branch_id !== route.branch_id) return json({error: 'Route belongs to another branch'}, 403)
 
-    const publicKey = Deno.env.get('VAPID_PUBLIC_KEY')
-    const privateKey = Deno.env.get('VAPID_PRIVATE_KEY')
-    const subject = Deno.env.get('VAPID_SUBJECT')
-    if (!publicKey || !privateKey || !subject) return json({error: 'VAPID push secrets are not configured'}, 503)
-    webpush.setVapidDetails(subject, publicKey, privateKey)
-
     const {data: subscriptions, error: subscriptionError} = await service.from('push_subscriptions')
       .select('id,endpoint,p256dh,auth').eq('user_id', route.driver_id)
     if (subscriptionError) throw subscriptionError
@@ -101,11 +96,19 @@ Deno.serve(async request => {
       href: '/driver',
       tag: `route:${route.id}`,
     })
-    const results = await Promise.allSettled((subscriptions || []).map(subscription => webpush.sendNotification({endpoint: subscription.endpoint, keys: {p256dh: subscription.p256dh, auth: subscription.auth}}, payload)))
+    const publicKey = Deno.env.get('VAPID_PUBLIC_KEY')
+    const privateKey = Deno.env.get('VAPID_PRIVATE_KEY')
+    const subject = Deno.env.get('VAPID_SUBJECT')
+    const webPushConfigured = Boolean(publicKey && privateKey && subject)
+    if ((subscriptions || []).length && webPushConfigured) webpush.setVapidDetails(subject!, publicKey!, privateKey!)
+    if ((subscriptions || []).length && !webPushConfigured) console.warn('Web push skipped because VAPID secrets are not configured')
+    const results = webPushConfigured
+      ? await Promise.allSettled((subscriptions || []).map(subscription => webpush.sendNotification({endpoint: subscription.endpoint, keys: {p256dh: subscription.p256dh, auth: subscription.auth}}, payload)))
+      : []
     const nativeDelivered = await sendNativePush((nativeTokens || []).map(item => item.token), title, body, route.id)
     const staleIds = results.flatMap((result, index) => result.status === 'rejected' && (result.reason?.statusCode === 404 || result.reason?.statusCode === 410) ? [subscriptions![index].id] : [])
     if (staleIds.length) await service.from('push_subscriptions').delete().in('id', staleIds)
-    return json({ok: true, delivered: results.filter(result => result.status === 'fulfilled').length + nativeDelivered, subscriptions: subscriptions?.length || 0, nativeTokens: nativeTokens?.length || 0})
+    return json({ok: true, delivered: results.filter(result => result.status === 'fulfilled').length + nativeDelivered, subscriptions: subscriptions?.length || 0, nativeTokens: nativeTokens?.length || 0, webPushConfigured})
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Unable to send route notification'
     console.error(detail)

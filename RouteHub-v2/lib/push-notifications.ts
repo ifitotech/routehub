@@ -1,7 +1,12 @@
 import { getSupabase } from './supabase'
 import {Capacitor, registerPlugin} from '@capacitor/core'
 
-type NativePush = {requestPermissions(): Promise<{receive: string}>; register(): Promise<void>; addListener(event: 'registration', cb: (token: {value: string}) => void): Promise<{remove(): Promise<void>}>}
+type NativePush = {
+  requestPermissions(): Promise<{receive: string}>
+  register(): Promise<void>
+  addListener(event: 'registration', cb: (token: {value: string}) => void): Promise<{remove(): Promise<void>}>
+  addListener(event: 'registrationError', cb: (error: {error?: string}) => void): Promise<{remove(): Promise<void>}>
+}
 const nativePush = registerPlugin<NativePush>('PushNotifications')
 
 async function getVapidPublicKey() {
@@ -21,10 +26,26 @@ export async function registerPushNotifications(vapidPublicKey?: string) {
     const {data: {user}} = await getSupabase().auth.getUser()
     if (!user) throw new Error('Sign in before enabling notifications.')
     const token = await new Promise<string>((resolve, reject) => {
-      let handle: {remove(): Promise<void>} | undefined
-      const timeout = window.setTimeout(() => { void handle?.remove(); reject(new Error('Unable to register this device for notifications.')) }, 15000)
-      void nativePush.addListener('registration', value => { window.clearTimeout(timeout); void handle?.remove(); resolve(value.value) }).then(value => { handle = value }).catch(reject)
-      void nativePush.register().catch(reject)
+      let registrationHandle: {remove(): Promise<void>} | undefined
+      let errorHandle: {remove(): Promise<void>} | undefined
+      const cleanup = () => { void registrationHandle?.remove(); void errorHandle?.remove() }
+      const timeout = window.setTimeout(() => { cleanup(); reject(new Error('Unable to register this device for notifications.')) }, 15000)
+      void Promise.all([
+        nativePush.addListener('registration', value => { window.clearTimeout(timeout); cleanup(); resolve(value.value) }),
+        nativePush.addListener('registrationError', value => {
+          window.clearTimeout(timeout)
+          cleanup()
+          reject(new Error(value.error || 'Firebase could not register this device for notifications.'))
+        }),
+      ]).then(([registration, registrationError]) => {
+        registrationHandle = registration
+        errorHandle = registrationError
+        return nativePush.register()
+      }).catch(error => {
+        window.clearTimeout(timeout)
+        cleanup()
+        reject(error)
+      })
     })
     const {error} = await getSupabase().from('native_push_tokens').upsert({user_id: user.id, platform: Capacitor.getPlatform(), token, user_agent: navigator.userAgent, updated_at: new Date().toISOString()}, {onConflict: 'user_id,platform,token'})
     if (error) throw error
