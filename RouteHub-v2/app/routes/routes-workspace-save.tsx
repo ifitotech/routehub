@@ -37,16 +37,23 @@ export function useRoutesSave(w: any) {
       const scheduledLocal = new Date(`${form.date}T${form.time || '00:00'}`)
       if (Number.isNaN(scheduledLocal.getTime())) throw Error(c.invalidDate)
       const scheduledAt = scheduledLocal.toISOString()
+      const branchDefaultOrigin = defaultBranch?.address || defaultBranch?.name || ''
+      const shouldUsePrevious = Boolean(previousRoute && originMode === 'branch' && (!form.origin.trim() || form.origin.trim() === branchDefaultOrigin.trim()))
+      const effectiveOriginMode = shouldUsePrevious ? 'previous' : originMode
       const selected = contacts.find((contact: {id: string}) => contact.id === form.contact_id)
       const destinationAddress = selected?.address || form.destination.trim()
       const destinationName = selected?.company_name || form.destination_label.trim() || form.destination.trim()
       const destinationPhone = form.destination_phone.trim() || selected?.phone || null
       const destinationContactName = form.stop_contact_name.trim() || selected?.contact_name || null
-      let originCoordinate = originMode === 'branch' ? originBranchCoordinate : originMode === 'previous' ? previousDestinationCoordinate : originMode === 'contact' ? originContactCoordinate : originMode === 'custom' ? selectedDriverGps : null
+      let originCoordinate = effectiveOriginMode === 'branch' ? originBranchCoordinate : effectiveOriginMode === 'previous' ? previousDestinationCoordinate : effectiveOriginMode === 'contact' ? originContactCoordinate : effectiveOriginMode === 'custom' ? selectedDriverGps : null
       let destinationCoordinate = form.type === 'return' ? returnBranchCoordinate : sanitizeCoordinate(selectedDestinationLocation?.coordinate) || savedCoordinate(selected)
       const persistedDestinationAddress = form.type === 'return' ? returnBranch?.address || returnBranch?.name || destinationAddress : destinationAddress
       const persistedDestinationName = form.type === 'return' ? returnBranch?.name || destinationName : destinationName
-      const persistedOriginAddress = originBranch?.address || form.origin.trim() || defaultBranch?.address || defaultBranch?.name || c.branch
+      const persistedOriginAddress = effectiveOriginMode === 'previous'
+        ? previousRoute?.destination_address || previousRoute?.destination_name || form.origin.trim() || branchDefaultOrigin || c.branch
+        : effectiveOriginMode === 'branch'
+          ? originBranch?.address || form.origin.trim() || branchDefaultOrigin || c.branch
+          : form.origin.trim() || branchDefaultOrigin || c.branch
       if (!originCoordinate && persistedOriginAddress) {
         originCoordinate = (await geocodeAddress(persistedOriginAddress, undefined, defaultBranch ? savedCoordinate(defaultBranch) : null))?.coordinate || null
       }
@@ -69,7 +76,7 @@ export function useRoutesSave(w: any) {
         mode: 'flexible',
         status: 'published',
         mission_type: form.type,
-        origin_name: originMode === 'branch' ? originBranch?.name || c.branch : originMode === 'previous' ? previousRoute?.destination_name || form.origin.trim() : contacts.find((contact: {address: string}) => contact.address === form.origin)?.company_name || form.origin.trim(),
+        origin_name: effectiveOriginMode === 'branch' ? originBranch?.name || c.branch : effectiveOriginMode === 'previous' ? previousRoute?.destination_name || form.origin.trim() : contacts.find((contact: {address: string}) => contact.address === form.origin)?.company_name || form.origin.trim(),
         origin_address: persistedOriginAddress,
         origin_lat: originCoordinate?.lat ?? null,
         origin_lng: originCoordinate?.lng ?? null,

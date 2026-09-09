@@ -13,7 +13,7 @@ const OperationsMap = nextDynamic(() => import('../operations-map'), {ssr: false
 export default function NewRouteDialog(d: any) {
   const p = d
   if (!p.open) return null
-  const {saving, setOpen, justCreated, locale, c, openBuilder, previewOpen, setPreviewOpen, form, setForm, selectedContact, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, planningMapRoutes, setSelectedDestinationLocation} = p
+  const {saving, setOpen, justCreated, locale, c, openBuilder, previewOpen, setPreviewOpen, form, setForm, selectedContact, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, planningMapRoutes, setSelectedDestinationLocation, selectDriver} = p
   const typeDesc = (value: string) => value==='pickup' ? (locale==='es'?'Recoger en un punto':'Pick up items from a location') : value==='return' ? (locale==='es'?'Regresar a la tienda':'Return to store') : (locale==='es'?'Entregar al cliente':'Deliver to customer')
   const routes = planningMapRoutes || []
   const statusOf = (list: string[]) => routes.filter((route: {status?: string}) => list.includes(route.status || '')).length
