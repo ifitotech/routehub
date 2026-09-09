@@ -1,6 +1,6 @@
 'use client'
 
-import {useMemo} from 'react'
+import {useEffect, useMemo} from 'react'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 import type {GeocodedLocation} from '../../lib/maps/types'
 import type {AddressSearchSuggestion, LocalAddressSuggestion} from '../google-address-input'
@@ -53,9 +53,18 @@ export function useRoutesDerived() {
   ], [branches, contacts])
   const oc = originCopy[locale]
   const defaultBranch = branches.find(branch => branch.id === branchId) || branches[0]
-  const previousRoute = useMemo(() => routes
-    .filter(route => route.driver_id === form.driver_id && route.route_date === form.date)
-    .sort((a, b) => Number(b.position || 0) - Number(a.position || 0))[0], [routes, form.driver_id, form.date])
+  const findPreviousRoute = (driverId: string, date: string) => routes
+    .filter(route => route.driver_id === driverId && routeDateValue(route) === date)
+    .sort((a, b) => Number(b.position || 0) - Number(a.position || 0))[0]
+  const previousRoute = useMemo(() => findPreviousRoute(form.driver_id, form.date), [routes, form.driver_id, form.date])
+  useEffect(() => {
+    if (!form.driver_id || (originMode !== 'branch' && originMode !== 'previous')) return
+    const route = findPreviousRoute(form.driver_id, form.date)
+    const nextOrigin = route?.destination_address || route?.destination_name || defaultBranch?.address || defaultBranch?.name || ''
+    const nextMode: OriginMode = route ? 'previous' : 'branch'
+    setOriginMode(current => current === nextMode ? current : nextMode)
+    setForm(current => current.origin === nextOrigin ? current : {...current, origin: nextOrigin})
+  }, [defaultBranch?.address, defaultBranch?.name, form.date, form.driver_id, originMode, routes])
   const branchForValue = (value: string) => branches.find(branch => (branch.address || branch.name) === value) || null
   const originContact = originMode === 'contact' ? contacts.find(contact => contact.address === form.origin) || null : null
   const originBranch = originMode === 'branch' ? branchForValue(form.origin) || defaultBranch : null
@@ -121,6 +130,12 @@ export function useRoutesDerived() {
     if (mode === 'custom') setForm(current => ({...current, origin: ''}))
   }
 
+  const selectDriver = (driverId: string) => {
+    const route = findPreviousRoute(driverId, form.date)
+    setForm(current => ({...current, driver_id: driverId, origin: route?.destination_address || route?.destination_name || defaultBranch?.address || defaultBranch?.name || ''}))
+    setOriginMode(route ? 'previous' : 'branch')
+  }
+
   const updateDestination = (value: string) => {
     const normalized = value.trim().toLowerCase()
     const contact = contacts.find(item => {
@@ -182,13 +197,13 @@ export function useRoutesDerived() {
     setPendingLocation(null)
   }
 
-  const priorityRoutes = routes.filter(route => route.driver_id === form.driver_id && route.route_date === form.date && ['draft', 'pending', 'published', 'paused'].includes(route.status || '')).sort(routeSort)
+  const priorityRoutes = routes.filter(route => route.driver_id === form.driver_id && routeDateValue(route) === form.date && ['draft', 'pending', 'published', 'paused'].includes(route.status || '')).sort(routeSort)
 
   return {
     ...core,
     defaultBranch, todayValue, oc, selectedContact, destinationSuggestions, searchContext,
     selectDestinationContact, selectExternalDestination, updateDestination, useConfirmedDestination,
-    setOriginSource, scheduledTodayRoutes, upcomingRoutes, completedTodayRoutes,
+    setOriginSource, selectDriver, scheduledTodayRoutes, upcomingRoutes, completedTodayRoutes,
     issueTodayRoutes, planningMapRoutes, todayRoutes, inProgressRoutes, priorityRoutes,
     selectedDriverGps, originBranchCoordinate, previousDestinationCoordinate,
     originContactCoordinate, returnBranchCoordinate, returnBranch, originBranch,

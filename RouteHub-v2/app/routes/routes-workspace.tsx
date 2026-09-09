@@ -3,7 +3,7 @@
 import {chooseDefaultAssignee} from '../../lib/route-assignment'
 import {getSupabase} from '../../lib/supabase'
 import type {Contact, FormState} from './routes-model'
-import {initialForm} from './routes-model'
+import {initialForm, routeDateValue} from './routes-model'
 import {useRoutesDerived} from './routes-workspace-derived'
 import {useRoutesSave} from './routes-workspace-save'
 
@@ -66,7 +66,7 @@ export function useRoutesWorkspace() {
     const nextPriority: FormState['priority'] = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
     const next = initialForm(nextPriority)
     const driverId = chooseDefaultAssignee(drivers, defaultBranch?.primary_driver_id)?.user_id || form.driver_id || ''
-    const lastForDriver = routes.filter(route => route.driver_id === driverId && route.route_date === next.date).sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0]
+    const lastForDriver = routes.filter(route => route.driver_id === driverId && routeDateValue(route) === next.date).sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0]
     setOriginMode(lastForDriver ? 'previous' : 'branch')
     setForm({...next, driver_id: driverId, origin: lastForDriver?.destination_address || lastForDriver?.destination_name || defaultBranch?.address || defaultBranch?.name || ''})
     setMessage('')
