@@ -297,7 +297,9 @@ export default function DriverV3Page() {
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
               {route.destination_address&&<p>{route.destination_address}</p>}
-              {kind!=='return'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
+              <div className={styles.orderSlot} aria-hidden={kind!=='pickup'||!route.order_number}>
+                {kind==='pickup'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
+              </div>
             </div>
             {route.destination_phone?(
               <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} className={styles.operationIcon} style={{background:'#EAF2FF',color:'#1667F2',textDecoration:'none'}} aria-label={t.drvCall||'Call'}>

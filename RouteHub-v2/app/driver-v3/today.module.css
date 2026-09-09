@@ -16,6 +16,7 @@
 .destination{display:grid;grid-template-columns:minmax(0,1fr) 56px;align-items:center;gap:12px;margin-top:10px}
 .destination h1{margin:0;color:#0f172a;font-size:clamp(24px,6.8vw,28px);line-height:1.15;font-weight:750;letter-spacing:-.025em;overflow-wrap:anywhere}
 .destination p{margin:6px 0 0;color:#667280;font-size:14px;line-height:19px;font-weight:500;overflow-wrap:anywhere}
+.orderSlot{min-height:42px;margin-top:7px;display:flex;align-items:flex-start}
 .order{display:inline-flex;align-items:center;min-height:26px;margin-top:8px;padding:0 9px;border-radius:7px;background:#f2f6fb;color:#315477;font-size:12px;line-height:26px;font-weight:750;overflow-wrap:anywhere}
 .operationIcon{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;justify-self:end}
 .operationIcon svg{width:28px;height:28px;stroke-width:2.2}
@@ -123,7 +124,8 @@
   .destination{grid-template-columns:minmax(0,1fr) 46px;gap:8px;margin-top:6px}
   .destination h1{font-size:21px;line-height:1.05}
   .destination p{margin-top:4px;font-size:12px;line-height:16px}
-  .order{min-height:22px;margin-top:5px;padding-inline:7px;font-size:11px;line-height:22px}
+  .orderSlot{min-height:31px;margin-top:4px}
+  .order{min-height:22px;margin-top:0;padding-inline:7px;font-size:11px;line-height:22px}
   .operationIcon{width:46px;height:46px}
   .operationIcon svg{width:23px;height:23px}
   .hero>.divider{margin:7px 0}
@@ -146,7 +148,8 @@
   .destination{margin-top:5px;gap:7px}
   .destination h1{font-size:20px;line-height:1.04}
   .destination p{margin-top:3px;font-size:12px;line-height:15px}
-  .order{min-height:22px;margin-top:4px;font-size:11px;line-height:22px}
+  .orderSlot{min-height:28px;margin-top:3px}
+  .order{min-height:22px;margin-top:0;font-size:11px;line-height:22px}
   .operationIcon{width:43px;height:43px}
   .operationIcon svg{width:21px;height:21px}
   .hero>.divider{margin:5px 0}
