@@ -77,7 +77,8 @@
 .summaryGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;text-align:center}
 .summaryGrid strong{display:block;font-size:16px}
 .summaryGrid span{color:#667280;font-size:10px}
-.nextStopSummary{min-height:104px;touch-action:pan-y}
+.routeSwipeZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:54px;padding:8px 12px;color:#64748b;touch-action:pan-y;user-select:none}
+.routeSwipeHandle{width:42px;height:5px;border-radius:999px;background:#cbd5e1}
 .nextStopSwipeHint{margin:0 0 8px;color:#64748b;font-size:11px;line-height:14px;font-weight:700;text-align:center}
 .nextStopButton{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit}
 .nextStopContent{display:grid;grid-template-columns:minmax(0,1fr) 28px;align-items:center;gap:10px}

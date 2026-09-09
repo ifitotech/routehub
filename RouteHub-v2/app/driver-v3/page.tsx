@@ -346,9 +346,10 @@ export default function DriverV3Page() {
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
         <section
-          className={`${styles.summary} ${styles.nextStopSummary}`}
+          className={styles.routeSwipeZone}
           aria-label={t.drvNextStop}
-          onTouchStart={event=>{routeSwipeStart.current=event.touches[0]?.clientY??null;routeSwipeTriggered.current=false}}
+          onClick={()=>{if(!routeSwipeTriggered.current)setSheet('next')}}
+          onTouchStart={event=>{routeSwipeStart.current=event.touches[0]?.clientY??null}}
           onTouchEnd={event=>{
             if(routeSwipeStart.current==null)return
             const end=event.changedTouches[0]?.clientY
@@ -361,24 +362,8 @@ export default function DriverV3Page() {
             }
           }}
         >
-          <p className="eyebrow">{t.drvNextStop}</p>
+          <span className={styles.routeSwipeHandle} aria-hidden="true" />
           <p className={styles.nextStopSwipeHint}>{locale==='es'?'Desliza hacia arriba para ver las siguientes rutas':'Swipe up to see the next routes'}</p>
-          {nextRoute?(
-            <button
-              type="button"
-              className={styles.nextStopButton}
-              onClick={()=>{if(!routeSwipeTriggered.current)setSheet('next')}}
-            >
-            <div className={styles.nextStopContent}>
-              <div>
-                <span className={`${styles.typeBadge} ${styles[nextKind||'return']}`}><Package/>{nextLabel}</span>
-                <strong>{nextRoute.destination_name||nextRoute.destination_address||t.drvCurrentStopName}</strong>
-                {nextRoute.destination_address&&<p>{nextRoute.destination_address}</p>}
-              </div>
-              <ChevronRight aria-hidden="true"/>
-            </div>
-            </button>
-          ):<div className={styles.nextStopEmpty}>{t.drvNoMoreStops}</div>}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 
