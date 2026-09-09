@@ -18,14 +18,13 @@ import {useLocale} from '../../lib/use-preferences'
 import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 
-const OpenStreetRoutePreview = dynamic(() => import('../../components/openstreet-route-preview'), {ssr: false})
-const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
+const DriverRoutePreview = dynamic(() => import('../../components/driver-v3/DriverRoutePreview'), {ssr: false})
 
 export default function DriverV3Page() {
   const router=useRouter()
   const searchParams=useSearchParams()
   const {t,locale}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
@@ -49,10 +48,6 @@ export default function DriverV3Page() {
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
-  const previewDriverLocation=liveFix
-    ||(drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null
-      ?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}
-      :null)
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -280,7 +275,6 @@ export default function DriverV3Page() {
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
   const action=primary()
-  const previewRoutes = [snapshot?.queue.current, ...(snapshot?.queue.upcoming||[])].filter(Boolean).filter((item:any)=>!['completed','issue','cancelled'].includes(String(item.status))) as any[]
   const openRoutesWithTransition=()=>{
     if(typeof document!=='undefined'&&'startViewTransition' in document){
       ;(document as Document & {startViewTransition?:(callback:()=>void)=>unknown}).startViewTransition?.(()=>router.push('/driver/history'))
@@ -330,7 +324,7 @@ export default function DriverV3Page() {
           <div className={styles.divider}/>
           <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
             <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            {previewRoutes.length?<OperationsMap routes={previewRoutes} driverLocations={previewDriverLocation?[{id:driverId||'driver',driver_id:driverId,location:previewDriverLocation,status:'on_route'}]:[]} fitDriverLocations locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
+            <DriverRoutePreview route={route} locale={locale}/>
             </div>
           </div>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
