@@ -1,6 +1,6 @@
-.page{display:flex;flex-direction:column;gap:12px;width:100%;max-width:100%;min-height:100%;padding:2px 0 4px;box-sizing:border-box;color:#0f172a}
+.page{display:flex;flex-direction:column;gap:10px;width:100%;max-width:100%;height:100%;min-height:0;padding:2px 0 4px;box-sizing:border-box;color:#0f172a;overflow:hidden}
 .startDay{display:grid;place-items:center;width:100%;height:44px;border-radius:12px;background:#eaf2ff;color:#1667f2;font-size:13px;font-weight:800;text-decoration:none}
-.hero{display:flex;flex-direction:column;flex:0 0 auto;width:100%;padding:16px;border:1px solid #e5e7eb;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06);box-sizing:border-box}
+.hero{display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:16px;border:1px solid #e5e7eb;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06);box-sizing:border-box;min-height:0}
 .heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
 .typeBadge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;line-height:28px;font-weight:800;letter-spacing:.01em}
 .typeBadge svg{width:15px;height:15px}
@@ -114,18 +114,18 @@
    navigation on compact handsets without changing the normal tablet layout. */
 @media (max-width:400px) and (max-height:850px){
   .page{gap:7px;padding-bottom:0}
-  .hero{padding:11px;border-radius:17px}
+  .hero{padding:10px;border-radius:17px}
   .heroTop{min-height:24px}
   .typeBadge{height:24px;padding-inline:8px;font-size:11px;line-height:24px}
   .typeBadge svg{width:13px;height:13px}
   .destination{grid-template-columns:minmax(0,1fr) 46px;gap:8px;margin-top:6px}
-  .destination h1{font-size:22px;line-height:1.05}
+  .destination h1{font-size:21px;line-height:1.05}
   .destination p{margin-top:4px;font-size:12px;line-height:16px}
   .order{min-height:22px;margin-top:5px;padding-inline:7px;font-size:11px;line-height:22px}
   .operationIcon{width:46px;height:46px}
   .operationIcon svg{width:23px;height:23px}
   .hero>.divider{margin:7px 0}
-  .hero>button[style]{padding:8px 9px!important;margin-top:5px!important;border-radius:11px!important}
+  .hero>button[style]{padding:7px 9px!important;margin-top:4px!important;border-radius:11px!important}
   .hero>button[style] strong{font-size:13px!important}
   .hero>button[style] .stopNumber{width:24px;height:24px;font-size:12px}
   .mapPreview{height:128px;min-height:128px;max-height:128px;flex-basis:128px;margin-bottom:8px;border-radius:11px}
@@ -139,6 +139,22 @@
   .routeMoreButton strong{font-size:13px;line-height:16px}
   .routeMoreButton small{font-size:10px;line-height:13px}
   .routeMoreIcon{width:27px;height:27px;font-size:17px}
+}
+@media (max-height:760px){
+  .page{gap:6px}
+  .hero{padding:10px;border-radius:16px}
+  .destination{margin-top:5px;gap:7px}
+  .destination h1{font-size:20px;line-height:1.04}
+  .destination p{margin-top:3px;font-size:12px;line-height:15px}
+  .order{min-height:22px;margin-top:4px;font-size:11px;line-height:22px}
+  .operationIcon{width:43px;height:43px}
+  .operationIcon svg{width:21px;height:21px}
+  .hero>.divider{margin:5px 0}
+  .primary{min-height:50px;height:50px;font-size:14px}
+  .secondaryActions{margin-top:6px;gap:6px}
+  .secondaryActions a,.secondaryActions button{min-height:42px;height:42px;font-size:12px}
+  .returnToAppHint{margin-top:5px;padding:5px 8px;font-size:10px;line-height:13px}
+  .routeMoreButton{min-height:48px;padding:6px 9px}
 }
 @media(min-width:420px){
   .mapPreview{height:196px;min-height:196px;max-height:196px;flex-basis:196px}
