@@ -42,6 +42,11 @@ export default function DriverV3Page() {
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
+  const serviceContext=kind==='pickup'
+    ? (route?.order_number ? `PO ${route.order_number}` : (locale==='es'?'Parada de recogida':'Pickup stop'))
+    : kind==='delivery'
+      ? (locale==='es'?'Parada de entrega':'Delivery stop')
+      : (locale==='es'?'Regreso a sucursal':'Return to branch')
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
@@ -297,8 +302,8 @@ export default function DriverV3Page() {
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
               {route.destination_address&&<p>{route.destination_address}</p>}
-              <div className={styles.orderSlot} aria-hidden={kind!=='pickup'||!route.order_number}>
-                {kind==='pickup'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
+              <div className={styles.orderSlot}>
+                <span className={styles.order}>{serviceContext}</span>
               </div>
             </div>
             {route.destination_phone?(
