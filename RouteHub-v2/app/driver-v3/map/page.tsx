@@ -57,7 +57,7 @@ export default function DriverV3Map() {
   }
 
   return (
-    <DriverV3Shell active="map" flush>
+    <DriverV3Shell active="map" flush hideNav>
       <main className="driver-navigation-page">
       {loading ? (
         <div className="driver-navigation-state">{t.drvLoadingMap}</div>
