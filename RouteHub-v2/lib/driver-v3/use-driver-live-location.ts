@@ -7,16 +7,21 @@ import {
   getLocationPermission,
 } from '../location'
 import {updateDrivingLocation} from '../driving-session'
+import {startNativeLocationTracking, stopNativeLocationTracking} from '../native-location-tracking'
 import {useDriverData} from './use-driver-data'
 
 /** Live GPS only while Driving Day is active AND the OS already allows it. */
 export function useDriverLiveLocation() {
-  const {drivingSession, driverId, setLiveFix} = useDriverData()
+  const {drivingSession, driverId, routes, setLiveFix} = useDriverData()
   const last = useRef<{at: number; lat: number; lng: number; accuracy: number; heading: number | null} | null>(null)
   const sessionId = drivingSession?.id
+  const activeRoute = routes.some(route => route.status === 'active')
 
   useEffect(() => {
-    if (!drivingSession || !driverId || typeof navigator === 'undefined' || !navigator.geolocation) return
+    if (!drivingSession || !driverId) {
+      void stopNativeLocationTracking().catch(() => {})
+      return
+    }
     let disposed = false
     let wake: WakeLockSentinel | null = null
     let watch: number | null = null
@@ -91,10 +96,17 @@ export function useDriverLiveLocation() {
       const permission = await getLocationPermission()
       if (disposed) return
       if (!canStartBackgroundGps(permission)) return
+      try {
+        const nativeStarted = await startNativeLocationTracking({sessionId: drivingSession.id, driverId, intervalMinutes: activeRoute ? 5 : 20})
+        if (nativeStarted) return
+      } catch {
+        // Browser/PWA fallback remains available when native setup is unavailable.
+      }
+      if (typeof navigator === 'undefined' || !navigator.geolocation) return
       void send()
       void holdScreen()
       startWatch()
-      interval = window.setInterval(() => void send(), 5 * 60 * 1000)
+      interval = window.setInterval(() => void send(), (activeRoute ? 5 : 20) * 60 * 1000)
     })()
 
     const onVisible = () => {
@@ -109,5 +121,5 @@ export function useDriverLiveLocation() {
       if (watch != null) navigator.geolocation.clearWatch(watch)
       void wake?.release()
     }
-  }, [sessionId, driverId, setLiveFix, drivingSession])
+  }, [sessionId, driverId, setLiveFix, drivingSession, activeRoute])
 }

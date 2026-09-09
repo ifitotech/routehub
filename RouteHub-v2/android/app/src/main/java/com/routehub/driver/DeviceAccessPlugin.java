@@ -20,6 +20,48 @@ import com.getcapacitor.annotation.PermissionCallback;
 })
 public class DeviceAccessPlugin extends Plugin {
     @PluginMethod
+    public void startLocationTracking(PluginCall call) {
+        String url = call.getString("supabaseUrl", "");
+        String key = call.getString("supabaseAnonKey", "");
+        String accessToken = call.getString("accessToken", "");
+        String refreshToken = call.getString("refreshToken", "");
+        String sessionId = call.getString("sessionId", "");
+        String driverId = call.getString("driverId", "");
+        if (!url.startsWith("https://") || key.isEmpty() || accessToken.isEmpty() || refreshToken.isEmpty() || sessionId.isEmpty() || driverId.isEmpty()) {
+            call.reject("A secure signed-in location session is required");
+            return;
+        }
+        if (getPermissionState("location") != com.getcapacitor.PermissionState.GRANTED) {
+            call.reject("Allow precise location before starting Driving Day");
+            return;
+        }
+        Intent intent = new Intent(getContext(), DriverLocationService.class);
+        intent.setAction(DriverLocationService.ACTION_START);
+        intent.putExtra("supabaseUrl", url);
+        intent.putExtra("supabaseAnonKey", key);
+        intent.putExtra("accessToken", accessToken);
+        intent.putExtra("refreshToken", refreshToken);
+        intent.putExtra("sessionId", sessionId);
+        intent.putExtra("driverId", driverId);
+        intent.putExtra("intervalMinutes", call.getInt("intervalMinutes", 20));
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) getContext().startForegroundService(intent);
+            else getContext().startService(intent);
+            call.resolve();
+        } catch (Exception error) { call.reject("Unable to start location sharing", error); }
+    }
+
+    @PluginMethod
+    public void stopLocationTracking(PluginCall call) {
+        try {
+            Intent intent = new Intent(getContext(), DriverLocationService.class);
+            intent.setAction(DriverLocationService.ACTION_STOP);
+            getContext().startService(intent);
+            call.resolve();
+        } catch (Exception error) { call.reject("Unable to stop location sharing", error); }
+    }
+
+    @PluginMethod
     public void downloadUpdate(PluginCall call) {
         String url = call.getString("url", "");
         String fileName = call.getString("fileName", "RouteHub-Driver.apk");
@@ -48,6 +90,7 @@ public class DeviceAccessPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("location", getPermissionState("location").toString());
         result.put("camera", getPermissionState("camera").toString());
+        result.put("tracking", DriverLocationService.isTracking(getContext()));
         result.put("versionCode", BuildConfig.VERSION_CODE);
         call.resolve(result);
     }

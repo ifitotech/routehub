@@ -5,7 +5,7 @@ import {getSupabase} from '../supabase'
 import {operationalDate} from '../driver-queue'
 import {buildDriverSnapshot} from '../driver/driver-refresh'
 import type {DriverV3Route} from './types'
-import {getActiveDrivingSession, startDrivingDay, type DrivingSession} from '../driving-session'
+import {getActiveDrivingSession, type DrivingSession} from '../driving-session'
 import {createRealtimeRefresh} from '../realtime-sync'
 
 type DriverV3Data = {
@@ -87,14 +87,6 @@ function useDriverDataInternal(): DriverV3Data {
       // The route remains usable and the session can be recovered on the next
       // focus/refresh once the protected session table is available.
       let session = await getActiveDrivingSession(user.id)
-      if (!session.error && !session.data) {
-        const started = await startDrivingDay({
-          companyId: membership.company_id,
-          branchId: membership.branch_id ?? null,
-          driverId: user.id,
-        })
-        if (!started.error && started.data) session = started
-      }
       setDrivingSession(session.data)
       if (session.data?.last_lat != null && session.data?.last_lng != null) {
         setLiveFix({
