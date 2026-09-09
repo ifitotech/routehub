@@ -39,6 +39,7 @@ export default function DriverV3Page() {
   const nameRef=useRef<HTMLInputElement>(null)
   const photoRef=useRef<HTMLInputElement>(null)
   const [nameFocus,setNameFocus]=useState(false)
+  const routeSwipeStart=useRef<number|null>(null)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
   const operation=snapshot?.currentOperation
@@ -279,6 +280,11 @@ export default function DriverV3Page() {
   }
   const action=primary()
   const previewRoutes = [snapshot?.queue.current, ...(snapshot?.queue.upcoming||[])].filter(Boolean).filter((item:any)=>!['completed','issue','cancelled'].includes(String(item.status))) as any[]
+  const openRoutesWithTransition=()=>{
+    if(typeof document!=='undefined'&&'startViewTransition' in document){
+      ;(document as Document & {startViewTransition?:(callback:()=>void)=>unknown}).startViewTransition?.(()=>router.push('/driver/history'))
+    }else router.push('/driver/history')
+  }
 
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
@@ -340,8 +346,20 @@ export default function DriverV3Page() {
         </section>
         <section className={`${styles.summary} ${styles.nextStopSummary}`} aria-label={t.drvNextStop}>
           <p className="eyebrow">{t.drvNextStop}</p>
+          <p className={styles.nextStopSwipeHint}>{locale==='es'?'Desliza hacia arriba para ver las siguientes rutas':'Swipe up to see the next routes'}</p>
           {nextRoute?(
-            <button type="button" className={styles.nextStopButton} onClick={()=>setSheet('next')}>
+            <button
+              type="button"
+              className={styles.nextStopButton}
+              onClick={()=>setSheet('next')}
+              onTouchStart={event=>{routeSwipeStart.current=event.touches[0]?.clientY??null}}
+              onTouchEnd={event=>{
+                if(routeSwipeStart.current==null)return
+                const delta=event.changedTouches[0]?.clientY-routeSwipeStart.current
+                routeSwipeStart.current=null
+                if(delta<-70)openRoutesWithTransition()
+              }}
+            >
             <div className={styles.nextStopContent}>
               <div>
                 <span className={`${styles.typeBadge} ${styles[nextKind||'return']}`}><Package/>{nextLabel}</span>

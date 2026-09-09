@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname,useRouter} from 'next/navigation'
+import {useRef} from 'react'
 import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
@@ -19,6 +20,7 @@ type Props = {
   headerStatus?: string
   flush?: boolean
   hideNav?: boolean
+  swipeDownTo?: string
 }
 
 export default function DriverV3Shell({
@@ -32,6 +34,7 @@ export default function DriverV3Shell({
   headerStatus,
   flush = false,
   hideNav = false,
+  swipeDownTo,
 }: Props) {
   const {t} = useLocale()
   const pathname = usePathname()
@@ -40,6 +43,12 @@ export default function DriverV3Shell({
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
   const mapOpen = pathname === '/driver/map' || pathname.startsWith('/driver/map/')
+  const swipeStart=useRef<number|null>(null)
+  const navigateWithTransition=(path:string)=>{
+    if(typeof document!=='undefined'&&'startViewTransition' in document){
+      ;(document as Document & {startViewTransition?:(callback:()=>void)=>unknown}).startViewTransition?.(()=>router.push(path))
+    }else router.push(path)
+  }
 
   return (
     <main className={styles.shell}>
@@ -62,7 +71,16 @@ export default function DriverV3Shell({
         </Link>
       </header>
 
-      <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
+      <section
+        className={`${styles.content} ${flush ? styles.contentFlush : ''}`}
+        onTouchStart={event=>{swipeStart.current=event.touches[0]?.clientY??null}}
+        onTouchEnd={event=>{
+          if(!swipeDownTo||swipeStart.current==null)return
+          const delta=event.changedTouches[0]?.clientY-swipeStart.current
+          swipeStart.current=null
+          if(delta>70)navigateWithTransition(swipeDownTo)
+        }}
+      >{children}</section>
 
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
         <Link className={active === 'today' || active === 'route' ? styles.active : ''} href="/driver">

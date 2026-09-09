@@ -74,7 +74,7 @@ export default function History() {
   }
 
   return (
-    <DriverV3Shell active="history" title={t.drvRouteHistory} subtitle={day}>
+    <DriverV3Shell active="history" title={t.drvRouteHistory} subtitle={day} swipeDownTo="/driver">
       <label className="card" style={{display: 'block', marginBottom: 12, padding: '12px 14px'}}>
         <span className="eyebrow" style={{display: 'block', marginBottom: 6}}>{t.drvRouteHistory}</span>
         <input
