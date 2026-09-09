@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import {ChevronLeft, History, Home, UserRound} from 'lucide-react'
+import {usePathname,useRouter} from 'next/navigation'
+import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {useLocale} from '../../lib/use-preferences'
 
@@ -33,7 +34,12 @@ export default function DriverV3Shell({
   hideNav = false,
 }: Props) {
   const {t} = useLocale()
+  const pathname = usePathname()
+  const router = useRouter()
   const isStack = mode === 'stack'
+  const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
+  const menuHref = profileOpen ? '/driver' : '/driver/more'
+  const mapOpen = pathname === '/driver/map' || pathname.startsWith('/driver/map/')
 
   return (
     <main className={styles.shell}>
@@ -42,11 +48,18 @@ export default function DriverV3Shell({
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
-        ) : <span className={styles.headerSpacer} aria-hidden="true" />}
+        ) : (
+          <button type="button" className={styles.headerIcon} aria-label={mapOpen ? (t.drvToday || 'Close map') : (t.drvMap || 'Map')} aria-pressed={mapOpen} onClick={() => mapOpen ? router.back() : router.push('/driver/map')}>
+            <MapIcon color="#fff" strokeWidth={2.2} />
+          </button>
+        )}
         <Link href="/driver" className={styles.headerBrand}>
-          <span>RouteHub Driver</span>
+          <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
+          <span>RouteHub</span>
         </Link>
-        {isStack?<span className={styles.headerSpacer} aria-hidden="true" />:<span className={styles.headerStatus}>{headerStatus}</span>}
+        <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
+          <UserRound color="#fff" strokeWidth={2.2} />
+        </Link>
       </header>
 
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
@@ -58,11 +71,15 @@ export default function DriverV3Shell({
         </Link>
         <Link className={active === 'history' || active === 'route' ? styles.active : ''} href="/driver/history">
           <History />
-          <span>{t.drvHistory || 'History'}</span>
+          <span>{t.routes || 'Routes'}</span>
+        </Link>
+        <Link className={active === 'truck' ? styles.active : ''} href="/driver/truck">
+          <Truck />
+          <span>{t.drvTruck}</span>
         </Link>
         <Link className={active === 'more' ? styles.active : ''} href="/driver/settings">
-          <UserRound />
-          <span>{t.drvProfile || 'Profile'}</span>
+          <Settings />
+          <span>{t.drvMore || 'More'}</span>
         </Link>
       </nav>
     </main>
