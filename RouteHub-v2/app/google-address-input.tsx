@@ -147,7 +147,10 @@ export default function GoogleAddressInput({
     setFreeSuggestions([])
     setSuggestionsOpen(false)
     setLookupState('idle')
-    inputRef.current?.focus()
+    // A saved RouteHub address is already a complete selection. Blurring here
+    // prevents mobile browsers from reopening the suggestion list immediately
+    // after the pointer interaction and covering the rest of Add Route.
+    window.setTimeout(() => inputRef.current?.blur(), 0)
   }
 
   // Touch browsers can blur the field before a click arrives. Pointer down
