@@ -38,6 +38,7 @@ export default function DriverV3Page() {
   const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
+  const swipeStartY=useRef<number|null>(null)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
@@ -271,6 +272,14 @@ export default function DriverV3Page() {
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
   const action=primary()
+  const routeSwipeAction=()=>nextRoute?setSheet('next'):router.push('/driver/history')
+  const routeSwipeStart=(event:React.TouchEvent<HTMLButtonElement>)=>{swipeStartY.current=event.touches[0]?.clientY??null}
+  const routeSwipeEnd=(event:React.TouchEvent<HTMLButtonElement>)=>{
+    if(swipeStartY.current==null)return
+    const delta=swipeStartY.current-(event.changedTouches[0]?.clientY??swipeStartY.current)
+    swipeStartY.current=null
+    if(delta>28)routeSwipeAction()
+  }
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet&&operation)}>
@@ -325,11 +334,11 @@ export default function DriverV3Page() {
           </div>
           {started&&<div className={styles.returnToAppHint} role="note">
             <strong>{locale==='es'?'Después de llegar':'After you arrive'}</strong>
-            <span>{locale==='es'?'Regresa a RouteHub y presiona “Ya llegué” para completar esta parada.':'Return to RouteHub and press “I arrived” to complete this stop.'}</span>
+            <span>{locale==='es'?`Regresa a RouteHub y presiona “${action.label}” para completar esta parada.`:`Return to RouteHub and press “${action.label}” to complete this stop.`}</span>
           </div>}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        <button className={styles.routeSwipeZone} type="button" aria-label={nextRoute ? (locale==='es'?'Abrir siguiente ruta':'Open next route') : (locale==='es'?'Ver historial':'View history')} onClick={()=>nextRoute?setSheet('next'):router.push('/driver/history')}>
+        <button className={styles.routeSwipeZone} type="button" aria-label={nextRoute ? (locale==='es'?'Abrir siguiente ruta':'Open next route') : (locale==='es'?'Ver historial':'View history')} onClick={routeSwipeAction} onTouchStart={routeSwipeStart} onTouchEnd={routeSwipeEnd}>
           <span className={styles.routeSwipeHandle} aria-hidden="true">↑</span>
           <span>{nextRoute ? (locale==='es'?'Desliza hacia arriba para ver la siguiente ruta':'Swipe up for the next route') : (locale==='es'?'No hay más rutas pendientes':'No more pending routes')}</span>
         </button>
