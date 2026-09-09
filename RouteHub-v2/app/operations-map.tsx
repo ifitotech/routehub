@@ -164,8 +164,8 @@ function nearestLinePoint(line:Coordinate[],target:Coordinate,startAt:number){
 /**
  * A driver's assignment is one ordered route. Render it as non-overlapping
  * status segments so the operations map never stacks duplicate blue lines.
- * Completed work stays gray only while there is work still pending; a fully
- * completed assignment disappears from the route drawing altogether.
+ * Completed stops remain visible as destination pins, while their route
+ * geometry is removed so the map stays readable as work is completed.
  */
 function routeLineSegments(sequence:ResolvedSequence):RouteLineSegment[]{
  if(sequence.line.length<2||!sequence.routes.some(route=>isRemaining(route.status)))return []
@@ -175,7 +175,7 @@ function routeLineSegments(sequence:ResolvedSequence):RouteLineSegment[]{
   if(!route.destination)continue
   const endAt=nearestLinePoint(sequence.line,route.destination,startAt)
   if(endAt<=startAt)continue
-  const color=route.status==='completed'?'#94a3b8':isRemaining(route.status)?sequence.color:null
+  const color=isRemaining(route.status)?sequence.color:null
   if(color){
    const points=sequence.line.slice(startAt,endAt+1)
    const previous=segments[segments.length-1]
