@@ -110,10 +110,9 @@ export default function DriverV3Page() {
         }catch{}
       }
       await refresh()
-      // Start the in-app navigation experience. The external Maps action
-      // remains available from the stop details as a fallback.
-      void router.prefetch('/driver/map')
-      router.push('/driver/map')
+      // Navigation stays in the driver's installed map app. RouteHub records
+      // the start first, then hands off the same authoritative destination.
+      openMapsForRoute(route)
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
