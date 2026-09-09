@@ -329,10 +329,9 @@ export default function DriverV3Page() {
           </div>}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        <button className={styles.routeMoreButton} type="button" aria-label={locale==='es'?'Ver próximas rutas':'View upcoming routes'} onClick={()=>nextRoute?setSheet('next'):router.push('/driver/history')}>
-          <span className={styles.routeMoreIcon} aria-hidden="true">↑</span>
-          <span><strong>{locale==='es'?'Ver próximas rutas':'View upcoming routes'}</strong><small>{nextRoute ? (locale==='es'?'Toca para continuar con la siguiente parada':'Tap to continue with the next stop') : (locale==='es'?'No hay más paradas pendientes':'No more pending stops')}</small></span>
-          <ChevronRight size={20} aria-hidden="true" />
+        <button className={styles.routeSwipeZone} type="button" aria-label={nextRoute ? (locale==='es'?'Abrir siguiente ruta':'Open next route') : (locale==='es'?'Ver historial':'View history')} onClick={()=>nextRoute?setSheet('next'):router.push('/driver/history')}>
+          <span className={styles.routeSwipeHandle} aria-hidden="true">↑</span>
+          <span>{nextRoute ? (locale==='es'?'Desliza hacia arriba para ver la siguiente ruta':'Swipe up for the next route') : (locale==='es'?'No hay más rutas pendientes':'No more pending routes')}</span>
         </button>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 

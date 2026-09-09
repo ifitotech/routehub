@@ -88,8 +88,10 @@
 .returnToAppHint{display:grid;gap:3px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#eff7ff;color:#315477;font-size:12px;line-height:16px}
 .returnToAppHint strong{font-size:12px;color:#1677ff;font-weight:800}
 .returnToAppHint span{font-weight:600}
-.routeSwipeZone{display:none}
-.routeSwipeHandle{width:42px;height:5px;border-radius:999px;background:#cbd5e1}
+.routeSwipeZone{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:32px;padding:4px 8px;border:0;background:transparent;color:#64748b;font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:manipulation}
+.routeSwipeZone:active{transform:scale(.98);color:#1677ff}
+.routeSwipeZone:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px;border-radius:8px}
+.routeSwipeHandle{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#eaf3ff;color:#1677ff;font-size:17px;font-weight:900;line-height:1}
 .nextStopSwipeHint{margin:0 0 8px;color:#64748b;font-size:11px;line-height:14px;font-weight:700;text-align:center}
 .nextStopButton{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit}
 .nextStopContent{display:grid;grid-template-columns:minmax(0,1fr) 28px;align-items:center;gap:10px}
@@ -135,10 +137,8 @@
   .secondaryActions a,.secondaryActions button{min-height:45px;height:45px;border-radius:12px;font-size:13px}
   .secondaryActions svg{width:19px;height:19px}
   .returnToAppHint{margin-top:7px;padding:7px 9px;font-size:11px;line-height:14px}
-  .routeMoreButton{min-height:54px;padding:8px 10px;border-radius:13px}
-  .routeMoreButton strong{font-size:13px;line-height:16px}
-  .routeMoreButton small{font-size:10px;line-height:13px}
-  .routeMoreIcon{width:27px;height:27px;font-size:17px}
+  .routeSwipeZone{min-height:30px;font-size:10px}
+  .routeSwipeHandle{width:23px;height:23px;font-size:15px}
 }
 @media (max-height:760px){
   .page{gap:6px}
@@ -154,7 +154,7 @@
   .secondaryActions{margin-top:6px;gap:6px}
   .secondaryActions a,.secondaryActions button{min-height:42px;height:42px;font-size:12px}
   .returnToAppHint{margin-top:5px;padding:5px 8px;font-size:10px;line-height:13px}
-  .routeMoreButton{min-height:48px;padding:6px 9px}
+  .routeSwipeZone{min-height:28px}
 }
 @media(min-width:420px){
   .mapPreview{height:196px;min-height:196px;max-height:196px;flex-basis:196px}
