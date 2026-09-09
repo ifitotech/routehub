@@ -413,3 +413,14 @@
 
 
 .content > div:first-child{min-height:100%;}
+
+/* Sheets and shared form states use the same high-contrast dark palette as tabs. */
+:global(html[data-theme='dark']) .sheet,:global(html[data-theme='dark']) .confirmSheet,:global(html[data-theme='dark']) .mapSheet{background:#18263b;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .sheetTitle,:global(html[data-theme='dark']) .confirmSheet h2{color:#f4f7fb}
+:global(html[data-theme='dark']) .confirmSheet p{color:#b9c9dd}
+:global(html[data-theme='dark']) .sheetHandle{background:#60738c}
+:global(html[data-theme='dark']) .content [role=alert]{background:#4a252b;color:#ffc1c6;border-color:#80424d}
+:global(html[data-theme='dark']) .content [role=status]{background:#153a2b;color:#8fe7bc}
+:global(html[data-theme='dark']) .tag{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .content input::placeholder,:global(html[data-theme='dark']) .content textarea::placeholder{color:#8fa2ba;opacity:1}
+:global(html[data-theme='dark']) .stickyAction{background:linear-gradient(180deg,rgba(16,28,45,0) 0%,#101c2d 28%,#101c2d 100%)}

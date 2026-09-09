@@ -254,13 +254,11 @@ html[data-theme='dark'] .driver-v3-root {
   color: #f4f7fb;
 }
 html[data-theme='dark'] .driver-v3-root h1,
-html[data-theme='dark'] .driver-v3-root h2,
-html[data-theme='dark'] .driver-v3-root strong {
+html[data-theme='dark'] .driver-v3-root h2 {
   color: #f4f7fb;
 }
 html[data-theme='dark'] .driver-v3-root p,
-html[data-theme='dark'] .driver-v3-root small,
-html[data-theme='dark'] .driver-v3-root span {
+html[data-theme='dark'] .driver-v3-root small {
   color: #c5d0de;
 }
 html[data-theme='dark'] .driver-v3-root a {

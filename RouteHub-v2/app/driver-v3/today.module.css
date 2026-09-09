@@ -94,3 +94,23 @@
 @media(min-width:420px){
   .mapPreview{height:196px;min-height:196px;max-height:196px;flex-basis:196px}
 }
+
+/* Explicit dark foreground/background pairs keep every operational card legible. */
+:global(html[data-theme='dark']) .page{color:#f4f7fb}
+:global(html[data-theme='dark']) .hero,:global(html[data-theme='dark']) .progressCard,:global(html[data-theme='dark']) .nextCard,:global(html[data-theme='dark']) .stateCard,:global(html[data-theme='dark']) .summary{background:#18263b;border-color:#31445f;color:#f4f7fb;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+:global(html[data-theme='dark']) .destination h1,:global(html[data-theme='dark']) .progressCard strong,:global(html[data-theme='dark']) .nextCard,:global(html[data-theme='dark']) .nextStopContent strong{color:#f4f7fb}
+:global(html[data-theme='dark']) .destination p,:global(html[data-theme='dark']) .stopCount,:global(html[data-theme='dark']) .progressCard span,:global(html[data-theme='dark']) .nextCard span,:global(html[data-theme='dark']) .nextCard p,:global(html[data-theme='dark']) .stateCard p,:global(html[data-theme='dark']) .summaryGrid span,:global(html[data-theme='dark']) .nextStopContent p,:global(html[data-theme='dark']) .nextStopEmpty{color:#b9c9dd}
+:global(html[data-theme='dark']) .startDay{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .delivery{background:#31234f;color:#c8a8ff}
+:global(html[data-theme='dark']) .pickup{background:#123d46;color:#77d9e5}
+:global(html[data-theme='dark']) .return{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .order{background:#21334b;color:#c9daf2}
+:global(html[data-theme='dark']) .divider{background:#31445f}
+:global(html[data-theme='dark']) .mapAction{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .issueAction{background:#472f12;color:#ffd28a}
+:global(html[data-theme='dark']) .feedback{background:#153a2b;color:#8fe7bc}
+:global(html[data-theme='dark']) .feedbackError{background:#4a252b;color:#ffc1c6}
+:global(html[data-theme='dark']) .progressTrack:before,:global(html[data-theme='dark']) .progressDots:before{background:#405570}
+:global(html[data-theme='dark']) .progressDots i,:global(html[data-theme='dark']) .progressDots .upcoming{background:#18263b;border-color:#60738c}
+:global(html[data-theme='dark']) .mapPreview :global(.openstreet-route-empty),:global(html[data-theme='dark']) .mapEmpty{background:#102036;color:#b9c9dd}
+:global(html[data-theme='dark']) .loadingHero,:global(html[data-theme='dark']) .loadingProgress,:global(html[data-theme='dark']) .loadingNext{border-color:#31445f;background:linear-gradient(90deg,#18263b 20%,#21334b 50%,#18263b 80%)}

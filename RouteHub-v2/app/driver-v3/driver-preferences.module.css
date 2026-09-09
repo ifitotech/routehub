@@ -57,4 +57,11 @@
 :global(html[data-theme='dark']) .row,:global(html[data-theme='dark']) .infoRow,:global(html[data-theme='dark']) .page :global(.settings-card + .settings-card),:global(html[data-theme='dark']) .actionRow{border-color:#31445f}
 :global(html[data-theme='dark']) .choice,:global(html[data-theme='dark']) .languageChoice,:global(html[data-theme='dark']) .editForm input{background:#102036;color:#f4f7fb;border-color:#31445f}
 :global(html[data-theme='dark']) .choiceSelected,:global(html[data-theme='dark']) .languageChoiceSelected{background:#17345c;color:#9cc4ff;border-color:#6ea5ff}
+:global(html[data-theme='dark']) .pageHeader p,:global(html[data-theme='dark']) .eyebrow,:global(html[data-theme='dark']) .sectionHeader p,:global(html[data-theme='dark']) .rowCopy small,:global(html[data-theme='dark']) .profileHero p,:global(html[data-theme='dark']) .infoRow small,:global(html[data-theme='dark']) .footer{color:#b9c9dd}
+:global(html[data-theme='dark']) .rowIcon{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .rowChevron,:global(html[data-theme='dark']) .infoRow svg{color:#9aabc0}
+:global(html[data-theme='dark']) .status{background:#153a2b;color:#8fe7bc}
+:global(html[data-theme='dark']) .status[data-state='inactive']{background:#472f12;color:#ffd28a}
+:global(html[data-theme='dark']) .page :global(.settings-card p){color:#b9c9dd}
+:global(html[data-theme='dark']) .editForm label{color:#f4f7fb}
 @media(max-width:360px){.choices,.languageChoices{gap:5px;padding-left:9px;padding-right:9px}.choice{font-size:11px}.languageChoice{font-size:11px}.row{padding-left:12px;padding-right:12px}.avatar{width:66px;height:66px}}
