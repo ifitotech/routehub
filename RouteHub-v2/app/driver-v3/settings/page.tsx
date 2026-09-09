@@ -248,14 +248,21 @@ export default function DriverV3Settings() {
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
         <DevicePermissions locale={locale} />
-        <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
+        {updateState === 'available' ? <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
+          <span className={styles.rowIcon}><Download size={18} /></span>
+          <span className={styles.rowCopy}>
+            <strong>{locale === 'es' ? 'Descargar actualización' : locale === 'fr' ? 'Télécharger la mise à jour' : 'Download update'}</strong>
+            <small>{locale === 'es' ? `Instalar RouteHub ${latestVersion}` : locale === 'fr' ? `Installer RouteHub ${latestVersion}` : `Install RouteHub ${latestVersion}`}</small>
+          </span>
+          <ChevronRight className={styles.rowChevron} size={19} />
+        </a> : <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
           <span className={styles.rowIcon}><Download size={18} /></span>
           <span className={styles.rowCopy}>
             <strong>{locale === 'es' ? 'Buscar actualizaciones' : locale === 'fr' ? 'Rechercher des mises à jour' : 'Check for updates'}</strong>
-            <small>{updateState === 'checking' ? (locale === 'es' ? 'Comprobando…' : 'Checking…') : updateState === 'available' ? `${locale === 'es' ? 'Nueva versión disponible' : 'New version available'}: ${latestVersion}` : updateState === 'current' ? (locale === 'es' ? 'Tienes la versión más reciente' : 'You have the latest version') : locale === 'es' ? `Versión instalada ${DRIVER_APP_VERSION}` : `Installed version ${DRIVER_APP_VERSION}`}</small>
+            <small>{updateState === 'checking' ? (locale === 'es' ? 'Comprobando…' : 'Checking…') : updateState === 'current' ? (locale === 'es' ? 'Tienes la versión más reciente' : 'You have the latest version') : locale === 'es' ? `Versión instalada ${DRIVER_APP_VERSION}` : `Installed version ${DRIVER_APP_VERSION}`}</small>
           </span>
           <ChevronRight className={styles.rowChevron} size={19} />
-        </button>
+        </button>}
         <p className={styles.footer}>RouteHub Driver · {copy.versionLabel} {DRIVER_APP_VERSION}</p>
       </div>
 
