@@ -1,8 +1,6 @@
 'use client'
 
-import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
@@ -15,17 +13,19 @@ import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
-import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 
-const OpenStreetRoutePreview = dynamic(() => import('../../components/openstreet-route-preview'), {ssr: false})
-const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
+type CompletedStop = {
+  id: string
+  kind: 'pickup' | 'delivery' | 'return'
+  label: string
+}
 
 export default function DriverV3Page() {
   const router=useRouter()
   const searchParams=useSearchParams()
-  const {t,locale}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
+  const {t}=useLocale()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
@@ -39,6 +39,7 @@ export default function DriverV3Page() {
   const nameRef=useRef<HTMLInputElement>(null)
   const photoRef=useRef<HTMLInputElement>(null)
   const [nameFocus,setNameFocus]=useState(false)
+  const [completedStop,setCompletedStop]=useState<CompletedStop | null>(null)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
   const operation=snapshot?.currentOperation
@@ -47,10 +48,6 @@ export default function DriverV3Page() {
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
-  const previewDriverLocation=liveFix
-    ||(drivingSession?.last_lat!=null&&drivingSession?.last_lng!=null
-      ?{lat:Number(drivingSession.last_lat),lng:Number(drivingSession.last_lng)}
-      :null)
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -111,10 +108,8 @@ export default function DriverV3Page() {
         }catch{}
       }
       await refresh()
-      // Start the in-app navigation experience. The external Maps action
-      // remains available from the stop details as a fallback.
-      void router.prefetch('/driver/map')
-      router.push('/driver/map')
+      // Today remains a focused work surface. Navigation stays in the
+      // device's Maps app through the existing external navigation action.
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
@@ -144,6 +139,7 @@ export default function DriverV3Page() {
       await completePickupWithEvidence(ctx())
       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       setSheet(null)
+      setCompletedStop({id:route.id,kind:'pickup',label:route.destination_name||route.destination_address||t.drvCurrentStopName})
       await refresh()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -165,6 +161,8 @@ export default function DriverV3Page() {
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
       await completeReturn(ctx(),{location})
       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+      setSheet(null)
+      setCompletedStop({id:route.id,kind:'return',label:route.destination_name||route.destination_address||t.drvCurrentStopName})
       await refresh()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -240,6 +238,7 @@ export default function DriverV3Page() {
       setPhoto(null)
       setSigned(false)
       setAskName(false)
+      if(!withIssue) setCompletedStop({id:route.id,kind:'delivery',label:route.destination_name||route.destination_address||t.drvCurrentStopName})
       await refresh()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -268,17 +267,16 @@ export default function DriverV3Page() {
     }
   }
 
-  const primary=()=>{
-    if(!started) {
-      const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
-      return {label:startLabel, run:startCurrent}
-    }
-    if(kind==='pickup') return {label:t.drvCompletePickup, run:arrivePickup}
-    if(kind==='return') return {label:t.drvCompleteReturn, run:openReturn}
-    return {label:t.drvCompleteDelivery, run:openDelivery}
+  const typeLabel=kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'
+  const activeOperation=snapshot?.currentOperation
+  const completedNext=(completedStop&&activeOperation&&activeOperation.route.id!==completedStop.id ? activeOperation.route as any : null)
+  const completedNextKind=completedNext?.mission_type==='branch'?'return':completedNext?.mission_type
+  const completedNextLabel=completedNextKind==='pickup'?t.drvPickup:completedNextKind==='delivery'?t.drvDelivery:t.drvReturn
+  const finishArrival=()=>{
+    if(kind==='pickup') return arrivePickup()
+    if(kind==='return') return openReturn()
+    return openDelivery()
   }
-  const action=primary()
-  const previewRoutes = [snapshot?.queue.current, ...(snapshot?.queue.upcoming||[])].filter(Boolean).filter((item:any)=>!['completed','issue','cancelled'].includes(String(item.status))) as any[]
 
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
@@ -287,73 +285,41 @@ export default function DriverV3Page() {
             {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
-      </section>:operation&&route?<>
-        <section className={styles.hero}>
-          <div className={styles.heroTop}>
-            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
-            <span className="muted" style={{fontSize:12,fontWeight:700}}>ROUTE {routeNumber(route)}</span>
+      </section>:completedStop?<section className={`${styles.hero} ${styles.completedHero}`}>
+        <div className={styles.successIcon}>✓</div>
+        <h1>Parada completada</h1>
+        <p className={styles.completeMessage}>¡Excelente! La parada se registró correctamente.</p>
+        <div className={styles.completeSummary}>✓ {completedStop.kind==='pickup'?'Pickup':completedStop.kind==='delivery'?'Delivery':'Return'} confirmado</div>
+        {completedNext?<div className={styles.nextPreview}><span>{t.drvNextStop}</span><b>{completedNextLabel}</b><strong>{completedNext.destination_name||completedNext.destination_address||t.drvCurrentStopName}</strong><p>{completedNext.destination_address}</p></div>:<div className={styles.nextPreview}><strong>Ruta completada</strong><p>Has completado todas las paradas de hoy.</p></div>}
+        {completedNext?<button className={styles.primary} type="button" onClick={()=>{setCompletedStop(null);void refresh()}}><ChevronRight/>Siguiente parada</button>:null}
+      </section>:operation&&route?<section className={styles.hero}>
+        <div className={styles.heroTop}>
+          <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{typeLabel}</span>
+          {started?<span className={styles.enRoute}>En ruta</span>:null}
+        </div>
+        <p className={styles.stopCount}>Parada {(operation?.completed||0)+1} de {operation?.total||1}</p>
+        <div className={styles.destination}>
+          <div>
+            <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
+            {route.destination_address&&<p>{route.destination_address}</p>}
           </div>
-          <div className={styles.destination} onClick={()=>setSheet('info')} role="button">
-            <div>
-              <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
-              {route.destination_address&&<p>{route.destination_address}</p>}
-              {kind!=='return'&&route.order_number&&<span className={styles.order} style={{fontSize:18,fontWeight:800}}>PO {route.order_number}</span>}
-            </div>
-            {route.destination_phone?(
-              <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} className={styles.operationIcon} style={{background:'#EAF2FF',color:'#1667F2',textDecoration:'none'}} aria-label={t.drvCall||'Call'}>
-                <Phone/>
-              </a>
-            ):(
-              <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
-            )}
-          </div>
-          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'12px 12px',margin:'8px 0 0',textAlign:'left'}}>
-            <span style={{width:28,height:28,borderRadius:14,background:kind==='delivery'?'#7C5CFF':kind==='pickup'?'#1667F2':'#0F1D35',color:'#fff',display:'grid',placeItems:'center',fontSize:13,fontWeight:800,flexShrink:0}}>1</span>
-            <span style={{flex:1,minWidth:0}}>
-              <strong style={{display:'block',fontSize:15}}>
-                {route.destination_contact_name||route.destination_name||t.drvCurrentStopName}
-                {route.destination_phone?` · ${route.destination_phone}`:''}
-              </strong>
-              <span className="muted" style={{fontSize:12,display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                {route.notes||route.driver_note||(kind==='delivery'?t.drvDeliveryHelp:kind==='pickup'?t.drvPickupHelp:t.drvReturnHelp)}
-              </span>
-            </span>
-            <ChevronRight size={18} color="#94A3B8"/>
-          </button>
-          <div className={styles.divider}/>
-          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
-            <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            {previewRoutes.length?<OperationsMap routes={previewRoutes} driverLocations={previewDriverLocation?[{id:driverId||'driver',driver_id:driverId,location:previewDriverLocation,status:'on_route'}]:[]} fitDriverLocations locale={locale} hideFooter/>:<div className={styles.mapEmpty}>{t.drvNoMoreStops}</div>}
-            </div>
-          </div>
-          <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
-            <MapPin/>{busy?t.drvBusy:action.label}
-          </button>
-          <div className={styles.secondaryActions}>
+          <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
+        </div>
+        {kind==='pickup'&&route.order_number?<div className={styles.order}><span>PO</span>{route.order_number}</div>:null}
+        {route.notes||route.driver_note?<div className={styles.notes}><b>Notas</b><p>{route.notes||route.driver_note}</p></div>:null}
+        {started&&(route.destination_contact_name||route.destination_phone)?<div className={styles.contact}><b>Contacto</b><span>{route.destination_contact_name||route.destination_name}{route.destination_phone?`  ${route.destination_phone}`:''}</span></div>:null}
+        <div className={styles.actionArea}>
+          {started?<div className={styles.secondaryActions}>
             <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
-            <button type="button" className={styles.issueAction} onClick={()=>{
-              if(kind==='delivery'){setSheet('delivery');setPodPanel('issue')}
-              else {setSheet('pickup');setIssueOpen(true)}
-            }}><TriangleAlert/>{t.drvIssue}</button>
-          </div>
-          {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
-        </section>
-        <section className={`${styles.summary} ${styles.nextStopSummary}`} aria-label={t.drvNextStop}>
-          <p className="eyebrow">{t.drvNextStop}</p>
-          {nextRoute?(
-            <button type="button" className={styles.nextStopButton} onClick={()=>setSheet('next')}>
-            <div className={styles.nextStopContent}>
-              <div>
-                <span className={`${styles.typeBadge} ${styles[nextKind||'return']}`}><Package/>{nextLabel}</span>
-                <strong>{nextRoute.destination_name||nextRoute.destination_address||t.drvCurrentStopName}</strong>
-                {nextRoute.destination_address&&<p>{nextRoute.destination_address}</p>}
-              </div>
-              <ChevronRight aria-hidden="true"/>
-            </div>
-            </button>
-          ):<div className={styles.nextStopEmpty}>{t.drvNoMoreStops}</div>}
-        </section>
-      </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
+            {route.destination_phone?<a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} className={styles.mapAction}><Phone/>{t.drvCall||'Llamar'}</a>:null}
+          </div>:null}
+          <button className={styles.primary} disabled={busy} onClick={()=>void (started?finishArrival():startCurrent())}>
+            <MapPin/>{busy?t.drvBusy:(started?(t.drvArrived||'YA LLEGUÉ'):(t.drvStartRoute||'COMENZAR RUTA'))}
+          </button>
+          <p className={styles.helpText}>{started?'Al llegar, vuelve a RouteHub y presiona Ya llegué.':'Presiona Comenzar ruta para activar esta parada y continuar.'}</p>
+        </div>
+        {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
+      </section>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 
       {sheet==='info'&&route&&(
         <div style={overlay} onTouchMove={e=>e.preventDefault()}>
@@ -472,12 +438,6 @@ export default function DriverV3Page() {
             <h2 style={{margin:'0 0 4px',fontSize:22,lineHeight:'26px'}}>{route.destination_name||t.drvCompleteDelivery}</h2>
             {route.destination_address&&<p className="muted" style={{margin:'0 0 8px',fontSize:14}}>{route.destination_address}</p>}
             <p className="muted" style={{margin:'0 0 12px',fontSize:13,lineHeight:'18px'}}>{t.drvDeliveryHelp}</p>
-            {route.order_number?(
-            <div style={{margin:'0 0 12px',padding:'12px 14px',borderRadius:14,background:'#fff',border:'1px solid #e5eaf0'}}>
-              <p style={{margin:0,fontSize:11,fontWeight:800,letterSpacing:'.14em',color:'#667280'}}>PO</p>
-              <p style={{margin:'4px 0 0',fontSize:28,lineHeight:'32px',fontWeight:800}}>{route.order_number}</p>
-            </div>
-            ):null}
             <label className="muted" style={{display:'block',marginBottom:12,padding:askName?'12px':'0',borderRadius:14,background:askName?'#fff7ed':'transparent',border:askName?'1px solid #fdba74':'0'}}>
               {t.drvReceivedBy}
               <input ref={nameRef} value={recipient} onFocus={()=>{setNameFocus(true);setPodPanel(null)}} onBlur={()=>setNameFocus(false)} onChange={e=>{setRecipient(e.target.value);if(e.target.value.trim())setAskName(false)}} placeholder={t.drvRecipientName} style={{display:'block',width:'100%',minHeight:48,marginTop:6,border:'1px solid #dde5ee',borderRadius:12,padding:'0 12px',font:'inherit',boxSizing:'border-box',background:'#fff'}}/>

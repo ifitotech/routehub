@@ -22,16 +22,16 @@ test('android external navigation keeps a native fallback chain while non-browse
   assert.match(openNavigation(destination,'iPhone OS 18_0'),/^maps:\/\//)
 })
 
-test('Driver entry uses the V3 current operation, quota-safe preview, and real external navigation',async()=>{
+test('Driver entry uses the authoritative current operation and external navigation without an embedded map',async()=>{
   const entry=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
   const source=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
   assert.match(entry,/driver-v3\/page/)
   assert.match(source,/snapshot\?\.currentOperation/)
-  assert.match(source,/OpenStreetRoutePreview/)
-  assert.match(source,/router\.prefetch\('\/driver\/map'\)/)
   assert.match(source,/openNavigationWithFallback\(/)
+  assert.match(source,/Today remains a focused work surface/)
+  assert.doesNotMatch(source,/OperationsMap/)
+  assert.doesNotMatch(source,/router\.push\('\/driver\/map'\)/)
   assert.match(source,/sheet==='next'/)
-  assert.match(source,/setSheet\('next'\)/)
   assert.match(source,/router\.push\('\/driver\/history'\)/)
   assert.match(source,/target\.destination_lat!=null&&target\.destination_lng!=null/)
   assert.doesNotMatch(source,/autoStartNavigation/)
