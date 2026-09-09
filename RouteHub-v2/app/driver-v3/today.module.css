@@ -1,6 +1,12 @@
 .page{display:flex;flex-direction:column;gap:10px;width:100%;max-width:100%;height:100%;min-height:0;padding:2px 0 4px;box-sizing:border-box;color:#0f172a;overflow:hidden}
 .startDay{display:grid;place-items:center;width:100%;height:44px;border-radius:12px;background:#eaf2ff;color:#1667f2;font-size:13px;font-weight:800;text-decoration:none}
-.hero{display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:16px;border:1px solid #e5e7eb;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06);box-sizing:border-box;min-height:0}
+.hero{--service-surface:#fff;--service-border:#e5e7eb;--service-detail:#f4f7fb;display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:16px;border:1px solid var(--service-border);border-radius:20px;background:var(--service-surface);box-shadow:0 2px 8px rgba(15,29,53,.06);box-sizing:border-box;min-height:0}
+/* Keep the operational layout identical for every stop type. Only the soft
+   surface color changes, so the Driver can identify the service at a glance
+   without action buttons moving between Pickup, Delivery, and Return. */
+.servicePickup{--service-surface:#f0fbfc;--service-border:#cdecef;--service-detail:#fff}
+.serviceDelivery{--service-surface:#f7f2ff;--service-border:#e4d7f9;--service-detail:#fff}
+.serviceReturn{--service-surface:#f1f5fa;--service-border:#d8e2ee;--service-detail:#fff}
 .heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
 .typeBadge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;line-height:28px;font-weight:800;letter-spacing:.01em}
 .typeBadge svg{width:15px;height:15px}
@@ -24,6 +30,10 @@
 .operationIcon.pickup{background:#e6fafb;color:#0b9eb2}
 .operationIcon.return{background:#eef2f7;color:#475569}
 .divider{height:1px;margin:12px 0;background:#e8edf3}
+.servicePickup .divider,.serviceDelivery .divider,.serviceReturn .divider{background:var(--service-border)}
+.stopDetails{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;margin:8px 0 0;padding:12px;border:0;border-radius:14px;background:var(--service-detail);color:#0f172a;text-align:left;font:inherit;box-sizing:border-box}
+.stopDetails:active{transform:scale(.99)}
+.stopDetails:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px}
 .mapPreview{display:block;width:100%;height:184px;min-height:184px;max-height:184px;flex:0 0 184px;border:0;padding:0;margin:0 0 12px;border-radius:14px;overflow:hidden;background:#e8eef4;contain:layout paint}
 .mapPreview :global(.leaflet-container){width:100%!important;height:100%!important}
 .mapPreview :global(.openstreet-route-preview){display:block;width:100%;height:100%;border:0;filter:saturate(.82) contrast(.96)}
@@ -129,9 +139,9 @@
   .operationIcon{width:46px;height:46px}
   .operationIcon svg{width:23px;height:23px}
   .hero>.divider{margin:7px 0}
-  .hero>button[style]{padding:7px 9px!important;margin-top:4px!important;border-radius:11px!important}
-  .hero>button[style] strong{font-size:13px!important}
-  .hero>button[style] .stopNumber{width:24px;height:24px;font-size:12px}
+  .stopDetails{min-height:42px;margin-top:4px;padding:7px 9px;border-radius:11px}
+  .stopDetails strong{font-size:13px!important}
+  .stopDetails .stopNumber{width:24px;height:24px;font-size:12px}
   .mapPreview{height:128px;min-height:128px;max-height:128px;flex-basis:128px;margin-bottom:8px;border-radius:11px}
   .primary{min-height:54px;height:54px;border-radius:13px;font-size:15px;line-height:18px}
   .primary svg{width:21px;height:21px}

@@ -288,7 +288,7 @@ export default function DriverV3Page() {
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>
-        <section className={styles.hero}>
+        <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn}`}>
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
             <span className="muted" style={{fontSize:12,fontWeight:700}}>ROUTE {routeNumber(route)}</span>
@@ -309,7 +309,7 @@ export default function DriverV3Page() {
               <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
             )}
           </div>
-          <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'12px 12px',margin:'8px 0 0',textAlign:'left'}}>
+          <button type="button" onClick={()=>setSheet('info')} className={styles.stopDetails}>
             <span className={`${styles.stopNumber} ${styles[kind||'return']}`}>1</span>
             <span style={{flex:1,minWidth:0}}>
               <strong style={{display:'block',fontSize:15}}>
