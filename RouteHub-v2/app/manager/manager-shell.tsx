@@ -3,7 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {ChevronDown, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Settings, Truck, Users} from 'lucide-react'
-import {useLocale, useThemePreference} from '../../lib/use-preferences'
+import {applyThemePreference,useLocale} from '../../lib/use-preferences'
+import {useEffect} from 'react'
 import styles from './manager-shell.module.css'
 
 type ManagerSection = 'today' | 'routes' | 'map' | 'truck' | 'contacts' | 'history' | 'reports' | 'settings'
@@ -18,7 +19,7 @@ type ManagerShellProps = {
 
 export default function ManagerShell({children, active = 'today', branchName, displayName, roleLabel}: ManagerShellProps) {
   const {locale, t} = useLocale()
-  useThemePreference()
+  useEffect(()=>{applyThemePreference('light')},[])
   const copy = locale === 'es'
     ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'

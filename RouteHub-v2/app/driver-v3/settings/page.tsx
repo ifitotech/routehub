@@ -1,8 +1,8 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, CalendarDays, ChevronRight, CircleHelp, Download, FileText, MapPin, Monitor, Moon, Shield, Sun} from 'lucide-react'
-import {useLocale, useThemePreference, type ThemePreference} from '../../../lib/use-preferences'
+import {Bell, CalendarDays, ChevronRight, CircleHelp, Download, FileText, MapPin, Shield} from 'lucide-react'
+import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -26,7 +26,6 @@ const LANGS = [
 export default function DriverV3Settings() {
   const {locale, setLocale, t} = useLocale()
   const copy = settingsCopy(locale)
-  const {theme, setTheme} = useThemePreference()
   const {drivingSession, driverId, companyId, branchId, refresh} = useDriverData()
   const [dayBusy, setDayBusy] = useState(false)
   const [confirmEnd, setConfirmEnd] = useState(false)
@@ -124,12 +123,6 @@ export default function DriverV3Settings() {
     }
   }
 
-  const themes: Array<{id: ThemePreference; label: string; icon: typeof Sun}> = [
-    {id: 'light', label: t.light, icon: Sun},
-    {id: 'dark', label: t.dark, icon: Moon},
-    {id: 'system', label: t.system, icon: Monitor},
-  ]
-
   return (
     <DriverV3Shell active="more" title={t.drvSettings} hideNav={confirmEnd}>
       <div className={styles.page}>
@@ -196,26 +189,6 @@ export default function DriverV3Settings() {
             </span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </a>
-        </section>
-
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2>{copy.appearance}</h2>
-          </div>
-          <div className={styles.choices} role="radiogroup" aria-label={copy.appearance}>
-            {themes.map(({id, label, icon: Icon}) => (
-              <button
-                key={id}
-                type="button"
-                className={`${styles.choice} ${theme === id ? styles.choiceSelected : ''}`}
-                aria-checked={theme === id}
-                role="radio"
-                onClick={() => setTheme(id)}
-              >
-                <Icon size={18} /><span>{label}</span>
-              </button>
-            ))}
-          </div>
         </section>
 
         <section className={styles.section}>

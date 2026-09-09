@@ -132,11 +132,11 @@ function useDriverDataInternal(): DriverV3Data {
   }, [load])
 
   useEffect(() => {
-    if(!driverId) return
+    if(!driverId||!companyId) return
     const client = getSupabase()
     const sync = createRealtimeRefresh(() => load(true), 150)
     const channel = client
-      .channel('driver-v3-routes')
+      .channel(`driver-v3-routes-${driverId}-${companyId}`)
       .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `driver_id=eq.${driverId}`}, payload => {
         const changed = payload.new as Partial<DriverV3Route> & {id?: string}
         const removed = payload.old as Partial<DriverV3Route> & {id?: string}
@@ -148,6 +148,20 @@ function useDriverDataInternal(): DriverV3Data {
           setRoutes(routesRef.current)
         }
         sync.schedule()
+      })
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'routes', filter: `company_id=eq.${companyId}`}, payload => {
+        const changed = payload.new as Partial<DriverV3Route> & {id?: string}
+        const removed = payload.old as Partial<DriverV3Route> & {id?: string}
+        if (payload.eventType === 'DELETE' && removed.id) {
+          routesRef.current = routesRef.current.filter(route => route.id !== removed.id)
+          setRoutes(routesRef.current)
+        } else if (changed.id && routesRef.current.some(route => route.id === changed.id)) {
+          routesRef.current = routesRef.current.map(route => route.id === changed.id ? {...route, ...changed} as DriverV3Route : route)
+          setRoutes(routesRef.current)
+        }
+        // Company-scoped events also catch assignment/reassignment changes
+        // where the driver's filtered subscription may not receive the row.
+        void load(true)
       })
       .subscribe()
     const onFocus = () => { sync.schedule() }
@@ -161,7 +175,7 @@ function useDriverDataInternal(): DriverV3Data {
       document.removeEventListener('visibilitychange', onFocus)
       window.clearInterval(tick)
     }
-  }, [driverId, load])
+  }, [companyId, driverId, load])
 
   const snapshot = useMemo(
     () => (driverId ? buildDriverSnapshot(routes as any, driverId, operationalDate()) : null),

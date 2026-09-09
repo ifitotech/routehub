@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import {usePathname,useRouter} from 'next/navigation'
-import {useRef} from 'react'
+import {useEffect,useRef} from 'react'
 import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
-import {useLocale} from '../../lib/use-preferences'
+import {applyThemePreference,useLocale} from '../../lib/use-preferences'
 
 type Tab = 'today' | 'route' | 'map' | 'history' | 'truck' | 'more'
 
@@ -37,6 +37,7 @@ export default function DriverV3Shell({
   swipeDownTo,
 }: Props) {
   const {t} = useLocale()
+  useEffect(()=>{applyThemePreference('light')},[])
   const pathname = usePathname()
   const router = useRouter()
   const isStack = mode === 'stack'
