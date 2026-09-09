@@ -113,8 +113,10 @@ export default function DriverV3Settings() {
     if (!latestVersion) return
     setUpdateState('downloading')
     try {
-      await downloadAndroidUpdate(latestVersion)
-      setMessage(locale === 'es' ? 'Descargando actualización. Cuando termine, toca la notificación de Android para instalarla.' : 'Downloading update. When it finishes, tap the Android notification to install it.')
+      const updateFlow = await downloadAndroidUpdate(latestVersion)
+      setMessage(updateFlow === 'permission'
+        ? (locale === 'es' ? 'Permite que RouteHub instale apps desde esta fuente y vuelve aquí para tocar “Descargar actualización”.' : 'Allow RouteHub to install apps from this source, then return here and tap “Download update”.')
+        : (locale === 'es' ? 'Descargando actualización. El instalador de Android se abrirá al terminar.' : 'Downloading update. The Android installer will open when it finishes.'))
       setUpdateState('available')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : (locale === 'es' ? 'No se pudo descargar la actualización.' : 'Unable to download the update.'))
