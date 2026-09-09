@@ -108,6 +108,38 @@
   .progressCard{grid-template-columns:52px minmax(0,1fr) 52px;padding-inline:8px}
   .mapPreview{height:168px;min-height:168px;max-height:168px;flex-basis:168px}
 }
+
+/* Android phones commonly reserve more space for system bars than the CSS
+   viewport reports. Keep the complete Today card visible above the bottom
+   navigation on compact handsets without changing the normal tablet layout. */
+@media (max-width:400px) and (max-height:850px){
+  .page{gap:7px;padding-bottom:0}
+  .hero{padding:11px;border-radius:17px}
+  .heroTop{min-height:24px}
+  .typeBadge{height:24px;padding-inline:8px;font-size:11px;line-height:24px}
+  .typeBadge svg{width:13px;height:13px}
+  .destination{grid-template-columns:minmax(0,1fr) 46px;gap:8px;margin-top:6px}
+  .destination h1{font-size:22px;line-height:1.05}
+  .destination p{margin-top:4px;font-size:12px;line-height:16px}
+  .order{min-height:22px;margin-top:5px;padding-inline:7px;font-size:11px;line-height:22px}
+  .operationIcon{width:46px;height:46px}
+  .operationIcon svg{width:23px;height:23px}
+  .hero>.divider{margin:7px 0}
+  .hero>button[style]{padding:8px 9px!important;margin-top:5px!important;border-radius:11px!important}
+  .hero>button[style] strong{font-size:13px!important}
+  .hero>button[style] .stopNumber{width:24px;height:24px;font-size:12px}
+  .mapPreview{height:128px;min-height:128px;max-height:128px;flex-basis:128px;margin-bottom:8px;border-radius:11px}
+  .primary{min-height:54px;height:54px;border-radius:13px;font-size:15px;line-height:18px}
+  .primary svg{width:21px;height:21px}
+  .secondaryActions{gap:7px;margin-top:8px}
+  .secondaryActions a,.secondaryActions button{min-height:45px;height:45px;border-radius:12px;font-size:13px}
+  .secondaryActions svg{width:19px;height:19px}
+  .returnToAppHint{margin-top:7px;padding:7px 9px;font-size:11px;line-height:14px}
+  .routeMoreButton{min-height:54px;padding:8px 10px;border-radius:13px}
+  .routeMoreButton strong{font-size:13px;line-height:16px}
+  .routeMoreButton small{font-size:10px;line-height:13px}
+  .routeMoreIcon{width:27px;height:27px;font-size:17px}
+}
 @media(min-width:420px){
   .mapPreview{height:196px;min-height:196px;max-height:196px;flex-basis:196px}
 }
