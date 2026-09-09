@@ -38,8 +38,6 @@ export default function DriverV3Page() {
   const nameRef=useRef<HTMLInputElement>(null)
   const photoRef=useRef<HTMLInputElement>(null)
   const [nameFocus,setNameFocus]=useState(false)
-  const routeSwipeStart=useRef<number|null>(null)
-  const routeSwipeTriggered=useRef(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
   const operation=snapshot?.currentOperation
@@ -275,12 +273,6 @@ export default function DriverV3Page() {
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
   const action=primary()
-  const openRoutesWithTransition=()=>{
-    if(typeof document!=='undefined'&&'startViewTransition' in document){
-      ;(document as Document & {startViewTransition?:(callback:()=>void)=>unknown}).startViewTransition?.(()=>router.push('/driver/history'))
-    }else router.push('/driver/history')
-  }
-
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet&&operation)}>
@@ -337,28 +329,17 @@ export default function DriverV3Page() {
               else {setSheet('pickup');setIssueOpen(true)}
             }}><TriangleAlert/>{t.drvIssue}</button>
           </div>
+          {started&&<div className={styles.returnToAppHint} role="note">
+            <strong>{locale==='es'?'Después de llegar':'After you arrive'}</strong>
+            <span>{locale==='es'?'Regresa a RouteHub y presiona “Ya llegué” para completar esta parada.':'Return to RouteHub and press “I arrived” to complete this stop.'}</span>
+          </div>}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        <section
-          className={styles.routeSwipeZone}
-          aria-label={t.drvNextStop}
-          onClick={()=>{if(!routeSwipeTriggered.current)setSheet('next')}}
-          onTouchStart={event=>{routeSwipeStart.current=event.touches[0]?.clientY??null}}
-          onTouchEnd={event=>{
-            if(routeSwipeStart.current==null)return
-            const end=event.changedTouches[0]?.clientY
-            const delta=typeof end==='number'?end-routeSwipeStart.current:0
-            routeSwipeStart.current=null
-            if(delta<-70){
-              routeSwipeTriggered.current=true
-              openRoutesWithTransition()
-              window.setTimeout(()=>{routeSwipeTriggered.current=false},450)
-            }
-          }}
-        >
-          <span className={styles.routeSwipeHandle} aria-hidden="true" />
-          <p className={styles.nextStopSwipeHint}>{locale==='es'?'Desliza hacia arriba para ver las siguientes rutas':'Swipe up to see the next routes'}</p>
-        </section>
+        <button className={styles.routeMoreButton} type="button" aria-label={locale==='es'?'Ver próximas rutas':'View upcoming routes'} onClick={()=>nextRoute?setSheet('next'):router.push('/driver/history')}>
+          <span className={styles.routeMoreIcon} aria-hidden="true">↑</span>
+          <span><strong>{locale==='es'?'Ver próximas rutas':'View upcoming routes'}</strong><small>{nextRoute ? (locale==='es'?'Toca para continuar con la siguiente parada':'Tap to continue with the next stop') : (locale==='es'?'No hay más paradas pendientes':'No more pending stops')}</small></span>
+          <ChevronRight size={20} aria-hidden="true" />
+        </button>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 
       {sheet==='info'&&route&&(
