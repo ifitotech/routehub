@@ -5,10 +5,14 @@
 .typeBadge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;line-height:28px;font-weight:800;letter-spacing:.01em}
 .typeBadge svg{width:15px;height:15px}
 .delivery{background:#f2ecff;color:#7c3aed}
-.pickup{background:#e8fafc;color:#0a8797}
-.return{background:#eaf2ff;color:#0f1d35}
+.pickup{background:#e6fafb;color:#0b9eb2}
+.return{background:#eef2f7;color:#475569}
 .stopCount{color:#667280;font-size:12px;line-height:20px;font-weight:700;white-space:nowrap}
 .stopCount strong{color:#1667f2;font-size:20px;vertical-align:-1px}
+.stopNumber{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#fff;font-size:13px;font-weight:800;flex-shrink:0}
+.stopNumber.delivery{background:#7c3aed;color:#fff}
+.stopNumber.pickup{background:#0b9eb2;color:#fff}
+.stopNumber.return{background:#475569;color:#fff}
 .destination{display:grid;grid-template-columns:minmax(0,1fr) 56px;align-items:center;gap:12px;margin-top:10px}
 .destination h1{margin:0;color:#0f172a;font-size:clamp(24px,6.8vw,28px);line-height:1.15;font-weight:750;letter-spacing:-.025em;overflow-wrap:anywhere}
 .destination p{margin:6px 0 0;color:#667280;font-size:14px;line-height:19px;font-weight:500;overflow-wrap:anywhere}
@@ -16,8 +20,8 @@
 .operationIcon{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;justify-self:end}
 .operationIcon svg{width:28px;height:28px;stroke-width:2.2}
 .operationIcon.delivery{background:#f2ecff;color:#7c3aed}
-.operationIcon.pickup{background:#e8fafc;color:#0ea5b7}
-.operationIcon.return{background:#eaf2ff;color:#1667f2}
+.operationIcon.pickup{background:#e6fafb;color:#0b9eb2}
+.operationIcon.return{background:#eef2f7;color:#475569}
 .divider{height:1px;margin:12px 0;background:#e8edf3}
 .mapPreview{display:block;width:100%;height:184px;min-height:184px;max-height:184px;flex:0 0 184px;border:0;padding:0;margin:0 0 12px;border-radius:14px;overflow:hidden;background:#e8eef4;contain:layout paint}
 .mapPreview :global(.leaflet-container){width:100%!important;height:100%!important}
@@ -103,7 +107,10 @@
 :global(html[data-theme='dark']) .startDay{background:#17345c;color:#9cc4ff}
 :global(html[data-theme='dark']) .delivery{background:#31234f;color:#c8a8ff}
 :global(html[data-theme='dark']) .pickup{background:#123d46;color:#77d9e5}
-:global(html[data-theme='dark']) .return{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .return{background:#28364a;color:#c2ccda}
+:global(html[data-theme='dark']) .stopNumber.delivery{background:#8f62ef;color:#fff}
+:global(html[data-theme='dark']) .stopNumber.pickup{background:#1599a8;color:#fff}
+:global(html[data-theme='dark']) .stopNumber.return{background:#64748b;color:#fff}
 :global(html[data-theme='dark']) .order{background:#21334b;color:#c9daf2}
 :global(html[data-theme='dark']) .divider{background:#31445f}
 :global(html[data-theme='dark']) .mapAction{background:#17345c;color:#9cc4ff}

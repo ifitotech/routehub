@@ -104,13 +104,12 @@ function originMarker(color:string){
 }
 
 function driverMarker(driver:OperationsDriverLocation){
- const initials=String(driver.label||'DR').split(/\s+|@/).filter(Boolean).map(part=>part[0]).join('').replace(/[^a-z0-9]/gi,'').slice(0,2).toUpperCase()||'DR'
  const status=driver.status==='unavailable'?'is-offline':'is-online'
  return L.divIcon({
   className:'operations-driver-marker-wrap',
-  html:`<span class="operations-driver-marker ${status}" aria-hidden="true"><strong>${initials}</strong><i></i></span>`,
-  iconSize:[46,46],
-  iconAnchor:[23,23],
+  html:`<span class="operations-driver-marker ${status}" aria-hidden="true"><svg class="operations-driver-truck" viewBox="0 0 24 24" focusable="false"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2M15 18H9M19 18h1a2 2 0 0 0 2-2v-3.5a2 2 0 0 0-.59-1.41l-3.5-3.5A2 2 0 0 0 16.5 7H14M9 18.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM20 18.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"/></svg><i></i></span>`,
+  iconSize:[30,30],
+  iconAnchor:[15,15],
  })
 }
 

@@ -308,7 +308,7 @@ export default function DriverV3Page() {
             )}
           </div>
           <button type="button" onClick={()=>setSheet('info')} style={{display:'flex',alignItems:'center',gap:10,width:'100%',border:0,background:'#F4F7FB',borderRadius:14,padding:'12px 12px',margin:'8px 0 0',textAlign:'left'}}>
-            <span style={{width:28,height:28,borderRadius:14,background:kind==='delivery'?'#7C5CFF':kind==='pickup'?'#1667F2':'#0F1D35',color:'#fff',display:'grid',placeItems:'center',fontSize:13,fontWeight:800,flexShrink:0}}>1</span>
+            <span className={`${styles.stopNumber} ${styles[kind||'return']}`}>1</span>
             <span style={{flex:1,minWidth:0}}>
               <strong style={{display:'block',fontSize:15}}>
                 {route.destination_contact_name||route.destination_name||t.drvCurrentStopName}
