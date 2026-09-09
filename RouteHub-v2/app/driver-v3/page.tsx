@@ -40,6 +40,7 @@ export default function DriverV3Page() {
   const photoRef=useRef<HTMLInputElement>(null)
   const [nameFocus,setNameFocus]=useState(false)
   const routeSwipeStart=useRef<number|null>(null)
+  const routeSwipeTriggered=useRef(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
   const operation=snapshot?.currentOperation
@@ -344,21 +345,29 @@ export default function DriverV3Page() {
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        <section className={`${styles.summary} ${styles.nextStopSummary}`} aria-label={t.drvNextStop}>
+        <section
+          className={`${styles.summary} ${styles.nextStopSummary}`}
+          aria-label={t.drvNextStop}
+          onTouchStart={event=>{routeSwipeStart.current=event.touches[0]?.clientY??null;routeSwipeTriggered.current=false}}
+          onTouchEnd={event=>{
+            if(routeSwipeStart.current==null)return
+            const end=event.changedTouches[0]?.clientY
+            const delta=typeof end==='number'?end-routeSwipeStart.current:0
+            routeSwipeStart.current=null
+            if(delta<-70){
+              routeSwipeTriggered.current=true
+              openRoutesWithTransition()
+              window.setTimeout(()=>{routeSwipeTriggered.current=false},450)
+            }
+          }}
+        >
           <p className="eyebrow">{t.drvNextStop}</p>
           <p className={styles.nextStopSwipeHint}>{locale==='es'?'Desliza hacia arriba para ver las siguientes rutas':'Swipe up to see the next routes'}</p>
           {nextRoute?(
             <button
               type="button"
               className={styles.nextStopButton}
-              onClick={()=>setSheet('next')}
-              onTouchStart={event=>{routeSwipeStart.current=event.touches[0]?.clientY??null}}
-              onTouchEnd={event=>{
-                if(routeSwipeStart.current==null)return
-                const delta=event.changedTouches[0]?.clientY-routeSwipeStart.current
-                routeSwipeStart.current=null
-                if(delta<-70)openRoutesWithTransition()
-              }}
+              onClick={()=>{if(!routeSwipeTriggered.current)setSheet('next')}}
             >
             <div className={styles.nextStopContent}>
               <div>
