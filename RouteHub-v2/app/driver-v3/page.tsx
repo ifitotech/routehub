@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import dynamic from 'next/dynamic'
 import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
@@ -17,8 +16,7 @@ import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
 import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
-
-const DriverRoutePreview = dynamic(() => import('../../components/driver-v3/DriverRoutePreview'), {ssr: false})
+import DriverRouteEstimate from '../../components/driver-v3/DriverRouteEstimate'
 
 export default function DriverV3Page() {
   const router=useRouter()
@@ -314,11 +312,7 @@ export default function DriverV3Page() {
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
           <div className={styles.divider}/>
-          <div className={styles.mapPreview} role="button" tabIndex={0} aria-label={t.drvOpenInternalMap} onClick={()=>router.push('/driver/map')} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();router.push('/driver/map')}}}>
-            <div style={{height:'100%',pointerEvents:'none',visibility:sheet?'hidden':'visible'}}>
-            <DriverRoutePreview route={route} locale={locale}/>
-            </div>
-          </div>
+          <DriverRouteEstimate route={route} locale={locale}/>
           <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
             <MapPin/>{busy?t.drvBusy:action.label}
           </button>

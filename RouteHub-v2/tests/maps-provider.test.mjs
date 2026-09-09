@@ -27,7 +27,7 @@ test('Driver entry uses the current operation preview and real external navigati
   const source=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
   assert.match(entry,/driver-v3\/page/)
   assert.match(source,/snapshot\?\.currentOperation/)
-  assert.match(source,/<DriverRoutePreview route=\{route\} locale=\{locale\}/)
+  assert.match(source,/<DriverRouteEstimate route=\{route\} locale=\{locale\}/)
   assert.doesNotMatch(source,/<OperationsMap/)
   assert.match(source,/router\.prefetch\('\/driver\/map'\)/)
   assert.match(source,/openNavigationWithFallback\(/)

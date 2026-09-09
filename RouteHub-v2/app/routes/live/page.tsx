@@ -26,7 +26,10 @@ export default function LiveRoutePage() {
   const [drivers, setDrivers] = useState<OperationsDriverLocation[]>([])
 
   useEffect(() => {
-    void (async () => {
+    let disposed = false
+    let timer: number | null = null
+    let channel: ReturnType<ReturnType<typeof getSupabase>['channel']> | null = null
+    const load = async () => {
       try {
         const membership = await currentMembership()
         const dashboard = await loadManagerDashboard({
@@ -40,6 +43,7 @@ export default function LiveRoutePage() {
         const originAddress = String(branch?.address || branch?.name || '')
         const originLat = branch?.latitude == null ? null : Number(branch.latitude)
         const originLng = branch?.longitude == null ? null : Number(branch.longitude)
+        if (disposed) return
         setRoutes(dashboard.todayRoutes.map(route => ({
           id: route.id,
           mission_type: route.mission_type,
@@ -61,6 +65,7 @@ export default function LiveRoutePage() {
           .in('status', ['active', 'paused'])
         if (membership.branch_id) query = query.eq('branch_id', membership.branch_id)
         const {data: sessions} = await query
+        if (disposed) return
         setDrivers((sessions || []).flatMap(session => (
           session.last_lat == null || session.last_lng == null ? [] : [{
             id: String(session.id),
@@ -71,9 +76,26 @@ export default function LiveRoutePage() {
           }]
         )))
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Unable to load map.')
+        if (!disposed) setError(cause instanceof Error ? cause.message : 'Unable to load map.')
       }
-    })()
+    }
+    void load()
+    timer = window.setInterval(() => void load(), 15_000)
+    void currentMembership().then(membership => {
+      if (disposed) return
+      channel = getSupabase()
+        .channel(`manager-live-driving-sessions-${membership.company_id}`)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'driving_sessions',
+          filter: `company_id=eq.${membership.company_id}`,
+        }, () => void load())
+        .subscribe()
+    }).catch(() => undefined)
+    return () => {
+      disposed = true
+      if (timer != null) window.clearInterval(timer)
+      if (channel) void getSupabase().removeChannel(channel)
+    }
   }, [])
 
   return (
