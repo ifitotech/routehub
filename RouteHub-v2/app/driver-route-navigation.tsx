@@ -119,5 +119,8 @@ export default function DriverRouteNavigation({
   // A saved route origin is a planning point, never a live GPS fix.
   const liveLocation=safeSharedLocation?{...safeSharedLocation,accuracy:sharedLocation?.accuracy,heading:sharedLocation?.heading??null,at:sharedLocation?.at}:null
 
-  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice={false} sharedLocation={liveLocation} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
+  // Navigation is the correct moment to acquire a fresh foreground GPS fix.
+  // A saved driving-session location is useful as an initial reference, but
+  // must never leave turn guidance paused when it is stale or unavailable.
+  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice sharedLocation={liveLocation} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
 }

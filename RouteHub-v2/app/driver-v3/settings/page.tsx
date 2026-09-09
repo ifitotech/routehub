@@ -13,6 +13,7 @@ import {registerPushNotifications} from '../../../lib/push-notifications'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {settingsCopy} from '../../../lib/drv-settings-copy'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
+import {downloadAndroidUpdate} from '../../../lib/android-update'
 import styles from '../driver-preferences.module.css'
 import confirmStyles from '../../../components/driver-v3/driver-v3.module.css'
 
@@ -32,7 +33,7 @@ export default function DriverV3Settings() {
   const [message, setMessage] = useState('')
   const [notify, setNotify] = useState<'on' | 'off'>('off')
   const [notifyBusy, setNotifyBusy] = useState(false)
-  const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'current' | 'available' | 'error'>('idle')
+  const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'downloading' | 'current' | 'available' | 'error'>('idle')
   const [latestVersion, setLatestVersion] = useState('')
 
   useEffect(() => {
@@ -104,6 +105,19 @@ export default function DriverV3Settings() {
       setLatestVersion(version)
       setUpdateState(version && version !== DRIVER_APP_VERSION ? 'available' : 'current')
     } catch {
+      setUpdateState('error')
+    }
+  }
+
+  const installUpdate = async () => {
+    if (!latestVersion) return
+    setUpdateState('downloading')
+    try {
+      await downloadAndroidUpdate(latestVersion)
+      setMessage(locale === 'es' ? 'Descargando actualización. Cuando termine, toca la notificación de Android para instalarla.' : 'Downloading update. When it finishes, tap the Android notification to install it.')
+      setUpdateState('available')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : (locale === 'es' ? 'No se pudo descargar la actualización.' : 'Unable to download the update.'))
       setUpdateState('error')
     }
   }
@@ -248,14 +262,14 @@ export default function DriverV3Settings() {
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
         <DevicePermissions locale={locale} />
-        {updateState === 'available' ? <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
+        {updateState === 'available' || updateState === 'downloading' ? <button type="button" className={styles.row} disabled={updateState === 'downloading'} onClick={() => void installUpdate()}>
           <span className={styles.rowIcon}><Download size={18} /></span>
           <span className={styles.rowCopy}>
-            <strong>{locale === 'es' ? 'Descargar actualización' : locale === 'fr' ? 'Télécharger la mise à jour' : 'Download update'}</strong>
+            <strong>{updateState === 'downloading' ? (locale === 'es' ? 'Descargando actualización…' : 'Downloading update…') : (locale === 'es' ? 'Descargar actualización' : locale === 'fr' ? 'Télécharger la mise à jour' : 'Download update')}</strong>
             <small>{locale === 'es' ? `Instalar RouteHub ${latestVersion}` : locale === 'fr' ? `Installer RouteHub ${latestVersion}` : `Install RouteHub ${latestVersion}`}</small>
           </span>
           <ChevronRight className={styles.rowChevron} size={19} />
-        </a> : <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
+        </button> : <button type="button" className={styles.row} onClick={() => void checkForUpdates()} disabled={updateState === 'checking'}>
           <span className={styles.rowIcon}><Download size={18} /></span>
           <span className={styles.rowCopy}>
             <strong>{locale === 'es' ? 'Buscar actualizaciones' : locale === 'fr' ? 'Rechercher des mises à jour' : 'Check for updates'}</strong>

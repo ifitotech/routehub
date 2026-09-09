@@ -2,6 +2,8 @@ package com.routehub.driver;
 
 import android.Manifest;
 import android.content.Intent;
+import android.app.DownloadManager;
+import android.content.Context;
 import android.net.Uri;
 import android.provider.Settings;
 import com.getcapacitor.JSObject;
@@ -17,6 +19,30 @@ import com.getcapacitor.annotation.PermissionCallback;
     @Permission(alias = "camera", strings = {Manifest.permission.CAMERA})
 })
 public class DeviceAccessPlugin extends Plugin {
+    @PluginMethod
+    public void downloadUpdate(PluginCall call) {
+        String url = call.getString("url", "");
+        String fileName = call.getString("fileName", "RouteHub-Driver.apk");
+        if (!url.startsWith("https://")) {
+            call.reject("A secure update URL is required");
+            return;
+        }
+        try {
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+            request.setTitle("RouteHub Driver update");
+            request.setDescription("Downloading update. Tap the completed notification to install it.");
+            request.setMimeType("application/vnd.android.package-archive");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir("Download", fileName.replaceAll("[^A-Za-z0-9._-]", "_"));
+            DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager == null) throw new IllegalStateException("Download service unavailable");
+            long id = manager.enqueue(request);
+            JSObject result = new JSObject();
+            result.put("downloadId", String.valueOf(id));
+            call.resolve(result);
+        } catch (Exception error) { call.reject("Unable to download update", error); }
+    }
+
     @PluginMethod
     public void status(PluginCall call) {
         JSObject result = new JSObject();
