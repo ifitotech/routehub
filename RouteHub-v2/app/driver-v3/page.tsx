@@ -39,6 +39,10 @@ export default function DriverV3Page() {
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
   const swipeStartY=useRef<number|null>(null)
+  const refreshStartY=useRef<number|null>(null)
+  const refreshDistance=useRef(0)
+  const [refreshing,setRefreshing]=useState(false)
+  const [pullDistance,setPullDistance]=useState(0)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
@@ -292,10 +296,36 @@ export default function DriverV3Page() {
     swipeStartY.current=null
     if(delta>28)routeSwipeAction()
   }
+  const refreshToday=async()=>{
+    if(refreshing||sheet)return
+    setRefreshing(true)
+    try{await refresh()}finally{setRefreshing(false);setPullDistance(0)}
+  }
+  const pullStart=(event:React.TouchEvent<HTMLDivElement>)=>{
+    if(sheet||refreshing)return
+    refreshStartY.current=event.touches[0]?.clientY??null
+  }
+  const pullMove=(event:React.TouchEvent<HTMLDivElement>)=>{
+    if(refreshStartY.current==null)return
+    const distance=Math.max(0,(event.touches[0]?.clientY??refreshStartY.current)-refreshStartY.current)
+    refreshDistance.current=Math.min(distance,88)
+    setPullDistance(refreshDistance.current)
+  }
+  const pullEnd=(event:React.TouchEvent<HTMLDivElement>)=>{
+    const distance=refreshDistance.current
+    refreshStartY.current=null
+    refreshDistance.current=0
+    if(distance>=64)void refreshToday()
+    else setPullDistance(0)
+  }
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet&&operation)}>
-    <div className={styles.page}>
+    <div className={styles.page} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+      <div className={`${styles.refreshIndicator}${refreshing||pullDistance>=24?styles.refreshVisible:''}`} aria-live="polite">
+        <span className={refreshing?styles.refreshSpinner:''} aria-hidden="true">↻</span>
+        <span>{refreshing?(locale==='es'?'Actualizando rutas…':'Refreshing routes…'):(locale==='es'?'Suelta para actualizar':'Release to refresh')}</span>
+      </div>
             {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
