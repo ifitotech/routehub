@@ -54,9 +54,9 @@ export function useRoutesDerived() {
   const oc = originCopy[locale]
   const defaultBranch = branches.find(branch => branch.id === branchId) || branches[0]
   const findPreviousRoute = (driverId: string, date: string) => routes
-    .filter(route => route.driver_id === driverId && routeDateValue(route) === date)
+    .filter(route => route.driver_id === driverId && routeDateValue(route) === date && (!branchId || !route.branch_id || route.branch_id === branchId))
     .sort((a, b) => Number(b.position || 0) - Number(a.position || 0))[0]
-  const previousRoute = useMemo(() => findPreviousRoute(form.driver_id, form.date), [routes, form.driver_id, form.date])
+  const previousRoute = useMemo(() => findPreviousRoute(form.driver_id, form.date), [branchId, routes, form.driver_id, form.date])
   useEffect(() => {
     if (!form.driver_id || (originMode !== 'branch' && originMode !== 'previous')) return
     const route = findPreviousRoute(form.driver_id, form.date)
@@ -64,7 +64,7 @@ export function useRoutesDerived() {
     const nextMode: OriginMode = route ? 'previous' : 'branch'
     setOriginMode(current => current === nextMode ? current : nextMode)
     setForm(current => current.origin === nextOrigin ? current : {...current, origin: nextOrigin})
-  }, [defaultBranch?.address, defaultBranch?.name, form.date, form.driver_id, originMode, routes])
+  }, [branchId, defaultBranch?.address, defaultBranch?.name, form.date, form.driver_id, originMode, routes])
   const branchForValue = (value: string) => branches.find(branch => (branch.address || branch.name) === value) || null
   const originContact = originMode === 'contact' ? contacts.find(contact => contact.address === form.origin) || null : null
   const originBranch = originMode === 'branch' ? branchForValue(form.origin) || defaultBranch : null
