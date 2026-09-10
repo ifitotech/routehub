@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
+import {useRouter} from 'next/navigation'
 import {ChevronRight, Map} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -25,6 +26,8 @@ function tone(status: string, isCurrent: boolean) {
 }
 
 export default function History() {
+  const router = useRouter()
+  const swipeStartY = useRef<number|null>(null)
   const {loading, error, routes, snapshot} = useDriverData()
   const {t, locale} = useLocale()
   const [day, setDay] = useState(operationalDate())
@@ -74,7 +77,23 @@ export default function History() {
   }
 
   return (
-    <DriverV3Shell active="history" title={t.drvRouteHistory} subtitle={day} swipeDownTo="/driver">
+    <DriverV3Shell active="history" title={t.drvRouteHistory} subtitle={day}>
+      <button
+        type="button"
+        className="driver-route-swipe-back"
+        aria-label={locale === 'es' ? 'Desliza hacia abajo para volver a Hoy' : 'Swipe down to return to Today'}
+        onTouchStart={event => { swipeStartY.current = event.touches[0]?.clientY ?? null }}
+        onTouchEnd={event => {
+          if (swipeStartY.current == null) return
+          const delta = (event.changedTouches[0]?.clientY ?? swipeStartY.current) - swipeStartY.current
+          swipeStartY.current = null
+          if (delta > 28) router.push('/driver')
+        }}
+        onClick={() => router.push('/driver')}
+      >
+        <span aria-hidden="true" className="driver-route-swipe-back__bar" />
+        <span>{locale === 'es' ? 'Desliza hacia abajo para volver a Hoy' : 'Swipe down to return to Today'}</span>
+      </button>
       <label className="card" style={{display: 'block', marginBottom: 12, padding: '12px 14px'}}>
         <span className="eyebrow" style={{display: 'block', marginBottom: 6}}>{t.drvRouteHistory}</span>
         <input

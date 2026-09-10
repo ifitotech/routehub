@@ -145,6 +145,29 @@
   font-size:14px;font-weight:700;text-decoration:none;margin-bottom:8px
 }
 
+:global(.driver-route-swipe-back){
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  width:100%;
+  min-height:52px;
+  margin:0 0 10px;
+  padding:8px;
+  border:0;
+  background:transparent;
+  color:#64748b;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+  touch-action:pan-y;
+}
+:global(.driver-route-swipe-back:active){color:#1667f2;transform:scale(.98)}
+:global(.driver-route-swipe-back:focus-visible){outline:3px solid rgba(22,119,255,.2);outline-offset:2px;border-radius:8px}
+:global(.driver-route-swipe-back__bar){display:block;width:42px;height:4px;border-radius:999px;background:#b8c6d8}
+
 /* Today header */
 .todayHeader{
   position:relative;

@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import {usePathname,useRouter} from 'next/navigation'
-import {useEffect,useRef} from 'react'
+import {usePathname} from 'next/navigation'
+import {useEffect} from 'react'
 import {ChevronLeft, History, Home, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {applyThemePreference,useLocale} from '../../lib/use-preferences'
@@ -39,16 +39,9 @@ export default function DriverV3Shell({
   const {t} = useLocale()
   useEffect(()=>{applyThemePreference('light')},[])
   const pathname = usePathname()
-  const router = useRouter()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
-  const swipeStart=useRef<number|null>(null)
-  const navigateWithTransition=(path:string)=>{
-    if(typeof document!=='undefined'&&'startViewTransition' in document){
-      ;(document as Document & {startViewTransition?:(callback:()=>void)=>unknown}).startViewTransition?.(()=>router.push(path))
-    }else router.push(path)
-  }
 
   return (
     <main className={styles.shell}>
@@ -67,16 +60,7 @@ export default function DriverV3Shell({
         </Link>
       </header>
 
-      <section
-        className={`${styles.content} ${flush ? styles.contentFlush : ''}`}
-        onTouchStart={event=>{swipeStart.current=event.touches[0]?.clientY??null}}
-        onTouchEnd={event=>{
-          if(!swipeDownTo||swipeStart.current==null)return
-          const delta=event.changedTouches[0]?.clientY-swipeStart.current
-          swipeStart.current=null
-          if(delta>70)navigateWithTransition(swipeDownTo)
-        }}
-      >{children}</section>
+      <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
 
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
         <Link className={active === 'today' || active === 'route' ? styles.active : ''} href="/driver">
