@@ -17,7 +17,7 @@ export default function Routes() {
   const [pane, setPane] = useState<'list' | 'map'>('list')
   const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, scheduledTodayRoutes = [], upcomingRoutes = [], completedTodayRoutes = [], issueTodayRoutes = [], renderRouteCards, loading, todayRoutes = [], inProgressRoutes = []} = w
   const mapRoutes = useMemo(() => {
-    const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes]
+    const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...upcomingRoutes]
     return source.map((route: any) => ({
       id: route.id,
       origin_address: route.origin_address,
@@ -31,7 +31,7 @@ export default function Routes() {
       driver_id: route.driver_id,
       position: route.position,
     }))
-  }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes])
+  }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes, upcomingRoutes])
   return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
     <div className={styles.page}>
     <header className={styles.header}>
@@ -64,11 +64,25 @@ export default function Routes() {
         <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{scheduledTodayRoutes.length} {c.active}</span></div>
         <section className={styles.routeGrid}>{renderRouteCards(scheduledTodayRoutes)}</section>
       </section>}
-      {!loading && !inProgressRoutes.length && !scheduledTodayRoutes.length && !issueTodayRoutes.length && <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
       {upcomingRoutes.length > 0 && <section className={styles.routeSection}>
-        <div className={styles.sectionHeading}><h2>{c.upcomingSection}</h2><span>{upcomingRoutes.length} {c.active}</span></div>
-        <section className={styles.routeGrid}>{renderRouteCards(upcomingRoutes)}</section>
+        <div className={styles.sectionHeading}><h2>{c.upcomingSection}</h2><span>{upcomingRoutes.length}</span></div>
+        {Array.from(upcomingRoutes.reduce((groups: Map<string, typeof upcomingRoutes>, route: any) => {
+          const key = route.route_date || String(route.scheduled_at || '').slice(0, 10) || 'upcoming'
+          const list = groups.get(key) || []
+          list.push(route)
+          groups.set(key, list)
+          return groups
+        }, new Map<string, typeof upcomingRoutes>())).map(([day, items]) => {
+          const today = todayValue || ''
+          const next = (() => { const d = new Date(`${today}T12:00:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
+          const label = day === next ? (locale==='es'?'Ma\u00f1ana':locale==='fr'?'Demain':'Tomorrow') : new Intl.DateTimeFormat(locale, {weekday:'short', month:'short', day:'numeric'}).format(new Date(`${day}T12:00:00`))
+          return <div key={day}>
+            <div className={styles.sectionHeading}><h2>{label}</h2><span>{day}</span></div>
+            <section className={styles.routeGrid}>{renderRouteCards(items)}</section>
+          </div>
+        })}
       </section>}
+      {!loading && !inProgressRoutes.length && !scheduledTodayRoutes.length && !issueTodayRoutes.length && !upcomingRoutes.length && <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
       {completedTodayRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length} {c.active}</span></div>
         <section className={styles.routeGrid}>{renderRouteCards(completedTodayRoutes)}</section>
