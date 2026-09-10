@@ -1,37 +1,38 @@
-.page{display:flex;flex-direction:column;gap:10px;width:100%;max-width:100%;height:100%;min-height:0;padding:2px 0 4px;box-sizing:border-box;color:#0f172a;overflow:hidden}
+.page{display:flex;flex-direction:column;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:4px 0 2px;box-sizing:border-box;color:#0f172a;overflow:hidden}
 .startDay{display:grid;place-items:center;width:100%;height:44px;border-radius:12px;background:#eaf2ff;color:#1667f2;font-size:13px;font-weight:800;text-decoration:none}
-.hero{--service-surface:#fff;--service-border:#e5e7eb;--service-detail:#f4f7fb;display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:16px;border:1px solid var(--service-border);border-radius:20px;background:var(--service-surface);box-shadow:0 2px 8px rgba(15,29,53,.06);box-sizing:border-box;min-height:0}
+.hero{--service-surface:#fff;--service-border:#e5e7eb;--service-detail:#f4f7fb;display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:16px;border:1px solid var(--service-border);border-radius:20px;background:var(--service-surface);box-shadow:0 6px 20px rgba(15,23,42,.06);box-sizing:border-box;min-height:0}
 /* Keep the operational layout identical for every stop type. Only the soft
    surface color changes, so the Driver can identify the service at a glance
    without action buttons moving between Pickup, Delivery, and Return. */
-.servicePickup{--service-surface:#f0fbfc;--service-border:#cdecef;--service-detail:#fff}
-.serviceDelivery{--service-surface:#f7f2ff;--service-border:#e4d7f9;--service-detail:#fff}
-.serviceReturn{--service-surface:#edf4fb;--service-border:#cbd9e7;--service-detail:#fff}
+.servicePickup{--service-surface:#f4fcfd;--service-border:#cdecef;--service-detail:#fff}
+.serviceDelivery{--service-surface:#faf7ff;--service-border:#e4d7f9;--service-detail:#fff}
+.serviceReturn{--service-surface:#f3f8fd;--service-border:#cbd9e7;--service-detail:#fff}
 .heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
 .typeBadge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;line-height:28px;font-weight:800;letter-spacing:.01em}
 .typeBadge svg{width:15px;height:15px}
 .delivery{background:#f2ecff;color:#7c3aed}
 .pickup{background:#e6fafb;color:#0b9eb2}
 .return{background:#e6f0fa;color:#355f87}
+.stopSummary{min-height:16px;margin:8px 0 0;color:#64748b;font-size:11px;line-height:16px;font-weight:800;letter-spacing:.06em}
 .stopCount{color:#667280;font-size:12px;line-height:20px;font-weight:700;white-space:nowrap}
 .stopCount strong{color:#1667f2;font-size:20px;vertical-align:-1px}
 .stopNumber{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#fff;font-size:13px;font-weight:800;flex-shrink:0}
 .stopNumber.delivery{background:#7c3aed;color:#fff}
 .stopNumber.pickup{background:#0b9eb2;color:#fff}
 .stopNumber.return{background:#355f87;color:#fff}
-.destination{display:grid;grid-template-columns:minmax(0,1fr) 56px;align-items:center;gap:12px;margin-top:10px}
-.destination h1{margin:0;color:#0f172a;font-size:clamp(24px,6.8vw,28px);line-height:1.15;font-weight:750;letter-spacing:-.025em;overflow-wrap:anywhere}
-.destination p{margin:6px 0 0;color:#667280;font-size:14px;line-height:19px;font-weight:500;overflow-wrap:anywhere}
-.orderSlot{min-height:30px;margin-top:5px;display:flex;align-items:flex-start}
+.destination{display:grid;grid-template-columns:minmax(0,1fr) 56px;align-items:center;gap:12px;margin-top:4px}
+.destination h1{display:-webkit-box;min-height:58px;margin:0;color:#0f172a;font-size:clamp(24px,6.8vw,28px);line-height:1.08;font-weight:800;letter-spacing:-.03em;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.destination p{display:-webkit-box;min-height:40px;margin:6px 0 0;color:#64748b;font-size:14px;line-height:19px;font-weight:600;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.orderSlot{min-height:30px;margin-top:6px;display:flex;align-items:flex-start}
 .order{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border-radius:7px;background:#f5f8fc;background:color-mix(in srgb,var(--service-border) 45%,#fff);color:#315477;font-size:12px;line-height:25px;font-weight:750;overflow-wrap:anywhere}
-.operationIcon{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;justify-self:end}
+.operationIcon{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;justify-self:end}
 .operationIcon svg{width:28px;height:28px;stroke-width:2.2}
 .operationIcon.delivery{background:#f2ecff;color:#7c3aed}
 .operationIcon.pickup{background:#e6fafb;color:#0b9eb2}
 .operationIcon.return{background:#e6f0fa;color:#355f87}
 .divider{height:1px;margin:12px 0;background:#e8edf3}
 .servicePickup .divider,.serviceDelivery .divider,.serviceReturn .divider{background:var(--service-border)}
-.stopDetails{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;margin:8px 0 0;padding:12px;border:0;border-radius:14px;background:var(--service-detail);color:#0f172a;text-align:left;font:inherit;box-sizing:border-box}
+.stopDetails{display:flex;align-items:center;gap:10px;width:100%;min-height:54px;margin:8px 0 0;padding:10px 12px;border:0;border-radius:14px;background:var(--service-detail);color:#0f172a;text-align:left;font:inherit;box-shadow:0 1px 0 rgba(15,23,42,.03);box-sizing:border-box}
 .stopDetails:active{transform:scale(.99)}
 .stopDetails:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px}
 .mapPreview{display:block;width:100%;height:184px;min-height:184px;max-height:184px;flex:0 0 184px;border:0;padding:0;margin:0 0 12px;border-radius:14px;overflow:hidden;background:#e8eef4;contain:layout paint}
@@ -39,12 +40,12 @@
 .mapPreview :global(.openstreet-route-preview){display:block;width:100%;height:100%;border:0;filter:saturate(.82) contrast(.96)}
 .mapPreview :global(.openstreet-route-empty){display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;color:#64748b;font-size:13px;font-weight:700;background:#eef3f7}
 .mapEmpty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#64748b;font-size:13px;font-weight:700;background:#eef3f7}
-.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;height:64px;padding:0 16px;border:0;border-radius:16px;background:#1667f2;color:#fff;box-shadow:0 3px 8px rgba(22,103,242,.18);font:inherit;font-size:17px;line-height:22px;font-weight:800;letter-spacing:.02em;text-decoration:none;box-sizing:border-box;touch-action:manipulation;flex:0 0 auto}
+.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;height:60px;padding:0 16px;border:0;border-radius:15px;background:linear-gradient(135deg,#1f7aff,#1267ed);color:#fff;box-shadow:0 8px 18px rgba(22,103,237,.22);font:inherit;font-size:16px;line-height:22px;font-weight:800;letter-spacing:.02em;text-decoration:none;box-sizing:border-box;touch-action:manipulation;flex:0 0 auto}
 .primary svg{width:24px;height:24px}
 .primary:active{background:#0e55d8}
 .primary:disabled{opacity:.58}
-.secondaryActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;flex:0 0 auto}
-.secondaryActions a,.secondaryActions button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;height:56px;border:0;border-radius:16px;font:inherit;font-size:15px;font-weight:800;text-decoration:none;box-sizing:border-box}
+.secondaryActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;flex:0 0 auto}
+.secondaryActions a,.secondaryActions button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;height:48px;border:0;border-radius:12px;font:inherit;font-size:14px;font-weight:800;text-decoration:none;box-sizing:border-box}
 .secondaryActions svg{width:22px;height:22px}
 .mapAction{background:#eef6ff;color:#1667f2}
 .issueAction{background:#fff7e6;color:#d97706}
@@ -96,10 +97,12 @@
 .routeMoreButton small{overflow:hidden;color:#64748b;font-size:11px;line-height:15px;text-overflow:ellipsis;white-space:nowrap}
 .routeMoreButton>svg{color:#1677ff}
 .routeMoreIcon{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eaf3ff;color:#1677ff;font-size:19px;font-weight:900;line-height:1}
-.returnToAppHint{display:grid;gap:3px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#eff7ff;color:#315477;font-size:12px;line-height:16px}
+.returnToAppHint{display:grid;gap:3px;min-height:44px;margin-top:10px;padding:8px 10px;border-radius:12px;background:#eef6ff;color:#315477;font-size:11px;line-height:15px}
 .returnToAppHint strong{font-size:12px;color:#1677ff;font-weight:800}
 .returnToAppHint span{font-weight:600}
-.routeSwipeZone{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:68px;margin-top:auto;padding:12px 8px;border:0;background:transparent;color:#64748b;font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:pan-y}
+.returnToAppHintActive{background:#ecfdf3;color:#24714e}
+.returnToAppHintActive strong{color:#12b76a}
+.routeSwipeZone{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;margin-top:auto;padding:8px;border:0;background:transparent;color:#64748b;font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:pan-y}
 .routeSwipeZone:active{transform:scale(.98);color:#1677ff}
 .routeSwipeZone:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px;border-radius:8px}
 .routeSwipeHandle{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#eaf3ff;color:#1677ff;font-size:17px;font-weight:900;line-height:1}

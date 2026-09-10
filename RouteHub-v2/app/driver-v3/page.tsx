@@ -50,6 +50,11 @@ export default function DriverV3Page() {
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
+  const currentStopPosition=Math.max(1,Number(route?.position)||1)
+  const visibleStopCount=currentStopPosition+(snapshot?.queue.upcoming?.length||0)
+  const stopSummary=locale==='es'
+    ? `PARADA ACTUAL · ${currentStopPosition} DE ${visibleStopCount}`
+    : `CURRENT STOP · ${currentStopPosition} OF ${visibleStopCount}`
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -297,6 +302,7 @@ export default function DriverV3Page() {
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
             <span className="muted" style={{fontSize:12,fontWeight:700}}>ROUTE {routeNumber(route)}</span>
           </div>
+          <p className={styles.stopSummary}>{stopSummary}</p>
           <div className={styles.destination} onClick={()=>setSheet('info')} role="button">
             <div>
               <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
@@ -326,9 +332,8 @@ export default function DriverV3Page() {
             </span>
             <ChevronRight size={18} color="#94A3B8"/>
           </button>
-          <div className={styles.divider}/>
           <DriverRouteEstimate route={route} locale={locale}/>
-          <button className={styles.primary} style={{background:'#16B96B'}} disabled={busy} onClick={()=>void action.run()}>
+          <button className={styles.primary} disabled={busy} onClick={()=>void action.run()}>
             <MapPin/>{busy?t.drvBusy:action.label}
           </button>
           <div className={styles.secondaryActions}>
@@ -338,10 +343,13 @@ export default function DriverV3Page() {
               else {setSheet('pickup');setIssueOpen(true)}
             }}><TriangleAlert/>{t.drvIssue}</button>
           </div>
-          {started&&<div className={styles.returnToAppHint} role="note">
-            <strong>{locale==='es'?'Después de llegar':'After you arrive'}</strong>
-            <span>{locale==='es'?`Regresa a RouteHub y presiona “${action.label}” para completar esta parada.`:`Return to RouteHub and press “${action.label}” to complete this stop.`}</span>
-          </div>}
+          <div className={`${styles.returnToAppHint} ${started?styles.returnToAppHintActive:''}`} role="note">
+            <strong>{started?(locale==='es'?'Al llegar':'When you arrive'):(locale==='es'?'Siguiente paso':'Next step')}</strong>
+            <span>{started
+              ? (locale==='es'?`Regresa a RouteHub y presiona “${action.label}” para completar esta parada.`:`Return to RouteHub and press “${action.label}” to complete this stop.`)
+              : (locale==='es'?'Comienza la ruta y usa Mapas del teléfono para navegar.':'Start the route, then use your phone\'s Maps app to navigate.')}
+            </span>
+          </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
         <button className={styles.routeSwipeZone} type="button" aria-label={nextRoute ? (locale==='es'?'Abrir siguiente ruta':'Open next route') : (locale==='es'?'Ver historial':'View history')} onClick={routeSwipeAction} onTouchStart={routeSwipeStart} onTouchEnd={routeSwipeEnd}>
