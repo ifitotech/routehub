@@ -43,7 +43,7 @@ export default function RoutesBoard({routes, locale}: {routes: OperationsRoute[]
   }, [])
   return (
     <div className={styles.mapPane}>
-      <OperationsMap routes={routes} driverLocations={drivers} locale={locale} interactive />
+      <OperationsMap routes={routes} driverLocations={drivers} locale={locale} interactive hideFooter />
     </div>
   )
 }
