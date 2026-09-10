@@ -23,7 +23,15 @@
   color: var(--rh-muted, #667892);
   font-size: 14px;
 }
-.list { display: grid; gap: 8px; }
+.list { display: grid; gap: 8px; margin-bottom: 18px; }
+.group {
+  margin: 8px 2px 0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
 .item {
   display: flex;
   align-items: center;
@@ -54,6 +62,7 @@
 :global(html[data-theme='dark']) .page { color: #f4f7fb; }
 :global(html[data-theme='dark']) .header span,
 :global(html[data-theme='dark']) .copy small,
+:global(html[data-theme='dark']) .group,
 :global(html[data-theme='dark']) .item > svg { color: #9aabc0; }
 :global(html[data-theme='dark']) .item {
   background: #18263b;
