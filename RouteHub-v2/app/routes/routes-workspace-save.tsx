@@ -1,5 +1,6 @@
 'use client'
 
+import {useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 import {geocodeAddress} from '../../lib/maps/geocoding'
@@ -9,6 +10,7 @@ import type {RouteRecord} from './routes-model'
 import {initialForm, routeStatuses, savedCoordinate} from './routes-model'
 
 export function useRoutesSave(w: any) {
+  const [busyRouteId, setBusyRouteId] = useState('')
   const {
     saving, form, contacts, companyId, c, setMessage, setSaving, originMode,
     originBranchCoordinate, previousDestinationCoordinate, originContactCoordinate,
@@ -186,7 +188,34 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  const toggleRoutePause = async (route: RouteRecord) => {
+    const status = route.status || 'pending'
+    if (!['active', 'paused'].includes(status) || busyRouteId) return
+    const pausing = status === 'active'
+    const label = route.destination_name || route.destination_address || 'route'
+    const confirmation = pausing
+      ? (locale === 'es' ? `¿Pausar ${label}? El conductor verá la ruta como pausada.` : locale === 'fr' ? `Mettre ${label} en pause ? Le conducteur verra l’itinéraire en pause.` : `Pause ${label}? The driver will see this route as paused.`)
+      : (locale === 'es' ? `¿Reanudar ${label}?` : locale === 'fr' ? `Reprendre ${label} ?` : `Resume ${label}?`)
+    if (!window.confirm(confirmation)) return
+    setBusyRouteId(route.id)
+    try {
+      const client = getSupabase()
+      const nextStatus = pausing ? 'paused' : 'active'
+      const {data, error} = await client.from('routes').update({status: nextStatus, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).eq('status', status).select('id').maybeSingle()
+      if (error) throw error
+      if (!data) throw new Error(locale === 'es' ? 'La ruta cambió antes de poder actualizarla. Actualiza la lista.' : locale === 'fr' ? 'L’itinéraire a changé avant la mise à jour. Actualisez la liste.' : 'The route changed before it could be updated. Refresh the list.')
+      if (currentUserId && companyId) await recordActivity({companyId, userId: currentUserId, action: pausing ? 'route_paused_by_manager' : 'route_resumed_by_manager', recordId: route.id, after: {status: nextStatus}}).catch(() => undefined)
+      void sendRoutePush(route.id, 'updated')
+      await loadWorkspace()
+      setMessage(pausing ? (locale === 'es' ? 'Ruta pausada.' : locale === 'fr' ? 'Itinéraire en pause.' : 'Route paused.') : (locale === 'es' ? 'Ruta reanudada.' : locale === 'fr' ? 'Itinéraire reprise.' : 'Route resumed.'))
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    } finally {
+      setBusyRouteId('')
+    }
+  }
+
   const renderRouteCards = (_items: RouteRecord[]) => null
 
-  return {save, renderRouteCards, cancelRoute, moveRoute}
+  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, busyRouteId}
 }
