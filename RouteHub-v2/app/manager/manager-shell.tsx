@@ -2,9 +2,8 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import {ChevronDown, ClipboardList, History, Home, MoreHorizontal, Plus, Route as RouteIcon, Settings, Truck, Users} from 'lucide-react'
-import {applyThemePreference,useLocale} from '../../lib/use-preferences'
-import {useEffect} from 'react'
+import {ChevronDown, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import styles from './manager-shell.module.css'
 
 type ManagerSection = 'today' | 'routes' | 'map' | 'truck' | 'contacts' | 'history' | 'reports' | 'settings'
@@ -19,11 +18,11 @@ type ManagerShellProps = {
 
 export default function ManagerShell({children, active = 'today', branchName, displayName, roleLabel}: ManagerShellProps) {
   const {locale, t} = useLocale()
-  useEffect(()=>{applyThemePreference('light')},[])
+  useThemePreference()
   const copy = locale === 'es'
-    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuraci\u00f3n', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
+    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
-      ? {today: 'Aujourd\u2019hui', map: 'Carte', contacts: 'Contacts', reports: 'Rapports', settings: 'Param\u00e8tres', newRoute: 'Nouvel itin\u00e9raire', workspace: 'Espace de travail', role: 'Manager de succursale'}
+      ? {today: 'Aujourd’hui', map: 'Carte', contacts: 'Contacts', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
       : {today: 'Today', map: 'Map', contacts: 'Contacts', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
   const name = displayName?.trim() || t.managerRole
   const initials = name.slice(0, 2).toUpperCase()
@@ -31,11 +30,8 @@ export default function ManagerShell({children, active = 'today', branchName, di
   const nav = [
     {id: 'today' as const, href: '/manager', label: copy.today, Icon: Home},
     {id: 'routes' as const, href: '/routes', label: t.routes, Icon: RouteIcon},
-    {id: 'truck' as const, href: '/manager/truck', label: locale === 'es' ? 'Cami\u00f3n' : locale === 'fr' ? 'Camion' : 'Truck', Icon: Truck},
     {id: 'contacts' as const, href: '/contacts', label: copy.contacts, Icon: Users},
-    {id: 'history' as const, href: '/manager/history', label: t.history, Icon: History},
-    {id: 'reports' as const, href: '/reports', label: copy.reports, Icon: ClipboardList},
-    {id: 'settings' as const, href: '/settings', label: copy.settings, Icon: Settings},
+    {id: 'settings' as const, href: '/manager/more', label: t.more, Icon: MoreHorizontal},
   ]
 
   return <main className={styles.shell} data-manager-section={active}>
