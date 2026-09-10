@@ -276,7 +276,10 @@ export default function DriverV3Page() {
       const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
       return {label:startLabel, run:startCurrent}
     }
-    if(kind==='pickup') return {label:t.drvCompletePickup, run:arrivePickup}
+    // Pickup completion is a single explicit action in Today. The real
+    // mutation records arrival and completion together, so the Driver is not
+    // left on a paused stop after tapping Complete Pickup.
+    if(kind==='pickup') return {label:t.drvCompletePickup, run:confirmPickup}
     if(kind==='return') return {label:t.drvCompleteReturn, run:openReturn}
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
