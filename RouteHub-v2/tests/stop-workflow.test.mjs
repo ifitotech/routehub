@@ -9,7 +9,7 @@ const completedPage=()=>readFileSync(new URL('../app/driver-v3/completed/page.ts
 const driverData=()=>readFileSync(new URL('../lib/driver-v3/use-driver-data.ts',import.meta.url),'utf8')
 const driverActions=()=>readFileSync(new URL('../lib/driver/driver-actions.ts',import.meta.url),'utf8')
 const routesPage=()=>readFileSync(new URL('../app/routes/new-route-fields.tsx',import.meta.url),'utf8')
-const managePage=()=>readFileSync(new URL('../app/routes/manage/page.tsx',import.meta.url),'utf8')
+const managerBuilder=()=>readFileSync(new URL('../app/routes/new-route-dialog.tsx',import.meta.url),'utf8')+readFileSync(new URL('../app/routes/new-route-fields.tsx',import.meta.url),'utf8')
 const migration=()=>readFileSync(new URL('../supabase/migrations/026_stop_workflow_and_finalization.sql',import.meta.url),'utf8')
 
 test('legacy return and transfer route records keep a stable stop meaning',()=>{
@@ -122,14 +122,12 @@ test('pickup PO is captured in both the builder and focused driver display',()=>
   assert.match(driverPage(),/PO \{route\.order_number\}/)
 })
 
-test('manager can edit pickup, delivery, and branch data without replacing the queue',()=>{
-  const source=managePage()
-  // The manager editor is localized, so assert the semantic controls and their
-  // English copy source rather than a hard-coded rendered label.
-  assert.match(source,/\{copy\.stopType\}<select/)
-  assert.match(source,/pickupFrom:'Pickup from \/ location'/)
-  assert.match(source,/deliveryAddress:'Delivery address'/)
-  assert.match(source,/return:'Return to branch'/)
+test('manager route builder supports pickup, delivery, and branch stops without bypassing the queue',()=>{
+  const source=managerBuilder()
+  assert.match(source,/routeTypes\.map\(type/)
+  assert.match(source,/form\.type==='pickup'/)
+  assert.match(source,/form\.type==='delivery'/)
+  assert.match(source,/form\.type==='return'/)
   assert.match(source,/destination_phone/)
 })
 

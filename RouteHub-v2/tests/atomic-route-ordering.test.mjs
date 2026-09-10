@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises'
 
 const migration=await readFile(new URL('../supabase/migrations/023_atomic_route_queue_reordering.sql',import.meta.url),'utf8')
 const startingPointMigration=await readFile(new URL('../supabase/migrations/036_relink_queue_starting_point.sql',import.meta.url),'utf8')
-const client=await readFile(new URL('../app/routes/manage/page.tsx',import.meta.url),'utf8')
+const client=await readFile(new URL('../app/routes/routes-workspace-save.tsx',import.meta.url),'utf8')
 
 test('atomic reorder derives and validates one complete queue server-side',()=>{
   assert.match(migration,/create or replace function public\.reorder_route_queue\(p_route_ids uuid\[\]\)/i)
@@ -47,8 +47,8 @@ test('reassignment normalizes only source and target queues',()=>{
   assert.doesNotMatch(migration,/update\s+public\.company_users[\s\S]*set\s+role/i)
 })
 
-test('Manage Routes uses one queue RPC, not a client batch of independent order updates',()=>{
-  assert.match(client,/rpc\('reorder_route_queue',\{p_route_ids:routeIds\}\)/)
+test('Manage Routes uses atomic queue RPCs, not client batches of independent order updates',()=>{
+  assert.match(client,/rpc\('reorder_route_queue', \{p_route_ids: swapped\}\)/)
   assert.doesNotMatch(client,/rpc\('reorder_driver_routes'/)
-  assert.match(client,/await load\(\)/)
+  assert.match(client,/await loadWorkspace\(\)/)
 })
