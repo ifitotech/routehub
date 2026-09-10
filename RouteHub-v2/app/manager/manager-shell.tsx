@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import {ChevronDown, ClipboardList, History, Home, MapPin, MoreHorizontal, Plus, Route as RouteIcon, Settings, Truck, Users} from 'lucide-react'
+import {ChevronDown, ClipboardList, History, Home, MoreHorizontal, Plus, Route as RouteIcon, Settings, Truck, Users} from 'lucide-react'
 import {applyThemePreference,useLocale} from '../../lib/use-preferences'
 import {useEffect} from 'react'
 import styles from './manager-shell.module.css'
@@ -21,9 +21,9 @@ export default function ManagerShell({children, active = 'today', branchName, di
   const {locale, t} = useLocale()
   useEffect(()=>{applyThemePreference('light')},[])
   const copy = locale === 'es'
-    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
+    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuraci\u00f3n', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
-      ? {today: 'Aujourd’hui', map: 'Carte', contacts: 'Contacts', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
+      ? {today: 'Aujourd\u2019hui', map: 'Carte', contacts: 'Contacts', reports: 'Rapports', settings: 'Param\u00e8tres', newRoute: 'Nouvel itin\u00e9raire', workspace: 'Espace de travail', role: 'Manager de succursale'}
       : {today: 'Today', map: 'Map', contacts: 'Contacts', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
   const name = displayName?.trim() || t.managerRole
   const initials = name.slice(0, 2).toUpperCase()
@@ -31,8 +31,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
   const nav = [
     {id: 'today' as const, href: '/manager', label: copy.today, Icon: Home},
     {id: 'routes' as const, href: '/routes', label: t.routes, Icon: RouteIcon},
-    {id: 'map' as const, href: '/routes/live', label: copy.map, Icon: MapPin},
-    {id: 'truck' as const, href: '/manager/truck', label: locale === 'es' ? 'Camión' : locale === 'fr' ? 'Camion' : 'Truck', Icon: Truck},
+    {id: 'truck' as const, href: '/manager/truck', label: locale === 'es' ? 'Cami\u00f3n' : locale === 'fr' ? 'Camion' : 'Truck', Icon: Truck},
     {id: 'contacts' as const, href: '/contacts', label: copy.contacts, Icon: Users},
     {id: 'history' as const, href: '/manager/history', label: t.history, Icon: History},
     {id: 'reports' as const, href: '/reports', label: copy.reports, Icon: ClipboardList},
@@ -55,9 +54,8 @@ export default function ManagerShell({children, active = 'today', branchName, di
     <section className={styles.content}>{children}</section>
     <nav className={styles.mobileNav} aria-label="Mobile manager navigation">
       <Link href="/manager" data-active={active === 'today' ? 'true' : 'false'}><Home size={18}/><span>{copy.today}</span></Link>
-      <Link href="/routes" data-active={active === 'routes' ? 'true' : 'false'}><RouteIcon size={18}/><span>{t.routes}</span></Link>
+      <Link href="/routes" data-active={active === 'routes' || active === 'map' ? 'true' : 'false'}><RouteIcon size={18}/><span>{t.routes}</span></Link>
       <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>
-      <Link href="/routes/live" data-active={active === 'map' ? 'true' : 'false'}><MapPin size={18}/><span>{copy.map}</span></Link>
       <Link href="/manager/more" data-active={active === 'settings' ? 'true' : 'false'}><MoreHorizontal size={18}/><span>{t.more}</span></Link>
     </nav>
   </main>
