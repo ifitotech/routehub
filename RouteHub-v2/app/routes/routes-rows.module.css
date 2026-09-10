@@ -34,9 +34,11 @@
 .status[data-status='issue']{background:#fef2f2;color:#dc2626}
 .status[data-status='paused'],.status[data-status='active']{background:#eff6ff;color:#1d4ed8}
 .status[data-status='cancelled']{background:#f1f5f9;color:#64748b}
-.cancel{
-  justify-self:start;height:32px;margin-top:4px;padding:0 12px;
-  border:1px solid #fecaca;border-radius:10px;
-  background:#fff;color:#dc2626;font-size:12px;font-weight:800;
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.move,.cancel{
+  height:32px;padding:0 12px;
+  border-radius:10px;font-size:12px;font-weight:800;
 }
+.move{border:1px solid #d7e2f0;background:#fff;color:#0f1d35}
+.cancel{border:1px solid #fecaca;background:#fff;color:#dc2626}
 .row[data-managing='true'] .cancel{background:#fef2f2}
