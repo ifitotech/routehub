@@ -25,7 +25,7 @@ export default function Routes() {
   }, [])
   const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, scheduledTodayRoutes = [], upcomingRoutes = [], completedTodayRoutes = [], issueTodayRoutes = [], cancelRoute, moveRoute, driverIndex, loading, inProgressRoutes = []} = w
   const mapRoutes = useMemo(() => {
-    const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...upcomingRoutes, ...completedTodayRoutes]
+    const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...completedTodayRoutes]
     return source.map((route: any) => ({
       id: route.id,
       origin_address: route.origin_address,
@@ -39,7 +39,7 @@ export default function Routes() {
       driver_id: route.driver_id,
       position: route.position,
     }))
-  }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes, upcomingRoutes, completedTodayRoutes])
+  }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes, completedTodayRoutes])
   return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
     <div className={styles.page} data-routes-dispatch>
     <header className={styles.header}>
@@ -105,7 +105,7 @@ export default function Routes() {
     </>}
       </div>
       <div className={pane === 'list' ? board.mapHidden : undefined}>
-        <RoutesBoard routes={mapRoutes.length ? mapRoutes : planningMapRoutes || []} locale={locale} />
+        <RoutesBoard routes={mapRoutes} locale={locale} />
       </div>
     </div>
     </div>
