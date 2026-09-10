@@ -43,6 +43,7 @@ export default function Routes() {
       </div>
       <div className={styles.headerActions}>
         <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
+        <Link className={styles.secondaryButton} href="/routes/manage"><RouteIcon size={18}/>{c.manage}</Link>
         <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
       </div>
     </header>
