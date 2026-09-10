@@ -10,6 +10,7 @@ import NewRouteDialog from './new-route-dialog'
 import RoutesBoard from './routes-board'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
+import './routes-dispatch.css'
 import {useRoutesWorkspace} from './routes-workspace'
 
 export default function Routes() {
@@ -33,7 +34,7 @@ export default function Routes() {
     }))
   }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes, upcomingRoutes, completedTodayRoutes])
   return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
-    <div className={styles.page}>
+    <div className={styles.page} data-routes-dispatch>
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>{c.operations.toUpperCase()}</p>
@@ -51,7 +52,7 @@ export default function Routes() {
       <button type="button" data-on={pane === 'map' ? 'true' : 'false'} onClick={() => setPane('map')}>{locale==='es'?'Mapa':locale==='fr'?'Carte':'Map'}</button>
     </div>
     <div className={board.workspace}>
-      <div className={pane === 'map' ? board.listHidden : undefined}>
+      <div className={`${board.listPane} ${pane === 'map' ? board.listHidden : ''}`}>
     {loading ? <section className={styles.routeGrid} aria-label={c.loadError}>
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
     </section> : <>
@@ -97,6 +98,6 @@ export default function Routes() {
       </div>
     </div>
     </div>
-    {open && <NewRouteDialog open={open} saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={openBuilder} previewOpen={previewOpen} setPreviewOpen={setPreviewOpen} form={form} setForm={setForm} selectedContact={selectedContact} originMode={originMode} setOriginSource={setOriginSource} selectDriver={selectDriver} oc={oc} branches={branches} contacts={contacts} defaultBranch={defaultBranch} detailsOpen={detailsOpen} setDetailsOpen={setDetailsOpen} todayValue={todayValue} drivers={drivers} save={save} pendingLocation={pendingLocation} setPendingLocation={setPendingLocation} useConfirmedDestination={useConfirmedDestination} updateDestination={updateDestination} destinationSuggestions={destinationSuggestions} selectDestinationContact={selectDestinationContact} selectExternalDestination={selectExternalDestination} searchContext={searchContext} selectedDestinationLocation={selectedDestinationLocation} setSelectedDestinationLocation={setSelectedDestinationLocation} insertBeforeId={insertBeforeId} setInsertBeforeId={setInsertBeforeId} priorityRoutes={priorityRoutes} saveContactOpen={saveContactOpen} setSaveContactOpen={setSaveContactOpen} contactSaveMessage={contactSaveMessage} setContactSaveMessage={setContactSaveMessage} newContactName={newContactName} setNewContactName={setNewContactName} savingContact={savingContact} saveDestinationAsContact={saveDestinationAsContact} planningMapRoutes={planningMapRoutes} />}
+    {open && <NewRouteDialog open={open} saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={openBuilder} previewOpen={previewOpen} setPreviewOpen={setPreviewOpen} form={form} setForm={setForm} selectedContact={selectedContact} originMode={originMode} setOriginSource={setOriginSource} selectDriver={selectDriver} oc={oc} branches={branches} contacts={contacts} defaultBranch={defaultBranch} detailsOpen={detailsOpen} setDetailsOpen={setDetailsOpen} todayValue={todayValue} drivers={drivers} save={save} pendingLocation={pendingLocation} setPendingLocation={setPendingLocation} useConfirmedDestination={useConfirmedDestination} updateDestination={updateDestination} destinationSuggestions={destinationSuggestions} selectDestinationContact={selectDestinationContact} selectExternalDestination={selectExternalDestination} searchContext={searchContext} selectedDestinationLocation={selectedDestinationLocation} setSelectedDestinationLocation={setSelectedDestinationLocation} insertBeforeId={insertBeforeId} setInsertBeforeId={setInsertBeforeId} priorityRoutes={priorityRoutes} saveContactOpen={saveContactOpen} setSaveContactOpen={setSaveContactOpen} contactSaveMessage={contactSaveMessage} setContactSaveMessage={setContactSaveMessage} newContactName={setNewContactName} setNewContactName={setNewContactName} savingContact={savingContact} saveDestinationAsContact={saveDestinationAsContact} planningMapRoutes={planningMapRoutes} />}
     </ManagerShell>
 }
