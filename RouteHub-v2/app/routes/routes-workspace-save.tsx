@@ -159,7 +159,34 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  const moveRoute = async (route: RouteRecord, direction: 'up' | 'down') => {
+    if (!route.driver_id || !route.company_id) return
+    if (['completed', 'cancelled', 'active'].includes(route.status || '')) return
+    try {
+      const client = getSupabase()
+      let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', route.driver_id).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
+      queueQuery = route.branch_id == null ? queueQuery.is('branch_id', null) : queueQuery.eq('branch_id', route.branch_id)
+      const {data: queue, error: queueError} = await queueQuery
+      if (queueError) throw queueError
+      const ids = (queue || []).map((item: {id: string}) => item.id)
+      const index = ids.indexOf(route.id)
+      const next = direction === 'up' ? index - 1 : index + 1
+      if (index < 0 || next < 0 || next >= ids.length) return
+      const swapped = [...ids]
+      const current = swapped[index]
+      swapped[index] = swapped[next]
+      swapped[next] = current
+      const {error: reorderError} = await client.rpc('reorder_route_queue', {p_route_ids: swapped})
+      if (reorderError) throw reorderError
+      void sendRoutePush(route.id, 'updated')
+      await loadWorkspace()
+      setMessage(locale==='es' ? 'Orden actualizado.' : locale==='fr' ? 'Ordre mis à jour.' : 'Queue updated.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    }
+  }
+
   const renderRouteCards = (_items: RouteRecord[]) => null
 
-  return {save, renderRouteCards, cancelRoute}
+  return {save, renderRouteCards, cancelRoute, moveRoute}
 }
