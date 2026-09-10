@@ -383,18 +383,11 @@ export default function Manager() {
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.synced}: {syncedLabel}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
+    {(hasIssue || overdueRoutes.length > 0) && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{hasIssue ? `${summary.openIssues} ${copy.issue}` : `${overdueRoutes.length} ${copy.overdue}`}</strong><p>{hasIssue ? copy.review : overdueRoutes.slice(0, 2).map(route => route.destination_name || route.destination_address).filter(Boolean).join(' · ')}</p></div><Link href="/routes"><ArrowRight size={16}/></Link></section>}
     <div className={todayStyles.todayLayout}>
       <main className={todayStyles.todayMain}>
         <div className={todayStyles.sectionHeading}><div><span>{copy.liveOperations}</span><h2>{copy.liveDescription}</h2></div><Link href="/routes/live">{copy.viewMap}</Link></div>
         <p className={todayStyles.fixLine}>{fixLabel}</p>
-        {driverRows.length > 0 && <section className={todayStyles.driverStrip} aria-label={copy.drivers}>
-          <strong>{copy.drivers}</strong>
-          <div>{driverRows.map(item => <button type="button" key={item.driverId} className={item.driverId === selectedDriverId ? todayStyles.driverSelected : ''} onClick={() => setSelectedDriverId(item.driverId)}>
-            <span className={item.fix?.updatedAt ? todayStyles.driverLive : todayStyles.driverIdle} />
-            <b>{item.fix?.label || 'Driver'}</b>
-            <small>{item.active?.destination_name || `${item.pending} ${copy.remaining}`}</small>
-          </button>)}</div>
-        </section>}
         <div className={todayStyles.opsMap}>
           <OperationsMap
             hideFooter
@@ -424,6 +417,14 @@ export default function Manager() {
         {deliveryStatus}
       </main>
       <aside className={todayStyles.todaySide}>
+        {driverRows.length > 0 && <section className={todayStyles.driverStrip} aria-label={copy.drivers}>
+          <div className={todayStyles.driverHeading}><strong>{copy.drivers}</strong><span>{driverRows.length}</span></div>
+          <div className={todayStyles.driverList}>{driverRows.map(item => <button type="button" key={item.driverId} className={item.driverId === selectedDriverId ? todayStyles.driverSelected : ''} onClick={() => setSelectedDriverId(item.driverId)}>
+            <span className={item.fix?.updatedAt ? todayStyles.driverLive : todayStyles.driverIdle} />
+            <b>{item.fix?.label || 'Driver'}</b>
+            <small>{item.active?.destination_name || `${item.pending} ${copy.remaining}`}</small>
+          </button>)}</div>
+        </section>}
         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
           <div className={todayStyles.sideHeading}><h2>{copy.upcoming}</h2><Link href="/routes">{copy.viewAll}</Link></div>
           {loading ? <div className={todayStyles.loading}>{t.loading}</div> : (() => {
@@ -459,7 +460,6 @@ export default function Manager() {
         </section>
       </aside>
     </div>
-    {(hasIssue || overdueRoutes.length > 0) && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{hasIssue ? `${summary.openIssues} ${copy.issue}` : `${overdueRoutes.length} ${copy.overdue}`}</strong><p>{hasIssue ? copy.review : overdueRoutes.slice(0, 2).map(route => route.destination_name || route.destination_address).filter(Boolean).join(' · ')}</p></div><Link href="/routes"><ArrowRight size={16}/></Link></section>}
     <div className={`${styles.desktopOnly} ${todayStyles.hideOnFit}`}><TemporaryRouteAssignments /></div>
     <nav className={`nav ${styles.nav} ${styles.todayNav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </ManagerShell>

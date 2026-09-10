@@ -52,7 +52,7 @@
 .sectionHeading h2 { margin: 5px 0 0; color: var(--rh-text, #0f1d35); font-size: 16px; line-height: 1.3; }
 .scope { flex: none; padding: 6px 9px; border: 1px solid var(--rh-border, #dde5ee); border-radius: 999px; color: var(--rh-muted, #667892); font-size: 11px; font-weight: 700; }
 
-.todaySide { display: grid; gap: 16px; }
+.todaySide { display: grid; gap: 16px; align-content: start; }
 .sideCard { display: grid; gap: 13px; padding: 18px; border: 1px solid var(--rh-border, #dde5ee); border-radius: 17px; background: var(--rh-card, #fff); box-shadow: 0 5px 16px rgb(15 29 53 / 4%); }
 .sideHeading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sideHeading h2 { margin: 0; color: var(--rh-text, #0f1d35); font-size: 15px; }
@@ -68,11 +68,13 @@
 }
 .newLink { display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 12px;border-radius:999px;background:#1667f2;color:#fff;font-size:13px;font-weight:800;text-decoration:none }
 .fixLine { margin:0;color:#667892;font-size:12px;font-weight:650 }
-.driverStrip{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 11px;border:1px solid #e3eaf3;border-radius:14px;background:#fff}
-.driverStrip>strong{flex:none;color:#64748b;font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
-.driverStrip>div{display:flex;gap:7px;min-width:0;overflow-x:auto;scrollbar-width:none}.driverStrip>div::-webkit-scrollbar{display:none}
-.driverStrip button{display:grid;grid-template-columns:8px minmax(0,1fr);align-items:center;column-gap:6px;min-width:142px;padding:7px 9px;border:1px solid transparent;border-radius:10px;background:#f7f9fc;color:#334155;text-align:left;font:inherit;cursor:pointer}
-.driverStrip button:hover,.driverStrip .driverSelected{border-color:#b9d3f7;background:#edf5ff}.driverStrip b{overflow:hidden;font-size:11px;text-overflow:ellipsis;white-space:nowrap}.driverStrip small{grid-column:2;overflow:hidden;color:#64748b;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.driverLive,.driverIdle{width:7px;height:7px;border-radius:50%;background:#16b96b;box-shadow:0 0 0 3px #e8f8f0}.driverIdle{background:#94a3b8;box-shadow:0 0 0 3px #f1f5f9}
+.driverStrip { display:grid; gap:12px; min-width:0; padding:18px; border:1px solid var(--rh-border, #dde5ee); border-radius:17px; background:var(--rh-card, #fff); box-shadow:0 5px 16px rgb(15 29 53 / 4%); }
+.driverHeading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.driverHeading strong { color:var(--rh-text, #0f1d35); font-size:15px; }
+.driverHeading span { display:grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:999px; background:var(--rh-soft-blue, #eaf2ff); color:var(--rh-blue, #1667f2); font-size:11px; font-weight:850; }
+.driverList { display:grid; gap:7px; min-width:0; max-height:284px; overflow:auto; scrollbar-width:thin; scrollbar-color:#cbd6e5 transparent; }
+.driverList button { display:grid; grid-template-columns:8px minmax(0,1fr); align-items:center; column-gap:8px; min-width:0; padding:9px 10px; border:1px solid transparent; border-radius:11px; background:#f7f9fc; color:#334155; text-align:left; font:inherit; cursor:pointer; transition:background-color 140ms ease,border-color 140ms ease; }
+.driverList button:hover,.driverStrip .driverSelected { border-color:#b9d3f7; background:#edf5ff; }.driverStrip b{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.driverStrip small{grid-column:2;overflow:hidden;color:#64748b;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.driverLive,.driverIdle{width:7px;height:7px;border-radius:50%;background:#16b96b;box-shadow:0 0 0 3px #e8f8f0}.driverIdle{background:#94a3b8;box-shadow:0 0 0 3px #f1f5f9}
 .deliveryStatus {
   overflow: hidden;
   border: 1px solid var(--rh-border, #dde5ee);
@@ -182,7 +184,7 @@
 .routeInfo strong { font-size: 13px; }
 .routeInfo span { color: var(--rh-muted, #667892); font-size: 11px; }
 .loading, .emptyText { padding: 11px 2px; color: var(--rh-muted, #667892); font-size: 12px; }
-.attention { display: flex; align-items: center; gap: 11px; margin: 0 0 28px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--rh-error, #ef5350) 30%, var(--rh-border, #dde5ee)); border-radius: 15px; background: var(--rh-error-soft, #fff0f0); color: var(--rh-error, #ef5350); }
+.attention { display: flex; align-items: center; gap: 11px; margin: 0 0 16px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--rh-error, #ef5350) 30%, var(--rh-border, #dde5ee)); border-radius: 15px; background: var(--rh-error-soft, #fff0f0); color: var(--rh-error, #ef5350); }
 .attention > div { min-width: 0; }
 .attention strong { display: block; color: var(--rh-text, #0f1d35); font-size: 13px; }
 .attention p { margin: 3px 0 0; color: var(--rh-muted, #667892); font-size: 11px; }
@@ -195,6 +197,8 @@
   .summaryCard span { font-size: 10px; }
   .todayLayout { grid-template-columns: 1fr; gap: 16px; padding-bottom: 100px; }
   .todaySide { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .driverStrip { padding:15px; }
+  .driverList { max-height:218px; }
   .deliveryStatusRow { grid-template-columns: minmax(105px, auto) minmax(0, 1fr); }
   .deliveryMetrics { grid-template-columns: repeat(4, minmax(90px, 1fr)); }
   .deliveryMetric:nth-child(5) { border-left: 0; }
@@ -206,6 +210,9 @@
   .sectionHeading { align-items: flex-start; flex-direction: column; gap: 7px; }
   .scope { align-self: flex-start; }
   .todaySide { grid-template-columns: 1fr; }
+  .driverList { display:flex; gap:8px; max-height:none; overflow-x:auto; overflow-y:hidden; padding-bottom:2px; scrollbar-width:none; }
+  .driverList::-webkit-scrollbar { display:none; }
+  .driverList button { flex:0 0 158px; }
   .sideCard { padding: 15px; }
   .deliveryStatusRow { grid-template-columns: 1fr; }
   .onRoute { padding-inline: 7px; }
@@ -309,7 +316,18 @@
   .todayMain :global([class*='compactActions']) { margin-top: 8px; }
   .todayMain :global([class*='compactActions'] a) { min-height: 46px; padding-inline: 17px; }
 
-  .todaySide { gap: 20px; }
+  .todaySide { gap: 16px; }
+
+  .driverStrip {
+    gap:14px;
+    padding:20px;
+    border:0;
+    border-radius:20px;
+    box-shadow:0 10px 28px rgb(33 56 90 / 5%);
+  }
+  .driverHeading strong { font-size:17px; }
+  .driverList { gap:8px; max-height:min(315px, calc(100dvh - 480px)); }
+  .driverList button { padding:10px 11px; }
 
   .sideCard {
     gap: 17px;
