@@ -4,9 +4,12 @@ import Link from 'next/link'
 import {usePathname} from 'next/navigation'
 import {useEffect} from 'react'
 import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
-import styles from './driver-v3.module.css'
+import shellA from './driver-v3-a.module.css'
+import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
 import {applyThemePreference,useLocale} from '../../lib/use-preferences'
+
+const styles = {...shellA, ...shellB}
 
 type Tab = 'today' | 'route' | 'map' | 'history' | 'truck' | 'more'
 
