@@ -1,0 +1,223 @@
+/* In-app bottom sheet — full viewport overlay, above tab bar */
+.sheetBackdrop{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  background:rgba(15,29,53,.55);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0;
+  animation:sheetFade .18s ease;
+}
+.sheet{
+  width:100%;
+  max-width:680px;
+  max-height:min(86dvh, 720px);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:#fff;
+  border-radius:22px 22px 0 0;
+  padding:10px 18px 0;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  box-shadow:0 -16px 48px rgba(15,29,53,.28);
+  animation:sheetUp .22s ease;
+  box-sizing:border-box;
+}
+.sheetBody{
+  min-height:0;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:8px;
+}
+.sheetFooter{
+  flex-shrink:0;
+  padding-top:8px;
+}
+.sheetHandle{
+  width:40px;
+  height:4px;
+  border-radius:999px;
+  background:#D5DCE6;
+  margin:4px auto 14px;
+}
+.sheetTitle{
+  margin:0 0 12px;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:#0f1d35;
+}
+@keyframes sheetFade{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+
+/* Compact app bars for tabs & stack screens (no repeated brand logo) */
+.tabHeader{
+  min-height:calc(56px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 16px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:#0f1d35;
+}
+.tabTitles{min-width:0;display:grid;gap:2px}
+.tabTitles strong{color:#fff;font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:22px}
+.tabTitles small{color:#b9c9e2;font-size:12px;font-weight:600;line-height:16px}
+
+.stackHeader{
+  min-height:calc(56px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 8px 10px 4px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) 44px;
+  align-items:center;
+  gap:4px;
+  background:#0f1d35;
+}
+.backBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  min-height:44px;
+  padding:0 8px 0 4px;
+  color:#fff;
+  text-decoration:none;
+  font-size:15px;
+  font-weight:700;
+  border-radius:10px;
+}
+.backBtn:active{opacity:.7}
+.stackTitles{min-width:0;text-align:center;display:grid;gap:1px}
+.stackTitles strong{color:#fff;font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stackTitles small{color:#b9c9e2;font-size:11px;font-weight:600;line-height:14px}
+.stackSpacer{width:44px;height:44px}
+
+.contentFlush{position:relative;padding:0!important;max-width:none;overflow:hidden}
+.contentFlush :global(.driver-navigation-page){
+  position:relative!important;
+  inset:auto!important;
+  z-index:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.contentFlush :global(.driver-navigation-state){height:100%!important;min-height:0!important}
+.contentFlush :global(.driver-navigation-page > .route-plan-driver.is-driving){
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+}
+.contentFlush :global(.driver-navigation-page .route-plan-driver.is-driving .route-plan-canvas){
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+}
+.contentFlush :global(.driver-navigation-page .route-plan-guidance){top:10px!important}
+.mapScreen{display:flex;flex-direction:column;min-height:100%;height:100%}
+.mapCanvas{flex:1;min-height:240px;position:relative;background:#e8edf3}
+.mapSheet{
+  flex-shrink:0;
+  background:#fff;
+  border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 28px rgba(15,29,53,.12);
+  padding:14px 16px 8px;
+  border-top:1px solid #e8edf3;
+}
+
+.confirmBackdrop{
+  position:fixed;inset:0;z-index:210;background:rgba(15,29,53,.52);
+  display:flex;align-items:flex-end;justify-content:center;animation:sheetFade .18s ease;
+}
+.confirmSheet{
+  width:100%;max-width:680px;background:#fff;border-radius:20px 20px 0 0;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:0 -12px 40px rgba(15,29,53,.22);animation:sheetUp .22s ease;
+}
+.confirmSheet h2{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.confirmSheet p{margin:0 0 16px;color:#667892;font-size:14px;line-height:1.45}
+.confirmActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.appHeader{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) 44px;
+  align-items:center;
+  position:sticky;
+  top:0;
+  background:#0F1D35;
+  color:#fff;
+  min-height:calc(48px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 8px 0;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  filter:none !important;
+  text-shadow:none !important;
+  -webkit-font-smoothing:antialiased;
+}
+.appHeader *{
+  filter:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  text-shadow:none !important;
+}
+
+.headerBrand{
+  justify-self:center;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#fff;
+  text-decoration:none;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  text-shadow:none;
+  -webkit-font-smoothing:antialiased;
+  filter:none;
+}
+ .headerBrand img{width:32px;height:32px;border-radius:8px;background:#fff;object-fit:contain;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important}
+.headerIcon,
+.appHeader button.headerIcon,
+.appHeader a.headerIcon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  padding:0;
+  margin:0;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  background-color:transparent !important;
+  box-shadow:none !important;
+  color:#fff !important;
+  text-decoration:none;
+  appearance:none;
+  -webkit-appearance:none;
+  filter:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  text-shadow:none !important;
+  opacity:1 !important;
+}
+.appHeader button.headerIcon svg,
+.headerIcon svg{color:#fff;stroke:#fff;width:22px;height:22px}
+
+
+.content > div:first-child{min-height:100%;}
+
+/* Sheets and shared form states use the same high-contrast dark palette as tabs. */
+:global(html[data-theme='dark']) .sheet,:global(html[data-theme='dark']) .confirmSheet,:global(html[data-theme='dark']) .mapSheet{background:#18263b;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .sheetTitle,:global(html[data-theme='dark']) .confirmSheet h2{color:#f4f7fb}
+:global(html[data-theme='dark']) .confirmSheet p{color:#b9c9dd}
+:global(html[data-theme='dark']) .sheetHandle{background:#60738c}
+:global(html[data-theme='dark']) .content [role=alert]{background:#4a252b;color:#ffc1c6;border-color:#80424d}
+:global(html[data-theme='dark']) .content [role=status]{background:#153a2b;color:#8fe7bc}
+:global(html[data-theme='dark']) .tag{background:#17345c;color:#9cc4ff}
+:global(html[data-theme='dark']) .content input::placeholder,:global(html[data-theme='dark']) .content textarea::placeholder{color:#8fa2ba;opacity:1}
+:global(html[data-theme='dark']) .stickyAction{background:linear-gradient(180deg,rgba(16,28,45,0) 0%,#101c2d 28%,#101c2d 100%)}
