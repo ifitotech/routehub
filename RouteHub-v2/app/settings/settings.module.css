@@ -1,1 +1,49 @@
-.page{max-width:900px;margin:0;padding:clamp(20px,3vw,36px);color:#0f1d35}.page .topbar{margin-bottom:22px}.page .settings-card,.page :global(.notification-settings-card),.page :global(.install-app-card){border-color:#dde5ee;border-radius:16px;background:#fff;box-shadow:0 6px 18px rgb(15 29 53 / 5%)}.page :global(.settings-card-heading){display:flex;align-items:center;justify-content:space-between;gap:12px}.page :global(.settings-card-heading h2){margin:0}.page :global(.profile-summary),.page :global(.branch-summary){padding:12px 0}.page :global(.settings-edit-panel){display:grid;gap:12px}.page :global(.settings-edit-panel) label{margin-top:0}.page :global(.settings-card) input,.page :global(.settings-card) select{min-height:44px;border:1px solid #dde5ee;border-radius:10px;background:#fff;color:#0f1d35}.page :global(.settings-card) button{min-height:42px}.page :global(.notification-settings-card),.page :global(.install-app-card){margin-top:14px;padding:18px}.page :global(.plan-name){color:#1667f2}.page :global(.danger-outline){border-color:#ef5350;color:#ef5350}@media(max-width:1023px){.page{max-width:760px;margin:0 auto;padding:20px 16px 96px}}@media(prefers-reduced-motion:reduce){.page *{scroll-behavior:auto}}
+.page{max-width:720px;margin:0 auto;padding:8px 0 28px;color:#0f1d35}
+.eyebrow{margin:0 0 6px;color:#1667f2;font-size:11px;font-weight:850;letter-spacing:.14em}
+.page h1{margin:0 0 18px;font-size:28px;letter-spacing:-.04em}
+.group{margin:18px 2px 8px;color:#64748b;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.card{display:grid;border:1px solid #dde5ee;border-radius:16px;background:#fff;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;border-bottom:1px solid #edf2f7;background:transparent;color:inherit;text-align:left;text-decoration:none}
+.card .row:last-child{border-bottom:0}
+.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#eaf2ff;color:#1667f2;font-size:11px;font-weight:900;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#eaf2ff;color:#1667f2;flex:none}
+.copy{min-width:0;flex:1;display:grid;gap:2px}
+.copy strong{font-size:14px;line-height:1.25}
+.copy small,.hint,.status{color:#64748b;font-size:12px;line-height:1.35}
+.meta{color:#64748b;font-size:12px;font-weight:700;flex:none}
+.seg{display:flex;gap:4px;padding:3px;border-radius:999px;background:#eef3f8}
+.seg button{height:28px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:#334155;font-size:11px;font-weight:800}
+.seg button[data-on='true']{background:#1667f2;color:#fff}
+.editor{display:grid;gap:10px;padding:4px 14px 14px}
+.editor label{display:grid;gap:6px;font-size:12px;font-weight:700;color:#334155}
+.editor input{min-height:42px;border:1px solid #dde5ee;border-radius:10px;padding:0 10px;background:#fff}
+.photo{display:inline-flex;align-items:center;gap:8px}
+.photo input{display:none}
+.primary{height:42px;border:0;border-radius:12px;background:#1667f2;color:#fff;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.embed :global(.card),
+.embed :global(.settings-card),
+.embed :global(.notification-settings-card),
+.embed :global(.install-app-card){margin:0 0 10px;padding:14px;border:1px solid #dde5ee;border-radius:16px;background:#fff;box-shadow:none}
+.embed :global(h2){margin:0 0 6px;font-size:15px}
+.embed :global(p){margin:0 0 10px;font-size:13px}
+.embed :global(button){min-height:40px}
+.signOut{margin-top:18px;height:44px;width:100%;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#dc2626;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.status{margin-top:10px}
+
+:global(html[data-theme='dark']) .page{color:#f4f7fb}
+:global(html[data-theme='dark']) .group,
+:global(html[data-theme='dark']) .copy small,
+:global(html[data-theme='dark']) .hint,
+:global(html[data-theme='dark']) .meta,
+:global(html[data-theme='dark']) .status{color:#9aabc0}
+:global(html[data-theme='dark']) .card,
+:global(html[data-theme='dark']) .embed :global(.card),
+:global(html[data-theme='dark']) .embed :global(.settings-card),
+:global(html[data-theme='dark']) .embed :global(.notification-settings-card),
+:global(html[data-theme='dark']) .embed :global(.install-app-card){background:#18263b;border-color:#31445f;color:#f4f7fb}
+:global(html[data-theme='dark']) .row{border-bottom-color:#31445f}
+:global(html[data-theme='dark']) .seg{background:#24364f}
+:global(html[data-theme='dark']) .seg button{color:#d5e2f2}
+:global(html[data-theme='dark']) .editor input{background:#101a2b;border-color:#31445f;color:#f4f7fb}
+:global(html[data-theme='dark']) .signOut{background:#18263b}
