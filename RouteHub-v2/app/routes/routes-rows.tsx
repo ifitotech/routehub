@@ -4,7 +4,7 @@ import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './rou
 import type {RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
 
-export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onPrioritize, onMoveTomorrow, busyRouteId, managing}: {
+export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, busyRouteId, managing}: {
   items: RouteRecord[]
   locale: string
   c: any
@@ -12,8 +12,6 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   onCancel?: (route: RouteRecord) => void
   onMove?: (route: RouteRecord, direction: 'up' | 'down') => void
   onTogglePause?: (route: RouteRecord) => void
-  onPrioritize?: (route: RouteRecord) => void
-  onMoveTomorrow?: (route: RouteRecord) => void
   busyRouteId?: string
   managing?: boolean
 }) {
@@ -28,8 +26,6 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         const canCancel = canManage && status !== 'active' && Boolean(onCancel)
         const canMove = canManage && status !== 'active' && Boolean(onMove)
         const canTogglePause = canManage && ['active', 'paused'].includes(status) && Boolean(onTogglePause)
-        const canPrioritize = canManage && ['draft', 'pending', 'published', 'paused'].includes(status) && Boolean(onPrioritize)
-        const canMoveTomorrow = canManage && ['draft', 'pending', 'published'].includes(status) && Boolean(onMoveTomorrow)
         const busy = busyRouteId === route.id
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
         return (
@@ -55,8 +51,6 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                       {busy ? '…' : status === 'paused' ? (locale === 'es' ? 'Reanudar' : locale === 'fr' ? 'Reprendre' : 'Resume') : (locale === 'es' ? 'Pausar' : locale === 'fr' ? 'Mettre en pause' : 'Pause')}
                     </button>
                   ) : null}
-                  {canPrioritize ? <button type="button" className={styles.prioritize} disabled={busy} onClick={() => onPrioritize?.(route)}>{busy ? '…' : locale === 'es' ? 'Priorizar ahora' : locale === 'fr' ? 'Prioriser maintenant' : 'Prioritize now'}</button> : null}
-                  {canMoveTomorrow ? <button type="button" className={styles.tomorrow} disabled={busy} onClick={() => onMoveTomorrow?.(route)}>{locale === 'es' ? 'Mover a mañana' : locale === 'fr' ? 'Déplacer à demain' : 'Move to tomorrow'}</button> : null}
                   {canMove ? (
                     <>
                       <button type="button" className={styles.move} disabled={busy} onClick={() => onMove?.(route, 'up')}>{locale === 'es' ? 'Subir' : locale === 'fr' ? 'Monter' : 'Up'}</button>

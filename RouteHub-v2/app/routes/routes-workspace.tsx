@@ -81,6 +81,6 @@ export function useRoutesWorkspace() {
     setOpen(true)
   }
 
-  const {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, prioritizeRoute, moveRouteToTomorrow, busyRouteId} = useRoutesSave(derived)
-  return {...derived, saveDestinationAsContact, openBuilder, save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, prioritizeRoute, moveRouteToTomorrow, busyRouteId, loadError: derived.message}
+  const {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, busyRouteId} = useRoutesSave(derived)
+  return {...derived, saveDestinationAsContact, openBuilder, save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, busyRouteId, loadError: derived.message}
 }
