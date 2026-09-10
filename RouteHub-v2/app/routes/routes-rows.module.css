@@ -1,21 +1,42 @@
-.list{display:grid;gap:8px}
-.row{display:grid;grid-template-columns:36px minmax(0,1.4fr) auto minmax(0,.9fr) 84px;gap:10px;align-items:center;min-height:72px;padding:10px 12px;border:1px solid #dde5ee;border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.list{display:grid;gap:8px;min-width:0}
+.row{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  min-width:0;
+  padding:12px;
+  border:1px solid #dde5ee;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 4px 14px rgba(15,23,42,.04);
+}
 .row[data-status='completed']{border-left:4px solid #16b96b}
 .row[data-status='active'],.row[data-status='paused']{border-left:4px solid #1667f2}
 .row[data-status='issue']{border-left:4px solid #e11d48}
-.row[data-status='published'],.row[data-status='pending']{border-left:4px solid #f59e0b}
-.num{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#eef4ff;color:#1667f2;font-size:11px;font-weight:900}
-.main{min-width:0;display:grid;gap:2px}
-.main small{color:#64748b;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-.main strong{color:#0f1d35;font-size:15px;line-height:1.2;word-break:break-word}
-.main span{color:#64748b;font-size:12px;word-break:break-word}
-.status{justify-self:start;padding:4px 8px;border-radius:999px;background:#eef4ff;color:#1667f2;font-size:10px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+.row[data-status='published'],.row[data-status='pending'],.row[data-status='draft']{border-left:4px solid #f59e0b}
+.num{
+  width:32px;height:32px;border-radius:10px;
+  display:grid;place-items:center;
+  background:#eef4ff;color:#1667f2;font-size:11px;font-weight:900;
+}
+.body{min-width:0;display:grid;gap:4px}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.topline small{color:#64748b;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.body strong{color:#0f1d35;font-size:15px;line-height:1.25;font-weight:800;overflow-wrap:anywhere;word-break:break-word}
+.body p{margin:0;color:#64748b;font-size:12px;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
+.status{
+  flex:none;padding:3px 8px;border-radius:999px;
+  background:#eef4ff;color:#1667f2;
+  font-size:10px;font-weight:800;text-transform:uppercase;white-space:nowrap;
+}
 .status[data-status='completed']{background:#ecfdf5;color:#059669}
 .status[data-status='issue']{background:#fef2f2;color:#dc2626}
 .status[data-status='paused'],.status[data-status='active']{background:#eff6ff;color:#1d4ed8}
-.meta{min-width:0;display:grid;gap:2px}
-.meta b{color:#334155;font-size:12px}
-.meta small{color:#94a3b8;font-size:11px}
-.cancel{height:32px;padding:0 10px;border:1px solid #fecaca;border-radius:10px;background:#fff;color:#dc2626;font-size:12px;font-weight:800}
-.spacer{width:84px}
-@media(max-width:720px){.row{grid-template-columns:32px minmax(0,1fr);align-items:start}.status,.meta,.cancel,.spacer{grid-column:2}}
+.status[data-status='cancelled']{background:#f1f5f9;color:#64748b}
+.cancel{
+  justify-self:start;height:32px;margin-top:4px;padding:0 12px;
+  border:1px solid #fecaca;border-radius:10px;
+  background:#fff;color:#dc2626;font-size:12px;font-weight:800;
+}
+.row[data-managing='true'] .cancel{background:#fef2f2}

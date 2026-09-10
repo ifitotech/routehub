@@ -20,14 +20,23 @@
 .listPane{
   min-width:0;
   max-height:calc(100dvh - 168px);
+  overflow:auto;
   overflow-x:hidden;
-  overflow-y:auto;
-  padding-right:2px;
+  padding-right:4px;
+}
+.manageHint{
+  margin:0 0 12px;
+  padding:10px 12px;
+  border:1px solid #bfdbfe;
+  border-radius:12px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-size:13px;
+  font-weight:700;
 }
 .workspace{
   display:grid;
   gap:14px;
-  min-width:0;
 }
 .mobileToggle{display:flex;gap:8px}
 .mobileToggle button{
@@ -52,5 +61,5 @@
   .listHidden{display:none}
   .mapHidden{display:none}
   .mapPane{height:calc(100dvh - 220px)}
-  .listPane{max-height:none;overflow:visible}
+  .listPane{max-height:none}
 }

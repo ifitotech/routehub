@@ -4,3 +4,22 @@
   padding:84px 18px 20px!important;
   overflow-x:hidden!important;
 }
+[data-routes-dispatch] article,
+[data-routes-dispatch] section{
+  min-width:0;
+  max-width:100%;
+}
+[data-routes-dispatch] [class*="routeCard"],
+[data-routes-dispatch] [class*="routeGrid"]{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  min-width:0!important;
+  overflow:visible!important;
+}
+[data-routes-dispatch] [class*="routeCard"] *{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:break-word!important;
+}
+[data-routes-dispatch] header button[data-on='true']{background:#eaf2ff;color:#1667f2}
