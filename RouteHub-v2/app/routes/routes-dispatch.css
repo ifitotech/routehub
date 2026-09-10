@@ -20,7 +20,11 @@
   padding:8px 10px!important;
 }
 [data-routes-dispatch] article > div:last-child{
-  display:none!important;
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:8px!important;
+  padding-top:8px!important;
 }
 [data-routes-dispatch] article > div:nth-child(3){
   grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)!important;
@@ -28,4 +32,14 @@
 }
 [data-routes-dispatch] article > div:nth-child(3) > div:nth-child(3){
   display:none!important;
+}
+[data-routes-dispatch] [data-cancel-route]{
+  border:1px solid #fecaca;
+  background:#fff;
+  color:#dc2626;
+  border-radius:10px;
+  height:32px;
+  padding:0 10px;
+  font-size:12px;
+  font-weight:800;
 }
