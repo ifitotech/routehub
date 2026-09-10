@@ -56,4 +56,5 @@ end;
 $$;
 
 revoke all on function public.enforce_assigned_driver_route_update() from public;
+revoke execute on function public.enforce_assigned_driver_route_update() from anon, authenticated;
 notify pgrst, 'reload schema';
