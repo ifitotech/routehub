@@ -5,6 +5,7 @@ import {usePathname} from 'next/navigation'
 import {useEffect} from 'react'
 import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
+import './driver-route-swipe.css'
 import {applyThemePreference,useLocale} from '../../lib/use-preferences'
 
 type Tab = 'today' | 'route' | 'map' | 'history' | 'truck' | 'more'
