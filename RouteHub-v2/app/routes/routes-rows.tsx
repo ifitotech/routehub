@@ -19,7 +19,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, mana
         const destination = route.destination_name || route.destination_address || c.destinationPending
         const origin = route.origin_name || route.origin_address || c.branch
         const driver = driverDetails(route.driver_id ? driverIndex?.get(route.driver_id) : undefined, c.teamDriver)
-        const canCancel = Boolean(onCancel) && !['completed', 'cancelled'].includes(status)
+        const canCancel = Boolean(managing && onCancel) && !['completed', 'cancelled'].includes(status)
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
         return (
           <article key={route.id} className={styles.row} data-status={status} data-managing={managing ? 'true' : 'false'}>
