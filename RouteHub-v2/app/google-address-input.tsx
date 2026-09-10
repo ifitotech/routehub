@@ -108,6 +108,10 @@ export default function GoogleAddressInput({
 
   const runSearch = useCallback(async () => {
     const query = value.trim()
+    // A saved RouteHub contact is authoritative. Do not replace a matching
+    // company location with an external address result just because the
+    // search button was tapped.
+    if (prioritizesLocalSuggestions && matchingLocalSuggestions.length > 0) return
     if ((googleReady && !prioritizesLocalSuggestions) || query.length < 3 || query.length > 180) return
     searchController.current?.abort()
     const controller = new AbortController()
@@ -128,7 +132,7 @@ export default function GoogleAddressInput({
       setFreeSuggestions([])
       setLookupState('error')
     }
-  }, [googleReady, prioritizesLocalSuggestions, searchContext, value])
+  }, [googleReady, matchingLocalSuggestions.length, prioritizesLocalSuggestions, searchContext, value])
 
   const selectSuggestion = (suggestion: AddressSearchSuggestion) => {
     selectedValueRef.current = suggestion.label
@@ -162,7 +166,7 @@ export default function GoogleAddressInput({
 
   return <div className="routehub-address-input">
     <div className="routehub-address-control">
-      <input ref={inputRef} {...props} value={value} name="routehub-address-search" type="search" autoComplete="off" autoCorrect="off" autoCapitalize="words" spellCheck={false} onFocus={() => { if (matchingLocalSuggestions.length || freeSuggestions.length) setSuggestionsOpen(true) }} onChange={event => { selectedValueRef.current = ''; onValueChange(event.target.value); setFreeSuggestions([]); setLookupState('idle'); setSuggestionsOpen(Boolean(matchingLocalSuggestions.length)) }} onKeyDown={event => { onKeyDown?.(event); if (!event.defaultPrevented && event.key === 'Enter' && !googleReady) { event.preventDefault(); void runSearch() } }} role="combobox" aria-autocomplete="list" aria-expanded={shouldShowSuggestions} aria-controls={listId}/>
+      <input ref={inputRef} {...props} value={value} name="routehub-address-search" type="search" autoComplete="off" autoCorrect="off" autoCapitalize="words" spellCheck={false} onFocus={() => { if (matchingLocalSuggestions.length || freeSuggestions.length) setSuggestionsOpen(true) }} onChange={event => { const nextValue = event.target.value; const nextQuery = nextValue.trim().toLocaleLowerCase(); const nextTerms = nextQuery.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(term => term.length > 1); const nextMatches = nextTerms.length === 0 ? localSuggestions.slice(0, 5) : localSuggestions.filter(item => { const searchable = `${item.primary} ${item.secondary || ''} ${item.value}`.toLocaleLowerCase(); return nextTerms.every(term => searchable.includes(term)) }).slice(0, 5); selectedValueRef.current = ''; onValueChange(nextValue); setFreeSuggestions([]); setLookupState('idle'); setSuggestionsOpen(Boolean(nextMatches.length)) }} onKeyDown={event => { onKeyDown?.(event); if (!event.defaultPrevented && event.key === 'Enter' && !googleReady) { event.preventDefault(); void runSearch() } }} role="combobox" aria-autocomplete="list" aria-expanded={shouldShowSuggestions} aria-controls={listId}/>
       {(!googleReady || prioritizesLocalSuggestions) && <button type="button" className="routehub-address-search-button" disabled={value.trim().length < 3 || lookupState === 'loading'} onClick={() => void runSearch()}>{lookupState === 'loading' ? '…' : searchLabel}</button>}
     </div>
     {shouldShowSuggestions && <div className="routehub-address-suggestions" id={listId} role="listbox" aria-label="Address and contact suggestions">
