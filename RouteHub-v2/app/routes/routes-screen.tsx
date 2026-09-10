@@ -17,7 +17,7 @@ export default function Routes() {
   const [pane, setPane] = useState<'list' | 'map'>('list')
   const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, scheduledTodayRoutes = [], upcomingRoutes = [], completedTodayRoutes = [], issueTodayRoutes = [], renderRouteCards, loading, todayRoutes = [], inProgressRoutes = []} = w
   const mapRoutes = useMemo(() => {
-    const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...upcomingRoutes]
+    const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...upcomingRoutes, ...completedTodayRoutes]
     return source.map((route: any) => ({
       id: route.id,
       origin_address: route.origin_address,
@@ -31,7 +31,7 @@ export default function Routes() {
       driver_id: route.driver_id,
       position: route.position,
     }))
-  }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes, upcomingRoutes])
+  }, [inProgressRoutes, scheduledTodayRoutes, issueTodayRoutes, upcomingRoutes, completedTodayRoutes])
   return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
     <div className={styles.page}>
     <header className={styles.header}>
@@ -42,7 +42,6 @@ export default function Routes() {
       </div>
       <div className={styles.headerActions}>
         <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
-        <Link className={styles.secondaryButton} href="/routes/manage?reorder=1"><RouteIcon size={18}/>{c.manage}</Link>
         <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
       </div>
     </header>
@@ -82,7 +81,6 @@ export default function Routes() {
           </div>
         })}
       </section>}
-      {!loading && !inProgressRoutes.length && !scheduledTodayRoutes.length && !issueTodayRoutes.length && !upcomingRoutes.length && <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
       {completedTodayRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length} {c.active}</span></div>
         <section className={styles.routeGrid}>{renderRouteCards(completedTodayRoutes)}</section>
@@ -91,6 +89,7 @@ export default function Routes() {
         <div className={styles.sectionHeading}><h2>{c.issue}</h2><span>{issueTodayRoutes.length}</span></div>
         <section className={styles.routeGrid}>{renderRouteCards(issueTodayRoutes)}</section>
       </section>}
+      {!loading && !inProgressRoutes.length && !scheduledTodayRoutes.length && !issueTodayRoutes.length && !upcomingRoutes.length && !completedTodayRoutes.length && <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
     </>}
       </div>
       <div className={pane === 'list' ? board.mapHidden : undefined}>
