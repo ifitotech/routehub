@@ -68,6 +68,11 @@
 }
 .newLink { display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 12px;border-radius:999px;background:#1667f2;color:#fff;font-size:13px;font-weight:800;text-decoration:none }
 .fixLine { margin:0;color:#667892;font-size:12px;font-weight:650 }
+.driverStrip{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 11px;border:1px solid #e3eaf3;border-radius:14px;background:#fff}
+.driverStrip>strong{flex:none;color:#64748b;font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.driverStrip>div{display:flex;gap:7px;min-width:0;overflow-x:auto;scrollbar-width:none}.driverStrip>div::-webkit-scrollbar{display:none}
+.driverStrip button{display:grid;grid-template-columns:8px minmax(0,1fr);align-items:center;column-gap:6px;min-width:142px;padding:7px 9px;border:1px solid transparent;border-radius:10px;background:#f7f9fc;color:#334155;text-align:left;font:inherit;cursor:pointer}
+.driverStrip button:hover,.driverStrip .driverSelected{border-color:#b9d3f7;background:#edf5ff}.driverStrip b{overflow:hidden;font-size:11px;text-overflow:ellipsis;white-space:nowrap}.driverStrip small{grid-column:2;overflow:hidden;color:#64748b;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.driverLive,.driverIdle{width:7px;height:7px;border-radius:50%;background:#16b96b;box-shadow:0 0 0 3px #e8f8f0}.driverIdle{background:#94a3b8;box-shadow:0 0 0 3px #f1f5f9}
 .deliveryStatus {
   overflow: hidden;
   border: 1px solid var(--rh-border, #dde5ee);

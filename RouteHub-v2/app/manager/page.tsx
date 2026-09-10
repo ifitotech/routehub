@@ -31,7 +31,7 @@ export default function Manager() {
     newRoute: 'Nueva ruta', reorder: 'Reordenar rutas', addContact: 'Agregar contacto', noPending: 'No hay rutas hoy.',
     assignment: 'Asignado', waiting: 'Sin asignar', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
     branchManager: 'Manager de sucursal', currentBranch: 'Sucursal actual', updated: 'Actualizado',
-    lastSeen: 'Última ubicación', noFix: 'El Driver no está compartiendo ubicación (app cerrada).', ago: 'hace', seeMore: 'Ver más',
+    lastSeen: 'Última ubicación', noFix: 'Ubicación no disponible.', ago: 'hace', seeMore: 'Ver más', overdue: 'Pendientes anteriores', drivers: 'Conductores', remaining: 'pendientes', refresh: 'Actualizar', synced: 'Sincronizado',
   } : locale === 'fr' ? {
     today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'En cours', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
     liveDescription: 'Arrêt en cours chez le chauffeur.', quickActions: 'Actions',
@@ -39,7 +39,7 @@ export default function Manager() {
     newRoute: 'Nouvel itinéraire', reorder: 'Réordonner', addContact: 'Ajouter un contact', noPending: 'Aucun itinéraire aujourd’hui.',
     assignment: 'Assigné', waiting: 'Non assigné', issue: 'incident ouvert', review: 'Consultez les rapports.',
     branchManager: 'Manager de succursale', currentBranch: 'Succursale actuelle', updated: 'Mis à jour',
-    lastSeen: 'Dernière position', noFix: 'Le chauffeur ne partage pas sa position (app fermée).', ago: 'il y a', seeMore: 'Voir plus',
+    lastSeen: 'Dernière position', noFix: 'Position indisponible.', ago: 'il y a', seeMore: 'Voir plus', overdue: 'En attente antérieure', drivers: 'Chauffeurs', remaining: 'restants', refresh: 'Actualiser', synced: 'Synchronisé',
   } : {
     today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'In progress', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
     liveDescription: 'The stop the driver is running now.', quickActions: 'Actions',
@@ -47,7 +47,7 @@ export default function Manager() {
     newRoute: 'New route', reorder: 'Reorder routes', addContact: 'Add contact', noPending: 'No routes today.',
     assignment: 'Assigned', waiting: 'Unassigned', issue: 'open issue', review: 'Review route reports.',
     branchManager: 'Branch Manager', currentBranch: 'Current branch', updated: 'Updated',
-    lastSeen: 'Last location', noFix: 'Driver is not sharing location (app closed).', ago: 'ago', seeMore: 'See more',
+    lastSeen: 'Last location', noFix: 'Location unavailable.', ago: 'ago', seeMore: 'See more', overdue: 'Earlier pending', drivers: 'Drivers', remaining: 'remaining', refresh: 'Refresh', synced: 'Synced',
   }
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
@@ -58,13 +58,17 @@ export default function Manager() {
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
+  const [liveFixes, setLiveFixes] = useState<Record<string, LiveFix>>({})
+  const [selectedDriverId, setSelectedDriverId] = useState('')
+  const [overdueRoutes, setOverdueRoutes] = useState<DashboardRoute[]>([])
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
   const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
   const initialDurationRef=useRef<Record<string,number>>({})
   const coordinateRepairRef=useRef(new Set<string>())
+  const liveFix=selectedDriverId?liveFixes[selectedDriverId]||null:Object.values(liveFixes)[0]||null
   const liveFixRef=useRef(liveFix)
   liveFixRef.current=liveFix
-  const activeRoute=todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
+  const activeRoute=(selectedDriverId?todayRoutes.find(route=>route.driver_id===selectedDriverId&&['active','paused'].includes(String(route.status||''))):undefined)||todayRoutes.find(route=>['active','paused'].includes(String(route.status||'')))
   const activeRouteId=activeRoute?.id
   const activeDestination=sanitizeCoordinate({lat:activeRoute?.destination_lat,lng:activeRoute?.destination_lng})
   const activeDestinationLat=activeDestination?.lat
@@ -153,6 +157,15 @@ export default function Manager() {
           branchId,
           routeDate: managerOperationalDate(),
         })
+        let overdueQuery = client.from('routes')
+          .select('id,company_id,branch_id,route_date,mission_type,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_lat,destination_lng,order_number,status,driver_id,position,route_started_at')
+          .eq('company_id', membership.company_id)
+          .lt('route_date', managerOperationalDate())
+          .in('status', ['pending', 'published', 'assigned', 'active', 'paused', 'issue'])
+          .order('route_date', {ascending: false})
+          .order('position', {ascending: true})
+          .limit(20)
+        if (branchId) overdueQuery = overdueQuery.eq('branch_id', branchId)
         let sessionQuery = client.from('driving_sessions')
           .select('driver_id,last_lat,last_lng,last_updated_at,status')
           .eq('company_id', membership.company_id)
@@ -160,11 +173,13 @@ export default function Manager() {
           .order('last_updated_at', {ascending: false})
           .limit(8)
         if (branchId) sessionQuery = sessionQuery.eq('branch_id', branchId)
-        const {data: sessions} = await sessionQuery
-        const session = (sessions || []).find(row => row.last_lat != null && row.last_lng != null) || sessions?.[0] || null
-        const {data: driverProfile} = session?.driver_id
-          ? await client.from('users').select('name,email').eq('id', session.driver_id).maybeSingle()
-          : {data: null}
+        const [{data: sessions, error: sessionError}, {data: overdue, error: overdueError}] = await Promise.all([sessionQuery, overdueQuery])
+        if (sessionError || overdueError) throw sessionError || overdueError
+        const sessionDriverIds = [...new Set((sessions || []).map(row => String(row.driver_id || '')).filter(Boolean))]
+        const {data: driverProfiles} = sessionDriverIds.length
+          ? await client.from('users').select('id,name,email').in('id', sessionDriverIds)
+          : {data: []}
+        const profileById = new Map((driverProfiles || []).map(profile => [String(profile.id), profile]))
         if (cancelled) return
         const metadata = userData.user?.user_metadata as Record<string, unknown> | undefined
         const name = String(metadata?.full_name || metadata?.name || userData.user?.email || '')
@@ -177,13 +192,18 @@ export default function Manager() {
         })
         setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0)))
         setSummary(dashboard.summary)
-        setLiveFix(session ? {
-          driverId: String(session.driver_id || ''),
-          updatedAt: session.last_updated_at || null,
-          lat: session.last_lat == null ? null : Number(session.last_lat),
-          lng: session.last_lng == null ? null : Number(session.last_lng),
-          label: String(driverProfile?.name || driverProfile?.email || 'Driver'),
-        } : null)
+        setOverdueRoutes((overdue || []) as DashboardRoute[])
+        const fixes = Object.fromEntries((sessions || []).filter(row => row.driver_id).map(row => {
+          const profile = profileById.get(String(row.driver_id))
+          return [String(row.driver_id), {
+            driverId: String(row.driver_id), updatedAt: row.last_updated_at || null,
+            lat: row.last_lat == null ? null : Number(row.last_lat), lng: row.last_lng == null ? null : Number(row.last_lng),
+            label: String(profile?.name || profile?.email || 'Driver'),
+          } satisfies LiveFix]
+        }))
+        setLiveFixes(fixes)
+        setSelectedDriverId(current => current || Object.keys(fixes)[0] || dashboard.todayRoutes.find(route => route.driver_id)?.driver_id || '')
+        setLastSyncedAt(new Date())
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : t.unableLoadReports)
       } finally {
@@ -212,6 +232,7 @@ export default function Manager() {
         if (disposed) return
         setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0)))
         setSummary(dashboard.summary)
+        setLastSyncedAt(new Date())
       } catch {
         // The five-minute refresh remains the recovery path for transient
         // realtime or network failures; do not replace visible data here.
@@ -233,16 +254,17 @@ export default function Manager() {
         const row = payload.new as Partial<{driver_id:string;branch_id:string|null;status:string;last_lat:number|null;last_lng:number|null;last_updated_at:string|null}>
         if (!row.driver_id || (dashboardBranchId && row.branch_id && row.branch_id !== dashboardBranchId)) return
         if (!['active', 'paused'].includes(String(row.status || '')) || row.last_lat == null || row.last_lng == null) {
-          setLiveFix(current => current?.driverId === row.driver_id ? null : current)
+          setLiveFixes(current => {
+            const next = {...current}
+            delete next[row.driver_id!]
+            return next
+          })
           return
         }
-        setLiveFix(current=>({
-          driverId: row.driver_id!,
-          updatedAt: row.last_updated_at || new Date().toISOString(),
-          lat: Number(row.last_lat),
-          lng: Number(row.last_lng),
-          label: current?.driverId===row.driver_id?current?.label:undefined,
-        }))
+        setLiveFixes(current=>({...current,[row.driver_id!]:{
+          driverId: row.driver_id!, updatedAt: row.last_updated_at || new Date().toISOString(),
+          lat: Number(row.last_lat), lng: Number(row.last_lng), label: current[row.driver_id!]?.label,
+        }}))
       })
       .subscribe()
     return () => { void client.removeChannel(channel) }
@@ -255,6 +277,15 @@ export default function Manager() {
     {label: copy.issues, value: summary.openIssues, href: '/reports', tone: todayStyles.summaryIssues},
   ] as const
   const hasIssue = summary.openIssues > 0
+  const driverRows = useMemo(() => {
+    const ids = [...new Set([...todayRoutes.map(route => route.driver_id), ...Object.keys(liveFixes)].filter((id): id is string => Boolean(id)))]
+    return ids.map(driverId => {
+      const fix = liveFixes[driverId]
+      const active = todayRoutes.find(route => route.driver_id === driverId && ['active', 'paused'].includes(String(route.status || '')))
+      const pending = todayRoutes.filter(route => route.driver_id === driverId && !['completed', 'cancelled'].includes(String(route.status || ''))).length
+      return {driverId, fix, active, pending}
+    })
+  }, [liveFixes, todayRoutes])
   const greetingName = displayName ? displayName.split('@')[0] : t.managerRole
   const operationalDate = managerOperationalDate()
   const dateLabel = new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : locale === 'fr' ? 'fr-FR' : 'en-US', {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'}).format(new Date(`${operationalDate}T12:00:00`))
@@ -281,6 +312,7 @@ export default function Manager() {
     if (minutes < 1) return `${copy.lastSeen} · ${locale === 'es' ? 'ahora' : locale === 'fr' ? 'maintenant' : 'now'}`
     return `${copy.lastSeen} · ${copy.ago} ${minutes}m`
   }, [liveFix, copy.lastSeen, copy.noFix, copy.ago, locale])
+  const syncedLabel = lastSyncedAt ? new Intl.DateTimeFormat(locale, {hour: 'numeric', minute: '2-digit'}).format(lastSyncedAt) : '—'
 
   const deliveryCopy = locale === 'es' ? {
     title: 'Estado del delivery', onRoute: 'En ruta', noActive: 'Sin ruta activa', estimatedArrival: 'Llegada estimada', distance: 'Distancia', driveTime: 'Tiempo de manejo', trafficDelay: 'Retraso por tráfico', started: 'Comenzó', lastGps: 'Último GPS', share: 'Compartir actualización', unavailable: 'No disponible', critical: 'Retraso crítico', delayed: 'Ligeramente demorado',
@@ -348,13 +380,21 @@ export default function Manager() {
   })()
 
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
-    <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.updated}: {new Intl.DateTimeFormat(undefined, {hour: 'numeric', minute: '2-digit'}).format(new Date())}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
+    <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.synced}: {syncedLabel}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
     <div className={todayStyles.todayLayout}>
       <main className={todayStyles.todayMain}>
         <div className={todayStyles.sectionHeading}><div><span>{copy.liveOperations}</span><h2>{copy.liveDescription}</h2></div><Link href="/routes/live">{copy.viewMap}</Link></div>
         <p className={todayStyles.fixLine}>{fixLabel}</p>
+        {driverRows.length > 0 && <section className={todayStyles.driverStrip} aria-label={copy.drivers}>
+          <strong>{copy.drivers}</strong>
+          <div>{driverRows.map(item => <button type="button" key={item.driverId} className={item.driverId === selectedDriverId ? todayStyles.driverSelected : ''} onClick={() => setSelectedDriverId(item.driverId)}>
+            <span className={item.fix?.updatedAt ? todayStyles.driverLive : todayStyles.driverIdle} />
+            <b>{item.fix?.label || 'Driver'}</b>
+            <small>{item.active?.destination_name || `${item.pending} ${copy.remaining}`}</small>
+          </button>)}</div>
+        </section>}
         <div className={todayStyles.opsMap}>
           <OperationsMap
             hideFooter
@@ -373,17 +413,11 @@ export default function Manager() {
               position: route.position,
               order_number: route.order_number,
             }))}
-            driverLocations={liveFix?.lat != null && liveFix.lng != null ? [{
-              id: liveFix.driverId || 'driver',
-              driver_id: liveFix.driverId,
-              location: {lat: liveFix.lat, lng: liveFix.lng},
-              updatedAt: liveFix.updatedAt,
-              label: liveFix.label,
-              status: 'on_route',
-              nextStop: todayRoutes.find(route => route.driver_id === liveFix.driverId && ['active', 'paused'].includes(String(route.status || '')))?.destination_name
-                || todayRoutes.find(route => ['active', 'paused'].includes(String(route.status || '')))?.destination_name
-                || undefined,
-            }] : []}
+            driverLocations={Object.values(liveFixes).filter(fix => fix.lat != null && fix.lng != null).map(fix => ({
+              id: fix.driverId, driver_id: fix.driverId, location: {lat: fix.lat!, lng: fix.lng!}, updatedAt: fix.updatedAt,
+              label: fix.label, status: fix.driverId === selectedDriverId ? 'on_route' : 'available',
+              nextStop: todayRoutes.find(route => route.driver_id === fix.driverId && ['active', 'paused'].includes(String(route.status || '')))?.destination_name || undefined,
+            }))}
             locale={locale}
           />
         </div>
@@ -425,7 +459,7 @@ export default function Manager() {
         </section>
       </aside>
     </div>
-    {hasIssue && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{summary.openIssues} {copy.issue}</strong><p>{copy.review}</p></div><Link href="/reports"><ArrowRight size={16}/></Link></section>}
+    {(hasIssue || overdueRoutes.length > 0) && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{hasIssue ? `${summary.openIssues} ${copy.issue}` : `${overdueRoutes.length} ${copy.overdue}`}</strong><p>{hasIssue ? copy.review : overdueRoutes.slice(0, 2).map(route => route.destination_name || route.destination_address).filter(Boolean).join(' · ')}</p></div><Link href="/routes"><ArrowRight size={16}/></Link></section>}
     <div className={`${styles.desktopOnly} ${todayStyles.hideOnFit}`}><TemporaryRouteAssignments /></div>
     <nav className={`nav ${styles.nav} ${styles.todayNav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </ManagerShell>

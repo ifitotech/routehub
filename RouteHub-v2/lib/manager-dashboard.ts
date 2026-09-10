@@ -52,7 +52,7 @@ export type ManagerDashboardData = {
   todayRoutes: DashboardRoute[]
 }
 
-const visibleTodayStatuses = new Set(['pending', 'published', 'active', 'paused', 'completed', 'issue'])
+const visibleTodayStatuses = new Set(['pending', 'published', 'assigned', 'active', 'paused', 'completed', 'issue'])
 
 function matchesBranch(recordBranchId: string | null, scopeBranchId: string | null) {
   return scopeBranchId === null || recordBranchId === scopeBranchId
@@ -92,8 +92,8 @@ export function selectManagerDashboard(
     todayRoutes,
     summary: {
       // Preserve the existing product meaning while fixing its scope.
-      activeRoutes: scopedRoutes.filter(route => ['published', 'active', 'paused'].includes(route.status)).length,
-      pendingRoutes: scopedRoutes.filter(route => route.status === 'pending').length,
+      activeRoutes: scopedRoutes.filter(route => ['published', 'assigned', 'active', 'paused'].includes(route.status)).length,
+      pendingRoutes: scopedRoutes.filter(route => ['pending', 'published', 'assigned'].includes(route.status)).length,
       completedRoutes: scopedRoutes.filter(route => route.status === 'completed').length,
       pendingRequests,
       availableDrivers,
