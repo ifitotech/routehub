@@ -4,12 +4,13 @@ import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './rou
 import type {RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
 
-export default function RouteRows({items, locale, c, driverIndex, onCancel, managing}: {
+export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, managing}: {
   items: RouteRecord[]
   locale: string
   c: any
   driverIndex?: Map<string, any>
   onCancel?: (route: RouteRecord) => void
+  onMove?: (route: RouteRecord, direction: 'up' | 'down') => void
   managing?: boolean
 }) {
   return (
@@ -19,7 +20,9 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, mana
         const destination = route.destination_name || route.destination_address || c.destinationPending
         const origin = route.origin_name || route.origin_address || c.branch
         const driver = driverDetails(route.driver_id ? driverIndex?.get(route.driver_id) : undefined, c.teamDriver)
-        const canCancel = Boolean(managing && onCancel) && !['completed', 'cancelled'].includes(status)
+        const canManage = Boolean(managing) && !['completed', 'cancelled', 'active'].includes(status)
+        const canCancel = canManage && Boolean(onCancel)
+        const canMove = canManage && Boolean(onMove)
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
         return (
           <article key={route.id} className={styles.row} data-status={status} data-managing={managing ? 'true' : 'false'}>
@@ -37,10 +40,20 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, mana
                 {routeDate(route, locale, c)} {routeTime(route, locale, c)}
                 {po ? ` · ${po}` : ''}
               </p>
-              {canCancel ? (
-                <button type="button" className={styles.cancel} onClick={() => onCancel?.(route)}>
-                  {locale === 'es' ? 'Cancelar' : locale === 'fr' ? 'Annuler' : 'Cancel'}
-                </button>
+              {canManage ? (
+                <div className={styles.actions}>
+                  {canMove ? (
+                    <>
+                      <button type="button" className={styles.move} onClick={() => onMove?.(route, 'up')}>{locale === 'es' ? 'Subir' : locale === 'fr' ? 'Monter' : 'Up'}</button>
+                      <button type="button" className={styles.move} onClick={() => onMove?.(route, 'down')}>{locale === 'es' ? 'Bajar' : locale === 'fr' ? 'Descendre' : 'Down'}</button>
+                    </>
+                  ) : null}
+                  {canCancel ? (
+                    <button type="button" className={styles.cancel} onClick={() => onCancel?.(route)}>
+                      {locale === 'es' ? 'Cancelar' : locale === 'fr' ? 'Annuler' : 'Cancel'}
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           </article>
