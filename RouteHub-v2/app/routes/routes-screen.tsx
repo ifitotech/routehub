@@ -23,7 +23,7 @@ export default function Routes() {
       if (new URLSearchParams(window.location.search).get('manage') === '1') setManaging(true)
     } catch {}
   }, [])
-  const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, scheduledTodayRoutes = [], upcomingRoutes = [], completedTodayRoutes = [], issueTodayRoutes = [], cancelRoute, driverIndex, loading, inProgressRoutes = []} = w
+  const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, scheduledTodayRoutes = [], upcomingRoutes = [], completedTodayRoutes = [], issueTodayRoutes = [], cancelRoute, moveRoute, driverIndex, loading, inProgressRoutes = []} = w
   const mapRoutes = useMemo(() => {
     const source = [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...upcomingRoutes, ...completedTodayRoutes]
     return source.map((route: any) => ({
@@ -63,17 +63,17 @@ export default function Routes() {
     </div>
     <div className={board.workspace}>
       <div className={`${board.listPane} ${pane === 'map' ? board.listHidden : ''}`}>
-    {managing && <p className={board.manageHint}>{locale==='es'?'Cancela o revisa las rutas aquí. No se abre otra página.':locale==='fr'?'Annulez ou révisez les itinéraires ici. Aucune autre page.':'Cancel or review routes here. Stay on this page.'}</p>}
+    {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
     {loading ? <section className={styles.routeGrid} aria-label={c.loadError}>
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
     </section> : <>
       {inProgressRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.inProgressSection}</h2><span>{inProgressRoutes.length} {c.active}</span></div>
-        <RouteRows items={inProgressRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} managing={managing} />
+        <RouteRows items={inProgressRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} managing={managing} />
       </section>}
       {scheduledTodayRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{scheduledTodayRoutes.length} {c.active}</span></div>
-        <RouteRows items={scheduledTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} managing={managing} />
+        <RouteRows items={scheduledTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} managing={managing} />
       </section>}
       {!loading && !inProgressRoutes.length && !scheduledTodayRoutes.length && !issueTodayRoutes.length && !upcomingRoutes.length && !completedTodayRoutes.length && <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{c.empty}</h2><p>{c.emptyHelp}</p><button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button></section>}
       {upcomingRoutes.length > 0 && <section className={styles.routeSection}>
@@ -87,20 +87,20 @@ export default function Routes() {
         }, new Map<string, typeof upcomingRoutes>())).map(([day, items]) => {
           const today = todayValue || ''
           const next = (() => { const d = new Date(`${today}T12:00:00`); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
-          const label = day === next ? (locale==='es'?'Mañana':locale==='fr'?'Demain':'Tomorrow') : new Intl.DateTimeFormat(locale, {weekday:'short', month:'short', day:'numeric'}).format(new Date(`${day}T12:00:00`))
+          const label = day === next ? (locale==='es'?'Manana':locale==='fr'?'Demain':'Tomorrow') : new Intl.DateTimeFormat(locale, {weekday:'short', month:'short', day:'numeric'}).format(new Date(`${day}T12:00:00`))
           return <div key={day}>
             <div className={styles.sectionHeading}><h2>{label}</h2><span>{day}</span></div>
-            <RouteRows items={items} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} managing={managing} />
+            <RouteRows items={items} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} managing={managing} />
           </div>
         })}
       </section>}
       {completedTodayRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length} {c.active}</span></div>
-        <RouteRows items={completedTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} managing={managing} />
+        <RouteRows items={completedTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} managing={managing} />
       </section>}
       {issueTodayRoutes.length > 0 && <section className={styles.routeSection}>
         <div className={styles.sectionHeading}><h2>{c.issue}</h2><span>{issueTodayRoutes.length}</span></div>
-        <RouteRows items={issueTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} managing={managing} />
+        <RouteRows items={issueTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} managing={managing} />
       </section>}
     </>}
       </div>
