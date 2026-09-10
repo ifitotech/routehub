@@ -105,6 +105,14 @@ test('driver cannot start a future, completed, or cancelled route', () => {
   assert.equal(canDriverStartRoute(route('today', 'published', 1), '2026-08-13'), true)
 })
 
+test('an assigned route is startable by its assigned driver in the database guard', () => {
+  const sql = readFileSync(new URL('../supabase/migrations/042_allow_assigned_route_start.sql', import.meta.url), 'utf8')
+  assert.match(sql, /old\.status in \('draft','pending','published','assigned'\) and new\.status = 'active'/)
+  assert.match(sql, /route_started_at/)
+  assert.match(sql, /to_jsonb\(new\)\s*-\s*allowed_columns/i)
+  assert.match(sql, /revoke all on function public\.enforce_assigned_driver_route_update\(\) from public/i)
+})
+
 test('database migration protects the one-active-route driver invariant', () => {
   const sql = readFileSync(new URL('../supabase/migrations/024_one_active_route_per_driver.sql', import.meta.url), 'utf8')
   assert.match(sql, /pg_advisory_xact_lock/)
