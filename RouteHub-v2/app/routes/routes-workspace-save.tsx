@@ -215,7 +215,50 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  const prioritizeRoute = async (route: RouteRecord) => {
+    if (busyRouteId) return
+    const label = route.destination_name || route.destination_address || 'route'
+    const confirmation = locale === 'es'
+      ? `¿Priorizar ${label} ahora? La ruta activa se pausará y esta será la ruta actual del conductor.`
+      : locale === 'fr' ? `Prioriser ${label} maintenant ? L’itinéraire actif sera mis en pause.` : `Prioritize ${label} now? The active route will be paused and this becomes the driver's current route.`
+    if (!window.confirm(confirmation)) return
+    setBusyRouteId(route.id)
+    try {
+      const client = getSupabase()
+      const {data, error} = await client.rpc('prioritize_route_now', {p_route_id: route.id})
+      if (error) throw error
+      if (!data) throw new Error(locale === 'es' ? 'No se pudo priorizar la ruta. Actualiza la lista.' : 'The route could not be prioritized. Refresh the list.')
+      void sendRoutePush(route.id, 'updated')
+      await loadWorkspace()
+      setMessage(locale === 'es' ? 'Ruta priorizada. La ruta anterior quedó pausada.' : locale === 'fr' ? 'Itinéraire priorisé. L’itinéraire précédent est en pause.' : 'Route prioritized. The previous route is paused.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    } finally { setBusyRouteId('') }
+  }
+
+  const moveRouteToTomorrow = async (route: RouteRecord) => {
+    if (busyRouteId || !route.route_date) return
+    const date = new Date(`${route.route_date}T12:00:00`)
+    date.setDate(date.getDate() + 1)
+    const targetDate = date.toISOString().slice(0, 10)
+    const label = route.destination_name || route.destination_address || 'route'
+    const confirmation = locale === 'es' ? `¿Mover ${label} a mañana? Se pondrá al final de la cola de mañana.` : locale === 'fr' ? `Déplacer ${label} à demain ? Il sera ajouté à la fin de la file de demain.` : `Move ${label} to tomorrow? It will be placed at the end of tomorrow's queue.`
+    if (!window.confirm(confirmation)) return
+    setBusyRouteId(route.id)
+    try {
+      const client = getSupabase()
+      const {data, error} = await client.rpc('reschedule_upcoming_route', {p_route_id: route.id, p_route_date: targetDate})
+      if (error) throw error
+      if (!data) throw new Error(locale === 'es' ? 'No se pudo mover la ruta. Actualiza la lista.' : 'The route could not be moved. Refresh the list.')
+      void sendRoutePush(route.id, 'updated')
+      await loadWorkspace()
+      setMessage(locale === 'es' ? 'Ruta movida a mañana.' : locale === 'fr' ? 'Itinéraire déplacé à demain.' : 'Route moved to tomorrow.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    } finally { setBusyRouteId('') }
+  }
+
   const renderRouteCards = (_items: RouteRecord[]) => null
 
-  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, busyRouteId}
+  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, prioritizeRoute, moveRouteToTomorrow, busyRouteId}
 }
