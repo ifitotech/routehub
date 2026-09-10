@@ -134,6 +134,15 @@ export default function GoogleAddressInput({
     }
   }, [googleReady, matchingLocalSuggestions.length, prioritizesLocalSuggestions, searchContext, value])
 
+  // When the text is not a saved contact, offer external address suggestions
+  // as the user types. Keep this debounced so normal typing does not issue a
+  // request for every keystroke, and never compete with a local match.
+  useEffect(() => {
+    if (googleReady || matchingLocalSuggestions.length > 0 || value.trim().length < 3 || value.trim().length > 180) return
+    const timer = window.setTimeout(() => { void runSearch() }, 350)
+    return () => window.clearTimeout(timer)
+  }, [googleReady, matchingLocalSuggestions.length, runSearch, value])
+
   const selectSuggestion = (suggestion: AddressSearchSuggestion) => {
     selectedValueRef.current = suggestion.label
     onValueChange(suggestion.label)
