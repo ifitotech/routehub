@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
 import {useEffect} from 'react'
-import {ChevronLeft, History, Home, Settings, Truck, UserRound} from 'lucide-react'
+import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import styles from './driver-v3.module.css'
 import {applyThemePreference,useLocale} from '../../lib/use-preferences'
 
@@ -42,6 +42,7 @@ export default function DriverV3Shell({
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
+  const mapOpen = pathname === '/driver/map'
 
   return (
     <main className={styles.shell}>
@@ -50,7 +51,11 @@ export default function DriverV3Shell({
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
-        ) : <span className={styles.headerIcon} aria-hidden="true" />}
+        ) : (
+          <Link href={mapOpen ? '/driver' : '/driver/map'} className={styles.headerIcon} aria-label={mapOpen ? (t.drvToday || 'Today') : (t.drvMap || 'Map')}>
+            <MapIcon size={22} strokeWidth={2.2} />
+          </Link>
+        )}
         <Link href="/driver" className={styles.headerBrand}>
           <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
           <span>RouteHub</span>
