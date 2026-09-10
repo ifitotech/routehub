@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import {ArrowRight, CalendarDays, ChevronRight, CircleDot, MapPin, PackageCheck, UserRound} from 'lucide-react'
+import {ArrowRight, CalendarDays, CircleDot, MapPin, PackageCheck, UserRound} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 import {geocodeAddress} from '../../lib/maps/geocoding'
@@ -135,6 +134,33 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  const cancelRoute = async (route: RouteRecord) => {
+    const label = route.destination_name || route.destination_address || 'route'
+    const ok = window.confirm(locale==='es' ? `Cancelar ${label}?` : locale==='fr' ? `Annuler ${label} ?` : `Cancel ${label}?`)
+    if (!ok) return
+    try {
+      const client = getSupabase()
+      const {error} = await client.from('routes').update({status: 'cancelled', updated_version: Date.now()}).eq('id', route.id)
+      if (error) throw error
+      if (route.driver_id && route.company_id) {
+        let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', route.driver_id).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
+        queueQuery = route.branch_id == null ? queueQuery.is('branch_id', null) : queueQuery.eq('branch_id', route.branch_id)
+        const {data: remaining, error: queueError} = await queueQuery
+        if (queueError) throw queueError
+        const ids = (remaining || []).map((item: {id: string}) => item.id)
+        if (ids.length) {
+          const {error: reorderError} = await client.rpc('reorder_route_queue', {p_route_ids: ids})
+          if (reorderError) throw reorderError
+        }
+      }
+      void sendRoutePush(route.id, 'updated')
+      await loadWorkspace()
+      setMessage(locale==='es' ? 'Ruta cancelada.' : locale==='fr' ? 'Itinéraire annulé.' : 'Route cancelled.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    }
+  }
+
   const renderRouteCards = (items: RouteRecord[]) => items.map((route, index) => {
     const details = driverDetails(route.driver_id ? driverIndex.get(route.driver_id) : undefined,c.teamDriver)
     const origin = route.origin_name || route.origin_address || c.branch
@@ -156,7 +182,7 @@ export function useRoutesSave(w: any) {
       </div>
       <div className={styles.cardFooter}>
         <span className={`${styles.priorityBadge} ${styles[`priority_${priority}`] || ''}`}>{priority==='urgent'?c.urgent:priority==='priority'?c.priorityName:c.normal}</span>
-        <Link href="/routes/manage">{c.viewManage}<ChevronRight size={16}/></Link>
+        {!['completed','cancelled'].includes(status) && <button type="button" data-cancel-route onClick={() => void cancelRoute(route)}>{locale==='es'?'Cancelar':locale==='fr'?'Annuler':'Cancel'}</button>}
       </div>
     </article>
   })
