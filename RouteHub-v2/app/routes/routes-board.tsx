@@ -2,6 +2,7 @@
 
 import {useEffect, useState} from 'react'
 import dynamic from 'next/dynamic'
+import {Map} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
 import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
@@ -43,6 +44,7 @@ export default function RoutesBoard({routes, locale}: {routes: OperationsRoute[]
   }, [])
   return (
     <div className={styles.mapPane}>
+      <header className={styles.mapHeading}><span><Map size={16}/>{locale==='es'?'Mapa de referencia':locale==='fr'?'Carte de référence':'Reference map'}</span><small>{routes.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</small></header>
       <OperationsMap routes={routes} driverLocations={drivers} locale={locale} interactive hideFooter />
     </div>
   )

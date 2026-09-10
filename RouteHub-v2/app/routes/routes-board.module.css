@@ -1,5 +1,7 @@
 .mapPane{
   --operations-map-height:100%;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
   min-height:280px;
   height:42vh;
   border:1px solid #dde5ee;
@@ -7,6 +9,7 @@
   overflow:hidden;
   background:#fff;
 }
+.mapHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-bottom:1px solid #e6edf5;background:linear-gradient(135deg,#fff 0%,#f6faff 100%);color:#1e3a67}.mapHeading span{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:850}.mapHeading span svg{color:#1667f2}.mapHeading small{color:#718198;font-size:10px;font-weight:800}
 .mapPane :global(section){
   height:100%;
   display:grid;
@@ -45,15 +48,14 @@
 .mobileToggle button[data-on='true']{background:#eaf2ff;border-color:#1667f2;color:#1667f2}
 @media(min-width:1024px){
   .workspace{
-    grid-template-columns:minmax(280px,.78fr) minmax(520px,1.22fr);
-    align-items:stretch;
-    min-height:calc(100dvh - 150px);
+    grid-template-columns:minmax(0,1.45fr) minmax(330px,.55fr);
+    align-items:start;
   }
   .mapPane{
     position:sticky;
-    top:12px;
-    height:calc(100dvh - 150px);
-    min-height:520px;
+    top:18px;
+    height:clamp(290px,35vh,390px);
+    min-height:290px;
   }
   .mobileToggle{display:none}
 }

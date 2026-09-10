@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {AlertTriangle, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
@@ -30,6 +30,13 @@ export default function Routes() {
   const futureRoutes = useMemo(() => upcomingRoutes.filter((route: any) => (route.route_date || String(route.scheduled_at || '').slice(0, 10)) > tomorrowValue), [tomorrowValue, upcomingRoutes])
   const todayRoutes = useMemo(() => [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...completedTodayRoutes], [completedTodayRoutes, inProgressRoutes, issueTodayRoutes, scheduledTodayRoutes])
   const visibleRoutes = dayView === 'today' ? todayRoutes : dayView === 'tomorrow' ? tomorrowRoutes : futureRoutes
+  const routeSummary = useMemo(() => {
+    const active = visibleRoutes.filter((route: any) => ['active', 'paused'].includes(route.status || '')).length
+    const pending = visibleRoutes.filter((route: any) => ['draft', 'pending', 'published'].includes(route.status || '')).length
+    const issues = visibleRoutes.filter((route: any) => route.status === 'issue').length
+    const driversAssigned = new Set(visibleRoutes.filter((route: any) => route.driver_id).map((route: any) => route.driver_id)).size
+    return {active, pending, issues, driversAssigned}
+  }, [visibleRoutes])
   const dayCopy = locale === 'es' ? {today:'Hoy', tomorrow:'Mañana', upcoming:'Próximas'} : locale === 'fr' ? {today:"Aujourd’hui", tomorrow:'Demain', upcoming:'À venir'} : {today:'Today', tomorrow:'Tomorrow', upcoming:'Upcoming'}
   const mapRoutes = useMemo(() => {
     const source = visibleRoutes
@@ -64,6 +71,18 @@ export default function Routes() {
       </div>
     </header>
     {message && <div className={message.includes('successfully') || message.includes('publicad') ? styles.successMessage : styles.message} role="status">{message}</div>}
+    <section className={styles.operationSummary} aria-label={locale==='es'?'Resumen operativo':'Operations summary'}>
+      <div className={styles.operationSummaryHeading}>
+        <div><p>{locale==='es'?'Control operativo':locale==='fr'?'Contrôle opérationnel':'Operations control'}</p><h2>{dayCopy[dayView]}</h2></div>
+        <button type="button" className={styles.mapShortcut} onClick={() => setPane('map')}><Map size={16}/>{locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}</button>
+      </div>
+      <div className={styles.summaryCards}>
+        <div className={styles.summaryCard} data-tone="blue"><span><PlayCircle size={18}/></span><div><strong>{routeSummary.active}</strong><small>{locale==='es'?'En curso':locale==='fr'?'En cours':'In progress'}</small></div></div>
+        <div className={styles.summaryCard} data-tone="amber"><span><Clock3 size={18}/></span><div><strong>{routeSummary.pending}</strong><small>{locale==='es'?'Pendientes':locale==='fr'?'En attente':'Pending'}</small></div></div>
+        <div className={styles.summaryCard} data-tone="red"><span><AlertTriangle size={18}/></span><div><strong>{routeSummary.issues}</strong><small>{locale==='es'?'Incidencias':locale==='fr'?'Incidents':'Issues'}</small></div></div>
+        <div className={styles.summaryCard} data-tone="slate"><span><Truck size={18}/></span><div><strong>{routeSummary.driversAssigned}</strong><small>{locale==='es'?'Conductores':locale==='fr'?'Conducteurs':'Drivers'}</small></div></div>
+      </div>
+    </section>
     <nav className={styles.dateTabs} aria-label={locale==='es'?'Filtrar rutas por día':'Filter routes by day'}>
       {(['today','tomorrow','upcoming'] as const).map(view => <button type="button" key={view} data-active={dayView === view} onClick={() => { setDayView(view); setPane('list') }}>
         {dayCopy[view]}<span>{view === 'today' ? todayRoutes.length : view === 'tomorrow' ? tomorrowRoutes.length : futureRoutes.length}</span>
