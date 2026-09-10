@@ -1,9 +1,54 @@
-.mapPane{min-height:280px;height:42vh;border:1px solid #dde5ee;border-radius:16px;overflow:hidden;background:#fff}
-.mapPane :global(section){height:100%;display:grid;grid-template-rows:minmax(0,1fr)}
-.mapPane :global(.leaflet-container){height:100%!important;min-height:280px}
-.workspace{display:grid;gap:14px}
+.mapPane{
+  --operations-map-height:100%;
+  min-height:280px;
+  height:42vh;
+  border:1px solid #dde5ee;
+  border-radius:16px;
+  overflow:hidden;
+  background:#fff;
+}
+.mapPane :global(section){
+  height:100%;
+  display:grid;
+  grid-template-rows:minmax(0,1fr);
+}
+.mapPane :global([class*="canvas"]),
+.mapPane :global(.leaflet-container){
+  height:100%!important;
+  min-height:100%!important;
+}
+.listPane{
+  min-width:0;
+  max-height:calc(100dvh - 168px);
+  overflow:auto;
+  padding-right:4px;
+}
+.workspace{
+  display:grid;
+  gap:14px;
+}
 .mobileToggle{display:flex;gap:8px}
-.mobileToggle button{flex:1;height:40px;border-radius:10px;border:1px solid #dde5ee;background:#fff;font-weight:700}
+.mobileToggle button{
+  flex:1;height:40px;border-radius:10px;border:1px solid #dde5ee;background:#fff;font-weight:700
+}
 .mobileToggle button[data-on='true']{background:#eaf2ff;border-color:#1667f2;color:#1667f2}
-@media(min-width:1024px){.workspace{grid-template-columns:minmax(320px,.92fr) minmax(420px,1.08fr);align-items:stretch;min-height:calc(100dvh - 168px)}.mapPane{position:sticky;top:12px;height:calc(100dvh - 168px);min-height:480px}.mobileToggle{display:none}}
-@media(max-width:1023px){.listHidden{display:none}.mapHidden{display:none}.mapPane{height:calc(100dvh - 220px)}}
+@media(min-width:1024px){
+  .workspace{
+    grid-template-columns:minmax(280px,.78fr) minmax(520px,1.22fr);
+    align-items:stretch;
+    min-height:calc(100dvh - 150px);
+  }
+  .mapPane{
+    position:sticky;
+    top:12px;
+    height:calc(100dvh - 150px);
+    min-height:520px;
+  }
+  .mobileToggle{display:none}
+}
+@media(max-width:1023px){
+  .listHidden{display:none}
+  .mapHidden{display:none}
+  .mapPane{height:calc(100dvh - 220px)}
+  .listPane{max-height:none}
+}
