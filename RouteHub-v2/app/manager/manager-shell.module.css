@@ -262,7 +262,7 @@
   .content {
     min-height: 0;
     height: auto;
-    padding: 20px clamp(24px, 3vw, 56px) 28px;
+    padding: 14px clamp(24px, 3vw, 56px) 28px;
     overflow: visible;
   }
 

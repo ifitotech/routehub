@@ -161,6 +161,42 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  // Moves an assigned route back to the Unassigned pool - e.g. the customer
+  // wants a different time, so instead of cancelling the manager frees the
+  // route to reassign later. The driver currently holding it must find out
+  // immediately: the DB update clears driver_id, which realtime subscribers
+  // filtered by driver_id=eq.<id> won't see once it no longer matches, so we
+  // also push a notification explicitly naming that driver (captured before
+  // the update, since after it the route has no driver to look up).
+  const unassignRoute = async (route: RouteRecord) => {
+    if (!route.driver_id || busyRouteId) return
+    if (['active', 'completed', 'cancelled'].includes(route.status || '')) return
+    const previousDriverId = route.driver_id
+    setBusyRouteId(route.id)
+    try {
+      const client = getSupabase()
+      const {error} = await client.from('routes').update({driver_id: null, position: null, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id)
+      if (error) throw error
+      let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
+      queueQuery = route.branch_id == null ? queueQuery.is('branch_id', null) : queueQuery.eq('branch_id', route.branch_id)
+      const {data: remaining, error: queueError} = await queueQuery
+      if (queueError) throw queueError
+      const ids = (remaining || []).map((item: {id: string}) => item.id)
+      if (ids.length) {
+        const {error: reorderError} = await client.rpc('reorder_route_queue', {p_route_ids: ids})
+        if (reorderError) throw reorderError
+      }
+      if (currentUserId && companyId) await recordActivity({companyId, userId: currentUserId, action: 'route_unassigned_by_manager', recordId: route.id, after: {previous_driver_id: previousDriverId}}).catch(() => undefined)
+      void sendRoutePush(route.id, 'unassigned', previousDriverId)
+      await loadWorkspace()
+      setMessage(locale === 'es' ? 'Ruta movida a sin asignar.' : locale === 'fr' ? 'Itinéraire déplacé vers non attribué.' : 'Route moved to unassigned.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    } finally {
+      setBusyRouteId('')
+    }
+  }
+
   const moveRoute = async (route: RouteRecord, direction: 'up' | 'down') => {
     if (!route.driver_id || !route.company_id) return
     if (['completed', 'cancelled', 'active'].includes(route.status || '')) return
@@ -240,5 +276,5 @@ export function useRoutesSave(w: any) {
 
   const renderRouteCards = (_items: RouteRecord[]) => null
 
-  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, busyRouteId}
+  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId}
 }

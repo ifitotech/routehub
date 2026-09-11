@@ -4,7 +4,7 @@ import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './rou
 import type {RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
 
-export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, busyRouteId, managing}: {
+export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, busyRouteId, managing}: {
   items: RouteRecord[]
   locale: string
   c: any
@@ -12,6 +12,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   onCancel?: (route: RouteRecord) => void
   onMove?: (route: RouteRecord, direction: 'up' | 'down') => void
   onTogglePause?: (route: RouteRecord) => void
+  onUnassign?: (route: RouteRecord) => void
   busyRouteId?: string
   managing?: boolean
 }) {
@@ -29,6 +30,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         // click and silently do nothing. Only show it where it can actually work.
         const canMove = canManage && status !== 'active' && status !== 'issue' && Boolean(onMove)
         const canTogglePause = canManage && ['active', 'paused'].includes(status) && Boolean(onTogglePause)
+        const canUnassign = canManage && status !== 'active' && Boolean(route.driver_id) && Boolean(onUnassign)
         const busy = busyRouteId === route.id
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
         return (
@@ -59,6 +61,11 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                       <button type="button" className={styles.move} disabled={busy} onClick={() => onMove?.(route, 'up')}>{locale === 'es' ? 'Subir' : locale === 'fr' ? 'Monter' : 'Up'}</button>
                       <button type="button" className={styles.move} disabled={busy} onClick={() => onMove?.(route, 'down')}>{locale === 'es' ? 'Bajar' : locale === 'fr' ? 'Descendre' : 'Down'}</button>
                     </>
+                  ) : null}
+                  {canUnassign ? (
+                    <button type="button" className={styles.unassign} disabled={busy} onClick={() => onUnassign?.(route)}>
+                      {busy ? '…' : (locale === 'es' ? 'Sin asignar' : locale === 'fr' ? 'Désattribuer' : 'Unassign')}
+                    </button>
                   ) : null}
                   {canCancel ? (
                     <button type="button" className={styles.cancel} disabled={busy} onClick={() => onCancel?.(route)}>

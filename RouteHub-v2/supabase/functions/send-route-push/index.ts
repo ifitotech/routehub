@@ -59,7 +59,7 @@ Deno.serve(async request => {
   if (request.method !== 'POST') return json({error: 'Method not allowed'}, 405)
   try {
     const authorization = request.headers.get('Authorization') || ''
-    const {routeId, event, action} = await request.json() as {routeId?: string; event?: 'assigned' | 'updated'; action?: 'config' | 'morning_reminder'}
+    const {routeId, event, action, driverId: overrideDriverId} = await request.json() as {routeId?: string; event?: 'assigned' | 'updated' | 'unassigned'; action?: 'config' | 'morning_reminder'; driverId?: string}
 
     const url = Deno.env.get('SUPABASE_URL')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -119,7 +119,7 @@ Deno.serve(async request => {
       if (!publicKey) return json({error: 'VAPID push secrets are not configured'}, 503)
       return json({vapidPublicKey: publicKey})
     }
-    if (!routeId || !['assigned', 'updated'].includes(event || '')) return json({error: 'Invalid route notification request'}, 400)
+    if (!routeId || !['assigned', 'updated', 'unassigned'].includes(event || '')) return json({error: 'Invalid route notification request'}, 400)
 
     const {data: route, error: routeError} = await service.from('routes')
       .select('id,company_id,branch_id,driver_id,mission_type,destination_name,destination_address,order_number,status')
@@ -140,21 +140,31 @@ Deno.serve(async request => {
     const address = String(route.destination_address || '').trim()
     const po = String(route.order_number || '').trim()
     const assigned = event === 'assigned'
+    const unassigned = event === 'unassigned'
     const title = assigned
       ? isPickup
         ? 'New pickup'
         : isReturn
           ? 'Return to branch'
           : 'New delivery'
-      : 'Route updated'
+      : unassigned
+        ? 'Route removed'
+        : 'Route updated'
     const body = assigned
       ? isPickup
         ? [storeOrClient || 'Pickup', po || address].filter(Boolean).join('\n')
         : isReturn
           ? address || storeOrClient || 'Branch'
           : [storeOrClient || 'Delivery', address || po].filter(Boolean).join('\n')
-      : `${storeOrClient || address || 'Your route'} was updated.`
-    return json({ok: true, ...(await sendPushToDriver(service, route.driver_id, title, body, route.id))})
+      : unassigned
+        ? `${storeOrClient || address || 'A stop'} is no longer on your route.`
+        : `${storeOrClient || address || 'Your route'} was updated.`
+    // For 'unassigned' the route's driver_id in the database has already been
+    // cleared, so the caller passes the driver who is losing the stop
+    // explicitly - the route's own driver_id would resolve to nobody.
+    const notifyDriverId = overrideDriverId || route.driver_id
+    if (!notifyDriverId) return json({ok: true, delivered: 0, subscriptions: 0, nativeTokens: 0, webPushConfigured: false})
+    return json({ok: true, ...(await sendPushToDriver(service, notifyDriverId, title, body, route.id))})
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Unable to send route notification'
     console.error(detail)
