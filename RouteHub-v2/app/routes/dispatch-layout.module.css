@@ -9,19 +9,24 @@
 .workspace {
   display: grid;
   grid-template-columns: 280px 1fr 1fr;
+  align-items: start;
   gap: 16px;
   width: 100%;
-  height: calc(100vh - 400px);
   min-height: 400px;
 }
 
+/* Sidebar and center size to their own content - an empty "Unassigned"
+   panel should stay compact, not stretch to match the map's height. Both
+   cap at the map's height and scroll internally if content runs long. */
 .sidebar {
   grid-column: 1;
+  max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
 
 .center {
   grid-column: 2;
+  max-height: calc(100vh - 400px);
   overflow-y: auto;
   padding: 16px;
   background: var(--rh-card, #fff);
@@ -29,11 +34,15 @@
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
 }
 
+/* The map is the one column that should always fill the available height -
+   it has no natural content height of its own. */
 .map {
   grid-column: 3;
+  align-self: stretch;
   position: sticky;
   top: 0;
-  height: 100%;
+  height: calc(100vh - 400px);
+  min-height: 400px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
