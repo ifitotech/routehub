@@ -32,7 +32,7 @@
 
 .weekDays {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex: 1;
   justify-content: space-between;
 }
@@ -48,7 +48,8 @@
   padding: 8px;
   border: 1.5px solid var(--rh-border, #dde5ee);
   border-radius: 12px;
-  background: transparent;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   color: var(--rh-text, #0f1d35);
   font-size: 11px;
   font-weight: 700;

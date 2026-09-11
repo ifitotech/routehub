@@ -12,7 +12,7 @@ import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
 import UnassignedPanel from './unassigned-panel'
 import DispatchLayout from './dispatch-layout'
-import VehicleSelector from './vehicle-selector'
+import DriverDropdown from './driver-dropdown'
 import DailyProgress from './daily-progress'
 import RouteSearch from './route-search'
 import styles from './routes.module.css'
@@ -170,6 +170,13 @@ export default function Routes() {
             <h1>{c.title}</h1>
           </div>
           <div className={styles.headerActions}>
+            <DriverDropdown
+              drivers={drivers}
+              selectedDriverId={selectedDriverId}
+              onDriverSelect={setSelectedDriverId}
+              driverStats={driverStats}
+              locale={locale}
+            />
             <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
             <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} onClick={() => { setManaging(on => !on); setPane('list') }}>
               <RouteIcon size={18}/>{c.manage}
@@ -201,14 +208,6 @@ export default function Routes() {
             <Map size={16}/>
           </button>
         </div>
-
-        <VehicleSelector
-          drivers={drivers}
-          selectedDriverId={selectedDriverId}
-          onDriverSelect={setSelectedDriverId}
-          driverStats={driverStats}
-          locale={locale}
-        />
 
         <div className={board.mobileToggle}>
           <button type="button" data-on={pane === 'list' ? 'true' : 'false'} onClick={() => setPane('list')}>{locale==='es'?'Lista':locale==='fr'?'Liste':'List'}</button>
