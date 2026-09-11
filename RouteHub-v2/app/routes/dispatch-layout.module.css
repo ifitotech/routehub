@@ -14,16 +14,13 @@
   --board-height: calc(100dvh - 250px);
 
   display: grid;
-  grid-template-columns: 280px 1fr 1fr;
+  grid-template-columns: 320px 1fr 480px;
   align-items: start;
   gap: 20px;
   width: 100%;
   min-height: 420px;
 }
 
-/* Sidebar and center size to their own content - an empty "Unassigned"
-   panel should stay compact, not stretch to match the map's height. Both
-   cap at the board height and scroll internally if content runs long. */
 .sidebar {
   grid-column: 1;
   max-height: var(--board-height);
@@ -54,14 +51,10 @@
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1600px) {
   .workspace {
-    grid-template-columns: 240px 1fr 400px;
-    gap: 12px;
-  }
-
-  .center {
-    padding: 12px;
+    grid-template-columns: 300px 1fr 420px;
+    gap: 16px;
   }
 }
 
