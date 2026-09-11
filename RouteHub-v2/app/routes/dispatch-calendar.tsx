@@ -94,8 +94,10 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
               onClick={() => onDateChange(dateStr)}
               aria-label={`${dayName} ${dayNum}${isSelected ? ', selected' : ''}`}
             >
-              <span className={styles.dayName}>{dayName}</span>
-              <span className={styles.dayNum}>{dayNum}</span>
+              <span className={styles.dayLabel}>
+                <span className={styles.dayName}>{dayName}</span>
+                <span className={styles.dayNum}>{dayNum}</span>
+              </span>
               {count > 0 && <span className={styles.badge} data-tone={pending > 0 ? 'pending' : 'done'}>{count}</span>}
             </button>
           )

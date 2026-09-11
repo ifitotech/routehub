@@ -43,12 +43,16 @@
   justify-content: center;
 }
 
+/* Three columns with matching 26px side slots: the badge sits in the right
+   slot and an empty one mirrors it on the left, so "MON 14" lands on the
+   card's true centre whether or not that day has a badge. Letting the badge
+   share the centred row instead pushed the label left on exactly the days
+   that had one, and the numbers stopped lining up across the week. */
 .day {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 26px;
+  align-items: center;
+  justify-items: center;
   flex: 0 1 128px;
   min-width: 0;
   min-height: 40px;
@@ -83,6 +87,15 @@
   background: var(--rh-soft-blue, #eaf2ff);
 }
 
+.dayLabel {
+  grid-column: 2;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .dayName {
   font-size: 10px;
   text-transform: uppercase;
@@ -105,6 +118,7 @@
    routes are all done or under way stays neutral, so the colour actually
    means something when you scan the week. */
 .badge {
+  grid-column: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -153,15 +167,31 @@
 
   /* Seven cards in a phone's width can't hold "MON 6" side by side, so they
      stack back to two short lines here - and they share the full width
-     instead of centring, since there's no spare room to centre within. */
+     instead of centring, since there's no spare room to centre within.
+     The desktop badge slots would eat most of a ~45px card, so the badge
+     goes back to the corner and the label owns the whole card. */
   .day {
+    display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 1px;
     flex: 1 1 0;
     min-height: 42px;
     padding: 5px 3px;
     font-size: 9px;
+  }
+
+  .dayLabel {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
   }
 
   .dayNum {
