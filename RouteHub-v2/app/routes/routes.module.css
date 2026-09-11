@@ -25,11 +25,15 @@
 .detailsToggle{width:100%;min-height:46px;padding:0 13px;display:flex;align-items:center;gap:9px;border:1px dashed #b9c9df;border-radius:12px;background:#f8fbff;color:#315a92;font-size:13px;font-weight:800;text-align:left;transition:background .18s ease,border-color .18s ease}
 .detailsToggle:hover{border-color:#7ca3df;background:#eef5ff}.detailsToggle svg:last-child{margin-left:auto;transition:transform .18s ease}.detailsChevronOpen{transform:rotate(90deg)}.optionalDetails{display:grid;gap:17px;padding:16px;border:1px solid #e1eaf5;border-radius:16px;background:#f8fafc;animation:detailsIn .18s ease}.successPanel{min-height:360px;padding:56px 24px;display:grid;place-content:center;justify-items:center;text-align:center;gap:13px}.successIcon{width:72px;height:72px;display:grid;place-items:center;border-radius:24px;background:#ecfdf5;color:#059669;box-shadow:0 14px 30px rgba(5,150,105,.16)}.successPanel h3{max-width:440px;margin:4px 0 0;color:#0f172a;font-size:25px;letter-spacing:-.03em}.successPanel p{max-width:410px;margin:0;color:#64748b}.successActions{display:flex;gap:10px;margin-top:12px}.successActions .primaryButton,.successActions .secondaryButton{min-width:140px}@keyframes detailsIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 
-/* Desktop dispatch keeps creation in a focused right-side drawer, while the
-   same functional route form remains a bottom sheet on phones. */
+/* Desktop dispatch keeps creation in a right-side drawer so the board stays
+   visible underneath - the same functional route form is a bottom sheet on
+   phones. The drawer's width is fluid rather than a fixed 430px: it stays a
+   form-only sheet while narrow, then grows to show the route preview map
+   once there's genuinely room for two columns, instead of snapping between
+   a cramped fixed-width drawer and an unrelated centered-modal shape. */
 @media(min-width:1024px){
   .backdrop{padding:0;display:flex;justify-content:flex-end;align-items:stretch;background:rgba(15,23,42,.24);backdrop-filter:blur(3px)}
-  .builder{width:min(430px,100vw);height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;box-shadow:-18px 0 46px rgba(15,23,42,.16);background:#fff}
+  .builder{width:clamp(430px,34vw,760px);height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;box-shadow:-18px 0 46px rgba(15,23,42,.16);background:#fff}
   .builderHeader{min-height:72px;padding:14px 22px;background:rgba(255,255,255,.96)}
   .builderHeader h2{font-size:21px}
   .builderBody{display:flex;flex-direction:column;padding:18px 20px 30px}
@@ -40,15 +44,9 @@
   .optionalDetails{padding:13px}
 }
 
-/* Wide monitors have the same spare horizontal room the dispatch board and
-   calendar were adapted for - a fixed 430px drawer with the map hidden reads
-   as cramped next to a full-width board. From here the drawer widens and the
-   route preview map returns alongside the form, matching the two-column
-   layout the drawer already uses below 1024px. */
-@media(min-width:1600px){
-  .backdrop{justify-content:center;background:rgba(15,23,42,.32)}
-  .builder{width:min(1040px,calc(100vw - 80px));height:calc(100dvh - 64px);max-height:calc(100dvh - 64px);margin:32px 32px 32px auto;border-radius:24px;box-shadow:0 30px 80px rgba(15,23,42,.28)}
-  .builderBody{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.85fr);gap:22px;padding:22px 26px 30px}
+@media(min-width:1280px){
+  .builder{width:clamp(760px,58vw,1080px)}
+  .builderBody{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.8fr);gap:22px}
   .mapColumn{display:grid}
   .formColumn{order:0}
 }
