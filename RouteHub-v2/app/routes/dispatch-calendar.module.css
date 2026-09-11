@@ -43,16 +43,15 @@
   justify-content: center;
 }
 
-/* Three columns with matching 26px side slots: the badge sits in the right
-   slot and an empty one mirrors it on the left, so "MON 14" lands on the
-   card's true centre whether or not that day has a badge. Letting the badge
-   share the centred row instead pushed the label left on exactly the days
-   that had one, and the numbers stopped lining up across the week. */
+/* The badge used to sit in a cramped 26px grid slot squeezed against the
+   label, which broke down once more days fit on screen and the cards
+   shrank - double-digit counts overlapped the date. It now floats outside
+   the card's own edge like a phone app icon's notification dot, so the
+   card layout never has to make room for it. */
 .day {
-  display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) 26px;
+  display: flex;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
   flex: 0 1 128px;
   min-width: 0;
   min-height: 40px;
@@ -68,6 +67,7 @@
   cursor: pointer;
   transition: all 120ms ease;
   position: relative;
+  overflow: visible;
 }
 
 .day:hover {
@@ -88,7 +88,6 @@
 }
 
 .dayLabel {
-  grid-column: 2;
   display: flex;
   align-items: baseline;
   justify-content: center;
@@ -97,7 +96,8 @@
 }
 
 .dayName {
-  font-size: 10px;
+  font-size: 14px;
+  font-weight: 800;
   text-transform: uppercase;
   opacity: 0.7;
 }
@@ -112,34 +112,41 @@
   line-height: 1;
 }
 
-/* Inline rather than floating in a corner: the cards are a single line tall
-   now, so an absolutely positioned badge would overlap the label.
+/* A notification-style badge: pinned to the card's own top-right corner and
+   spilling outside its border, with a white ring to separate it from
+   whatever sits behind it - the same shape as an iOS app icon's unread
+   count. It no longer competes with the label for space inside the card,
+   so double-digit counts never overlap the date again.
    Red is reserved for days that still have work waiting - a day whose
    routes are all done or under way stays neutral, so the colour actually
    means something when you scan the week. */
 .badge {
-  grid-column: 3;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   padding: 0 4px;
+  border: 2px solid var(--rh-card, #fff);
   border-radius: 999px;
-  background: #e9eef5;
-  color: #64748b;
+  background: #cbd5e1;
+  color: #fff;
   font-size: 9px;
   font-weight: 800;
+  line-height: 1;
 }
 
 .badge[data-tone='pending'] {
-  background: #ff6b6b;
+  background: #ff3b30;
   color: #fff;
 }
 
 .day.selected .badge {
-  background: rgba(255, 255, 255, 0.28);
-  color: #fff;
+  border-color: #1660f0;
 }
 
 @media (max-width: 720px) {
@@ -167,14 +174,9 @@
 
   /* Seven cards in a phone's width can't hold "MON 6" side by side, so they
      stack back to two short lines here - and they share the full width
-     instead of centring, since there's no spare room to centre within.
-     The desktop badge slots would eat most of a ~45px card, so the badge
-     goes back to the corner and the label owns the whole card. */
+     instead of centring, since there's no spare room to centre within. */
   .day {
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     gap: 1px;
     flex: 1 1 0;
     min-height: 42px;
@@ -188,19 +190,17 @@
     gap: 0;
   }
 
-  .badge {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-  }
-
+  .dayName,
   .dayNum {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .badge {
+    top: -4px;
+    right: -4px;
     min-width: 15px;
     height: 15px;
+    border-width: 1.5px;
     font-size: 8px;
   }
 }
