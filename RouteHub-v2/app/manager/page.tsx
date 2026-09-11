@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useEffect, useMemo, useRef, useState} from 'react'
-import {AlertTriangle, ArrowRight, Car, CheckCircle2, Clock, Flag, MapPin, PlayCircle, Radio, Share2, Timer, Truck} from 'lucide-react'
+import {AlertTriangle, ArrowDown, ArrowRight, Car, CheckCircle2, Clock, Flag, MapPin, PlayCircle, Radio, Share2, Timer, Truck} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
@@ -436,7 +436,7 @@ export default function Manager() {
   }, [pullDistance, isRefreshing, dashboardBranchId])
 
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
-    {(pullDistance > 0 || isRefreshing) && <div className={todayStyles.pullIndicator} style={{height: `${Math.min(pullDistance, 60)}px`, opacity: Math.min(pullDistance / 60, 1)}}><div className={`${todayStyles.spinner} ${isRefreshing ? todayStyles.active : ''}`}/><span>{isRefreshing ? copy.refresh : 'Pull to refresh'}</span></div>}
+    {(pullDistance > 0 || isRefreshing) && <div className={todayStyles.pullIndicator} style={{height: `${Math.min(pullDistance, 60)}px`, opacity: Math.min(pullDistance / 60, 1)}}><div className={`${todayStyles.spinner} ${isRefreshing ? todayStyles.active : ''}`}/><span style={{transform: pullDistance > 60 ? 'scale(1.05)' : 'scale(1)', transition: 'transform 140ms ease'}}>{isRefreshing ? (locale === 'es' ? 'Actualizando…' : locale === 'fr' ? 'Mise à jour…' : 'Refreshing…') : pullDistance > 60 ? (locale === 'es' ? '✓ Suelta para actualizar' : locale === 'fr' ? '✓ Relâchez pour actualiser' : '✓ Release to refresh') : (locale === 'es' ? '↓ Sigue bajando' : locale === 'fr' ? '↓ Continuez à tirer' : '↓ Pull down')}</span></div>}
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.synced}: {syncedLabel}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>

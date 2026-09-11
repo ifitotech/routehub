@@ -344,30 +344,51 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    background: linear-gradient(135deg, #eaf2ff 0%, #f0f8ff 100%);
-    border-bottom: 1px solid color-mix(in srgb, var(--rh-border, #dde5ee) 80%, transparent);
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(234, 242, 255, 0.95) 0%, rgba(240, 248, 255, 0.9) 100%);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(221, 229, 238, 0.4);
     overflow: hidden;
-    transition: height 80ms ease;
-    font-size: 12px;
+    transition: height 80ms cubic-bezier(0.4, 0, 0.2, 1), background 180ms ease;
+    font-size: 13px;
     font-weight: 600;
     color: var(--rh-primary, #1660f0);
+    letter-spacing: -0.3px;
   }
 
   .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #dde5ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+  }
+
+  .spinner::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 2.2px solid rgba(22, 96, 240, 0.2);
     border-top-color: var(--rh-primary, #1660f0);
+    border-right-color: var(--rh-primary, #1660f0);
     border-radius: 50%;
-    animation: none;
+    animation: spinSmooth 800ms cubic-bezier(0.4, 0, 0.6, 1) linear infinite;
+    box-shadow: 0 0 8px rgba(22, 96, 240, 0.15);
   }
 
-  .spinner.active {
-    animation: spin 600ms linear infinite;
+  .spinner.active::before {
+    animation: spinFast 600ms cubic-bezier(0.4, 0, 0.6, 1) linear infinite;
+    box-shadow: 0 0 12px rgba(22, 96, 240, 0.25);
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  @keyframes spinSmooth {
+    0% { transform: rotate(0deg); opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { transform: rotate(360deg); opacity: 0.7; }
+  }
+
+  @keyframes spinFast {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 }
