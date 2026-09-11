@@ -24,7 +24,10 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         const driver = driverDetails(route.driver_id ? driverIndex?.get(route.driver_id) : undefined, c.teamDriver)
         const canManage = Boolean(managing) && !['completed', 'cancelled'].includes(status)
         const canCancel = canManage && status !== 'active' && Boolean(onCancel)
-        const canMove = canManage && status !== 'active' && Boolean(onMove)
+        // The reorder queue on the server only tracks draft/pending/published/paused
+        // routes - an 'issue' route isn't part of it, so a Move button here would
+        // click and silently do nothing. Only show it where it can actually work.
+        const canMove = canManage && status !== 'active' && status !== 'issue' && Boolean(onMove)
         const canTogglePause = canManage && ['active', 'paused'].includes(status) && Boolean(onTogglePause)
         const busy = busyRouteId === route.id
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
