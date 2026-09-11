@@ -14,7 +14,7 @@
   --board-height: calc(100dvh - 250px);
 
   display: grid;
-  grid-template-columns: 320px 1fr 480px;
+  grid-template-columns: 340px 1fr 400px;
   align-items: start;
   gap: 20px;
   width: 100%;
@@ -53,7 +53,7 @@
 
 @media (max-width: 1600px) {
   .workspace {
-    grid-template-columns: 300px 1fr 420px;
+    grid-template-columns: 320px 1fr 380px;
     gap: 16px;
   }
 }
