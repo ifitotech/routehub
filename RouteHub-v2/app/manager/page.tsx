@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useEffect, useMemo, useRef, useState} from 'react'
-import {AlertTriangle, ArrowDown, ArrowRight, Car, CheckCircle2, Clock, Flag, MapPin, PlayCircle, Radio, Share2, Timer, Truck} from 'lucide-react'
+import {AlertTriangle, ArrowRight, Car, CheckCircle2, Clock, Flag, MapPin, PlayCircle, Radio, Share2, Timer, Truck} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
@@ -437,29 +437,16 @@ export default function Manager() {
 
   const pullProgress = Math.min(pullDistance / 60, 1)
   const pullReady = pullProgress >= 1
-  const circleCircumference = 2 * Math.PI * 14
 
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
-    {(pullDistance > 0 || isRefreshing) && <div className={todayStyles.pullIndicatorWrap} style={{height: isRefreshing ? 56 : Math.min(pullDistance, 72)}}>
-      <div className={`${todayStyles.pullCircle} ${isRefreshing ? todayStyles.pullSpinning : ''} ${pullReady ? todayStyles.pullReady : ''}`} style={{opacity: isRefreshing ? 1 : Math.max(pullProgress, 0.35), transform: `scale(${isRefreshing ? 1 : 0.7 + pullProgress * 0.3})`}}>
-        <svg width="34" height="34" viewBox="0 0 34 34">
-          <circle cx="17" cy="17" r="14" fill="none" stroke="rgba(22,96,240,0.14)" strokeWidth="2.5"/>
-          <circle
-            cx="17" cy="17" r="14" fill="none" stroke="url(#pullGradient)" strokeWidth="2.5" strokeLinecap="round"
-            strokeDasharray={circleCircumference}
-            strokeDashoffset={isRefreshing ? circleCircumference * 0.72 : circleCircumference * (1 - pullProgress)}
-            transform="rotate(-90 17 17)"
-            style={{transition: isRefreshing ? 'none' : 'stroke-dashoffset 60ms linear'}}
-          />
-          <defs>
-            <linearGradient id="pullGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1660f0"/>
-              <stop offset="100%" stopColor="#3b82f6"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <ArrowDown size={13} strokeWidth={2.6} className={todayStyles.pullArrow} style={{opacity: isRefreshing ? 0 : 1, transform: `translate(-50%, -50%) rotate(${pullReady ? 180 : 0}deg)`}}/>
-        {isRefreshing && <span className={todayStyles.pullDot}/>}
+    {(pullDistance > 0 || isRefreshing) && <div className={todayStyles.pullIndicatorWrap} style={{height: isRefreshing ? 58 : Math.min(pullDistance, 74)}}>
+      <div className={`${todayStyles.pullScene} ${pullReady ? todayStyles.pullReady : ''}`} style={{opacity: isRefreshing ? 1 : Math.max(pullProgress, 0.4)}}>
+        <div className={todayStyles.pullRoad}>
+          <span className={todayStyles.pullRoadLine}/>
+        </div>
+        <div className={`${todayStyles.pullTruck} ${isRefreshing ? todayStyles.pullTruckDriving : ''}`} style={!isRefreshing ? {left: `${8 + pullProgress * 74}%`, transform: `translate(-50%, -50%) ${pullReady ? 'scale(1.12)' : 'scale(1)'}`} : undefined}>
+          <Truck size={18} strokeWidth={2.3}/>
+        </div>
       </div>
     </div>}
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.synced}: {syncedLabel}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
