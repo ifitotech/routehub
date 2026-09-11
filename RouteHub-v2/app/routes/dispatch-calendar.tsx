@@ -14,15 +14,32 @@ type DispatchCalendarProps = {
   pendingCounts?: Record<string, number>
 }
 
-function toSafeDate(value: string): Date {
-  const parsed = new Date(value)
+// Route dates are local 'YYYY-MM-DD' strings (see localSchedule in
+// routes-model). new Date('2026-09-11') parses that as midnight UTC, which in
+// any negative-offset timezone is the previous local day - so getDate() showed
+// every date one behind. Noon local is offset-proof, and is how the rest of
+// the workspace parses these strings.
+function toLocalDate(value: string): Date {
+  const parsed = new Date(`${value}T12:00:00`)
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed
+}
+
+// Local-calendar counterpart of toISOString().slice(0,10), which would convert
+// to UTC first and shift the day back for the same reason.
+function toDateString(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
 }
 
 export default function DispatchCalendar({selectedDate, onDateChange, locale, routeCounts = {}, pendingCounts = {}}: DispatchCalendarProps) {
   const [weekStart, setWeekStart] = useState(() => {
-    const date = toSafeDate(selectedDate)
-    date.setDate(date.getDate() - date.getDay())
+    const date = toLocalDate(selectedDate)
+    // The labels below run Monday-first, so the week has to start on Monday
+    // too. getDay() is Sunday-based (0=Sun), which was shifting every label
+    // one day off its date.
+    const offsetToMonday = (date.getDay() + 6) % 7
+    date.setDate(date.getDate() - offsetToMonday)
     return date
   })
 
@@ -46,8 +63,8 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
     setWeekStart(newStart)
   }
 
-  const dateToString = (date: Date) => date.toISOString().slice(0, 10)
-  const isToday = (date: Date) => dateToString(date) === new Date().toISOString().slice(0, 10)
+  const todayString = toDateString(new Date())
+  const isToday = (date: Date) => toDateString(date) === todayString
 
   return (
     <div className={styles.calendar}>
@@ -57,7 +74,7 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
 
       <div className={styles.weekDays}>
         {days.map((day, idx) => {
-          const dateStr = dateToString(day)
+          const dateStr = toDateString(day)
           const isSelected = dateStr === selectedDate
           const count = routeCounts[dateStr] || 0
           const pending = pendingCounts[dateStr] || 0
