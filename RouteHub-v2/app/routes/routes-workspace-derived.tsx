@@ -91,6 +91,55 @@ export function useRoutesDerived() {
   const completedTodayRoutes = useMemo(() => routes
     .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'completed')
     .sort(routeSort), [routes, todayValue])
+
+  // Group routes by date and status for flexible dispatch layout
+  const routesByDateAndStatus = useMemo(() => {
+    const grouped = new Map<string, {
+      unassigned: RouteRecord[]
+      'in-progress': RouteRecord[]
+      pending: RouteRecord[]
+      completed: RouteRecord[]
+      issues: RouteRecord[]
+    }>()
+
+    routes.forEach(route => {
+      const date = routeDateValue(route) || todayValue
+      if (!grouped.has(date)) {
+        grouped.set(date, {
+          unassigned: [],
+          'in-progress': [],
+          pending: [],
+          completed: [],
+          issues: [],
+        })
+      }
+
+      const bucket = grouped.get(date)!
+      if (route.status === 'completed') {
+        bucket.completed.push(route)
+      } else if (route.status === 'issue') {
+        bucket.issues.push(route)
+      } else if (['active', 'paused'].includes(route.status || '')) {
+        bucket['in-progress'].push(route)
+      } else if (route.status === 'cancelled') {
+        // skip cancelled
+      } else if (!route.driver_id) {
+        bucket.unassigned.push(route)
+      } else {
+        bucket.pending.push(route)
+      }
+    })
+
+    // Sort each bucket
+    grouped.forEach(bucket => {
+      Object.keys(bucket).forEach(key => {
+        (bucket as any)[key].sort(routeSort)
+      })
+    })
+
+    return grouped
+  }, [routes, todayValue, routeSort])
+
   const planningMapRoutes = useMemo(() => {
     const configured = routes
       .filter(route => {
@@ -207,6 +256,6 @@ export function useRoutesDerived() {
     issueTodayRoutes, planningMapRoutes, todayRoutes, inProgressRoutes, priorityRoutes,
     selectedDriverGps, originBranchCoordinate, previousDestinationCoordinate,
     originContactCoordinate, returnBranchCoordinate, returnBranch, originBranch,
-    previousRoute, driverIndex, routeSort,
+    previousRoute, driverIndex, routeSort, routesByDateAndStatus,
   }
 }
