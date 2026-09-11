@@ -175,8 +175,13 @@ export function useRoutesSave(w: any) {
     setBusyRouteId(route.id)
     try {
       const client = getSupabase()
-      const {error} = await client.from('routes').update({driver_id: null, position: null, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id)
+      // Selecting the row back is what makes an RLS refusal visible: a blocked
+      // update returns success with zero rows, so without this the manager
+      // would get a "moved to unassigned" confirmation for a route that never
+      // actually moved. toggleRoutePause guards the same way.
+      const {data: updated, error} = await client.from('routes').update({driver_id: null, position: null, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).select('id').maybeSingle()
       if (error) throw error
+      if (!updated) throw new Error(locale === 'es' ? 'No se pudo mover la ruta. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'Impossible de déplacer l’itinéraire. Actualisez la liste et réessayez.' : 'The route could not be moved. Refresh the list and try again.')
       let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
       queueQuery = route.branch_id == null ? queueQuery.is('branch_id', null) : queueQuery.eq('branch_id', route.branch_id)
       const {data: remaining, error: queueError} = await queueQuery
@@ -261,8 +266,11 @@ export function useRoutesSave(w: any) {
       const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
       if (positionError) throw positionError
       const nextPosition = Number(lastRoute?.position || 0) + 1
-      const {error} = await client.from('routes').update({driver_id: driverId, position: nextPosition, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id)
+      // Same reason as unassignRoute: an RLS-refused update succeeds with zero
+      // rows, which would otherwise report an assignment that never happened.
+      const {data: updated, error} = await client.from('routes').update({driver_id: driverId, position: nextPosition, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).select('id').maybeSingle()
       if (error) throw error
+      if (!updated) throw new Error(locale === 'es' ? 'No se pudo asignar la ruta. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'Impossible d’attribuer l’itinéraire. Actualisez la liste et réessayez.' : 'The route could not be assigned. Refresh the list and try again.')
       if (currentUserId && companyId) await recordActivity({companyId, userId: currentUserId, action: 'route_assigned_by_manager', recordId: route.id, after: {driver_id: driverId}}).catch(() => undefined)
       void sendRoutePush(route.id, 'assigned')
       await loadWorkspace()
