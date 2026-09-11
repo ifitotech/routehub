@@ -10,6 +10,13 @@
   max-width:none!important;
   padding:0 0 20px!important;
   overflow-x:hidden!important;
+  /* The header, calendar and board used to be plain sibling blocks relying on
+     their own margins, which left the calendar card almost touching the board
+     below it. One flex column with a single gap gives the whole page a uniform
+     vertical rhythm instead. */
+  display:flex!important;
+  flex-direction:column!important;
+  gap:16px!important;
 }
 [data-routes-dispatch] article,
 [data-routes-dispatch] section{

@@ -165,9 +165,20 @@ export default function Routes() {
     <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
       <div className={styles.page} data-routes-dispatch>
         <header className={styles.header}>
-          <div>
+          <div className={styles.headerTitle}>
             <p className={styles.eyebrow}>{c.operations.toUpperCase()}</p>
             <h1>{c.title}</h1>
+          </div>
+          <div className={styles.headerTools}>
+            <DailyProgress
+              total={dailyProgress.total}
+              completed={dailyProgress.completed}
+              inProgress={dailyProgress.inProgress}
+              pending={dailyProgress.pending}
+              issues={dailyProgress.issues}
+              locale={locale}
+            />
+            <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
           </div>
           <div className={styles.headerActions}>
             <DriverDropdown
@@ -226,15 +237,6 @@ export default function Routes() {
           }
           center={
             <div>
-              <DailyProgress
-                total={dailyProgress.total}
-                completed={dailyProgress.completed}
-                inProgress={dailyProgress.inProgress}
-                pending={dailyProgress.pending}
-                issues={dailyProgress.issues}
-                locale={locale}
-              />
-              <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
               {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
               {loading ? (
                 <section className={styles.routeGrid} aria-label={c.loadError}>
@@ -246,20 +248,18 @@ export default function Routes() {
                     <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
                     <span>{assignedRoutes.length}</span>
                   </div>
-                  <div style={{maxHeight: '520px', overflowY: 'auto'}}>
-                    <RouteRows
-                      items={assignedRoutes}
-                      locale={locale}
-                      c={c}
-                      driverIndex={driverIndex}
-                      onCancel={cancelRoute}
-                      onMove={moveRoute}
-                      onTogglePause={toggleRoutePause}
-                      onUnassign={unassignRoute}
-                      busyRouteId={busyRouteId}
-                      managing={managing}
-                    />
-                  </div>
+                  <RouteRows
+                    items={assignedRoutes}
+                    locale={locale}
+                    c={c}
+                    driverIndex={driverIndex}
+                    onCancel={cancelRoute}
+                    onMove={moveRoute}
+                    onTogglePause={toggleRoutePause}
+                    onUnassign={unassignRoute}
+                    busyRouteId={busyRouteId}
+                    managing={managing}
+                  />
                 </section>
               ) : (
                 <section className={styles.emptyState}>

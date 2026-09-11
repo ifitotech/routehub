@@ -1,10 +1,13 @@
+/* Lives in the page header next to the search box and action buttons, so it
+   matches their height to keep that toolbar row uniform. */
 .container {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 52px;
   padding: 10px 14px;
   background: var(--rh-soft-blue, #eaf2ff);
-  border-radius: 10px;
+  border-radius: 14px;
   border: 1px solid var(--rh-border, #dde5ee);
 }
 

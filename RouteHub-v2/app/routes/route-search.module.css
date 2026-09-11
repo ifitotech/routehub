@@ -20,9 +20,10 @@
 
 .input input {
   width: 100%;
-  padding: 10px 12px 10px 36px;
-  border: 1.5px solid var(--rh-border, #dde5ee);
-  border-radius: 8px;
+  min-height: 52px;
+  padding: 10px 12px 10px 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
   background: var(--rh-card, #fff);
   color: var(--rh-text, #0f1d35);
   font-size: 13px;
