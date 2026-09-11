@@ -4,16 +4,15 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {AlertTriangle, CheckCircle, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {Map, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
 import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
-import StatusSidebar from './status-sidebar'
+import UnassignedPanel from './unassigned-panel'
 import DispatchLayout from './dispatch-layout'
 import VehicleSelector from './vehicle-selector'
-import RouteDetailsPanel from './route-details-panel'
 import DailyProgress from './daily-progress'
 import RouteSearch from './route-search'
 import styles from './routes.module.css'
@@ -26,9 +25,7 @@ export default function Routes() {
   const [pane, setPane] = useState<'list' | 'map'>('list')
   const [managing, setManaging] = useState(false)
   const [selectedDate, setSelectedDate] = useState(() => w.todayValue)
-  const [selectedStatus, setSelectedStatus] = useState<'in-progress' | 'pending' | 'unassigned' | 'completed' | 'issues'>('in-progress')
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
-  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -37,7 +34,7 @@ export default function Routes() {
     } catch {}
   }, [])
 
-  const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, busyRouteId, driverIndex, loading, routes} = w
+  const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, busyRouteId, driverIndex, loading} = w
 
   // Get routes for selected date and status from new unified data structure
   const routesByDateAndStatus = useMemo(() => w.routesByDateAndStatus, [w.routesByDateAndStatus])
@@ -66,30 +63,29 @@ export default function Routes() {
     }
   }, [currentDateRoutes, selectedDriverId])
 
-  const routesForSelectedStatus = useMemo(() => {
-    let routes = scopedRoutes[selectedStatus as keyof typeof scopedRoutes] || []
+  // Routes waiting for a driver - the left panel's job
+  const unassignedRoutes = scopedRoutes.unassigned || []
+
+  // Routes already assigned - the center queue, reorderable when managing.
+  // Active work first, then what's queued, then issues, then what's done.
+  const assignedRoutes = useMemo(() => {
+    let combined = [
+      ...(scopedRoutes['in-progress'] || []),
+      ...(scopedRoutes.pending || []),
+      ...(scopedRoutes.issues || []),
+      ...(scopedRoutes.completed || []),
+    ]
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
-      routes = routes.filter((r: any) => {
+      combined = combined.filter((r: any) => {
         const destination = (r.destination_address || r.destination_name || '').toLowerCase()
         return destination.includes(query)
       })
     }
 
-    return routes
-  }, [scopedRoutes, selectedStatus, searchQuery])
-
-  // Get selected route details
-  const selectedRoute = useMemo(() => {
-    if (!selectedRouteId) return null
-    return routesForSelectedStatus.find((r: any) => r.id === selectedRouteId) || null
-  }, [selectedRouteId, routesForSelectedStatus])
-
-  const selectedRouteDis = useMemo(() => {
-    if (!selectedRoute || !selectedRoute.driver_id) return null
-    return selectedRoute.driver_id
-  }, [selectedRoute])
+    return combined
+  }, [scopedRoutes, searchQuery])
 
   // Calculate driver stats for current date
   const driverStats = useMemo(() => {
@@ -108,34 +104,6 @@ export default function Routes() {
     })
     return stats
   }, [currentDateRoutes])
-
-  // Status sections for sidebar with live counts from selected date
-  const statusSections = useMemo(() => {
-    const getLabel = (key: string): string => {
-      const labels: Record<string, Record<string, string>> = {
-        es: {unassigned: 'No asignadas', 'in-progress': 'En curso', pending: 'Pendientes', completed: 'Completadas', issues: 'Incidencias'},
-        fr: {unassigned: 'Non attribuées', 'in-progress': 'En cours', pending: 'En attente', completed: 'Terminées', issues: 'Incidents'},
-        en: {unassigned: 'Unassigned', 'in-progress': 'In Progress', pending: 'Pending', completed: 'Completed', issues: 'Issues'},
-      }
-      return labels[locale]?.[key] || labels.en[key] || key
-    }
-
-    const icons = {
-      unassigned: <Truck size={18} />,
-      'in-progress': <PlayCircle size={18} />,
-      pending: <Clock3 size={18} />,
-      completed: <CheckCircle size={18} />,
-      issues: <AlertTriangle size={18} />,
-    }
-
-    return [
-      {status: 'unassigned', label: getLabel('unassigned'), count: scopedRoutes.unassigned?.length || 0, icon: icons.unassigned, routes: (scopedRoutes.unassigned || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'in-progress', label: getLabel('in-progress'), count: scopedRoutes['in-progress']?.length || 0, icon: icons['in-progress'], routes: (scopedRoutes['in-progress'] || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'pending', label: getLabel('pending'), count: scopedRoutes.pending?.length || 0, icon: icons.pending, routes: (scopedRoutes.pending || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'completed', label: getLabel('completed'), count: scopedRoutes.completed?.length || 0, icon: icons.completed, routes: (scopedRoutes.completed || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'issues', label: getLabel('issues'), count: scopedRoutes.issues?.length || 0, icon: icons.issues, routes: (scopedRoutes.issues || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-    ]
-  }, [scopedRoutes, locale])
 
   // Calculate route counts for calendar badges
   const routeCounts = useMemo(() => {
@@ -237,7 +205,15 @@ export default function Routes() {
         </div>
 
         <DispatchLayout
-          sidebar={<StatusSidebar sections={statusSections} selectedStatus={selectedStatus} onStatusSelect={setSelectedStatus} locale={locale} />}
+          sidebar={
+            <UnassignedPanel
+              routes={unassignedRoutes}
+              drivers={drivers}
+              onAssign={assignRouteToDriver}
+              busyRouteId={busyRouteId}
+              locale={locale}
+            />
+          }
           center={
             <div>
               <DailyProgress
@@ -254,45 +230,32 @@ export default function Routes() {
                 <section className={styles.routeGrid} aria-label={c.loadError}>
                   {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
                 </section>
-              ) : routesForSelectedStatus.length > 0 ? (
-                <>
-                  <section className={styles.routeSection}>
-                    <div className={styles.sectionHeading}>
-                      <h2>{statusSections.find((s: any) => s.status === selectedStatus)?.label}</h2>
-                      <span>{routesForSelectedStatus.length}</span>
-                    </div>
-                    <div style={{maxHeight: '400px', overflowY: 'auto'}}>
-                      <RouteRows
-                        items={routesForSelectedStatus}
-                        locale={locale}
-                        c={c}
-                        driverIndex={driverIndex}
-                        onCancel={cancelRoute}
-                        onMove={moveRoute}
-                        onTogglePause={toggleRoutePause}
-                        busyRouteId={busyRouteId}
-                        managing={managing}
-                      />
-                    </div>
-                  </section>
-                  {selectedRoute && (
-                    <RouteDetailsPanel
-                      route={selectedRoute}
-                      onPause={managing ? (id: string) => toggleRoutePause(selectedRoute) : undefined}
-                      onCancel={managing ? (id: string) => cancelRoute(selectedRoute) : undefined}
-                      managing={managing}
+              ) : assignedRoutes.length > 0 ? (
+                <section className={styles.routeSection}>
+                  <div className={styles.sectionHeading}>
+                    <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
+                    <span>{assignedRoutes.length}</span>
+                  </div>
+                  <div style={{maxHeight: '520px', overflowY: 'auto'}}>
+                    <RouteRows
+                      items={assignedRoutes}
                       locale={locale}
-                      driverName={selectedRouteDis || undefined}
+                      c={c}
+                      driverIndex={driverIndex}
+                      onCancel={cancelRoute}
+                      onMove={moveRoute}
+                      onTogglePause={toggleRoutePause}
+                      busyRouteId={busyRouteId}
+                      managing={managing}
                     />
-                  )}
-                </>
-
+                  </div>
+                </section>
               ) : (
                 <section className={styles.emptyState}>
                   <div><RouteIcon size={28}/></div>
-                  <h2>{locale==='es'?'Sin rutas':locale==='fr'?'Aucun itinéraire':'No routes'}</h2>
-                  <p>{locale==='es'?`No hay rutas en estado "${statusSections.find((s: any) => s.status === selectedStatus)?.label}" para este día.`:locale==='fr'?`Pas de routes avec le statut "${statusSections.find((s: any) => s.status === selectedStatus)?.label}" pour ce jour.`:`No routes with status "${statusSections.find((s: any) => s.status === selectedStatus)?.label}" for this day.`}</p>
-                  {selectedStatus === 'unassigned' && <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>}
+                  <h2>{locale==='es'?'Sin rutas asignadas':locale==='fr'?'Aucun itinéraire attribué':'No assigned routes'}</h2>
+                  <p>{locale==='es'?'Asigna rutas desde la lista de la izquierda para verlas aquí.':locale==='fr'?'Attribuez des itinéraires depuis la liste de gauche pour les voir ici.':'Assign routes from the list on the left to see them here.'}</p>
+                  <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
                 </section>
               )}
             </div>
