@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {AlertTriangle, CheckCircle, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {AlertTriangle, CheckCircle, CheckCircle2, Clock, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users, Zap} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
@@ -16,6 +16,7 @@ import VehicleSelector from './vehicle-selector'
 import RouteDetailsPanel from './route-details-panel'
 import DailyProgress from './daily-progress'
 import RouteSearch from './route-search'
+import QuickFilters from './quick-filters'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -30,6 +31,7 @@ export default function Routes() {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeQuickFilters, setActiveQuickFilters] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     try {
@@ -59,9 +61,11 @@ export default function Routes() {
 
   const routesForSelectedStatus = useMemo(() => {
     let routes = currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
+
     if (selectedDriverId) {
       routes = routes.filter((r: any) => r.driver_id === selectedDriverId)
     }
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       routes = routes.filter((r: any) => {
@@ -69,8 +73,19 @@ export default function Routes() {
         return destination.includes(query)
       })
     }
+
+    if (activeQuickFilters.size > 0) {
+      routes = routes.filter((r: any) => {
+        if (activeQuickFilters.has('active') && ['active', 'paused'].includes(r.status || '')) return true
+        if (activeQuickFilters.has('pending') && ['draft', 'pending', 'published'].includes(r.status || '')) return true
+        if (activeQuickFilters.has('completed') && r.status === 'completed') return true
+        if (activeQuickFilters.has('issues') && r.status === 'issue') return true
+        return false
+      })
+    }
+
     return routes
-  }, [currentDateRoutes, selectedStatus, selectedDriverId, searchQuery])
+  }, [currentDateRoutes, selectedStatus, selectedDriverId, searchQuery, activeQuickFilters])
 
   // Get selected route details
   const selectedRoute = useMemo(() => {
@@ -142,6 +157,48 @@ export default function Routes() {
     })
     return counts
   }, [routesByDateAndStatus])
+
+  // Quick filter options
+  const quickFilterOptions = useMemo(() => [
+    {
+      id: 'active',
+      label: locale === 'es' ? 'Activas' : locale === 'fr' ? 'Actifs' : 'Active',
+      icon: <Zap size={14} />,
+      isActive: activeQuickFilters.has('active'),
+      count: currentDateRoutes['in-progress']?.length || 0,
+    },
+    {
+      id: 'pending',
+      label: locale === 'es' ? 'Pendientes' : locale === 'fr' ? 'En attente' : 'Pending',
+      icon: <Clock size={14} />,
+      isActive: activeQuickFilters.has('pending'),
+      count: currentDateRoutes.pending?.length || 0,
+    },
+    {
+      id: 'completed',
+      label: locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed',
+      icon: <CheckCircle2 size={14} />,
+      isActive: activeQuickFilters.has('completed'),
+      count: currentDateRoutes.completed?.length || 0,
+    },
+    {
+      id: 'issues',
+      label: locale === 'es' ? 'Con Incidencias' : locale === 'fr' ? 'Avec Incidents' : 'With Issues',
+      icon: <AlertTriangle size={14} />,
+      isActive: activeQuickFilters.has('issues'),
+      count: currentDateRoutes.issues?.length || 0,
+    },
+  ], [currentDateRoutes, activeQuickFilters, locale])
+
+  const toggleQuickFilter = (filterId: string) => {
+    const newFilters = new Set(activeQuickFilters)
+    if (newFilters.has(filterId)) {
+      newFilters.delete(filterId)
+    } else {
+      newFilters.add(filterId)
+    }
+    setActiveQuickFilters(newFilters)
+  }
 
   // Calculate daily progress totals
   const dailyProgress = useMemo(() => {
@@ -249,6 +306,11 @@ export default function Routes() {
                 locale={locale}
               />
               <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
+              <QuickFilters
+                filters={quickFilterOptions}
+                onFilterToggle={toggleQuickFilter}
+                locale={locale}
+              />
               <VehicleSelector
                 drivers={drivers}
                 selectedDriverId={selectedDriverId}
