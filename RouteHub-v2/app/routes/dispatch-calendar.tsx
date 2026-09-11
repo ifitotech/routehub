@@ -1,8 +1,19 @@
 'use client'
 
 import {ChevronLeft, ChevronRight} from 'lucide-react'
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import styles from './dispatch-calendar.module.css'
+
+// Each day pill needs ~92px to stay readable (label + number + badge), plus
+// room for the two nav buttons. Wide monitors can fit well past the original
+// fixed 9-day strip, so the count is derived from measured width instead of
+// a constant - the same wide-screen waste the sidebar/board columns had.
+const DAY_MIN_WIDTH = 92
+function daysForWidth(width: number): number {
+  const usable = width - 80
+  const fit = Math.floor(usable / DAY_MIN_WIDTH)
+  return Math.max(9, Math.min(21, fit % 2 === 0 ? fit - 1 : fit))
+}
 
 type DispatchCalendarProps = {
   selectedDate: string
@@ -33,16 +44,41 @@ function toDateString(date: Date): string {
 }
 
 export default function DispatchCalendar({selectedDate, onDateChange, locale, routeCounts = {}, pendingCounts = {}}: DispatchCalendarProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dayCount, setDayCount] = useState(9)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(entries => {
+      const width = entries[0]?.contentRect.width
+      if (width) setDayCount(daysForWidth(width))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  // Centered on the selected date rather than pinned to Monday, so growing
+  // dayCount on a wider screen adds days evenly on both sides instead of
+  // just extending further into the future.
   const [weekStart, setWeekStart] = useState(() => {
     const date = toLocalDate(selectedDate)
-    const offsetToMonday = (date.getDay() + 6) % 7
-    // The strip shows the selected week plus a day of context on each side,
-    // so it starts on the Sunday before that Monday and runs nine days.
-    date.setDate(date.getDate() - offsetToMonday - 1)
+    date.setDate(date.getDate() - Math.floor(9 / 2))
     return date
   })
 
-  const days = Array.from({length: 9}, (_, i) => {
+  useEffect(() => {
+    setWeekStart(() => {
+      const date = toLocalDate(selectedDate)
+      date.setDate(date.getDate() - Math.floor(dayCount / 2))
+      return date
+    })
+    // Only re-center when dayCount changes (screen resize) or the selected
+    // date jumps outside the visible strip - not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayCount])
+
+  const days = Array.from({length: dayCount}, (_, i) => {
     const day = new Date(weekStart)
     day.setDate(day.getDate() + i)
     return day
@@ -73,7 +109,7 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
   const isToday = (date: Date) => toDateString(date) === todayString
 
   return (
-    <div className={styles.calendar}>
+    <div className={styles.calendar} ref={containerRef}>
       <button className={styles.navButton} onClick={handlePrevWeek} aria-label="Previous week">
         <ChevronLeft size={18}/>
       </button>

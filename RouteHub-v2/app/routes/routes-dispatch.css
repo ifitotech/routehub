@@ -6,7 +6,7 @@
    routes.module.css. Horizontal padding comes from the shell's .content
    for the same reason. */
 [data-routes-dispatch]{
-  width:min(100%,1680px)!important;
+  width:100%!important;
   max-width:none!important;
   padding:0 0 20px!important;
   overflow-x:hidden!important;
