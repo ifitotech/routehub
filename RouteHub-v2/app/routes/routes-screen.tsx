@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {Map, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
@@ -30,7 +30,9 @@ export default function Routes() {
 
   useEffect(() => {
     try {
-      if (new URLSearchParams(window.location.search).get('manage') === '1') setManaging(true)
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('manage') === '1') setManaging(true)
+      if (params.get('pane') === 'map') setPane('map')
     } catch {}
   }, [])
 
@@ -178,6 +180,16 @@ export default function Routes() {
         </header>
 
         {message && <div className={message.includes('successfully') || message.includes('publicad') ? styles.successMessage : styles.message} role="status">{message}</div>}
+
+        {!loading && (scopedRoutes.issues?.length || 0) > 0 && (
+          <Link href="/routes/issues" className={styles.attentionBanner} data-tone="alert">
+            <AlertTriangle size={18}/>
+            <span>
+              {scopedRoutes.issues!.length} {locale==='es'?'incidencia(s) abierta(s)':locale==='fr'?'incident(s) ouvert(s)':'open issue(s)'}
+            </span>
+            <ArrowRight size={16}/>
+          </Link>
+        )}
 
         <div className={styles.calendarRow}>
           <DispatchCalendar

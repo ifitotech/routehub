@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git commit -m 'Add DispatchCalendar component — Week view for Routes *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(xargs grep -l \"active=\\\\\"today\\\\\"\\\\|active='today'\")"
     ]
   }
 }

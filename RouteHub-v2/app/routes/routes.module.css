@@ -835,3 +835,8 @@
 .calendarRow{display:flex;align-items:center;gap:10px}
 .calendarRow>:first-child{flex:1;min-width:0}
 .calendarRow .mapShortcut{flex:0 0 auto;padding:0 14px}
+
+.attentionBanner{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 14px;border-radius:14px;text-decoration:none;font-size:13px;font-weight:700;transition:transform 140ms ease,box-shadow 140ms ease}
+.attentionBanner:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.08)}
+.attentionBanner span{flex:1}
+.attentionBanner[data-tone='alert']{background:#fff0f2;color:#dc2626;border:1px solid #fecaca}

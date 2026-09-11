@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {useEffect} from 'react'
-import {ChevronDown, Clock, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {ChevronDown, Clock, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import './manager-theme.css'
 import styles from './manager-shell.module.css'
@@ -44,16 +44,18 @@ export default function ManagerShell({children, active = 'today', branchName, di
   useThemePreference()
   useManagerLightTheme()
   const copy = locale === 'es'
-    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', history: 'Historial', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
+    ? {today: 'Hoy', dashboard: 'Panel', map: 'Mapa', contacts: 'Contactos', history: 'Historial', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
-      ? {today: 'Aujourd’hui', map: 'Carte', contacts: 'Contacts', history: 'Historique', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
-      : {today: 'Today', map: 'Map', contacts: 'Contacts', history: 'History', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
+      ? {today: 'Aujourd’hui', dashboard: 'Tableau de bord', map: 'Carte', contacts: 'Contacts', history: 'Historique', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
+      : {today: 'Today', dashboard: 'Dashboard', map: 'Map', contacts: 'Contacts', history: 'History', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
   const name = displayName?.trim() || t.managerRole
   const initials = name.slice(0, 2).toUpperCase()
   const role = roleLabel || copy.role
+  // Today and Routes used to be two separate screens showing overlapping
+  // route data; they're merged into one Dashboard (routes-screen.tsx) so
+  // there's a single nav entry instead of two.
   const nav = [
-    {id: 'today' as const, href: '/manager', label: copy.today, Icon: Home},
-    {id: 'routes' as const, href: '/routes', label: t.routes, Icon: RouteIcon},
+    {id: 'routes' as const, href: '/routes', label: copy.dashboard, Icon: RouteIcon},
     {id: 'contacts' as const, href: '/contacts', label: copy.contacts, Icon: Users},
     {id: 'history' as const, href: '/manager/history', label: copy.history, Icon: Clock},
     {id: 'settings' as const, href: '/settings', label: t.more, Icon: MoreHorizontal},
@@ -61,7 +63,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
 
   return <main className={styles.shell} data-manager-section={active}>
     <aside className={styles.sidebar} aria-label="Manager navigation">
-      <Link href="/manager" className={styles.brand} aria-label="RouteHub manager dashboard">
+      <Link href="/routes" className={styles.brand} aria-label="RouteHub manager dashboard">
         <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
         <span>Route<em>Hub</em></span>
       </Link>
