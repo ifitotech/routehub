@@ -215,7 +215,30 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  const assignRouteToDriver = async (route: RouteRecord, driverId: string) => {
+    if (!driverId || busyRouteId) return
+    setBusyRouteId(route.id)
+    try {
+      const client = getSupabase()
+      let positionQuery = client.from('routes').select('position').eq('company_id', route.company_id).eq('driver_id', driverId).eq('route_date', route.route_date || '').in('status', routeStatuses).order('position', {ascending: false}).limit(1)
+      positionQuery = route.branch_id == null ? positionQuery.is('branch_id', null) : positionQuery.eq('branch_id', route.branch_id)
+      const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
+      if (positionError) throw positionError
+      const nextPosition = Number(lastRoute?.position || 0) + 1
+      const {error} = await client.from('routes').update({driver_id: driverId, position: nextPosition, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id)
+      if (error) throw error
+      if (currentUserId && companyId) await recordActivity({companyId, userId: currentUserId, action: 'route_assigned_by_manager', recordId: route.id, after: {driver_id: driverId}}).catch(() => undefined)
+      void sendRoutePush(route.id, 'assigned')
+      await loadWorkspace()
+      setMessage(locale === 'es' ? 'Ruta asignada.' : locale === 'fr' ? 'Itinéraire attribué.' : 'Route assigned.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    } finally {
+      setBusyRouteId('')
+    }
+  }
+
   const renderRouteCards = (_items: RouteRecord[]) => null
 
-  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, busyRouteId}
+  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, busyRouteId}
 }

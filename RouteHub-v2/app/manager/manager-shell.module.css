@@ -69,7 +69,8 @@
 
 @media (min-width: 1024px) {
   .shell {
-    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
     align-items: stretch;
     overflow: hidden;
   }
@@ -79,12 +80,15 @@
     top: 0;
     z-index: 5;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 100dvh;
-    padding: 22px 14px 18px;
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    min-height: 0;
+    height: 68px;
+    padding: 0 20px;
     background: rgb(255 255 255 / 97%);
-    border-right: 1px solid var(--rh-border);
+    border-right: 0;
+    border-bottom: 1px solid var(--rh-border);
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0%);
   }
 
@@ -92,17 +96,18 @@
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    padding: 4px 8px 18px;
+    padding: 0;
     color: var(--rh-text);
-    font-size: 21px;
+    font-size: 19px;
     font-weight: 850;
     letter-spacing: -.04em;
+    flex: none;
   }
 
   .brand img {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
   }
 
   .brand em {
@@ -115,16 +120,17 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
-    margin: 4px 0 14px;
+    min-height: 40px;
+    margin: 0;
     padding: 0 14px;
-    border-radius: 12px;
+    border-radius: 11px;
     background: var(--rh-blue);
     color: #fff;
     font-size: 13px;
     font-weight: 800;
-    box-shadow: 0 12px 24px rgb(22 103 242 / 20%);
+    box-shadow: 0 8px 18px rgb(22 103 242 / 20%);
     transition: background-color 140ms ease, transform 140ms ease;
+    flex: none;
   }
 
   .newRoute:hover {
@@ -136,22 +142,24 @@
   }
 
   .nav {
-    display: grid;
-    gap: 6px;
-    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 0;
   }
 
   .nav a {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-height: 46px;
+    gap: 8px;
+    min-height: 40px;
     padding: 0 12px;
-    border-radius: 13px;
+    border-radius: 10px;
     color: var(--rh-ink-soft);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 620;
+    white-space: nowrap;
     transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
   }
 
@@ -171,25 +179,28 @@
 
   .nav a[data-active='true']::before {
     position: absolute;
-    left: -14px;
-    width: 4px;
-    height: 24px;
-    border-radius: 0 6px 6px 0;
+    left: 12px;
+    right: 12px;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
     background: var(--rh-blue);
     content: '';
   }
 
   .workspaceMeta {
     display: grid;
-    gap: 4px;
-    margin-top: auto;
-    padding: 14px 8px 10px;
-    border-top: 1px solid var(--rh-divider);
+    gap: 2px;
+    margin-top: 0;
+    margin-left: auto;
+    padding: 0 14px;
+    border-top: 0;
+    border-left: 1px solid var(--rh-divider);
   }
 
   .workspaceMeta span {
     color: var(--rh-muted);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 850;
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -201,6 +212,7 @@
     font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 160px;
   }
 
   .profile {
@@ -208,9 +220,10 @@
     align-items: center;
     gap: 10px;
     margin-top: 0;
-    padding: 10px 8px;
-    border-radius: 14px;
+    padding: 6px 8px;
+    border-radius: 12px;
     color: var(--rh-text);
+    flex: none;
     transition: background-color 140ms ease;
   }
 
@@ -247,7 +260,7 @@
   }
 
   .content {
-    min-height: 100dvh;
+    min-height: 0;
     height: auto;
     padding: 20px clamp(24px, 3vw, 56px) 28px;
     overflow: visible;
