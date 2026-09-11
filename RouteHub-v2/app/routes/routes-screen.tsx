@@ -27,6 +27,7 @@ export default function Routes() {
   const [selectedDate, setSelectedDate] = useState(() => w.todayValue)
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [assignDropActive, setAssignDropActive] = useState(false)
 
   useEffect(() => {
     try {
@@ -139,6 +140,12 @@ export default function Routes() {
     }
   }, [scopedRoutes])
 
+  // Dropping an unassigned route on the board assigns it to whichever driver
+  // the board is currently showing. With "All" selected and several drivers
+  // there's no unambiguous target, so the drop is refused and the panel's
+  // own driver picker stays the way to choose.
+  const dropTargetDriverId = selectedDriverId || (drivers.length === 1 ? drivers[0].user_id : null)
+
   // Build map routes from selected date (respects driver filter)
   const mapRoutes = useMemo(() => {
     const allRoutesForDay = [
@@ -239,11 +246,31 @@ export default function Routes() {
                 if (dropped) unassignRoute(dropped)
               }}
               busyRouteId={busyRouteId}
+              managing={managing}
               locale={locale}
             />
           }
           center={
-            <div>
+            <div
+              className={styles.assignDropZone}
+              data-drop-active={assignDropActive ? 'true' : 'false'}
+              onDragOver={managing ? event => { event.preventDefault(); event.dataTransfer.dropEffect = dropTargetDriverId ? 'move' : 'none'; if (!assignDropActive) setAssignDropActive(true) } : undefined}
+              onDragLeave={managing ? event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setAssignDropActive(false) } : undefined}
+              onDrop={managing ? event => {
+                event.preventDefault()
+                setAssignDropActive(false)
+                const routeId = event.dataTransfer.getData('text/plain')
+                const dropped = unassignedRoutes.find((r: any) => r.id === routeId)
+                if (dropped && dropTargetDriverId) assignRouteToDriver(dropped, dropTargetDriverId)
+              } : undefined}
+            >
+              {assignDropActive && (
+                <p className={styles.assignDropHint} data-tone={dropTargetDriverId ? 'ready' : 'blocked'}>
+                  {dropTargetDriverId
+                    ? (locale==='es'?'Suelta aquí para asignar':locale==='fr'?'Déposez ici pour attribuer':'Drop here to assign')
+                    : (locale==='es'?'Elige un conductor arriba para asignar arrastrando':locale==='fr'?'Choisissez un conducteur ci-dessus pour attribuer par glisser':'Pick a driver above to assign by dragging')}
+                </p>
+              )}
               {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
               {loading ? (
                 <section className={styles.routeGrid} aria-label={c.loadError}>

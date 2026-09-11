@@ -49,7 +49,7 @@
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  flex: 0 1 116px;
+  flex: 0 1 128px;
   min-width: 0;
   min-height: 40px;
   padding: 6px 8px;
@@ -141,6 +141,14 @@
 
   .weekDays {
     gap: 4px;
+  }
+
+  /* The strip carries nine days on desktop (a day of context either side of
+     the week). Nine won't fit across a phone, so the two context days are
+     dropped here and it's back to a plain seven-day week. */
+  .day:first-child,
+  .day:last-child {
+    display: none;
   }
 
   /* Seven cards in a phone's width can't hold "MON 6" side by side, so they

@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {Truck} from 'lucide-react'
+import {GripVertical, Truck} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -11,10 +11,11 @@ type UnassignedPanelProps = {
   onAssign: (route: RouteRecord, driverId: string) => void
   onDropRoute?: (routeId: string) => void
   busyRouteId?: string
+  managing?: boolean
   locale: string
 }
 
-export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, locale}: UnassignedPanelProps) {
+export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale}: UnassignedPanelProps) {
   const [dropActive, setDropActive] = useState(false)
   const fallback = locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'
   const assignLabel = locale === 'es' ? 'Asignar' : locale === 'fr' ? 'Attribuer' : 'Assign'
@@ -25,6 +26,11 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
     : locale === 'fr'
       ? 'Déposez ici pour retirer le conducteur'
       : 'Drop here to remove the driver'
+  const dragOutHint = locale === 'es'
+    ? 'Arrastra al tablero para asignar'
+    : locale === 'fr'
+      ? 'Glisser vers le tableau pour attribuer'
+      : 'Drag onto the board to assign'
 
   return (
     <aside
@@ -56,9 +62,23 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
         <div className={styles.list}>
           {routes.map(route => {
             const busy = busyRouteId === route.id
+            const canDrag = Boolean(managing) && !busy
             return (
-              <div key={route.id} className={styles.item}>
-                <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+              <div
+                key={route.id}
+                className={styles.item}
+                data-draggable={canDrag ? 'true' : 'false'}
+                draggable={canDrag}
+                title={canDrag ? dragOutHint : undefined}
+                onDragStart={canDrag ? event => {
+                  event.dataTransfer.setData('text/plain', route.id)
+                  event.dataTransfer.effectAllowed = 'move'
+                } : undefined}
+              >
+                <div className={styles.destination}>
+                  {canDrag ? <GripVertical size={13} className={styles.grip} aria-hidden /> : null}
+                  {route.destination_name || route.destination_address}
+                </div>
                 {drivers.length === 1 ? (
                   <button
                     type="button"

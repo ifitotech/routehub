@@ -98,11 +98,28 @@
 }
 
 .destination {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 12px;
   font-weight: 500;
   color: var(--rh-text, #0f1d35);
   line-height: 1.3;
   word-break: break-word;
+}
+
+.item[data-draggable='true'] {
+  cursor: grab;
+}
+
+.item[data-draggable='true']:active {
+  cursor: grabbing;
+}
+
+.grip {
+  flex: none;
+  margin-top: 1px;
+  color: #94a3b8;
 }
 
 .assignButton {
