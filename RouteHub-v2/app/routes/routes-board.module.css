@@ -3,6 +3,37 @@
    Route. This file only positions it inside the Routes workspace grid. */
 .mapPane {
   min-width: 0;
+  height: 100%;
+}
+
+/* CompactMap is deliberately fixed-height (190-210px) because on Add Route
+   and elsewhere the map is context, not the hero. On the dispatch board's
+   desktop layout it owns a full-height column, so leaving it at 210px left
+   ~300px of blank card underneath the tiles. The type selectors here keep
+   this ahead of compact-map's own .wrap height without needing !important.
+   Scoped to the 3-column breakpoint: while the layout is still stacked the
+   map is back to being a compact panel and its own expand button matters. */
+@media (min-width: 1201px) {
+  .mapPane > div {
+    height: 100%;
+    min-height: 0;
+    --operations-map-height: 100%;
+  }
+
+  /* OperationsMap's own <section> sizes to content, so the canvas asking for
+     height:100% would resolve against an auto height and collapse. Give the
+     section the full height too, completing the chain from the column's
+     explicit height down to the Leaflet container. */
+  .mapPane > div > section {
+    height: 100%;
+  }
+
+  /* The map already fills its column here, so CompactMap's expand/collapse
+     button has nothing left to do - hide it rather than leave a control that
+     does nothing when clicked. */
+  .mapPane > div > button {
+    display: none;
+  }
 }
 .manageHint{
   margin:0 0 12px;
