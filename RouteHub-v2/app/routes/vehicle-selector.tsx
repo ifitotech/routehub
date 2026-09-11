@@ -1,13 +1,7 @@
 'use client'
 
-import {ChevronDown, MapPin, Zap} from 'lucide-react'
+import {driverDetails, type Driver} from './routes-model'
 import styles from './vehicle-selector.module.css'
-
-type Driver = {
-  user_id: string
-  name?: string
-  email?: string
-}
 
 type VehicleSelectorProps = {
   drivers: Driver[]
@@ -24,75 +18,46 @@ export default function VehicleSelector({
   driverStats = {},
   locale,
 }: VehicleSelectorProps) {
-  const selectedDriver = selectedDriverId ? drivers.find(d => d.user_id === selectedDriverId) : null
-  const stats = selectedDriverId ? driverStats[selectedDriverId] : null
+  if (drivers.length === 0) return null
+
+  const allCount = Object.values(driverStats).reduce((sum, s) => sum + s.total, 0)
+  const fallback = locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h3>{locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'}</h3>
-      </div>
+      <span className={styles.label}>
+        {locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'}
+      </span>
+      <div className={styles.pills}>
+        <button
+          type="button"
+          className={styles.pill}
+          data-active={!selectedDriverId}
+          onClick={() => onDriverSelect(null)}
+        >
+          {locale === 'es' ? 'Todos' : locale === 'fr' ? 'Tous' : 'All'}
+          <span className={styles.count}>{allCount}</span>
+        </button>
 
-      <button
-        className={styles.selectorButton}
-        onClick={() => onDriverSelect(null)}
-        data-selected={!selectedDriverId}
-      >
-        <div className={styles.driverInfo}>
-          <div className={styles.driverName}>
-            {locale === 'es' ? 'Todos' : locale === 'fr' ? 'Tous' : 'All'}
-          </div>
-          <div className={styles.driverStats}>
-            {Object.values(driverStats).reduce((sum, s) => sum + s.total, 0)} rutas
-          </div>
-        </div>
-        <ChevronDown size={18} />
-      </button>
-
-      <div className={styles.driversList}>
         {drivers.map(driver => {
-          const driverStat = driverStats[driver.user_id] || {active: 0, total: 0}
+          const {name} = driverDetails(driver, fallback)
+          const stat = driverStats[driver.user_id] || {active: 0, total: 0}
           const isSelected = selectedDriverId === driver.user_id
 
           return (
             <button
               key={driver.user_id}
-              className={styles.driverButton}
+              type="button"
+              className={styles.pill}
+              data-active={isSelected}
               onClick={() => onDriverSelect(isSelected ? null : driver.user_id)}
-              data-selected={isSelected}
             >
-              <div className={styles.driverInfo}>
-                <div className={styles.driverName}>{driver.name || driver.email}</div>
-                <div className={styles.driverStats}>
-                  <div>
-                    {driverStat.active > 0 && (
-                      <>
-                        <Zap size={12} />
-                        <span>{driverStat.active}</span>
-                      </>
-                    )}
-                  </div>
-                  <div>{driverStat.total} rutas</div>
-                </div>
-              </div>
-              <ChevronDown size={18} className={styles.chevron} />
+              {name}
+              <span className={styles.count}>{stat.total}</span>
             </button>
           )
         })}
       </div>
-
-      {selectedDriver && stats && (
-        <div className={styles.summary}>
-          <div className={styles.summaryItem}>
-            <Zap size={16} />
-            <span>{stats.active} activo</span>
-          </div>
-          <div className={styles.summaryItem}>
-            <MapPin size={16} />
-            <span>{stats.total} total</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

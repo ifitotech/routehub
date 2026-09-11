@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {AlertTriangle, CheckCircle, CheckCircle2, Clock, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users, Zap} from 'lucide-react'
+import {AlertTriangle, CheckCircle, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
@@ -16,7 +16,6 @@ import VehicleSelector from './vehicle-selector'
 import RouteDetailsPanel from './route-details-panel'
 import DailyProgress from './daily-progress'
 import RouteSearch from './route-search'
-import QuickFilters from './quick-filters'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -31,7 +30,6 @@ export default function Routes() {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeQuickFilters, setActiveQuickFilters] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     try {
@@ -69,18 +67,8 @@ export default function Routes() {
       })
     }
 
-    if (activeQuickFilters.size > 0) {
-      routes = routes.filter((r: any) => {
-        if (activeQuickFilters.has('active') && ['active', 'paused'].includes(r.status || '')) return true
-        if (activeQuickFilters.has('pending') && ['draft', 'pending', 'published'].includes(r.status || '')) return true
-        if (activeQuickFilters.has('completed') && r.status === 'completed') return true
-        if (activeQuickFilters.has('issues') && r.status === 'issue') return true
-        return false
-      })
-    }
-
     return routes
-  }, [currentDateRoutes, selectedStatus, selectedDriverId, searchQuery, activeQuickFilters])
+  }, [currentDateRoutes, selectedStatus, selectedDriverId, searchQuery])
 
   // Get selected route details
   const selectedRoute = useMemo(() => {
@@ -153,48 +141,6 @@ export default function Routes() {
     return counts
   }, [routesByDateAndStatus])
 
-  // Quick filter options
-  const quickFilterOptions = useMemo(() => [
-    {
-      id: 'active',
-      label: locale === 'es' ? 'Activas' : locale === 'fr' ? 'Actifs' : 'Active',
-      icon: <Zap size={14} />,
-      isActive: activeQuickFilters.has('active'),
-      count: currentDateRoutes['in-progress']?.length || 0,
-    },
-    {
-      id: 'pending',
-      label: locale === 'es' ? 'Pendientes' : locale === 'fr' ? 'En attente' : 'Pending',
-      icon: <Clock size={14} />,
-      isActive: activeQuickFilters.has('pending'),
-      count: currentDateRoutes.pending?.length || 0,
-    },
-    {
-      id: 'completed',
-      label: locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed',
-      icon: <CheckCircle2 size={14} />,
-      isActive: activeQuickFilters.has('completed'),
-      count: currentDateRoutes.completed?.length || 0,
-    },
-    {
-      id: 'issues',
-      label: locale === 'es' ? 'Con Incidencias' : locale === 'fr' ? 'Avec Incidents' : 'With Issues',
-      icon: <AlertTriangle size={14} />,
-      isActive: activeQuickFilters.has('issues'),
-      count: currentDateRoutes.issues?.length || 0,
-    },
-  ], [currentDateRoutes, activeQuickFilters, locale])
-
-  const toggleQuickFilter = (filterId: string) => {
-    const newFilters = new Set(activeQuickFilters)
-    if (newFilters.has(filterId)) {
-      newFilters.delete(filterId)
-    } else {
-      newFilters.add(filterId)
-    }
-    setActiveQuickFilters(newFilters)
-  }
-
   // Calculate daily progress totals
   const dailyProgress = useMemo(() => {
     const total = (currentDateRoutes.unassigned?.length || 0) +
@@ -235,14 +181,6 @@ export default function Routes() {
     }))
   }, [currentDateRoutes])
 
-  // Summary stats for current date
-  const routeSummary = useMemo(() => {
-    const active = routesForSelectedStatus.filter((route: any) => ['active', 'paused'].includes(route.status || '')).length
-    const assigned = routesForSelectedStatus.filter((route: any) => route.driver_id).length
-    const issues = currentDateRoutes.issues?.length || 0
-    return {active, assigned, issues}
-  }, [routesForSelectedStatus, currentDateRoutes])
-
   return (
     <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
       <div className={styles.page} data-routes-dispatch>
@@ -265,14 +203,8 @@ export default function Routes() {
 
         <section className={styles.operationSummary} aria-label={locale==='es'?'Resumen operativo':'Operations summary'}>
           <div className={styles.operationSummaryHeading}>
-            <div><p>{locale==='es'?'Dispatch ':locale==='fr'?'Expédition':'Dispatch'}</p><h2>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale === 'es' ? 'es-ES' : locale === 'fr' ? 'fr-FR' : 'en-US', {weekday: 'short', month: 'short', day: 'numeric'})}</h2></div>
+            <div><p>{locale==='es'?'Dispatch':locale==='fr'?'Expédition':'Dispatch'}</p><h2>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale === 'es' ? 'es-ES' : locale === 'fr' ? 'fr-FR' : 'en-US', {weekday: 'long', month: 'short', day: 'numeric'})}</h2></div>
             <button type="button" className={styles.mapShortcut} onClick={() => setPane('map')}><Map size={16}/>{locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}</button>
-          </div>
-          <div className={styles.summaryCards}>
-            <div className={styles.summaryCard} data-tone="blue"><span><PlayCircle size={18}/></span><div><strong>{routeSummary.active}</strong><small>{locale==='es'?'En curso':locale==='fr'?'En cours':'In progress'}</small></div></div>
-            <div className={styles.summaryCard} data-tone="amber"><span><Clock3 size={18}/></span><div><strong>{routesForSelectedStatus.length}</strong><small>{locale==='es'?'Total':locale==='fr'?'Total':'Total'}</small></div></div>
-            <div className={styles.summaryCard} data-tone="red"><span><AlertTriangle size={18}/></span><div><strong>{routeSummary.issues}</strong><small>{locale==='es'?'Incidencias':locale==='fr'?'Incidents':'Issues'}</small></div></div>
-            <div className={styles.summaryCard} data-tone="slate"><span><Truck size={18}/></span><div><strong>{routeSummary.assigned}</strong><small>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</small></div></div>
           </div>
         </section>
 
@@ -301,11 +233,6 @@ export default function Routes() {
                 locale={locale}
               />
               <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
-              <QuickFilters
-                filters={quickFilterOptions}
-                onFilterToggle={toggleQuickFilter}
-                locale={locale}
-              />
               <VehicleSelector
                 drivers={drivers}
                 selectedDriverId={selectedDriverId}
