@@ -11,9 +11,14 @@ type DispatchCalendarProps = {
   routeCounts?: Record<string, number>
 }
 
+function toSafeDate(value: string): Date {
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
+}
+
 export default function DispatchCalendar({selectedDate, onDateChange, locale, routeCounts = {}}: DispatchCalendarProps) {
   const [weekStart, setWeekStart] = useState(() => {
-    const date = new Date(selectedDate)
+    const date = toSafeDate(selectedDate)
     date.setDate(date.getDate() - date.getDay())
     return date
   })

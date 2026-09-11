@@ -26,7 +26,7 @@ export default function Routes() {
   const w = useRoutesWorkspace()
   const [pane, setPane] = useState<'list' | 'map'>('list')
   const [managing, setManaging] = useState(false)
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState(() => w.todayValue)
   const [selectedStatus, setSelectedStatus] = useState<'in-progress' | 'pending' | 'unassigned' | 'completed' | 'issues'>('in-progress')
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
@@ -40,11 +40,6 @@ export default function Routes() {
   }, [])
 
   const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, busyRouteId, driverIndex, loading, routes} = w
-
-  // Initialize selected date to today
-  useEffect(() => {
-    if (!selectedDate) setSelectedDate(todayValue)
-  }, [todayValue, selectedDate])
 
   // Get routes for selected date and status from new unified data structure
   const routesByDateAndStatus = useMemo(() => w.routesByDateAndStatus, [w.routesByDateAndStatus])
