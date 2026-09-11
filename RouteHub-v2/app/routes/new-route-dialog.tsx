@@ -1,22 +1,42 @@
 'use client'
 
-import {Check, CheckCircle2, MapPin, Package, Plus, Route as RouteIcon, Store, Truck, Undo2, UserRound, Users, X} from 'lucide-react'
-import nextDynamic from 'next/dynamic'
+import {Check, CheckCircle2, MapPin, Package, Plus, Route as RouteIcon, Store, Truck, UserRound, Users, X} from 'lucide-react'
 import styles from './routes.module.css'
 import contrast from './route-contrast.module.css'
 import ui from './new-route-ui.module.css'
 import {branchLocation, driverDetails, routeTypes, typeLabel} from './routes-model'
 import NewRouteFields from './new-route-fields'
+import CompactMap from '../manager/compact-map'
+import type {useRoutesWorkspace} from './routes-workspace'
 
-const OperationsMap = nextDynamic(() => import('../operations-map'), {ssr: false})
+type Workspace = ReturnType<typeof useRoutesWorkspace>
 
-export default function NewRouteDialog(d: any) {
-  const p = d
+// Every prop this dialog and NewRouteFields read comes straight off the
+// workspace hook — picking from its real return type means the shape is
+// always accurate instead of hand-maintained.
+type NewRouteDialogProps = Pick<Workspace,
+  | 'open' | 'saving' | 'setOpen' | 'justCreated' | 'locale' | 'c' | 'openBuilder'
+  | 'previewOpen' | 'setPreviewOpen' | 'form' | 'setForm' | 'selectedContact'
+  | 'originMode' | 'setOriginSource' | 'selectDriver' | 'oc' | 'branches' | 'contacts'
+  | 'defaultBranch' | 'detailsOpen' | 'setDetailsOpen' | 'todayValue' | 'drivers' | 'save'
+  | 'pendingLocation' | 'setPendingLocation' | 'useConfirmedDestination' | 'updateDestination'
+  | 'destinationSuggestions' | 'selectDestinationContact' | 'selectExternalDestination'
+  | 'searchContext' | 'selectedDestinationLocation' | 'setSelectedDestinationLocation'
+  | 'insertBeforeId' | 'setInsertBeforeId' | 'priorityRoutes' | 'saveContactOpen'
+  | 'setSaveContactOpen' | 'contactSaveMessage' | 'setContactSaveMessage' | 'newContactName'
+  | 'setNewContactName' | 'savingContact' | 'saveDestinationAsContact' | 'planningMapRoutes'
+>
+
+export default function NewRouteDialog(p: NewRouteDialogProps) {
   if (!p.open) return null
   const {saving, setOpen, justCreated, locale, c, openBuilder, previewOpen, setPreviewOpen, form, setForm, selectedContact, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, planningMapRoutes, setSelectedDestinationLocation, selectDriver} = p
   const typeDesc = (value: string) => value==='pickup' ? (locale==='es'?'Recoger en un punto':'Pick up items from a location') : value==='return' ? (locale==='es'?'Regresar a la tienda':'Return to store') : (locale==='es'?'Entregar al cliente':'Deliver to customer')
   const routes = planningMapRoutes || []
-  const statusOf = (list: string[]) => routes.filter((route: {status?: string}) => list.includes(route.status || '')).length
+  const mapCopy = locale === 'es'
+    ? {eyebrow: 'VISTA PREVIA', title: 'Vista previa de la ruta', expand: 'Ampliar mapa', collapse: 'Reducir mapa', empty: 'Agrega una ubicación', emptyHelp: 'Las paradas aparecerán aquí en orden'}
+    : locale === 'fr'
+      ? {eyebrow: 'APERÇU', title: 'Aperçu de l’itinéraire', expand: 'Agrandir la carte', collapse: 'Réduire la carte', empty: 'Ajoutez un emplacement', emptyHelp: 'Les arrêts apparaîtront ici dans l’ordre'}
+      : {eyebrow: 'ROUTE PREVIEW', title: 'Route preview', expand: 'Expand map', collapse: 'Collapse map', empty: 'Add a location to build this route', emptyHelp: 'Locations will appear here in order'}
   return (
     <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">
@@ -37,21 +57,15 @@ export default function NewRouteDialog(d: any) {
           <div className={`${styles.mapColumn} ${previewOpen ? styles.mapColumnOpen : ''}`}>
             <section className={styles.previewCard}>
               <div className={styles.previewCardHeader}>
-                <div><span className={styles.previewEyebrow}>ROUTE PREVIEW</span><h3>{locale==='es' ? 'Vista previa' : 'Route preview'}</h3></div>
+                <div><span className={styles.previewEyebrow}>{mapCopy.eyebrow}</span><h3>{mapCopy.title}</h3></div>
                 <MapPin size={18}/>
               </div>
-              <OperationsMap routes={routes} locale={locale} interactive/>
-              <div className={ui.statusGrid}>
-                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['active','in_progress'])}</span><span className={ui.statusLabel}>In Progress</span></div>
-                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['published','pending'])}</span><span className={ui.statusLabel}>Pending</span></div>
-                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['completed'])}</span><span className={ui.statusLabel}>Completed</span></div>
-                <div className={ui.statusCard}><span className={ui.statusCount}>{statusOf(['issue'])}</span><span className={ui.statusLabel}>Issues</span></div>
-              </div>
-              <div className={ui.stopsEmpty}>
+              <CompactMap routes={routes} locale={locale} hideFooter expandLabel={mapCopy.expand} collapseLabel={mapCopy.collapse} />
+              {!routes.length && <div className={ui.stopsEmpty}>
                 <MapPin size={20}/>
-                <strong>{locale==='es' ? 'Agrega una ubicaci\u00f3n' : 'Add a location to build this route'}</strong>
-                <span>{locale==='es' ? 'Las paradas aparecen aqu\u00ed en orden' : 'Locations will appear here in order'}</span>
-              </div>
+                <strong>{mapCopy.empty}</strong>
+                <span>{mapCopy.emptyHelp}</span>
+              </div>}
             </section>
           </div>
           <div className={`${styles.formColumn} ${contrast.form}`}>

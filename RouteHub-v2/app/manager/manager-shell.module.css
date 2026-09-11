@@ -1,24 +1,10 @@
+/* Tokens now come from manager-theme.css (scoped to main[data-manager-section]). */
 .shell {
-  --rh-page-bg: #f7f9fc;
-  --rh-card: #ffffff;
-  --rh-text: #0f1d35;
-  --rh-muted: #667892;
-  --rh-blue: #1667f2;
-  --rh-blue-pressed: #0e55d8;
-  --rh-soft-blue: #eaf2ff;
-  --rh-success: #16b96b;
-  --rh-success-soft: #eaf9f1;
-  --rh-warning: #f59e0b;
-  --rh-warning-soft: #fff7e6;
-  --rh-error: #ef5350;
-  --rh-error-soft: #fff0f0;
-  --rh-border: #dde5ee;
-  --rh-divider: #e8edf3;
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 82% -8%, rgb(22 103 242 / 7%), transparent 30rem),
+    radial-gradient(circle at 82% -8%, rgb(22 96 240 / 6%), transparent 30rem),
     var(--rh-page-bg);
-  color: var(--rh-text);
+  color: var(--rh-ink);
 }
 
 .shell {
@@ -67,6 +53,7 @@
 }
 
 .mobileNav { display: none; }
+.mobileNewRoute { display: none; }
 
 .avatar {
   display: grid;
@@ -74,8 +61,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--rh-soft-blue);
+  color: var(--rh-blue);
   font-size: 11px;
   font-weight: 900;
 }
@@ -162,9 +149,9 @@
     min-height: 46px;
     padding: 0 12px;
     border-radius: 13px;
-    color: #687992;
+    color: var(--rh-ink-soft);
     font-size: 14px;
-    font-weight: 720;
+    font-weight: 620;
     transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
   }
 
@@ -173,7 +160,7 @@
   }
 
   .nav a:hover {
-    background: #f5f8fd;
+    background: var(--rh-surface-2);
     color: var(--rh-blue);
   }
 
@@ -228,7 +215,7 @@
   }
 
   .profile:hover {
-    background: #f7f9fc;
+    background: var(--rh-surface-2);
   }
 
   .profile > span:nth-child(2) {
@@ -289,14 +276,14 @@
     bottom: calc(8px + env(safe-area-inset-bottom));
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    align-items: end;
+    align-items: center;
     gap: 2px;
-    min-height: 64px;
+    min-height: 62px;
     padding: 6px 6px 8px;
-    border: 1px solid var(--rh-border);
+    border: 1px solid var(--rh-line);
     border-radius: 20px;
-    background: color-mix(in srgb, var(--rh-card) 88%, transparent);
-    box-shadow: 0 12px 30px rgb(15 29 53 / 16%);
+    background: color-mix(in srgb, var(--rh-card) 90%, transparent);
+    box-shadow: var(--rh-shadow-md);
     backdrop-filter: blur(16px);
   }
 
@@ -313,7 +300,21 @@
   }
 
   .mobileNav a[data-active='true'] { background: var(--rh-soft-blue); color: var(--rh-blue); }
-  .mobileNewRoute { width: 54px; height: 54px; justify-self: center; align-self: start; margin-top: -18px; border: 4px solid var(--rh-page-bg); border-radius: 50% !important; background: var(--rh-blue); color: #fff !important; box-shadow: 0 8px 18px rgb(22 103 242 / 28%); }
+  .mobileNewRoute {
+    position: fixed;
+    z-index: 21;
+    right: 16px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--rh-blue);
+    color: #fff;
+    box-shadow: 0 10px 22px rgb(22 96 240 / 32%);
+  }
+  .mobileNewRoute:active { transform: scale(.96); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -324,28 +325,4 @@
   }
 }
 
-:global(html[data-theme='dark']) .shell {
-  --rh-page-bg: #0b1628;
-  --rh-card: #18263b;
-  --rh-text: #f4f7fb;
-  --rh-muted: #9aabc0;
-  --rh-soft-blue: #17345c;
-  --rh-success-soft: #123528;
-  --rh-warning-soft: #3a2c12;
-  --rh-error-soft: #3a2027;
-  --rh-border: #31445f;
-  --rh-divider: #2a3d56;
-}
-:global(html[data-theme='dark']) .sidebar {
-  background: #102036;
-}
-:global(html[data-theme='dark']) .nav a:hover {
-  background: #17345c;
-}
-:global(html[data-theme='dark']) .profile:hover {
-  background: #17345c;
-}
-:global(html[data-theme='dark']) .avatar {
-  background: #17345c;
-  color: #9cc4ff;
-}
+/* Manager is intentionally light-only; no dark-theme overrides here. */

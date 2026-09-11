@@ -1,49 +1,39 @@
-.page{max-width:720px;margin:0 auto;padding:8px 0 28px;color:#0f1d35}
-.eyebrow{margin:0 0 6px;color:#1667f2;font-size:11px;font-weight:850;letter-spacing:.14em}
-.page h1{margin:0 0 18px;font-size:28px;letter-spacing:-.04em}
-.group{margin:18px 2px 8px;color:#64748b;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.card{display:grid;border:1px solid #dde5ee;border-radius:16px;background:#fff;overflow:hidden}
-.row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;border-bottom:1px solid #edf2f7;background:transparent;color:inherit;text-align:left;text-decoration:none}
-.card .row:last-child{border-bottom:0}
-.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#eaf2ff;color:#1667f2;font-size:11px;font-weight:900;flex:none}
+/* Settings — compact grouped list. Tokens come from manager-theme.css
+   (scoped to main[data-manager-section]); Manager is light-only. */
+.page{max-width:720px;margin:0 auto;padding:8px 0 32px;color:var(--rh-ink)}
+.eyebrow{margin:0 0 6px;color:var(--rh-blue);font-size:11px;font-weight:850;letter-spacing:.14em}
+.page h1{margin:0 0 18px;font-size:26px;letter-spacing:-.02em}
+.group{margin:20px 2px 8px;color:var(--rh-muted);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.card{display:grid;border:1px solid var(--rh-line);border-radius:var(--rh-r-lg);background:var(--rh-card);box-shadow:var(--rh-shadow-sm);overflow:hidden}
+.row{display:flex;align-items:center;gap:13px;width:100%;min-height:54px;padding:11px 16px;border:0;border-top:1px solid var(--rh-divider);background:transparent;color:inherit;text-align:left;text-decoration:none;font:inherit}
+.card .row:first-child{border-top:0}
+.row:hover{background:var(--rh-surface-2)}
+.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--rh-soft-blue);color:var(--rh-blue);font-size:11px;font-weight:900;flex:none}
 .avatar img{width:100%;height:100%;object-fit:cover}
-.icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#eaf2ff;color:#1667f2;flex:none}
+.icon{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--rh-surface-2);color:var(--rh-ink-soft);flex:none}
 .copy{min-width:0;flex:1;display:grid;gap:2px}
-.copy strong{font-size:14px;line-height:1.25}
-.copy small,.hint,.status{color:#64748b;font-size:12px;line-height:1.35}
-.meta{color:#64748b;font-size:12px;font-weight:700;flex:none}
-.seg{display:flex;gap:4px;padding:3px;border-radius:999px;background:#eef3f8}
-.seg button{height:28px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:#334155;font-size:11px;font-weight:800}
-.seg button[data-on='true']{background:#1667f2;color:#fff}
-.editor{display:grid;gap:10px;padding:4px 14px 14px}
-.editor label{display:grid;gap:6px;font-size:12px;font-weight:700;color:#334155}
-.editor input{min-height:42px;border:1px solid #dde5ee;border-radius:10px;padding:0 10px;background:#fff}
-.photo{display:inline-flex;align-items:center;gap:8px}
+.copy strong{font-size:13.5px;font-weight:600;line-height:1.25}
+.copy small,.hint,.status{color:var(--rh-ink-soft);font-size:12px;line-height:1.35}
+.meta{color:var(--rh-ink-soft);font-size:12.5px;font-weight:650;flex:none}
+.seg{display:inline-flex;border:1px solid var(--rh-line);border-radius:10px;overflow:hidden}
+.seg button{height:30px;padding:0 12px;border:0;background:var(--rh-card);color:var(--rh-ink-soft);font-size:12px;font-weight:700;font-family:inherit}
+.seg button[data-on='true']{background:var(--rh-blue);color:#fff}
+.editor{display:grid;gap:10px;padding:4px 16px 16px}
+.editor label{display:grid;gap:6px;font-size:12px;font-weight:650;color:var(--rh-ink-soft)}
+.editor input{min-height:42px;border:1px solid var(--rh-line);border-radius:var(--rh-r-md);padding:0 12px;background:var(--rh-card);color:var(--rh-ink);font:inherit}
+.editor input:focus{outline:2px solid var(--rh-blue);outline-offset:1px;border-color:var(--rh-blue)}
+.photo{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 .photo input{display:none}
-.primary{height:42px;border:0;border-radius:12px;background:#1667f2;color:#fff;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.primary{height:42px;border:0;border-radius:var(--rh-r-md);background:var(--rh-blue);color:#fff;font-weight:700;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.primary:hover{background:var(--rh-blue-700)}
+.primary:disabled{opacity:.6}
 .embed :global(.card),
 .embed :global(.settings-card),
 .embed :global(.notification-settings-card),
-.embed :global(.install-app-card){margin:0 0 10px;padding:14px;border:1px solid #dde5ee;border-radius:16px;background:#fff;box-shadow:none}
+.embed :global(.install-app-card){margin:0;padding:16px;border:1px solid var(--rh-line);border-radius:var(--rh-r-lg);background:var(--rh-card);box-shadow:var(--rh-shadow-sm)}
 .embed :global(h2){margin:0 0 6px;font-size:15px}
 .embed :global(p){margin:0 0 10px;font-size:13px}
 .embed :global(button){min-height:40px}
-.signOut{margin-top:18px;height:44px;width:100%;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#dc2626;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.signOut{margin-top:20px;height:44px;width:100%;border:1px solid var(--rh-line);border-radius:var(--rh-r-md);background:var(--rh-card);color:var(--rh-error);font-weight:650;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.signOut:hover{background:var(--rh-error-soft)}
 .status{margin-top:10px}
-
-:global(html[data-theme='dark']) .page{color:#f4f7fb}
-:global(html[data-theme='dark']) .group,
-:global(html[data-theme='dark']) .copy small,
-:global(html[data-theme='dark']) .hint,
-:global(html[data-theme='dark']) .meta,
-:global(html[data-theme='dark']) .status{color:#9aabc0}
-:global(html[data-theme='dark']) .card,
-:global(html[data-theme='dark']) .embed :global(.card),
-:global(html[data-theme='dark']) .embed :global(.settings-card),
-:global(html[data-theme='dark']) .embed :global(.notification-settings-card),
-:global(html[data-theme='dark']) .embed :global(.install-app-card){background:#18263b;border-color:#31445f;color:#f4f7fb}
-:global(html[data-theme='dark']) .row{border-bottom-color:#31445f}
-:global(html[data-theme='dark']) .seg{background:#24364f}
-:global(html[data-theme='dark']) .seg button{color:#d5e2f2}
-:global(html[data-theme='dark']) .editor input{background:#101a2b;border-color:#31445f;color:#f4f7fb}
-:global(html[data-theme='dark']) .signOut{background:#18263b}

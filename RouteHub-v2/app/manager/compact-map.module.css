@@ -1,0 +1,70 @@
+/* Compact by default everywhere — the map is context, not the hero. It only
+   grows when the manager explicitly asks for it. */
+.wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  height: 190px;
+  min-height: 190px;
+  background: #eaf2fb;
+  transition: height 180ms ease, min-height 180ms ease;
+  --operations-map-height: 190px;
+}
+
+.wrap[data-expanded='true'] {
+  height: 440px;
+  min-height: 440px;
+  --operations-map-height: 440px;
+}
+
+.toggle {
+  position: absolute;
+  z-index: 5;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--rh-border, #dde5ee);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rh-card, #fff) 92%, transparent);
+  color: var(--rh-blue, #1660f0);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  backdrop-filter: blur(3px);
+}
+
+.toggle:hover { background: var(--rh-card, #fff); }
+
+.loading { width: 100%; height: 100%; background: #eaf2fb; }
+
+@media (min-width: 1024px) {
+  .wrap { height: 210px; min-height: 210px; --operations-map-height: 210px; }
+  .wrap[data-expanded='true'] { height: 520px; min-height: 520px; --operations-map-height: min(560px, calc(100dvh - 240px)); }
+}
+
+/* Mobile has no room to grow in place, so the expanded state becomes a
+   fullscreen overlay instead. */
+@media (max-width: 1023px) {
+  .wrap[data-expanded='true'] {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    height: 100dvh;
+    min-height: 100dvh;
+    border-radius: 0;
+    --operations-map-height: 100dvh;
+  }
+  .wrap[data-expanded='true'] .toggle {
+    top: max(14px, env(safe-area-inset-top));
+    right: 14px;
+    bottom: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap { transition: none; }
+}

@@ -1,27 +1,9 @@
-.mapPane{
-  --operations-map-height:100%;
-  display:grid;
-  grid-template-rows:auto minmax(0,1fr);
-  min-height:280px;
-  height:42vh;
-  border:1px solid #dde5ee;
-  border-radius:16px;
-  overflow:hidden;
-  background:#fff;
-  cursor:zoom-in;
+/* The map itself (size, expand/collapse, fullscreen overlay on mobile) is
+   owned by ../manager/compact-map.module.css, shared with Today and Add
+   Route. This file only positions it inside the Routes workspace grid. */
+.mapPane {
+  min-width: 0;
 }
-.mapHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-bottom:1px solid #e6edf5;background:linear-gradient(135deg,#fff 0%,#f6faff 100%);color:#1e3a67}.mapHeading span{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:850}.mapHeading span svg{color:#1667f2}.mapHeading small{color:#718198;font-size:10px;font-weight:800}
-.mapPane :global(section){
-  height:100%;
-  display:grid;
-  grid-template-rows:minmax(0,1fr);
-}
-.mapPane :global([class*="canvas"]),
-.mapPane :global(.leaflet-container){
-  height:100%!important;
-  min-height:100%!important;
-}
-.mapModal{position:fixed;z-index:90;inset:0;display:grid;place-items:center;padding:24px;background:rgb(15 23 42 / 52%);backdrop-filter:blur(4px)}.mapModalCard{display:grid;grid-template-rows:auto minmax(0,1fr);width:min(1120px,calc(100vw - 48px));height:min(760px,calc(100dvh - 48px));overflow:hidden;border:1px solid #dbe5f0;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgb(15 23 42 / 32%)}.mapModalCard>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid #e6edf5;color:#153768;font-size:14px;font-weight:850}.mapModalCard>header span{display:inline-flex;align-items:center;gap:8px}.mapModalCard>header span svg{color:#1667f2}.mapModalCard>header button{display:grid;place-items:center;width:34px;height:34px;border:1px solid #dce5f0;border-radius:10px;background:#fff;color:#52647a;cursor:pointer}.mapModalCard>header button:hover{background:#f1f6fc;color:#1667f2}.mapModalCard :global(section){height:100%;display:grid;grid-template-rows:minmax(0,1fr)}.mapModalCard :global([class*="canvas"]),.mapModalCard :global(.leaflet-container){height:100%!important;min-height:100%!important}
 .listPane{
   min-width:0;
   max-height:calc(100dvh - 168px);
@@ -35,7 +17,7 @@
   border:1px solid #bfdbfe;
   border-radius:12px;
   background:#eff6ff;
-  color:#1d4ed8;
+  color:#0e48c4;
   font-size:13px;
   font-weight:700;
 }
@@ -47,7 +29,7 @@
 .mobileToggle button{
   flex:1;height:40px;border-radius:10px;border:1px solid #dde5ee;background:#fff;font-weight:700
 }
-.mobileToggle button[data-on='true']{background:#eaf2ff;border-color:#1667f2;color:#1667f2}
+.mobileToggle button[data-on='true']{background:#eaf2ff;border-color:#1660f0;color:#1660f0}
 @media(min-width:1024px){
   .workspace{
     grid-template-columns:minmax(0,1.45fr) minmax(330px,.55fr);
@@ -56,15 +38,11 @@
   .mapPane{
     position:sticky;
     top:18px;
-    height:clamp(290px,35vh,390px);
-    min-height:290px;
   }
   .mobileToggle{display:none}
 }
 @media(max-width:1023px){
   .listHidden{display:none}
   .mapHidden{display:none}
-  .mapPane{height:calc(100dvh - 220px)}
   .listPane{max-height:none}
 }
-@media(max-width:640px){.mapModal{padding:10px}.mapModalCard{width:100%;height:calc(100dvh - 20px);border-radius:18px}}

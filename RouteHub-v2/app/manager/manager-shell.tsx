@@ -2,9 +2,32 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import {ChevronDown, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {useEffect} from 'react'
+import {ChevronDown, Clock, Home, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
+import './manager-theme.css'
 import styles from './manager-shell.module.css'
+
+// Manager is intentionally light-only, but the stored theme preference
+// (shared with Driver) still defaults to 'dark' and several older Manager
+// screen modules carry their own [data-theme='dark'] rules. Rather than
+// hunting those down file by file, force the document to light while any
+// Manager screen is mounted and restore whatever preference was active the
+// moment it unmounts — Driver and every other page are unaffected.
+function useManagerLightTheme() {
+  useEffect(() => {
+    const root = document.documentElement
+    const previousTheme = root.dataset.theme
+    const previousColorScheme = root.style.colorScheme
+    root.dataset.theme = 'light'
+    root.style.colorScheme = 'light'
+    return () => {
+      if (previousTheme) root.dataset.theme = previousTheme
+      else delete root.dataset.theme
+      root.style.colorScheme = previousColorScheme
+    }
+  }, [])
+}
 
 type ManagerSection = 'today' | 'routes' | 'map' | 'truck' | 'contacts' | 'history' | 'reports' | 'settings'
 
@@ -19,11 +42,12 @@ type ManagerShellProps = {
 export default function ManagerShell({children, active = 'today', branchName, displayName, roleLabel}: ManagerShellProps) {
   const {locale, t} = useLocale()
   useThemePreference()
+  useManagerLightTheme()
   const copy = locale === 'es'
-    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
+    ? {today: 'Hoy', map: 'Mapa', contacts: 'Contactos', history: 'Historial', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
-      ? {today: 'Aujourd’hui', map: 'Carte', contacts: 'Contacts', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
-      : {today: 'Today', map: 'Map', contacts: 'Contacts', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
+      ? {today: 'Aujourd’hui', map: 'Carte', contacts: 'Contacts', history: 'Historique', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
+      : {today: 'Today', map: 'Map', contacts: 'Contacts', history: 'History', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
   const name = displayName?.trim() || t.managerRole
   const initials = name.slice(0, 2).toUpperCase()
   const role = roleLabel || copy.role
@@ -31,7 +55,8 @@ export default function ManagerShell({children, active = 'today', branchName, di
     {id: 'today' as const, href: '/manager', label: copy.today, Icon: Home},
     {id: 'routes' as const, href: '/routes', label: t.routes, Icon: RouteIcon},
     {id: 'contacts' as const, href: '/contacts', label: copy.contacts, Icon: Users},
-    {id: 'settings' as const, href: '/manager/more', label: t.more, Icon: MoreHorizontal},
+    {id: 'history' as const, href: '/manager/history', label: copy.history, Icon: Clock},
+    {id: 'settings' as const, href: '/settings', label: t.more, Icon: MoreHorizontal},
   ]
 
   return <main className={styles.shell} data-manager-section={active}>
@@ -45,14 +70,15 @@ export default function ManagerShell({children, active = 'today', branchName, di
         {nav.map(({id, href, label, Icon}) => <Link href={href} key={id} data-active={active === id ? 'true' : 'false'} aria-current={active === id ? 'page' : undefined}><Icon size={20} /><span>{label}</span></Link>)}
       </nav>
       <div className={styles.workspaceMeta}><span>{copy.workspace}</span><strong>{branchName || t.mainBranch}</strong></div>
-      <Link href="/manager/more" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
+      <Link href="/settings" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
     </aside>
     <section className={styles.content}>{children}</section>
+    <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>
     <nav className={styles.mobileNav} aria-label="Mobile manager navigation">
-      <Link href="/manager" data-active={active === 'today' ? 'true' : 'false'}><Home size={18}/><span>{copy.today}</span></Link>
-      <Link href="/routes" data-active={active === 'routes' || active === 'map' ? 'true' : 'false'}><RouteIcon size={18}/><span>{t.routes}</span></Link>
-      <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>
-      <Link href="/manager/more" data-active={active === 'settings' ? 'true' : 'false'}><MoreHorizontal size={18}/><span>{t.more}</span></Link>
+      {nav.map(({id, href, label, Icon}) => {
+        const isActive = active === id || (id === 'routes' && active === 'map')
+        return <Link href={href} key={id} data-active={isActive ? 'true' : 'false'} aria-current={isActive ? 'page' : undefined}><Icon size={18}/><span>{label}</span></Link>
+      })}
     </nav>
   </main>
 }

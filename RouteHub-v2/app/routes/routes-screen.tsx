@@ -99,11 +99,11 @@ export default function Routes() {
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
     </section> : <>
       {dayView === 'today' && inProgressRoutes.length > 0 && <section className={styles.routeSection}>
-        <div className={styles.sectionHeading}><h2>{c.inProgressSection}</h2><span>{inProgressRoutes.length} {c.active}</span></div>
+        <div className={styles.sectionHeading}><h2>{c.inProgressSection}</h2><span>{inProgressRoutes.length}</span></div>
         <RouteRows items={inProgressRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} onTogglePause={toggleRoutePause} busyRouteId={busyRouteId} managing={managing} />
       </section>}
       {dayView === 'today' && scheduledTodayRoutes.length > 0 && <section className={styles.routeSection}>
-        <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{scheduledTodayRoutes.length} {c.active}</span></div>
+        <div className={styles.sectionHeading}><h2>{c.todaySection}</h2><span>{scheduledTodayRoutes.length}</span></div>
         <RouteRows items={scheduledTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} onTogglePause={toggleRoutePause} busyRouteId={busyRouteId} managing={managing} />
       </section>}
       {!loading && !visibleRoutes.length && <section className={styles.emptyState}><div><RouteIcon size={28}/></div><h2>{dayView === 'today' ? c.empty : locale==='es' ? 'No hay rutas para este día' : locale==='fr' ? 'Aucun itinéraire pour ce jour' : 'No routes for this day'}</h2><p>{dayView === 'today' ? c.emptyHelp : locale==='es' ? 'Cambia de pestaña para revisar otro período.' : locale==='fr' ? 'Changez d’onglet pour consulter une autre période.' : 'Choose another tab to review a different period.'}</p>{dayView === 'today' && <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>}</section>}
@@ -116,7 +116,7 @@ export default function Routes() {
         <RouteRows items={futureRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} onTogglePause={toggleRoutePause} busyRouteId={busyRouteId} managing={managing} />
       </section>}
       {dayView === 'today' && completedTodayRoutes.length > 0 && <section className={styles.routeSection}>
-        <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length} {c.active}</span></div>
+        <div className={styles.sectionHeading}><h2>{c.completedSection}</h2><span>{completedTodayRoutes.length}</span></div>
         <RouteRows items={completedTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} onTogglePause={toggleRoutePause} busyRouteId={busyRouteId} managing={managing} />
       </section>}
       {dayView === 'today' && issueTodayRoutes.length > 0 && <section className={styles.routeSection}>

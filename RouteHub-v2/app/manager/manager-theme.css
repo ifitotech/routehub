@@ -1,0 +1,79 @@
+/* RouteHub Manager — single source of visual truth (light only).
+   Scoped to the Manager shell via [data-manager-section] so Driver, admin
+   and marketing pages are unaffected. Do NOT add a dark variant here:
+   Manager is intentionally light-only. Driver keeps its own theming. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&display=swap');
+
+main[data-manager-section] {
+  /* Neutrals — slight blue bias, chosen not inherited */
+  --rh-navy-900: #0b1f3a;
+  --rh-navy-800: #122a4b;
+  --rh-ink: #0f1d35;
+  --rh-ink-soft: #566688;
+  --rh-muted: #8492ab;
+  --rh-line: #e3e9f1;
+  --rh-divider: #eef2f7;
+  --rh-page-bg: #f5f7fb;
+  --rh-card: #ffffff;
+  --rh-surface-2: #f9fbfd;
+
+  /* Accent — one electric blue, no competitors */
+  --rh-blue: #1660f0;
+  --rh-blue-700: #0e48c4;
+  --rh-blue-pressed: #0e48c4;
+  --rh-soft-blue: #e9f1fe;
+
+  /* Semantic state */
+  --rh-success: #12a05c;
+  --rh-success-soft: #e6f5ec;
+  --rh-warning: #b26b00;
+  --rh-warning-soft: #fbf0dc;
+  --rh-error: #d33a3a;
+  --rh-error-soft: #fbeaea;
+
+  /* Radius / shadow / type scale */
+  --rh-r-sm: 10px;
+  --rh-r-md: 14px;
+  --rh-r-lg: 18px;
+  --rh-r-pill: 999px;
+  --rh-shadow-sm: 0 1px 2px rgb(15 29 53 / 6%);
+  --rh-shadow-md: 0 6px 18px rgb(15 29 53 / 8%);
+  --rh-shadow-lg: 0 18px 40px rgb(15 29 53 / 16%);
+  --rh-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --rh-font-display: "Inter Tight", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Back-compat aliases — legacy screen modules read these names.
+     Retired as each screen migrates onto the tokens above. */
+  --rh-text: var(--rh-ink);
+  --rh-text-secondary: var(--rh-ink-soft);
+  --rh-border: var(--rh-line);
+  --rh-surface: var(--rh-card);
+  --rh-bg: var(--rh-page-bg);
+  --rh-divider: #eef2f7;
+  --rh-primary: var(--rh-blue);
+  --rh-primary-hover: var(--rh-blue-700);
+  --rh-primary-soft: var(--rh-soft-blue);
+  --rh-danger: var(--rh-error);
+  --rh-danger-soft: var(--rh-error-soft);
+  --rh-radius-sm: var(--rh-r-sm);
+  --rh-radius-md: var(--rh-r-md);
+  --rh-radius-lg: var(--rh-r-lg);
+  --rh-shadow-card: var(--rh-shadow-sm);
+
+  font-family: var(--rh-font);
+  color: var(--rh-ink);
+}
+
+main[data-manager-section] h1,
+main[data-manager-section] h2,
+main[data-manager-section] h3 {
+  font-family: var(--rh-font-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+main[data-manager-section] :focus-visible {
+  outline: 2px solid var(--rh-blue);
+  outline-offset: 2px;
+}

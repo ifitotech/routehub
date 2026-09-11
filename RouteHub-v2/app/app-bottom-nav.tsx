@@ -10,7 +10,11 @@ import styles from './app-bottom-nav.module.css'
 export default function AppBottomNav() {
   const pathname = usePathname()
   const {t} = useLocale()
-  const hasLocalNav = pathname === '/manager' || pathname === '/operations' || pathname === '/sales' || pathname === '/counter' || pathname.startsWith('/driver')
+  // Every Manager surface now renders its own workspace navigation via
+  // ManagerShell (sidebar on desktop, bottom bar on mobile), so the shared
+  // bottom nav must stay out of the way on those routes.
+  const managerSurface = pathname.startsWith('/manager') || pathname === '/routes' || pathname.startsWith('/routes/') || pathname === '/contacts' || pathname === '/reports' || pathname === '/settings' || pathname.startsWith('/settings/')
+  const hasLocalNav = pathname === '/manager' || pathname === '/operations' || pathname === '/sales' || pathname === '/counter' || pathname.startsWith('/driver') || managerSurface
   if (pathname === '/' || pathname === '/login' || pathname === '/auth/callback' || pathname === '/activate-invitation' || pathname === '/product' || pathname === '/how-it-works' || pathname === '/for-drivers' || pathname === '/terms' || hasLocalNav) return null
 
   const links = pathname.startsWith('/admin')
@@ -20,7 +24,7 @@ export default function AppBottomNav() {
           {href: '/manager', label: t.home, Icon: Home},
           {href: '/routes', label: t.routes, Icon: RouteIcon},
           {href: '/manager/history', label: t.history, Icon: History},
-          {href: '/manager/more', label: t.more, Icon: MoreHorizontal},
+          {href: '/settings', label: t.more, Icon: MoreHorizontal},
         ]
     : [{href: '/', label: t.home, Icon: Home}, {href: '/routes', label: t.routes, Icon: RouteIcon}, {href: '/settings', label: t.settings, Icon: Settings}]
 

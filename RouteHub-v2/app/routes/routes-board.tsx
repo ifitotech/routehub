@@ -1,18 +1,14 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import dynamic from 'next/dynamic'
-import {Map, X} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
 import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
+import CompactMap from '../manager/compact-map'
 import styles from './routes-board.module.css'
-
-const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false})
 
 export default function RoutesBoard({routes, locale}: {routes: OperationsRoute[]; locale: string}) {
   const [drivers, setDrivers] = useState<OperationsDriverLocation[]>([])
-  const [expanded, setExpanded] = useState(false)
   useEffect(() => {
     let disposed = false
     const load = async () => {
@@ -43,18 +39,21 @@ export default function RoutesBoard({routes, locale}: {routes: OperationsRoute[]
     const timer = window.setInterval(() => void load(), 15_000)
     return () => { disposed = true; window.clearInterval(timer) }
   }, [])
-  const copy = locale==='es' ? {title:'Mapa de referencia',routes:'rutas',open:'Toca para ampliar el mapa',close:'Cerrar mapa'} : locale==='fr' ? {title:'Carte de référence',routes:'itinéraires',open:'Touchez pour agrandir la carte',close:'Fermer la carte'} : {title:'Reference map',routes:'routes',open:'Tap to expand map',close:'Close map'}
-  const openMap = () => setExpanded(true)
-  return <>
-    <div className={styles.mapPane} role="button" tabIndex={0} aria-label={copy.open} onClick={openMap} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openMap() } }}>
-      <header className={styles.mapHeading}><span><Map size={16}/>{locale==='es'?'Mapa de referencia':locale==='fr'?'Carte de référence':'Reference map'}</span><small>{routes.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</small></header>
-      <OperationsMap routes={routes} driverLocations={drivers} locale={locale} interactive={false} hideFooter />
+  const copy = locale === 'es'
+    ? {expand: 'Ampliar mapa', collapse: 'Reducir mapa'}
+    : locale === 'fr'
+      ? {expand: 'Agrandir la carte', collapse: 'Réduire la carte'}
+      : {expand: 'Expand map', collapse: 'Collapse map'}
+  return (
+    <div className={styles.mapPane}>
+      <CompactMap
+        routes={routes}
+        driverLocations={drivers}
+        locale={locale}
+        hideFooter
+        expandLabel={copy.expand}
+        collapseLabel={copy.collapse}
+      />
     </div>
-    {expanded && <div className={styles.mapModal} role="dialog" aria-modal="true" aria-label={copy.title} onClick={() => setExpanded(false)}>
-      <section className={styles.mapModalCard} onClick={event => event.stopPropagation()}>
-        <header><span><Map size={18}/>{copy.title}</span><button type="button" onClick={() => setExpanded(false)} aria-label={copy.close}><X size={18}/></button></header>
-        <OperationsMap routes={routes} driverLocations={drivers} locale={locale} interactive hideFooter />
-      </section>
-    </div>}
-  </>
+  )
 }

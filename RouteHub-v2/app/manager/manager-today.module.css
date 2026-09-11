@@ -27,11 +27,11 @@
   transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 
-.summaryCard:hover { border-color: color-mix(in srgb, var(--rh-blue, #1667f2) 38%, var(--rh-border, #dde5ee)); box-shadow: 0 8px 20px rgb(15 29 53 / 7%); }
+.summaryCard:hover { border-color: color-mix(in srgb, var(--rh-blue, #1660f0) 38%, var(--rh-border, #dde5ee)); box-shadow: 0 8px 20px rgb(15 29 53 / 7%); }
 .summaryCard:active { transform: scale(.985); }
 .summaryCard strong { color: inherit; font-size: 27px; line-height: 1; letter-spacing: -.04em; }
 .summaryCard span { color: var(--rh-muted, #667892); font-size: 12px; font-weight: 750; }
-.summaryActive strong { color: var(--rh-blue, #1667f2); }
+.summaryActive strong { color: var(--rh-blue, #1660f0); }
 .summaryPending strong { color: var(--rh-muted, #667892); }
 .summaryCompleted strong { color: var(--rh-success, #16b96b); }
 .summaryIssues strong { color: var(--rh-error, #ef5350); }
@@ -56,22 +56,20 @@
 .sideCard { display: grid; gap: 13px; padding: 18px; border: 1px solid var(--rh-border, #dde5ee); border-radius: 17px; background: var(--rh-card, #fff); box-shadow: 0 5px 16px rgb(15 29 53 / 4%); }
 .sideHeading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sideHeading h2 { margin: 0; color: var(--rh-text, #0f1d35); font-size: 15px; }
-.sideHeading a { color: var(--rh-blue, #1667f2); font-size: 11px; font-weight: 800; text-decoration: none; }
+.sideHeading a { color: var(--rh-blue, #1660f0); font-size: 11px; font-weight: 800; text-decoration: none; }
 .quickGrid { display: grid; gap: 7px; }
 .quickGrid a { display: flex; align-items: center; gap: 9px; min-height: 42px; padding: 0 10px; border: 1px solid var(--rh-border, #dde5ee); border-radius: 11px; color: var(--rh-text, #0f1d35); font-size: 12px; font-weight: 750; text-decoration: none; transition: background-color 140ms ease, border-color 140ms ease; }
-.quickGrid a:hover { border-color: color-mix(in srgb, var(--rh-blue, #1667f2) 35%, var(--rh-border, #dde5ee)); background: var(--rh-soft-blue, #eaf2ff); }
-.quickGrid a svg:first-child { color: var(--rh-blue, #1667f2); }
+.quickGrid a:hover { border-color: color-mix(in srgb, var(--rh-blue, #1660f0) 35%, var(--rh-border, #dde5ee)); background: var(--rh-soft-blue, #eaf2ff); }
+.quickGrid a svg:first-child { color: var(--rh-blue, #1660f0); }
 .quickGrid a svg:last-child { margin-left: auto; color: var(--rh-muted, #667892); }
-.opsMap { overflow:hidden;border-radius:18px;min-height:360px;background:#eaf2fb;--operations-map-height:360px }
-@media (min-width: 1024px) {
-  .opsMap { min-height:420px;--operations-map-height:420px }
-}
-.newLink { display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 12px;border-radius:999px;background:#1667f2;color:#fff;font-size:13px;font-weight:800;text-decoration:none }
+/* The map container itself now lives in ../compact-map.module.css, shared
+   with Routes and Add Route. */
+.newLink { display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 12px;border-radius:999px;background:#1660f0;color:#fff;font-size:13px;font-weight:800;text-decoration:none }
 .fixLine { margin:0;color:#667892;font-size:12px;font-weight:650 }
 .driverStrip { display:grid; gap:12px; min-width:0; padding:18px; border:1px solid var(--rh-border, #dde5ee); border-radius:17px; background:var(--rh-card, #fff); box-shadow:0 5px 16px rgb(15 29 53 / 4%); }
 .driverHeading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .driverHeading strong { color:var(--rh-text, #0f1d35); font-size:15px; }
-.driverHeading span { display:grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:999px; background:var(--rh-soft-blue, #eaf2ff); color:var(--rh-blue, #1667f2); font-size:11px; font-weight:850; }
+.driverHeading span { display:grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:999px; background:var(--rh-soft-blue, #eaf2ff); color:var(--rh-blue, #1660f0); font-size:11px; font-weight:850; }
 .driverList { display:grid; gap:7px; min-width:0; max-height:284px; overflow:auto; scrollbar-width:thin; scrollbar-color:#cbd6e5 transparent; }
 .driverList button { display:grid; grid-template-columns:8px minmax(0,1fr); align-items:center; column-gap:8px; min-width:0; padding:9px 10px; border:1px solid transparent; border-radius:11px; background:#f7f9fc; color:#334155; text-align:left; font:inherit; cursor:pointer; transition:background-color 140ms ease,border-color 140ms ease; }
 .driverList button:hover,.driverStrip .driverSelected { border-color:#b9d3f7; background:#edf5ff; }.driverStrip b{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.driverStrip small{grid-column:2;overflow:hidden;color:#64748b;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.driverLive,.driverIdle{width:7px;height:7px;border-radius:50%;background:#16b96b;box-shadow:0 0 0 3px #e8f8f0}.driverIdle{background:#94a3b8;box-shadow:0 0 0 3px #f1f5f9}
@@ -84,7 +82,7 @@
 }
 .deliveryTitle {
   padding: 10px 14px 4px;
-  color: var(--rh-blue, #1667f2);
+  color: var(--rh-blue, #1660f0);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: .06em;
@@ -119,30 +117,30 @@
 .onRoute small { color: #d97706; font-size: 9px; font-weight: 800; white-space: nowrap; }
 .deliveryMetrics {
   display: grid;
-  grid-template-columns: repeat(7, minmax(72px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   min-width: 0;
 }
 .deliveryMetric {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
-  padding: 7px 10px;
+  padding: 8px 12px;
   border-left: 1px solid #e8edf3;
-  color: var(--rh-blue, #1667f2);
+  color: var(--rh-blue, #1660f0);
 }
 .deliveryMetric > svg { flex: none; }
 .deliveryMetric span { display: grid; gap: 2px; min-width: 0; }
 .deliveryMetric small {
   overflow: hidden;
   color: var(--rh-muted, #667892);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.deliveryMetric strong { color: var(--rh-text, #0f1d35); font-size: 11px; white-space: nowrap; }
+.deliveryMetric strong { color: var(--rh-text, #0f1d35); font-size: 13px; white-space: nowrap; }
 .deliveryMetric[data-alert='true'] strong { color: #e05252; }
 .shareUpdate {
   display: inline-flex;
@@ -153,10 +151,10 @@
   min-height: 34px;
   margin-left: 8px;
   padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--rh-blue, #1667f2) 34%, #dbe5f1);
+  border: 1px solid color-mix(in srgb, var(--rh-blue, #1660f0) 34%, #dbe5f1);
   border-radius: 8px;
   background: #fff;
-  color: var(--rh-blue, #1667f2);
+  color: var(--rh-blue, #1660f0);
   font: inherit;
   font-size: 10px;
   font-weight: 850;
@@ -166,7 +164,7 @@
 .shareUpdate:hover { background: var(--rh-soft-blue, #eaf2ff); }
 .splitLists { display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start }
 .splitLabel { margin:0 0 6px;color:#667892;font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase }
-.seeMore { display:flex;justify-content:center;margin-top:10px;padding:8px 0 0;color:#1667f2;font-size:12px;font-weight:800;text-decoration:none }
+.seeMore { display:flex;justify-content:center;margin-top:10px;padding:8px 0 0;color:#1660f0;font-size:12px;font-weight:800;text-decoration:none }
 .dayList { display:grid;gap:0;padding:0;border:0;background:transparent }
 .dayRow { display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;border-top:1px solid #e8edf3;color:#0f1d35;text-decoration:none }
 .dayRow:first-child { border-top:0 }
@@ -178,13 +176,14 @@
 .upcomingRow { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 2px; border-top: 1px solid var(--rh-divider, #e8edf3); color: var(--rh-text, #0f1d35); text-decoration: none; }
 .upcomingRow:first-child { border-top: 0; padding-top: 2px; }
 .upcomingRow > svg { flex: none; color: var(--rh-muted, #667892); }
-.order { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 9px; background: var(--rh-soft-blue, #eaf2ff); color: var(--rh-blue, #1667f2); font-size: 12px; font-weight: 850; }
+.order { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 9px; background: var(--rh-soft-blue, #eaf2ff); color: var(--rh-blue, #1660f0); font-size: 12px; font-weight: 850; }
 .routeInfo { display: grid; gap: 3px; min-width: 0; }
 .routeInfo strong, .routeInfo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .routeInfo strong { font-size: 13px; }
 .routeInfo span { color: var(--rh-muted, #667892); font-size: 11px; }
 .loading, .emptyText { padding: 11px 2px; color: var(--rh-muted, #667892); font-size: 12px; }
 .attention { display: flex; align-items: center; gap: 11px; margin: 0 0 16px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--rh-error, #ef5350) 30%, var(--rh-border, #dde5ee)); border-radius: 15px; background: var(--rh-error-soft, #fff0f0); color: var(--rh-error, #ef5350); }
+.attention[data-tone='ok'] { border-color: color-mix(in srgb, var(--rh-success, #16b96b) 30%, var(--rh-border, #dde5ee)); background: var(--rh-success-soft, #eaf9f1); color: var(--rh-success, #16b96b); }
 .attention > div { min-width: 0; }
 .attention strong { display: block; color: var(--rh-text, #0f1d35); font-size: 13px; }
 .attention p { margin: 3px 0 0; color: var(--rh-muted, #667892); font-size: 11px; }
@@ -233,10 +232,6 @@
      excess vertical breathing room that pushed the lower sections below fold. */
   .todayLayout { gap: 12px; }
   .todayMain { gap: 10px; }
-  .opsMap {
-    min-height: 300px;
-    --operations-map-height: min(380px, calc(100dvh - 455px));
-  }
   .deliveryTitle { padding-top: 7px; }
   .deliveryStatusRow { padding-bottom: 7px; }
 
@@ -279,13 +274,6 @@
     overflow: visible;
   }
   .todayMain { min-height: 0; }
-  .opsMap {
-    height: var(--operations-map-height);
-    min-height: 380px;
-    overflow: hidden;
-    --operations-map-height: min(460px, calc(100dvh - 360px));
-    background: #eaf2fb;
-  }
   .hideOnFit { display: none; }
   .todayNav { display: none; }
 

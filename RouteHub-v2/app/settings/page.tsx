@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Building2, Camera, ChevronRight, LogOut, Save} from 'lucide-react'
+import {Building2, Camera, ChevronRight, ClipboardList, History, LogOut, Save, Send, Truck, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
@@ -17,7 +17,9 @@ type BranchSettings = {id: string; name: string; address: string; phone: string;
 
 export default function Settings() {
   const {locale, t, setLocale} = useLocale()
-  const {theme, setTheme} = useThemePreference()
+  // Keep the stored theme preference applied globally (Driver still uses it);
+  // Manager itself is intentionally light-only, so there is no theme control here.
+  useThemePreference()
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -32,10 +34,10 @@ export default function Settings() {
   const [trialEnd, setTrialEnd] = useState<string | null>(null)
   const [isCeo, setIsCeo] = useState(false)
   const copy = locale === 'es'
-    ? {name:'Nombre completo', phone:'Tel\u00e9fono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal principal', branchName:'Nombre de la sucursal', branchAddress:'Direcci\u00f3n de la sucursal', branchPhone:'Tel\u00e9fono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', tour:'Recorrido de la app', tourHelp:'Vuelve a ver la gu\u00eda r\u00e1pida de RouteHub.', tourAction:'Ver recorrido', appearance:'Apariencia', language:'Idioma', light:'Claro', dark:'Oscuro', system:'Sistema', legal:'Legal', privacy:'Privacidad', terms:'T\u00e9rminos'}
+    ? {name:'Nombre completo', phone:'Teléfono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal', branchName:'Nombre de la sucursal', branchAddress:'Dirección de la sucursal', branchPhone:'Teléfono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', tour:'Recorrido de la app', tourHelp:'Vuelve a ver la guía rápida de RouteHub.', tourAction:'Ver recorrido', preferences:'Preferencias', language:'Idioma', notifications:'Notificaciones', app:'App', operations:'Operaciones', reports:'Reportes', reportsHelp:'Conteos y actividad.', history:'Historial', historyHelp:'Días anteriores y evidencia.', truck:'Camión', truckHelp:'Registros del vehículo.', team:'Equipo e invitaciones', teamHelp:'Miembros, roles e invitaciones.', legal:'Legal', privacy:'Privacidad', terms:'Términos'}
     : locale === 'fr'
-      ? {name:'Nom complet', phone:'T\u00e9l\u00e9phone', photo:'Changer la photo', edit:'Modifier', save:'Enregistrer le profil', profileSaved:'Profil mis \u00e0 jour.', branch:'Succursale principale', branchName:'Nom de la succursale', branchAddress:'Adresse de la succursale', branchPhone:'T\u00e9l\u00e9phone de la succursale', saveBranch:'Enregistrer la succursale', branchSaved:'Succursale mise \u00e0 jour.', noBranch:'Aucune succursale associ\u00e9e.', tour:'Visite de l\u2019application', tourHelp:'Revoir le guide rapide de RouteHub.', tourAction:'Voir la visite', appearance:'Apparence', language:'Langue', light:'Clair', dark:'Sombre', system:'Syst\u00e8me', legal:'Mentions', privacy:'Confidentialit\u00e9', terms:'Conditions'}
-      : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Primary branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.', tour:'App tour', tourHelp:'See the RouteHub quick guide again.', tourAction:'View tour', appearance:'Appearance', language:'Language', light:'Light', dark:'Dark', system:'System', legal:'Legal', privacy:'Privacy', terms:'Terms'}
+      ? {name:'Nom complet', phone:'Téléphone', photo:'Changer la photo', edit:'Modifier', save:'Enregistrer le profil', profileSaved:'Profil mis à jour.', branch:'Succursale', branchName:'Nom de la succursale', branchAddress:'Adresse de la succursale', branchPhone:'Téléphone de la succursale', saveBranch:'Enregistrer la succursale', branchSaved:'Succursale mise à jour.', noBranch:'Aucune succursale associée.', tour:'Visite de l’application', tourHelp:'Revoir le guide rapide de RouteHub.', tourAction:'Voir la visite', preferences:'Préférences', language:'Langue', notifications:'Notifications', app:'Application', operations:'Opérations', reports:'Rapports', reportsHelp:'Totaux et activité.', history:'Historique', historyHelp:'Jours passés et preuves.', truck:'Camion', truckHelp:'Fiche véhicule.', team:'Équipe et invitations', teamHelp:'Membres, rôles et invitations.', legal:'Mentions', privacy:'Confidentialité', terms:'Conditions'}
+      : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.', tour:'App tour', tourHelp:'See the RouteHub quick guide again.', tourAction:'View tour', preferences:'Preferences', language:'Language', notifications:'Notifications', app:'App', operations:'Operations', reports:'Reports', reportsHelp:'Counts and activity.', history:'History', historyHelp:'Past days and proof.', truck:'Truck', truckHelp:'Vehicle records.', team:'Team & invitations', teamHelp:'Members, roles and invitations.', legal:'Legal', privacy:'Privacy', terms:'Terms'}
 
   useEffect(() => {
     let active = true
@@ -117,11 +119,20 @@ export default function Settings() {
     setBranchSaving(false)
   }
 
+  const operations = [
+    {href: '/reports', label: copy.reports, help: copy.reportsHelp, Icon: ClipboardList},
+    {href: '/manager/history', label: copy.history, help: copy.historyHelp, Icon: History},
+    {href: '/manager/truck', label: copy.truck, help: copy.truckHelp, Icon: Truck},
+    {href: '/manager/team', label: copy.team, help: copy.teamHelp, Icon: Users},
+    {href: '/manager/invitations', label: t.invitations, help: '', Icon: Send},
+  ]
+
   return (
     <ManagerShell active="settings" roleLabel={t.managerRole}>
       <div className={styles.page}>
         <p className={styles.eyebrow}>{t.account.toUpperCase()}</p>
         <h1>{t.settings}</h1>
+
         <p className={styles.group}>{t.profile}</p>
         <section className={styles.card}>
           <button className={styles.row} type="button" onClick={() => setEditingProfile(value => !value)}>
@@ -139,6 +150,7 @@ export default function Settings() {
             </div>
           )}
         </section>
+
         {!isCeo && (
           <>
             <p className={styles.group}>{copy.branch}</p>
@@ -167,12 +179,14 @@ export default function Settings() {
             </section>
           </>
         )}
+
         {isCeo && (
           <section className={styles.card}>
             <div className={styles.row}><span className={styles.copy}><strong>CEO / Platform administrator</strong><small>Companies, branches, approvals and audit.</small></span></div>
           </section>
         )}
-        <p className={styles.group}>{copy.appearance}</p>
+
+        <p className={styles.group}>{copy.preferences}</p>
         <section className={styles.card}>
           <div className={styles.row}>
             <span className={styles.copy}><strong>{copy.language}</strong></span>
@@ -182,32 +196,45 @@ export default function Settings() {
               ))}
             </div>
           </div>
-          <div className={styles.row}>
-            <span className={styles.copy}><strong>{copy.appearance}</strong></span>
-            <div className={styles.seg} role="group" aria-label={copy.appearance}>
-              {[{id:'light', label: copy.light}, {id:'dark', label: copy.dark}, {id:'system', label: copy.system}].map(item => (
-                <button key={item.id} type="button" data-on={theme === item.id ? 'true' : 'false'} onClick={() => setTheme(item.id as 'light' | 'dark' | 'system')}>{item.label}</button>
-              ))}
-            </div>
-          </div>
+          <button className={styles.row} type="button" onClick={requestOnboardingReplay}>
+            <span className={styles.copy}><strong>{copy.tour}</strong><small>{copy.tourHelp}</small></span>
+            <span className={styles.meta}>{copy.tourAction}</span>
+          </button>
         </section>
-        <p className={styles.group}>{t.preferences}</p>
+
+        <p className={styles.group}>{copy.notifications}</p>
         <div className={styles.embed}>
           <DeviceNotificationsSetting />
+        </div>
+
+        <p className={styles.group}>{copy.app}</p>
+        <div className={styles.embed}>
           <InstallAppCard />
         </div>
+
         {!isCeo && (
-          <section className={styles.card}>
-            <button className={styles.row} type="button" onClick={requestOnboardingReplay}>
-              <span className={styles.copy}><strong>{copy.tour}</strong><small>{copy.tourHelp}</small></span>
-              <span className={styles.meta}>{copy.tourAction}</span>
-            </button>
-            <div className={styles.row}>
-              <span className={styles.copy}><strong>{t.planBilling}</strong><small>{trialEnd ? `${t.premiumTrial}: ${new Date(trialEnd).toLocaleDateString(locale)}` : t.noTrial}</small></span>
-              <span className={styles.meta}>{plan === 'free' ? t.free : plan.toUpperCase()}</span>
-            </div>
-          </section>
+          <>
+            <p className={styles.group}>{copy.operations}</p>
+            <section className={styles.card}>
+              {operations.map(({href, label, help, Icon}) => (
+                <Link key={href} className={styles.row} href={href}>
+                  <span className={styles.icon}><Icon size={18} /></span>
+                  <span className={styles.copy}><strong>{label}</strong>{help ? <small>{help}</small> : null}</span>
+                  <ChevronRight size={18} />
+                </Link>
+              ))}
+            </section>
+
+            <p className={styles.group}>{t.planBilling}</p>
+            <section className={styles.card}>
+              <div className={styles.row}>
+                <span className={styles.copy}><strong>{t.planBilling}</strong><small>{trialEnd ? `${t.premiumTrial}: ${new Date(trialEnd).toLocaleDateString(locale)}` : t.noTrial}</small></span>
+                <span className={styles.meta}>{plan === 'free' ? t.free : plan.toUpperCase()}</span>
+              </div>
+            </section>
+          </>
         )}
+
         <p className={styles.group}>{t.support}</p>
         <section className={styles.card}>
           <button className={styles.row} type="button" onClick={() => setMessage(t.supportReady)}>
@@ -217,6 +244,7 @@ export default function Settings() {
           <Link className={styles.row} href="/privacy"><span className={styles.copy}><strong>{copy.privacy}</strong></span><ChevronRight size={18} /></Link>
           <Link className={styles.row} href="/terms"><span className={styles.copy}><strong>{copy.terms}</strong></span><ChevronRight size={18} /></Link>
         </section>
+
         <button className={styles.signOut} type="button" onClick={signOut}><LogOut size={16}/>{t.logout}</button>
         {message && <p className={styles.status} role="status">{message}</p>}
       </div>

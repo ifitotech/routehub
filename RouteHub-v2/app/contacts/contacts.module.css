@@ -3,7 +3,7 @@
   --muted: #667792;
   --line: #dbe5f2;
   --surface: #ffffff;
-  --primary: #2563eb;
+  --primary: #1660f0;
   width: min(100%, 1120px);
   margin: 0 auto;
 }
@@ -52,7 +52,7 @@
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
-.addButton:hover { background: #1d4ed8; box-shadow: 0 16px 30px rgb(37 99 235 / 28%); transform: translateY(-1px); }
+.addButton:hover { background: #0e48c4; box-shadow: 0 16px 30px rgb(37 99 235 / 28%); transform: translateY(-1px); }
 .addButton:active { transform: scale(.98); }
 
 .searchPanel {
@@ -149,22 +149,39 @@
 }
 
 .address { margin-top: 2px; }
-.cardActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cardActions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
 .cardActions a,.cardActions button { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--primary); font: inherit; font-size: .73rem; font-weight: 750; text-decoration: none; cursor: pointer; }
 .cardActions a:hover,.cardActions button:hover { background: #edf4ff; }
-.cardActions .dangerAction { color: #dc2626; }
-.callButton {
+
+/* Secondary actions (map, call, edit, delete) collapse behind a kebab menu
+   so Pickup/Delivery stay the obvious primary actions on the card. */
+.moreWrap { position: relative; margin-left: auto; }
+.moreButton { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; }
+.moreButton:hover { background: #edf4ff; color: var(--primary); }
+.moreButton[aria-expanded='true'] { border-color: var(--primary); color: var(--primary); }
+.menuBackdrop { position: fixed; inset: 0; z-index: 39; }
+.menu {
+  position: absolute;
+  z-index: 40;
+  right: 0;
+  top: calc(100% + 6px);
   display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border: 1px solid #bfd2f7;
+  gap: 2px;
+  width: max-content;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid var(--line);
   border-radius: 14px;
-  color: var(--primary);
-  text-decoration: none;
-  transition: background 180ms ease, transform 180ms ease;
+  background: var(--surface);
+  box-shadow: 0 18px 40px rgb(15 32 58 / 16%);
+  animation: riseIn 140ms ease-out;
 }
-.callButton:hover { background: #edf4ff; transform: translateY(-1px); }
+.menu a,.menu button { display: flex; align-items: center; gap: 9px; min-height: 38px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--ink); font: inherit; font-size: .82rem; font-weight: 650; text-align: left; text-decoration: none; cursor: pointer; }
+.menu a:hover,.menu button:hover { background: #f1f5fb; }
+.menu svg { flex: 0 0 auto; color: var(--muted); }
+.dangerItem { color: #dc2626 !important; }
+.dangerItem svg { color: #dc2626 !important; }
+.dangerItem:hover { background: #fef2f2 !important; }
 
 .empty {
   grid-column: 1 / -1;
@@ -183,7 +200,7 @@
   padding: 12px 14px;
   border-radius: 12px;
   background: #edf4ff;
-  color: #1d4ed8;
+  color: #0e48c4;
   font-size: .9rem;
   font-weight: 650;
 }
@@ -273,7 +290,7 @@
   --muted: var(--rh-text-secondary, #667892);
   --line: var(--rh-border, #dde5ee);
   --surface: var(--rh-surface, #ffffff);
-  --primary: var(--rh-primary, #1667f2);
+  --primary: var(--rh-primary, #1660f0);
   width: 100%;
   max-width: 1180px;
 }
@@ -292,8 +309,6 @@
 .cardActions a, .cardActions button { min-height: 38px; padding: 0 11px; border-radius: 11px; font-size: .78rem; }
 .pickupAction { border-color: #b8e8f0 !important; background: #effcff !important; color: #087f9b !important; }
 .deliveryAction { border-color: #c8d9ff !important; background: var(--rh-soft-blue, #eaf2ff) !important; color: var(--primary) !important; }
-.secondaryActions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
-.secondaryActions a, .secondaryActions button { min-height: 34px; padding: 0 9px; background: transparent; }
 
 @media (max-width: 720px) {
   .header { align-items: center; }
@@ -302,9 +317,9 @@
   .addButton::after { display: none; }
   .list { grid-template-columns: 1fr; gap: 10px; }
   .contactCard { grid-template-columns: 42px minmax(0, 1fr); padding: 15px; }
-  .cardActions { display: grid; grid-template-columns: 1fr 1fr; }
+  .cardActions { display: flex; }
   .cardActions a span, .cardActions button span { display: inline; }
-  .cardActions > .pickupAction, .cardActions > .deliveryAction { justify-content: center; min-height: 44px; }
-  .secondaryActions { grid-column: 1 / -1; margin-left: 0; }
-  .secondaryActions a, .secondaryActions button { min-height: 36px; }
+  .cardActions > .pickupAction, .cardActions > .deliveryAction { flex: 1; justify-content: center; min-height: 44px; }
+  .moreWrap { flex: 0 0 auto; }
+  .menu { right: 0; left: auto; }
 }

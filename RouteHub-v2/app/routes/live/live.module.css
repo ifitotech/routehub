@@ -62,7 +62,7 @@
   .managerMapPage :global([class*='operationsSide'] > header) {
     padding: 22px;
     border-radius: 22px 22px 0 0;
-    background: linear-gradient(145deg, #113c9d, #1667f2);
+    background: linear-gradient(145deg, #113c9d, #1660f0);
   }
 
   .managerMapPage :global([class*='operationSummary']) { padding: 22px; }

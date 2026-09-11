@@ -2,21 +2,19 @@
 
 import Link from 'next/link'
 import {useEffect, useMemo, useRef, useState} from 'react'
-import {AlertTriangle, ArrowRight, Car, Clock, Flag, History, Home, MapPin, MoreHorizontal, PlayCircle, Plus, Radio, Route as RouteIcon, Share2, Timer, Truck, Users} from 'lucide-react'
+import {AlertTriangle, ArrowRight, Car, CheckCircle2, Clock, Flag, MapPin, PlayCircle, Radio, Share2, Timer, Truck} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {currentMembership} from '../../lib/data'
 import {loadManagerDashboard, managerOperationalDate, type DashboardRoute, type DashboardSummary} from '../../lib/dashboard'
 import {useLocale} from '../../lib/use-preferences'
-import dynamic from 'next/dynamic'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
 import ManagerShell from './manager-shell'
+import CompactMap from './compact-map'
 import styles from './manager-dashboard.module.css'
 import todayStyles from './manager-today.module.css'
 import {calculateOperationsRoute} from '../../lib/maps/routing'
 import {geocodeAddress} from '../../lib/maps/geocoding'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
-
-const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false, loading: () => <div className={todayStyles.opsMap} aria-hidden />})
 
 const emptySummary: DashboardSummary = {activeRoutes: 0, pendingRoutes: 0, completedRoutes: 0, openIssues: 0}
 
@@ -32,6 +30,7 @@ export default function Manager() {
     assignment: 'Asignado', waiting: 'Sin asignar', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
     branchManager: 'Manager de sucursal', currentBranch: 'Sucursal actual', updated: 'Actualizado',
     lastSeen: 'Última ubicación', noFix: 'Ubicación no disponible.', ago: 'hace', seeMore: 'Ver más', overdue: 'Pendientes anteriores', drivers: 'Conductores', remaining: 'pendientes', refresh: 'Actualizar', synced: 'Sincronizado',
+    allOk: 'Sin incidencias hoy', expandMap: 'Ampliar mapa', collapseMap: 'Reducir mapa',
   } : locale === 'fr' ? {
     today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'En cours', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
     liveDescription: 'Arrêt en cours chez le chauffeur.', quickActions: 'Actions',
@@ -40,6 +39,7 @@ export default function Manager() {
     assignment: 'Assigné', waiting: 'Non assigné', issue: 'incident ouvert', review: 'Consultez les rapports.',
     branchManager: 'Manager de succursale', currentBranch: 'Succursale actuelle', updated: 'Mis à jour',
     lastSeen: 'Dernière position', noFix: 'Position indisponible.', ago: 'il y a', seeMore: 'Voir plus', overdue: 'En attente antérieure', drivers: 'Chauffeurs', remaining: 'restants', refresh: 'Actualiser', synced: 'Synchronisé',
+    allOk: 'Aucun incident aujourd’hui', expandMap: 'Agrandir la carte', collapseMap: 'Réduire la carte',
   } : {
     today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'In progress', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
     liveDescription: 'The stop the driver is running now.', quickActions: 'Actions',
@@ -48,6 +48,7 @@ export default function Manager() {
     assignment: 'Assigned', waiting: 'Unassigned', issue: 'open issue', review: 'Review route reports.',
     branchManager: 'Branch Manager', currentBranch: 'Current branch', updated: 'Updated',
     lastSeen: 'Last location', noFix: 'Location unavailable.', ago: 'ago', seeMore: 'See more', overdue: 'Earlier pending', drivers: 'Drivers', remaining: 'remaining', refresh: 'Refresh', synced: 'Synced',
+    allOk: 'No issues today', expandMap: 'Expand map', collapseMap: 'Collapse map',
   }
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
@@ -383,37 +384,51 @@ export default function Manager() {
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.synced}: {syncedLabel}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
-    {(hasIssue || overdueRoutes.length > 0) && <section className={todayStyles.attention} aria-label={copy.attention}><AlertTriangle size={19}/><div><strong>{hasIssue ? `${summary.openIssues} ${copy.issue}` : `${overdueRoutes.length} ${copy.overdue}`}</strong><p>{hasIssue ? copy.review : overdueRoutes.slice(0, 2).map(route => route.destination_name || route.destination_address).filter(Boolean).join(' · ')}</p></div><Link href="/routes"><ArrowRight size={16}/></Link></section>}
+    {!loading && (
+      (hasIssue || overdueRoutes.length > 0) ? (
+        <section className={todayStyles.attention} data-tone="alert" aria-label={copy.attention}>
+          <AlertTriangle size={19}/>
+          <div><strong>{hasIssue ? `${summary.openIssues} ${copy.issue}` : `${overdueRoutes.length} ${copy.overdue}`}</strong><p>{hasIssue ? copy.review : overdueRoutes.slice(0, 2).map(route => route.destination_name || route.destination_address).filter(Boolean).join(' · ')}</p></div>
+          <Link href="/routes"><ArrowRight size={16}/></Link>
+        </section>
+      ) : (
+        <section className={todayStyles.attention} data-tone="ok" aria-label={copy.attention}>
+          <CheckCircle2 size={19}/>
+          <div><strong>{copy.allOk}</strong></div>
+        </section>
+      )
+    )}
     <div className={todayStyles.todayLayout}>
       <main className={todayStyles.todayMain}>
         <div className={todayStyles.sectionHeading}><div><span>{copy.liveOperations}</span><h2>{copy.liveDescription}</h2></div><Link href="/routes/live">{copy.viewMap}</Link></div>
         <p className={todayStyles.fixLine}>{fixLabel}</p>
-        <div className={todayStyles.opsMap}>
-          <OperationsMap
-            hideFooter
-            routes={todayRoutes.filter(route => String(route.status || '') !== 'cancelled').map(route => ({
-              id: route.id,
-              mission_type: route.mission_type,
-              origin_address: route.origin_address || branchOrigin.address,
-              origin_lat: route.origin_lat ?? branchOrigin.lat,
-              origin_lng: route.origin_lng ?? branchOrigin.lng,
-              destination_name: route.destination_name,
-              destination_address: route.destination_address,
-              destination_lat: route.destination_lat,
-              destination_lng: route.destination_lng,
-              status: route.status,
-              driver_id: route.driver_id,
-              position: route.position,
-              order_number: route.order_number,
-            }))}
-            driverLocations={Object.values(liveFixes).filter(fix => fix.lat != null && fix.lng != null).map(fix => ({
-              id: fix.driverId, driver_id: fix.driverId, location: {lat: fix.lat!, lng: fix.lng!}, updatedAt: fix.updatedAt,
-              label: fix.label, status: fix.driverId === selectedDriverId ? 'on_route' : 'available',
-              nextStop: todayRoutes.find(route => route.driver_id === fix.driverId && ['active', 'paused'].includes(String(route.status || '')))?.destination_name || undefined,
-            }))}
-            locale={locale}
-          />
-        </div>
+        <CompactMap
+          hideFooter
+          interactive
+          expandLabel={copy.expandMap}
+          collapseLabel={copy.collapseMap}
+          routes={todayRoutes.filter(route => String(route.status || '') !== 'cancelled').map(route => ({
+            id: route.id,
+            mission_type: route.mission_type,
+            origin_address: route.origin_address || branchOrigin.address,
+            origin_lat: route.origin_lat ?? branchOrigin.lat,
+            origin_lng: route.origin_lng ?? branchOrigin.lng,
+            destination_name: route.destination_name,
+            destination_address: route.destination_address,
+            destination_lat: route.destination_lat,
+            destination_lng: route.destination_lng,
+            status: route.status,
+            driver_id: route.driver_id,
+            position: route.position,
+            order_number: route.order_number,
+          }))}
+          driverLocations={Object.values(liveFixes).filter(fix => fix.lat != null && fix.lng != null).map(fix => ({
+            id: fix.driverId, driver_id: fix.driverId, location: {lat: fix.lat!, lng: fix.lng!}, updatedAt: fix.updatedAt,
+            label: fix.label, status: fix.driverId === selectedDriverId ? 'on_route' : 'available',
+            nextStop: todayRoutes.find(route => route.driver_id === fix.driverId && ['active', 'paused'].includes(String(route.status || '')))?.destination_name || undefined,
+          }))}
+          locale={locale}
+        />
         {deliveryStatus}
       </main>
       <aside className={todayStyles.todaySide}>
@@ -461,6 +476,5 @@ export default function Manager() {
       </aside>
     </div>
     <div className={`${styles.desktopOnly} ${todayStyles.hideOnFit}`}><TemporaryRouteAssignments /></div>
-    <nav className={`nav ${styles.nav} ${styles.todayNav}`} aria-label="Primary navigation"><Link href="/manager" aria-current="page"><Home size={17} />{t.home}</Link><Link href="/routes"><RouteIcon size={17} />{t.routes}</Link><Link href="/manager/history"><History size={17} />{t.history}</Link><Link href="/manager/more"><MoreHorizontal size={17} />{t.more}</Link></nav>
   </ManagerShell>
 }
