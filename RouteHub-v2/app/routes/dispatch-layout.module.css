@@ -6,12 +6,12 @@
   height: 100%;
 }
 
-/* Everything above the board (top bar, page header, calendar and the gaps
-   between them) comes to roughly 270px, so this is what's actually left of
-   the viewport for the board itself. The previous 400px reservation cut the
-   columns short and left dead space underneath them. */
+/* What's above the board: the shell's 68px top bar, 14px content padding,
+   the ~52px header toolbar row, the ~56px calendar and the 16px gaps between
+   them - about 240px. The columns claim the rest of the viewport so nothing
+   is cut short with dead space underneath. */
 .workspace {
-  --board-height: calc(100dvh - 280px);
+  --board-height: calc(100dvh - 250px);
 
   display: grid;
   grid-template-columns: 280px 1fr 1fr;
