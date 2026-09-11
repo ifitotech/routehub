@@ -48,10 +48,6 @@
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
 }
 
-.mapVisible {
-  display: block;
-}
-
 @media (max-width: 1400px) {
   .workspace {
     grid-template-columns: 240px 1fr 400px;
@@ -87,6 +83,23 @@
     top: auto;
     height: 300px;
   }
+
+  /* Below the 3-column breakpoint, list and map compete for the same
+     screen - the List/Map toggle actually switches between them here
+     instead of both always being stacked underneath the summary widgets. */
+  .layout[data-pane='list'] .map {
+    display: none;
+  }
+
+  .layout[data-pane='map'] .sidebar,
+  .layout[data-pane='map'] .center {
+    display: none;
+  }
+
+  .layout[data-pane='map'] .map {
+    height: calc(100vh - 320px);
+    min-height: 320px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -112,5 +125,10 @@
   .map {
     order: 3;
     height: 250px;
+  }
+
+  .layout[data-pane='map'] .map {
+    height: calc(100vh - 260px);
+    min-height: 260px;
   }
 }

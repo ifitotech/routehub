@@ -4,13 +4,6 @@
 .mapPane {
   min-width: 0;
 }
-.listPane{
-  min-width:0;
-  max-height:calc(100dvh - 168px);
-  overflow:auto;
-  overflow-x:hidden;
-  padding-right:4px;
-}
 .manageHint{
   margin:0 0 12px;
   padding:10px 12px;
@@ -21,28 +14,15 @@
   font-size:13px;
   font-weight:700;
 }
-.workspace{
-  display:grid;
-  gap:14px;
-}
 .mobileToggle{display:flex;gap:8px}
 .mobileToggle button{
   flex:1;height:40px;border-radius:10px;border:1px solid #dde5ee;background:#fff;font-weight:700
 }
 .mobileToggle button[data-on='true']{background:#eaf2ff;border-color:#1660f0;color:#1660f0}
-@media(min-width:1024px){
-  .workspace{
-    grid-template-columns:minmax(0,1.45fr) minmax(330px,.55fr);
-    align-items:start;
-  }
-  .mapPane{
-    position:sticky;
-    top:18px;
-  }
+/* Matches DispatchLayout's own breakpoint (dispatch-layout.module.css) where
+   sidebar/center/map stop stacking and show side by side - below that width
+   this toggle is how the user switches which one they're looking at, so it
+   must stay visible exactly as long as the layout is still stacked. */
+@media(min-width:1201px){
   .mobileToggle{display:none}
-}
-@media(max-width:1023px){
-  .listHidden{display:none}
-  .mapHidden{display:none}
-  .listPane{max-height:none}
 }

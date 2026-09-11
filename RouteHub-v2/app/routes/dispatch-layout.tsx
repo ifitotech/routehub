@@ -17,7 +17,7 @@ export default function DispatchLayout({sidebar, center, map, mobileToggle, pane
       <div className={styles.workspace}>
         <div className={styles.sidebar}>{sidebar}</div>
         <div className={styles.center}>{center}</div>
-        <div className={`${styles.map} ${pane === 'map' ? styles.mapVisible : ''}`}>{map}</div>
+        <div className={styles.map}>{map}</div>
       </div>
     </div>
   )
