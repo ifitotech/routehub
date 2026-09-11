@@ -29,7 +29,15 @@ export default function GlobalChrome(){
   // other authenticated screen uses this exact shared header so moving from
   // Routes, History, Settings or a utility screen never falls back to an old
   // logo/navigation treatment.
-  if(isDriverWorkspace||pathname==='/'||pathname==='/login'||pathname==='/activate-invitation'||pathname==='/manager'||pathname==='/product'||pathname==='/how-it-works'||pathname==='/for-drivers'||pathname==='/terms')return null
+  // Every ManagerShell screen (Dashboard, Contacts, History, Team, Truck,
+  // Reports, Settings, Issues) now renders its own top bar carrying the logo
+  // and full navigation. Showing this floating chrome there puts a second
+  // logo on the page, and - because final-polish.css reserves space for it
+  // with `.global-chrome~main{padding-top:84px!important}` - it also forces
+  // 84px of dead space above content that already has a header of its own.
+  const managerWorkspaces = ['/manager', '/routes', '/contacts', '/settings', '/reports']
+  const isManagerWorkspace = managerWorkspaces.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  if(isDriverWorkspace||isManagerWorkspace||pathname==='/'||pathname==='/login'||pathname==='/activate-invitation'||pathname==='/product'||pathname==='/how-it-works'||pathname==='/for-drivers'||pathname==='/terms')return null
   const workspaceHomes=['/driver','/manager','/operations','/sales','/counter','/admin']
   const showBack=!workspaceHomes.includes(pathname)
   return <div className={`global-chrome${scrolled ? ' is-scrolled' : ''}`}>

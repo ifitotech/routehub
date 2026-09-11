@@ -1,7 +1,14 @@
+/* The 84px top padding this used to carry was reserving room for a fixed
+   top navbar this screen owned before it moved inside ManagerShell. The
+   shell now renders the top bar and supplies the content padding around
+   it, so that reservation was 84px of dead space at the top of every
+   visit - and being !important it overrode every .page padding rule in
+   routes.module.css. Horizontal padding comes from the shell's .content
+   for the same reason. */
 [data-routes-dispatch]{
   width:min(100%,1680px)!important;
   max-width:none!important;
-  padding:84px 18px 20px!important;
+  padding:0 0 20px!important;
   overflow-x:hidden!important;
 }
 [data-routes-dispatch] article,
