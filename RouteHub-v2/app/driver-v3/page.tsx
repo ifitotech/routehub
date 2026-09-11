@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
+import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, Truck, X} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -322,10 +322,14 @@ export default function DriverV3Page() {
   // completion sheet must not hide the nav after the last route is completed.
   return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet&&operation)}>
     <div className={styles.page} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
-      <div className={`${styles.refreshIndicator}${refreshing||pullDistance>=24?styles.refreshVisible:''}`} aria-live="polite">
-        <span className={refreshing?styles.refreshSpinner:''} aria-hidden="true">↻</span>
-        <span>{refreshing?(locale==='es'?'Actualizando rutas…':'Refreshing routes…'):(locale==='es'?'Suelta para actualizar':'Release to refresh')}</span>
-      </div>
+      {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
+        <div className={styles.pullRoad}>
+          <span className={styles.pullRoadLine}/>
+        </div>
+        <div className={`${styles.pullTruck} ${refreshing ? styles.pullTruckDriving : ''}`} style={!refreshing ? {left: `${8 + (pullDistance / 88) * 74}%`, transform: `translate(-50%, -50%) ${pullDistance >= 24 ? 'scale(1.12)' : 'scale(1)'}`} : undefined}>
+          <Truck size={16} strokeWidth={2.3}/>
+        </div>
+      </div>}
             {loading?<TodayLoading label={t.drvLoadingRoute}/>:error?<section className={styles.stateCard}>
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
