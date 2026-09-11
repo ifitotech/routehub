@@ -12,6 +12,7 @@ import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
 import StatusSidebar from './status-sidebar'
 import DispatchLayout from './dispatch-layout'
+import VehicleSelector from './vehicle-selector'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -23,6 +24,7 @@ export default function Routes() {
   const [managing, setManaging] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<'in-progress' | 'pending' | 'unassigned' | 'completed' | 'issues'>('in-progress')
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -51,8 +53,27 @@ export default function Routes() {
   }, [routesByDateAndStatus, selectedDate])
 
   const routesForSelectedStatus = useMemo(() => {
-    return currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
-  }, [currentDateRoutes, selectedStatus])
+    const routes = currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
+    return selectedDriverId ? routes.filter((r: any) => r.driver_id === selectedDriverId) : routes
+  }, [currentDateRoutes, selectedStatus, selectedDriverId])
+
+  // Calculate driver stats for current date
+  const driverStats = useMemo(() => {
+    const stats: Record<string, {active: number; total: number}> = {}
+    if (!currentDateRoutes) return stats
+
+    Object.values(currentDateRoutes).forEach((routeList: any) => {
+      routeList.forEach((route: any) => {
+        if (!route.driver_id) return
+        if (!stats[route.driver_id]) stats[route.driver_id] = {active: 0, total: 0}
+        stats[route.driver_id].total++
+        if (['active', 'paused'].includes(route.status || '')) {
+          stats[route.driver_id].active++
+        }
+      })
+    })
+    return stats
+  }, [currentDateRoutes])
 
   // Status sections for sidebar with live counts from selected date
   const statusSections = useMemo(() => {
@@ -177,6 +198,13 @@ export default function Routes() {
           sidebar={<StatusSidebar sections={statusSections} selectedStatus={selectedStatus} onStatusSelect={setSelectedStatus} locale={locale} />}
           center={
             <div>
+              <VehicleSelector
+                drivers={drivers}
+                selectedDriverId={selectedDriverId}
+                onDriverSelect={setSelectedDriverId}
+                driverStats={driverStats}
+                locale={locale}
+              />
               {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
               {loading ? (
                 <section className={styles.routeGrid} aria-label={c.loadError}>
