@@ -334,4 +334,40 @@
   .routeInfo strong { font-size: 14px; }
 
   .attention { margin-bottom: 0; padding: 17px 20px; border-radius: 18px; }
+
+  .pullIndicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #eaf2ff 0%, #f0f8ff 100%);
+    border-bottom: 1px solid color-mix(in srgb, var(--rh-border, #dde5ee) 80%, transparent);
+    overflow: hidden;
+    transition: height 80ms ease;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rh-primary, #1660f0);
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #dde5ee;
+    border-top-color: var(--rh-primary, #1660f0);
+    border-radius: 50%;
+    animation: none;
+  }
+
+  .spinner.active {
+    animation: spin 600ms linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 }

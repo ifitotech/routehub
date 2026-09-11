@@ -64,8 +64,12 @@ export default function Manager() {
   const [overdueRoutes, setOverdueRoutes] = useState<DashboardRoute[]>([])
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
   const [trafficEstimate, setTrafficEstimate] = useState<{durationSeconds?:number;staticDurationSeconds?:number;distanceMeters?:number} | null>(null)
+  const [pullDistance, setPullDistance] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const initialDurationRef=useRef<Record<string,number>>({})
   const coordinateRepairRef=useRef(new Set<string>())
+  const touchStartYRef=useRef(0)
+  const scrollTopRef=useRef(0)
   const liveFix=selectedDriverId?liveFixes[selectedDriverId]||null:Object.values(liveFixes)[0]||null
   const liveFixRef=useRef(liveFix)
   liveFixRef.current=liveFix
@@ -380,7 +384,59 @@ export default function Manager() {
     </section>
   })()
 
+  useEffect(() => {
+    if (isRefreshing) return
+    let startY = 0
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY
+      touchStartYRef.current = startY
+      scrollTopRef.current = window.scrollY || 0
+    }
+    const handleTouchMove = (e: TouchEvent) => {
+      if (scrollTopRef.current !== 0) return
+      const currentY = e.touches[0].clientY
+      const distance = Math.max(0, currentY - startY)
+      if (distance > 0 && distance < 120) {
+        setPullDistance(distance)
+      }
+    }
+    const handleTouchEnd = () => {
+      if (pullDistance > 60 && !isRefreshing) {
+        setIsRefreshing(true)
+        void (async () => {
+          try {
+            const membership = await currentMembership()
+            const dashboard = await loadManagerDashboard({
+              companyId: membership.company_id,
+              branchId: dashboardBranchId,
+              routeDate: managerOperationalDate(),
+            })
+            setTodayRoutes(dashboard.todayRoutes.slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0)))
+            setSummary(dashboard.summary)
+            setLastSyncedAt(new Date())
+          } catch (error) {
+            console.error('Pull refresh failed', error)
+          } finally {
+            setPullDistance(0)
+            setIsRefreshing(false)
+          }
+        })()
+      } else {
+        setPullDistance(0)
+      }
+    }
+    window.addEventListener('touchstart', handleTouchStart, false)
+    window.addEventListener('touchmove', handleTouchMove, false)
+    window.addEventListener('touchend', handleTouchEnd, false)
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [pullDistance, isRefreshing, dashboardBranchId])
+
   return <ManagerShell active="today" branchName={branchName || t.mainBranch} displayName={greetingName || 'Manager'} roleLabel={copy.branchManager}>
+    {(pullDistance > 0 || isRefreshing) && <div className={todayStyles.pullIndicator} style={{height: `${Math.min(pullDistance, 60)}px`, opacity: Math.min(pullDistance / 60, 1)}}><div className={`${todayStyles.spinner} ${isRefreshing ? todayStyles.active : ''}`}/><span>{isRefreshing ? copy.refresh : 'Pull to refresh'}</span></div>}
     <section className={styles.intro}><div><p className={todayStyles.headerDate}>{dateLabel}</p><h1>{copy.today}</h1><p>{branchName || t.mainBranch}</p></div><div className={styles.introMeta}><span>{copy.synced}: {syncedLabel}</span><span className={styles.desktopGreeting}>{greetingName || 'Manager'}</span></div></section>
     {error && <p className={styles.error} role="status">{error}</p>}
     <section className={todayStyles.summary} aria-label={t.branchMetrics}>{metrics.map(({label,value,href,tone}) => <Link className={`${todayStyles.summaryCard} ${tone}`} href={href} key={label} aria-label={`${label}: ${value}`}><strong>{loading ? '—' : value}</strong><span>{label}</span></Link>)}</section>
