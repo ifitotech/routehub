@@ -9,6 +9,9 @@ type DispatchCalendarProps = {
   onDateChange: (date: string) => void
   locale: string
   routeCounts?: Record<string, number>
+  /** Routes on that date still waiting to be done. Only these turn the
+   *  badge red - a day whose work is finished stays neutral grey. */
+  pendingCounts?: Record<string, number>
 }
 
 function toSafeDate(value: string): Date {
@@ -16,7 +19,7 @@ function toSafeDate(value: string): Date {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed
 }
 
-export default function DispatchCalendar({selectedDate, onDateChange, locale, routeCounts = {}}: DispatchCalendarProps) {
+export default function DispatchCalendar({selectedDate, onDateChange, locale, routeCounts = {}, pendingCounts = {}}: DispatchCalendarProps) {
   const [weekStart, setWeekStart] = useState(() => {
     const date = toSafeDate(selectedDate)
     date.setDate(date.getDate() - date.getDay())
@@ -57,6 +60,7 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
           const dateStr = dateToString(day)
           const isSelected = dateStr === selectedDate
           const count = routeCounts[dateStr] || 0
+          const pending = pendingCounts[dateStr] || 0
           const dayNum = day.getDate()
 
           return (
@@ -68,7 +72,7 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
             >
               <span className={styles.dayName}>{dayNames[idx]}</span>
               <span className={styles.dayNum}>{dayNum}</span>
-              {count > 0 && <span className={styles.badge}>{count}</span>}
+              {count > 0 && <span className={styles.badge} data-tone={pending > 0 ? 'pending' : 'done'}>{count}</span>}
             </button>
           )
         })}

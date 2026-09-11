@@ -33,11 +33,14 @@
   color: var(--rh-primary, #1660f0);
 }
 
+/* Centred as a group with equal fixed-width cards, rather than stretched
+   edge to edge - seven cards spread across a 1600px screen read as a
+   toolbar, not a week. They still shrink if the row runs out of room. */
 .weekDays {
   display: flex;
   gap: 10px;
   flex: 1;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .day {
@@ -46,7 +49,8 @@
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  flex: 1;
+  flex: 0 1 116px;
+  min-width: 0;
   min-height: 40px;
   padding: 6px 8px;
   border: 1px solid var(--rh-border, #dde5ee);
@@ -96,7 +100,10 @@
 }
 
 /* Inline rather than floating in a corner: the cards are a single line tall
-   now, so an absolutely positioned badge would overlap the label. */
+   now, so an absolutely positioned badge would overlap the label.
+   Red is reserved for days that still have work waiting - a day whose
+   routes are all done or under way stays neutral, so the colour actually
+   means something when you scan the week. */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -105,14 +112,20 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: #ff6b6b;
-  color: #fff;
+  background: #e9eef5;
+  color: #64748b;
   font-size: 9px;
   font-weight: 800;
 }
 
+.badge[data-tone='pending'] {
+  background: #ff6b6b;
+  color: #fff;
+}
+
 .day.selected .badge {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
 }
 
 @media (max-width: 720px) {
@@ -131,11 +144,13 @@
   }
 
   /* Seven cards in a phone's width can't hold "MON 6" side by side, so they
-     stack back to two short lines here. */
+     stack back to two short lines here - and they share the full width
+     instead of centring, since there's no spare room to centre within. */
   .day {
     flex-direction: column;
     align-items: center;
     gap: 1px;
+    flex: 1 1 0;
     min-height: 42px;
     padding: 5px 3px;
     font-size: 9px;

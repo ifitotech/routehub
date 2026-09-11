@@ -107,18 +107,20 @@ export default function Routes() {
     return stats
   }, [currentDateRoutes])
 
-  // Calculate route counts for calendar badges
-  const routeCounts = useMemo(() => {
+  // Calendar badges: the total per day, plus how much of it is still waiting
+  // to be done, so only days with outstanding work are highlighted.
+  const {routeCounts, pendingCounts} = useMemo(() => {
     const counts: Record<string, number> = {}
+    const pending: Record<string, number> = {}
     routesByDateAndStatus.forEach((dateRoutes, date) => {
-      const total = (dateRoutes.unassigned?.length || 0) +
-                    (dateRoutes['in-progress']?.length || 0) +
-                    (dateRoutes.pending?.length || 0) +
-                    (dateRoutes.completed?.length || 0) +
-                    (dateRoutes.issues?.length || 0)
-      counts[date] = total
+      const waiting = (dateRoutes.unassigned?.length || 0) + (dateRoutes.pending?.length || 0)
+      counts[date] = waiting +
+                     (dateRoutes['in-progress']?.length || 0) +
+                     (dateRoutes.completed?.length || 0) +
+                     (dateRoutes.issues?.length || 0)
+      pending[date] = waiting
     })
-    return counts
+    return {routeCounts: counts, pendingCounts: pending}
   }, [routesByDateAndStatus])
 
   // Calculate daily progress totals
@@ -214,6 +216,7 @@ export default function Routes() {
             onDateChange={setSelectedDate}
             locale={locale}
             routeCounts={routeCounts}
+            pendingCounts={pendingCounts}
           />
           <button type="button" className={styles.mapShortcut} onClick={() => setPane('map')} aria-label={locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}>
             <Map size={16}/>
