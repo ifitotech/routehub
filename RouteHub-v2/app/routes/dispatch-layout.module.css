@@ -14,7 +14,7 @@
   --board-height: calc(100dvh - 250px);
 
   display: grid;
-  grid-template-columns: 340px 1fr 400px;
+  grid-template-columns: 1fr 1.8fr 1fr;
   align-items: start;
   gap: 20px;
   width: 100%;
@@ -37,8 +37,6 @@
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
 }
 
-/* The map is the one column that should always fill the available height -
-   it has no natural content height of its own. */
 .map {
   grid-column: 3;
   align-self: stretch;
@@ -53,8 +51,7 @@
 
 @media (max-width: 1600px) {
   .workspace {
-    grid-template-columns: 320px 1fr 380px;
-    gap: 16px;
+    grid-template-columns: 1fr 1.6fr 1fr;
   }
 }
 
