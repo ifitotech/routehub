@@ -495,10 +495,13 @@
 
   .header {
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
 
-  .header h1 { font-size: clamp(40px, 3.6vw, 56px); }
+  /* This is a screen an operator opens dozens of times a day, not a landing
+     page - the oversized title was pure chrome pushing the actual dispatch
+     tools (calendar, driver filter, routes) further down every single time. */
+  .header h1 { font-size: 24px; }
   .header p:not(.eyebrow) { max-width: 570px; font-size: 16px; }
   .headerActions { justify-content: flex-end; }
   .primaryButton, .secondaryButton, .publishButton { min-height: 52px; border-radius: 14px; }

@@ -168,7 +168,6 @@ export default function Routes() {
           <div>
             <p className={styles.eyebrow}>{c.operations.toUpperCase()}</p>
             <h1>{c.title}</h1>
-            <p>{c.subtitle}</p>
           </div>
           <div className={styles.headerActions}>
             <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
