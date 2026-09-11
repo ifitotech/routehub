@@ -321,5 +321,6 @@
   .cardActions a span, .cardActions button span { display: inline; }
   .cardActions > .pickupAction, .cardActions > .deliveryAction { flex: 1; justify-content: center; min-height: 44px; }
   .moreWrap { flex: 0 0 auto; }
-  .menu { right: 0; left: auto; }
+  .menu { position: fixed; right: 12px; left: auto; top: auto; z-index: 41; }
+  .menuBackdrop { z-index: 40; }
 }
