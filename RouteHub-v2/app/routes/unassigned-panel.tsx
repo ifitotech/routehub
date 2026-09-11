@@ -17,7 +17,23 @@ type UnassignedPanelProps = {
 
 export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale}: UnassignedPanelProps) {
   const [dropActive, setDropActive] = useState(false)
-  const fallback = locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'
+  // Assignees span several branch roles, not just drivers. When a profile has
+  // no readable name the role names them, so the picker can't show the same
+  // word several times over.
+  const roleLabel = (role?: string) => {
+    const labels: Record<string, Record<string, string>> = {
+      es: {driver: 'Conductor', branch_manager: 'Gerente', operations_manager: 'Operaciones', sales_representative: 'Ventas', counter_sales: 'Mostrador'},
+      fr: {driver: 'Conducteur', branch_manager: 'Responsable', operations_manager: 'Opérations', sales_representative: 'Ventes', counter_sales: 'Comptoir'},
+      en: {driver: 'Driver', branch_manager: 'Manager', operations_manager: 'Operations', sales_representative: 'Sales', counter_sales: 'Counter'},
+    }
+    const set = labels[locale] || labels.en
+    return set[role || ''] || set.driver
+  }
+  const nameFor = (driver: Driver) => {
+    const role = roleLabel(driver.role)
+    const {name} = driverDetails(driver, role)
+    return name === role ? role : `${name} · ${role}`
+  }
   const assignLabel = locale === 'es' ? 'Asignar' : locale === 'fr' ? 'Attribuer' : 'Assign'
   const pickLabel = locale === 'es' ? 'Asignar a...' : locale === 'fr' ? 'Attribuer à...' : 'Assign to...'
 
@@ -97,7 +113,7 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
                   >
                     <option value="" disabled>{busy ? '…' : pickLabel}</option>
                     {drivers.map(driver => (
-                      <option key={driver.user_id} value={driver.user_id}>{driverDetails(driver, fallback).name}</option>
+                      <option key={driver.user_id} value={driver.user_id}>{nameFor(driver)}</option>
                     ))}
                   </select>
                 )}

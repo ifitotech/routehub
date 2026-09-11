@@ -37,13 +37,25 @@ export default function DriverDropdown({
     }
   }, [open])
 
-  // With a single driver, choosing between "All" and that one driver adds no value
-  if (drivers.length <= 1) return null
+  if (drivers.length === 0) return null
 
-  const fallback = locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'
+  // The list is everyone a route can be assigned to - driver, counter, ops,
+  // manager - not only drivers. Without a readable profile they all fell back
+  // to the same word, so the menu read as four identical "Driver" rows. The
+  // role is the one thing always available on the record, so it names the
+  // person when their profile can't.
+  const roleLabel = (role?: string) => {
+    const labels: Record<string, Record<string, string>> = {
+      es: {driver: 'Conductor', branch_manager: 'Gerente', operations_manager: 'Operaciones', sales_representative: 'Ventas', counter_sales: 'Mostrador'},
+      fr: {driver: 'Conducteur', branch_manager: 'Responsable', operations_manager: 'Opérations', sales_representative: 'Ventes', counter_sales: 'Comptoir'},
+      en: {driver: 'Driver', branch_manager: 'Manager', operations_manager: 'Operations', sales_representative: 'Sales', counter_sales: 'Counter'},
+    }
+    const set = labels[locale] || labels.en
+    return set[role || ''] || set.driver
+  }
   const allLabel = locale === 'es' ? 'Todos' : locale === 'fr' ? 'Tous' : 'All'
   const selectedDriver = selectedDriverId ? drivers.find(d => d.user_id === selectedDriverId) : null
-  const currentLabel = selectedDriver ? driverDetails(selectedDriver, fallback).name : allLabel
+  const currentLabel = selectedDriver ? driverDetails(selectedDriver, roleLabel(selectedDriver.role)).name : allLabel
   const allCount = Object.values(driverStats).reduce((sum, s) => sum + s.total, 0)
 
   return (
@@ -66,7 +78,8 @@ export default function DriverDropdown({
             <span className={styles.count}>{allCount}</span>
           </button>
           {drivers.map(driver => {
-            const {name} = driverDetails(driver, fallback)
+            const role = roleLabel(driver.role)
+            const {name} = driverDetails(driver, role)
             const stat = driverStats[driver.user_id] || {active: 0, total: 0}
             return (
               <button
@@ -77,7 +90,10 @@ export default function DriverDropdown({
                 data-active={selectedDriverId === driver.user_id}
                 onClick={() => { onDriverSelect(driver.user_id); setOpen(false) }}
               >
-                <span>{name}</span>
+                <span className={styles.person}>
+                  <span className={styles.personName}>{name}</span>
+                  {name !== role && <span className={styles.personRole}>{role}</span>}
+                </span>
                 <span className={styles.count}>{stat.total}</span>
               </button>
             )

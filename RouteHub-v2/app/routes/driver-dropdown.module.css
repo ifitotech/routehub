@@ -88,6 +88,33 @@
   white-space: nowrap;
 }
 
+/* Name on top, role underneath - and when the profile has no readable name
+   the role stands in for it, so no two rows read the same. */
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  text-align: left;
+}
+
+.personName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.personRole {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.item[data-active='true'] .personRole {
+  color: #1660f0;
+  opacity: 0.75;
+}
+
 .item:hover {
   background: #f1f5f9;
 }
