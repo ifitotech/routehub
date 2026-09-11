@@ -231,6 +231,10 @@ export default function Routes() {
               routes={unassignedRoutes}
               drivers={drivers}
               onAssign={assignRouteToDriver}
+              onDropRoute={(routeId: string) => {
+                const dropped = assignedRoutes.find((r: any) => r.id === routeId)
+                if (dropped) unassignRoute(dropped)
+              }}
               busyRouteId={busyRouteId}
               locale={locale}
             />

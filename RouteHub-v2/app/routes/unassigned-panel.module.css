@@ -5,8 +5,28 @@
   width: 100%;
   padding: 16px;
   background: var(--rh-card, #fff);
+  border: 1.5px dashed transparent;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+/* An assigned route dragged out of the board lands here to lose its driver,
+   which is the same outcome as its unassign button. */
+.panel[data-drop-active='true'] {
+  border-color: var(--rh-primary, #1660f0);
+  background: var(--rh-soft-blue, #eaf2ff);
+}
+
+.dropHint {
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--rh-primary, #1660f0);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .header {

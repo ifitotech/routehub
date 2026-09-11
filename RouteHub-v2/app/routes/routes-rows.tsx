@@ -1,5 +1,6 @@
 'use client'
 
+import {ChevronDown, ChevronUp, CornerUpLeft, GripVertical, Pause, Play, X} from 'lucide-react'
 import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './routes-model'
 import type {RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
@@ -16,6 +17,12 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   busyRouteId?: string
   managing?: boolean
 }) {
+  const label = locale === 'es'
+    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', unassign: 'Mover a sin asignar', drag: 'Arrastra a Sin asignar'}
+    : locale === 'fr'
+      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', unassign: 'Déplacer vers non attribué', drag: 'Glisser vers Non attribuées'}
+      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', unassign: 'Move to unassigned', drag: 'Drag to Unassigned'}
+
   return (
     <div className={styles.list}>
       {items.map((route, index) => {
@@ -34,8 +41,23 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         const busy = busyRouteId === route.id
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
         return (
-          <article key={route.id} className={styles.row} data-status={status} data-managing={managing ? 'true' : 'false'}>
-            <span className={styles.num}>{String(route.position || index + 1).padStart(2, '0')}</span>
+          <article
+            key={route.id}
+            className={styles.row}
+            data-status={status}
+            data-managing={managing ? 'true' : 'false'}
+            data-draggable={canUnassign ? 'true' : 'false'}
+            draggable={canUnassign && !busy}
+            title={canUnassign ? label.drag : undefined}
+            onDragStart={canUnassign ? event => {
+              event.dataTransfer.setData('text/plain', route.id)
+              event.dataTransfer.effectAllowed = 'move'
+            } : undefined}
+          >
+            <span className={styles.num}>
+              {canUnassign ? <GripVertical size={14} className={styles.grip} aria-hidden /> : null}
+              {String(route.position || index + 1).padStart(2, '0')}
+            </span>
             <div className={styles.body}>
               <div className={styles.topline}>
                 <small>{typeLabel(route.mission_type, c)}</small>
@@ -51,25 +73,37 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
               </p>
               {canManage ? (
                 <div className={styles.actions}>
-                  {canTogglePause ? (
-                    <button type="button" className={status === 'paused' ? styles.resume : styles.pause} disabled={busy} onClick={() => onTogglePause?.(route)}>
-                      {busy ? '…' : status === 'paused' ? (locale === 'es' ? 'Reanudar' : locale === 'fr' ? 'Reprendre' : 'Resume') : (locale === 'es' ? 'Pausar' : locale === 'fr' ? 'Mettre en pause' : 'Pause')}
-                    </button>
-                  ) : null}
                   {canMove ? (
                     <>
-                      <button type="button" className={styles.move} disabled={busy} onClick={() => onMove?.(route, 'up')}>{locale === 'es' ? 'Subir' : locale === 'fr' ? 'Monter' : 'Up'}</button>
-                      <button type="button" className={styles.move} disabled={busy} onClick={() => onMove?.(route, 'down')}>{locale === 'es' ? 'Bajar' : locale === 'fr' ? 'Descendre' : 'Down'}</button>
+                      <button type="button" className={styles.iconButton} disabled={busy} onClick={() => onMove?.(route, 'up')} title={label.up} aria-label={label.up}>
+                        <ChevronUp size={16} />
+                      </button>
+                      <button type="button" className={styles.iconButton} disabled={busy} onClick={() => onMove?.(route, 'down')} title={label.down} aria-label={label.down}>
+                        <ChevronDown size={16} />
+                      </button>
                     </>
                   ) : null}
+                  {canTogglePause ? (
+                    <button
+                      type="button"
+                      className={styles.iconButton}
+                      data-tone={status === 'paused' ? 'resume' : 'pause'}
+                      disabled={busy}
+                      onClick={() => onTogglePause?.(route)}
+                      title={status === 'paused' ? label.resume : label.pause}
+                      aria-label={status === 'paused' ? label.resume : label.pause}
+                    >
+                      {status === 'paused' ? <Play size={15} /> : <Pause size={15} />}
+                    </button>
+                  ) : null}
                   {canUnassign ? (
-                    <button type="button" className={styles.unassign} disabled={busy} onClick={() => onUnassign?.(route)}>
-                      {busy ? '…' : (locale === 'es' ? 'Sin asignar' : locale === 'fr' ? 'Désattribuer' : 'Unassign')}
+                    <button type="button" className={styles.iconButton} data-tone="unassign" disabled={busy} onClick={() => onUnassign?.(route)} title={label.unassign} aria-label={label.unassign}>
+                      <CornerUpLeft size={15} />
                     </button>
                   ) : null}
                   {canCancel ? (
-                    <button type="button" className={styles.cancel} disabled={busy} onClick={() => onCancel?.(route)}>
-                      {locale === 'es' ? 'Cancelar' : locale === 'fr' ? 'Annuler' : 'Cancel'}
+                    <button type="button" className={styles.iconButton} data-tone="cancel" disabled={busy} onClick={() => onCancel?.(route)} title={label.cancel} aria-label={label.cancel}>
+                      <X size={16} />
                     </button>
                   ) : null}
                 </div>
