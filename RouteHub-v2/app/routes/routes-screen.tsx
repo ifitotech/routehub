@@ -14,6 +14,8 @@ import StatusSidebar from './status-sidebar'
 import DispatchLayout from './dispatch-layout'
 import VehicleSelector from './vehicle-selector'
 import RouteDetailsPanel from './route-details-panel'
+import DailyProgress from './daily-progress'
+import RouteSearch from './route-search'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -27,6 +29,7 @@ export default function Routes() {
   const [selectedStatus, setSelectedStatus] = useState<'in-progress' | 'pending' | 'unassigned' | 'completed' | 'issues'>('in-progress')
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     try {
@@ -55,9 +58,19 @@ export default function Routes() {
   }, [routesByDateAndStatus, selectedDate])
 
   const routesForSelectedStatus = useMemo(() => {
-    const routes = currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
-    return selectedDriverId ? routes.filter((r: any) => r.driver_id === selectedDriverId) : routes
-  }, [currentDateRoutes, selectedStatus, selectedDriverId])
+    let routes = currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
+    if (selectedDriverId) {
+      routes = routes.filter((r: any) => r.driver_id === selectedDriverId)
+    }
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      routes = routes.filter((r: any) => {
+        const destination = (r.destination_address || r.destination_name || '').toLowerCase()
+        return destination.includes(query)
+      })
+    }
+    return routes
+  }, [currentDateRoutes, selectedStatus, selectedDriverId, searchQuery])
 
   // Get selected route details
   const selectedRoute = useMemo(() => {
@@ -129,6 +142,22 @@ export default function Routes() {
     })
     return counts
   }, [routesByDateAndStatus])
+
+  // Calculate daily progress totals
+  const dailyProgress = useMemo(() => {
+    const total = (currentDateRoutes.unassigned?.length || 0) +
+                  (currentDateRoutes['in-progress']?.length || 0) +
+                  (currentDateRoutes.pending?.length || 0) +
+                  (currentDateRoutes.completed?.length || 0) +
+                  (currentDateRoutes.issues?.length || 0)
+    return {
+      total,
+      completed: currentDateRoutes.completed?.length || 0,
+      inProgress: currentDateRoutes['in-progress']?.length || 0,
+      pending: currentDateRoutes.pending?.length || 0,
+      issues: currentDateRoutes.issues?.length || 0,
+    }
+  }, [currentDateRoutes])
 
   // Build map routes from selected date
   const mapRoutes = useMemo(() => {
@@ -211,6 +240,15 @@ export default function Routes() {
           sidebar={<StatusSidebar sections={statusSections} selectedStatus={selectedStatus} onStatusSelect={setSelectedStatus} locale={locale} />}
           center={
             <div>
+              <DailyProgress
+                total={dailyProgress.total}
+                completed={dailyProgress.completed}
+                inProgress={dailyProgress.inProgress}
+                pending={dailyProgress.pending}
+                issues={dailyProgress.issues}
+                locale={locale}
+              />
+              <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
               <VehicleSelector
                 drivers={drivers}
                 selectedDriverId={selectedDriverId}
