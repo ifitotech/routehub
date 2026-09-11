@@ -13,6 +13,7 @@ import DispatchCalendar from './dispatch-calendar'
 import StatusSidebar from './status-sidebar'
 import DispatchLayout from './dispatch-layout'
 import VehicleSelector from './vehicle-selector'
+import RouteDetailsPanel from './route-details-panel'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -25,6 +26,7 @@ export default function Routes() {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<'in-progress' | 'pending' | 'unassigned' | 'completed' | 'issues'>('in-progress')
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -56,6 +58,17 @@ export default function Routes() {
     const routes = currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
     return selectedDriverId ? routes.filter((r: any) => r.driver_id === selectedDriverId) : routes
   }, [currentDateRoutes, selectedStatus, selectedDriverId])
+
+  // Get selected route details
+  const selectedRoute = useMemo(() => {
+    if (!selectedRouteId) return null
+    return routesForSelectedStatus.find((r: any) => r.id === selectedRouteId) || null
+  }, [selectedRouteId, routesForSelectedStatus])
+
+  const selectedRouteDis = useMemo(() => {
+    if (!selectedRoute || !selectedRoute.driver_id) return null
+    return selectedRoute.driver_id
+  }, [selectedRoute])
 
   // Calculate driver stats for current date
   const driverStats = useMemo(() => {
@@ -211,23 +224,38 @@ export default function Routes() {
                   {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
                 </section>
               ) : routesForSelectedStatus.length > 0 ? (
-                <section className={styles.routeSection}>
-                  <div className={styles.sectionHeading}>
-                    <h2>{statusSections.find((s: any) => s.status === selectedStatus)?.label}</h2>
-                    <span>{routesForSelectedStatus.length}</span>
-                  </div>
-                  <RouteRows
-                    items={routesForSelectedStatus}
-                    locale={locale}
-                    c={c}
-                    driverIndex={driverIndex}
-                    onCancel={cancelRoute}
-                    onMove={moveRoute}
-                    onTogglePause={toggleRoutePause}
-                    busyRouteId={busyRouteId}
-                    managing={managing}
-                  />
-                </section>
+                <>
+                  <section className={styles.routeSection}>
+                    <div className={styles.sectionHeading}>
+                      <h2>{statusSections.find((s: any) => s.status === selectedStatus)?.label}</h2>
+                      <span>{routesForSelectedStatus.length}</span>
+                    </div>
+                    <div style={{maxHeight: '400px', overflowY: 'auto'}}>
+                      <RouteRows
+                        items={routesForSelectedStatus}
+                        locale={locale}
+                        c={c}
+                        driverIndex={driverIndex}
+                        onCancel={cancelRoute}
+                        onMove={moveRoute}
+                        onTogglePause={toggleRoutePause}
+                        busyRouteId={busyRouteId}
+                        managing={managing}
+                      />
+                    </div>
+                  </section>
+                  {selectedRoute && (
+                    <RouteDetailsPanel
+                      route={selectedRoute}
+                      onPause={managing ? (id: string) => toggleRoutePause(selectedRoute) : undefined}
+                      onCancel={managing ? (id: string) => cancelRoute(selectedRoute) : undefined}
+                      managing={managing}
+                      locale={locale}
+                      driverName={selectedRouteDis || undefined}
+                    />
+                  )}
+                </>
+
               ) : (
                 <section className={styles.emptyState}>
                   <div><RouteIcon size={28}/></div>
