@@ -347,6 +347,7 @@
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
+  padding-top: 16px;
   transition: height 90ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -401,7 +402,7 @@
 
 .pullTruckDriving {
   left: 0 !important;
-  animation: pullDrive 1100ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: pullDrive 1800ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
   color: #fff;
   background: linear-gradient(135deg, #1660f0, #3b82f6);
   box-shadow: 0 6px 18px rgba(22, 96, 240, 0.28);
