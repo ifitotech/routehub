@@ -84,8 +84,9 @@ export default function Team() {
     setEditBusy(true)
     try {
       const supabase = getSupabase()
-      const {error} = await supabase.from('users').update({name: editName.trim() || null, email: editEmail.trim()}).eq('id', editingMemberId)
-      if (error) throw error
+      const {error: userError} = await supabase.from('users').update({name: editName.trim() || null, email: editEmail.trim()}).eq('id', editingMemberId)
+      if (userError) throw userError
+      await supabase.from('invitations').update({email: editEmail.trim()}).eq('user_id', editingMemberId).eq('status', 'pending')
       setMessage(locale === 'es' ? 'Miembro actualizado.' : locale === 'fr' ? 'Membre mis à jour.' : 'Member updated.')
       setEditingMemberId(null)
       await load()
