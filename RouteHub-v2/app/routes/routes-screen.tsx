@@ -4,12 +4,14 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {AlertTriangle, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {AlertTriangle, CheckCircle, Clock3, Map, PlayCircle, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
 import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
+import StatusSidebar from './status-sidebar'
+import DispatchLayout from './dispatch-layout'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -20,6 +22,7 @@ export default function Routes() {
   const [pane, setPane] = useState<'list' | 'map'>('list')
   const [managing, setManaging] = useState(false)
   const [dayView, setDayView] = useState<'today' | 'tomorrow' | 'upcoming'>('today')
+  const [selectedStatus, setSelectedStatus] = useState<'in-progress' | 'pending' | 'unassigned' | 'completed' | 'issues'>('in-progress')
   useEffect(() => {
     try {
       if (new URLSearchParams(window.location.search).get('manage') === '1') setManaging(true)
@@ -31,6 +34,25 @@ export default function Routes() {
   const futureRoutes = useMemo(() => upcomingRoutes.filter((route: any) => (route.route_date || String(route.scheduled_at || '').slice(0, 10)) > tomorrowValue), [tomorrowValue, upcomingRoutes])
   const todayRoutes = useMemo(() => [...inProgressRoutes, ...scheduledTodayRoutes, ...issueTodayRoutes, ...completedTodayRoutes], [completedTodayRoutes, inProgressRoutes, issueTodayRoutes, scheduledTodayRoutes])
   const visibleRoutes = dayView === 'today' ? todayRoutes : dayView === 'tomorrow' ? tomorrowRoutes : futureRoutes
+  const unassignedRoutes = useMemo(() => visibleRoutes.filter((r: any) => !r.driver_id), [visibleRoutes])
+  const statusSections = useMemo(() => {
+    const getLabel = (key: string): string => {
+      if (locale === 'es') {
+        return {unassigned: 'No asignadas', 'in-progress': 'En curso', pending: 'Pendientes', completed: 'Completadas', issues: 'Incidencias'}[key] || key
+      } else if (locale === 'fr') {
+        return {unassigned: 'Non attribuées', 'in-progress': 'En cours', pending: 'En attente', completed: 'Terminées', issues: 'Incidents'}[key] || key
+      } else {
+        return {unassigned: 'Unassigned', 'in-progress': 'In Progress', pending: 'Pending', completed: 'Completed', issues: 'Issues'}[key] || key
+      }
+    }
+    return [
+      {status: 'unassigned', label: getLabel('unassigned'), count: unassignedRoutes.length, icon: <Truck size={18} />, routes: unassignedRoutes.slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'in-progress', label: getLabel('in-progress'), count: inProgressRoutes.length, icon: <PlayCircle size={18} />, routes: inProgressRoutes.slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'pending', label: getLabel('pending'), count: scheduledTodayRoutes.length, icon: <Clock3 size={18} />, routes: scheduledTodayRoutes.slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'completed', label: getLabel('completed'), count: completedTodayRoutes.length, icon: <CheckCircle size={18} />, routes: completedTodayRoutes.slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'issues', label: getLabel('issues'), count: issueTodayRoutes.length, icon: <AlertTriangle size={18} />, routes: issueTodayRoutes.slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+    ]
+  }, [unassignedRoutes, inProgressRoutes, scheduledTodayRoutes, completedTodayRoutes, issueTodayRoutes, locale])
   const routeSummary = useMemo(() => {
     const active = visibleRoutes.filter((route: any) => ['active', 'paused'].includes(route.status || '')).length
     const pending = visibleRoutes.filter((route: any) => ['draft', 'pending', 'published'].includes(route.status || '')).length
@@ -107,8 +129,9 @@ export default function Routes() {
       <button type="button" data-on={pane === 'list' ? 'true' : 'false'} onClick={() => setPane('list')}>{locale==='es'?'Lista':locale==='fr'?'Liste':'List'}</button>
       <button type="button" data-on={pane === 'map' ? 'true' : 'false'} onClick={() => setPane('map')}>{locale==='es'?'Mapa':locale==='fr'?'Carte':'Map'}</button>
     </div>
-    <div className={board.workspace}>
-      <div className={`${board.listPane} ${pane === 'map' ? board.listHidden : ''}`}>
+    <DispatchLayout
+      sidebar={<StatusSidebar sections={statusSections} selectedStatus={selectedStatus} onStatusSelect={setSelectedStatus} locale={locale} />}
+      center={<div>
     {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
     {loading ? <section className={styles.routeGrid} aria-label={c.loadError}>
       {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
@@ -139,11 +162,10 @@ export default function Routes() {
         <RouteRows items={issueTodayRoutes} locale={locale} c={c} driverIndex={driverIndex} onCancel={cancelRoute} onMove={moveRoute} onTogglePause={toggleRoutePause} busyRouteId={busyRouteId} managing={managing} />
       </section>}
     </>}
-      </div>
-      <div className={pane === 'list' ? board.mapHidden : undefined}>
-        <RoutesBoard routes={mapRoutes} locale={locale} />
-      </div>
-    </div>
+      </div>}
+      map={<RoutesBoard routes={mapRoutes} locale={locale} />}
+      pane={pane}
+    />
     </div>
     {open && <NewRouteDialog open={open} saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={openBuilder} previewOpen={previewOpen} setPreviewOpen={setPreviewOpen} form={form} setForm={setForm} selectedContact={selectedContact} originMode={originMode} setOriginSource={setOriginSource} selectDriver={selectDriver} oc={oc} branches={branches} contacts={contacts} defaultBranch={defaultBranch} detailsOpen={detailsOpen} setDetailsOpen={setDetailsOpen} todayValue={todayValue} drivers={drivers} save={save} pendingLocation={pendingLocation} setPendingLocation={setPendingLocation} useConfirmedDestination={useConfirmedDestination} updateDestination={updateDestination} destinationSuggestions={destinationSuggestions} selectDestinationContact={selectDestinationContact} selectExternalDestination={selectExternalDestination} searchContext={searchContext} selectedDestinationLocation={selectedDestinationLocation} setSelectedDestinationLocation={setSelectedDestinationLocation} insertBeforeId={insertBeforeId} setInsertBeforeId={setInsertBeforeId} priorityRoutes={priorityRoutes} saveContactOpen={saveContactOpen} setSaveContactOpen={setSaveContactOpen} contactSaveMessage={contactSaveMessage} setContactSaveMessage={setContactSaveMessage} newContactName={newContactName} setNewContactName={setNewContactName} savingContact={savingContact} saveDestinationAsContact={saveDestinationAsContact} planningMapRoutes={planningMapRoutes} />}
     </ManagerShell>
