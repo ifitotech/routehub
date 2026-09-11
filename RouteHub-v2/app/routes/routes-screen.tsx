@@ -9,6 +9,7 @@ import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRouteDialog from './new-route-dialog'
 import RoutesBoard from './routes-board'
+import DispatchCalendar from './dispatch-calendar'
 import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
@@ -83,11 +84,25 @@ export default function Routes() {
         <div className={styles.summaryCard} data-tone="slate"><span><Truck size={18}/></span><div><strong>{routeSummary.driversAssigned}</strong><small>{locale==='es'?'Conductores':locale==='fr'?'Conducteurs':'Drivers'}</small></div></div>
       </div>
     </section>
-    <nav className={styles.dateTabs} aria-label={locale==='es'?'Filtrar rutas por día':'Filter routes by day'}>
-      {(['today','tomorrow','upcoming'] as const).map(view => <button type="button" key={view} data-active={dayView === view} onClick={() => { setDayView(view); setPane('list') }}>
-        {dayCopy[view]}<span>{view === 'today' ? todayRoutes.length : view === 'tomorrow' ? tomorrowRoutes.length : futureRoutes.length}</span>
-      </button>)}
-    </nav>
+    <DispatchCalendar
+      selectedDate={todayValue}
+      onDateChange={(date) => {
+        if (date === todayValue) setDayView('today')
+        else if (date === tomorrowValue) setDayView('tomorrow')
+        else setDayView('upcoming')
+        setPane('list')
+      }}
+      locale={locale}
+      routeCounts={{
+        [todayValue]: todayRoutes.length,
+        [tomorrowValue]: tomorrowRoutes.length,
+        ...futureRoutes.reduce((acc: Record<string, number>, route: any) => {
+          const key = route.route_date || String(route.scheduled_at || '').slice(0, 10)
+          acc[key] = (acc[key] || 0) + 1
+          return acc
+        }, {}),
+      }}
+    />
     <div className={board.mobileToggle}>
       <button type="button" data-on={pane === 'list' ? 'true' : 'false'} onClick={() => setPane('list')}>{locale==='es'?'Lista':locale==='fr'?'Liste':'List'}</button>
       <button type="button" data-on={pane === 'map' ? 'true' : 'false'} onClick={() => setPane('map')}>{locale==='es'?'Mapa':locale==='fr'?'Carte':'Map'}</button>

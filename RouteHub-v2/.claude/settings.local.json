@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m 'Add DispatchCalendar component — Week view for Routes *)"
+    ]
+  }
+}
