@@ -52,12 +52,22 @@ export default function Routes() {
     }
   }, [routesByDateAndStatus, selectedDate])
 
-  const routesForSelectedStatus = useMemo(() => {
-    let routes = currentDateRoutes[selectedStatus as keyof typeof currentDateRoutes] || []
-
-    if (selectedDriverId) {
-      routes = routes.filter((r: any) => r.driver_id === selectedDriverId)
+  // Driver selection is a top-level context filter: it narrows every bucket
+  // (sidebar counts, daily progress, map, list) consistently, not just the list.
+  const scopedRoutes = useMemo(() => {
+    if (!selectedDriverId) return currentDateRoutes
+    const byDriver = (list: any[]) => list.filter(r => r.driver_id === selectedDriverId)
+    return {
+      unassigned: byDriver(currentDateRoutes.unassigned || []),
+      'in-progress': byDriver(currentDateRoutes['in-progress'] || []),
+      pending: byDriver(currentDateRoutes.pending || []),
+      completed: byDriver(currentDateRoutes.completed || []),
+      issues: byDriver(currentDateRoutes.issues || []),
     }
+  }, [currentDateRoutes, selectedDriverId])
+
+  const routesForSelectedStatus = useMemo(() => {
+    let routes = scopedRoutes[selectedStatus as keyof typeof scopedRoutes] || []
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
@@ -68,7 +78,7 @@ export default function Routes() {
     }
 
     return routes
-  }, [currentDateRoutes, selectedStatus, selectedDriverId, searchQuery])
+  }, [scopedRoutes, selectedStatus, searchQuery])
 
   // Get selected route details
   const selectedRoute = useMemo(() => {
@@ -119,13 +129,13 @@ export default function Routes() {
     }
 
     return [
-      {status: 'unassigned', label: getLabel('unassigned'), count: currentDateRoutes.unassigned?.length || 0, icon: icons.unassigned, routes: (currentDateRoutes.unassigned || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'in-progress', label: getLabel('in-progress'), count: currentDateRoutes['in-progress']?.length || 0, icon: icons['in-progress'], routes: (currentDateRoutes['in-progress'] || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'pending', label: getLabel('pending'), count: currentDateRoutes.pending?.length || 0, icon: icons.pending, routes: (currentDateRoutes.pending || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'completed', label: getLabel('completed'), count: currentDateRoutes.completed?.length || 0, icon: icons.completed, routes: (currentDateRoutes.completed || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
-      {status: 'issues', label: getLabel('issues'), count: currentDateRoutes.issues?.length || 0, icon: icons.issues, routes: (currentDateRoutes.issues || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'unassigned', label: getLabel('unassigned'), count: scopedRoutes.unassigned?.length || 0, icon: icons.unassigned, routes: (scopedRoutes.unassigned || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'in-progress', label: getLabel('in-progress'), count: scopedRoutes['in-progress']?.length || 0, icon: icons['in-progress'], routes: (scopedRoutes['in-progress'] || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'pending', label: getLabel('pending'), count: scopedRoutes.pending?.length || 0, icon: icons.pending, routes: (scopedRoutes.pending || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'completed', label: getLabel('completed'), count: scopedRoutes.completed?.length || 0, icon: icons.completed, routes: (scopedRoutes.completed || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
+      {status: 'issues', label: getLabel('issues'), count: scopedRoutes.issues?.length || 0, icon: icons.issues, routes: (scopedRoutes.issues || []).slice(0, 5).map((r: any) => ({id: r.id, destination: r.destination_address, driver_name: r.driver_name}))},
     ]
-  }, [currentDateRoutes, locale])
+  }, [scopedRoutes, locale])
 
   // Calculate route counts for calendar badges
   const routeCounts = useMemo(() => {
@@ -143,28 +153,28 @@ export default function Routes() {
 
   // Calculate daily progress totals
   const dailyProgress = useMemo(() => {
-    const total = (currentDateRoutes.unassigned?.length || 0) +
-                  (currentDateRoutes['in-progress']?.length || 0) +
-                  (currentDateRoutes.pending?.length || 0) +
-                  (currentDateRoutes.completed?.length || 0) +
-                  (currentDateRoutes.issues?.length || 0)
+    const total = (scopedRoutes.unassigned?.length || 0) +
+                  (scopedRoutes['in-progress']?.length || 0) +
+                  (scopedRoutes.pending?.length || 0) +
+                  (scopedRoutes.completed?.length || 0) +
+                  (scopedRoutes.issues?.length || 0)
     return {
       total,
-      completed: currentDateRoutes.completed?.length || 0,
-      inProgress: currentDateRoutes['in-progress']?.length || 0,
-      pending: currentDateRoutes.pending?.length || 0,
-      issues: currentDateRoutes.issues?.length || 0,
+      completed: scopedRoutes.completed?.length || 0,
+      inProgress: scopedRoutes['in-progress']?.length || 0,
+      pending: scopedRoutes.pending?.length || 0,
+      issues: scopedRoutes.issues?.length || 0,
     }
-  }, [currentDateRoutes])
+  }, [scopedRoutes])
 
-  // Build map routes from selected date
+  // Build map routes from selected date (respects driver filter)
   const mapRoutes = useMemo(() => {
     const allRoutesForDay = [
-      ...(currentDateRoutes.unassigned || []),
-      ...(currentDateRoutes['in-progress'] || []),
-      ...(currentDateRoutes.pending || []),
-      ...(currentDateRoutes.completed || []),
-      ...(currentDateRoutes.issues || []),
+      ...(scopedRoutes.unassigned || []),
+      ...(scopedRoutes['in-progress'] || []),
+      ...(scopedRoutes.pending || []),
+      ...(scopedRoutes.completed || []),
+      ...(scopedRoutes.issues || []),
     ]
     return allRoutesForDay.map((route: any) => ({
       id: route.id,
@@ -179,7 +189,7 @@ export default function Routes() {
       driver_id: route.driver_id,
       position: route.position,
     }))
-  }, [currentDateRoutes])
+  }, [scopedRoutes])
 
   return (
     <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
@@ -201,18 +211,24 @@ export default function Routes() {
 
         {message && <div className={message.includes('successfully') || message.includes('publicad') ? styles.successMessage : styles.message} role="status">{message}</div>}
 
-        <section className={styles.operationSummary} aria-label={locale==='es'?'Resumen operativo':'Operations summary'}>
-          <div className={styles.operationSummaryHeading}>
-            <div><p>{locale==='es'?'Dispatch':locale==='fr'?'Expédition':'Dispatch'}</p><h2>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale === 'es' ? 'es-ES' : locale === 'fr' ? 'fr-FR' : 'en-US', {weekday: 'long', month: 'short', day: 'numeric'})}</h2></div>
-            <button type="button" className={styles.mapShortcut} onClick={() => setPane('map')}><Map size={16}/>{locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}</button>
-          </div>
-        </section>
+        <div className={styles.calendarRow}>
+          <DispatchCalendar
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            locale={locale}
+            routeCounts={routeCounts}
+          />
+          <button type="button" className={styles.mapShortcut} onClick={() => setPane('map')} aria-label={locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}>
+            <Map size={16}/>
+          </button>
+        </div>
 
-        <DispatchCalendar
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
+        <VehicleSelector
+          drivers={drivers}
+          selectedDriverId={selectedDriverId}
+          onDriverSelect={setSelectedDriverId}
+          driverStats={driverStats}
           locale={locale}
-          routeCounts={routeCounts}
         />
 
         <div className={board.mobileToggle}>
@@ -233,13 +249,6 @@ export default function Routes() {
                 locale={locale}
               />
               <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
-              <VehicleSelector
-                drivers={drivers}
-                selectedDriverId={selectedDriverId}
-                onDriverSelect={setSelectedDriverId}
-                driverStats={driverStats}
-                locale={locale}
-              />
               {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
               {loading ? (
                 <section className={styles.routeGrid} aria-label={c.loadError}>

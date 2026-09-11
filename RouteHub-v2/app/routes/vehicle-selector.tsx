@@ -18,7 +18,8 @@ export default function VehicleSelector({
   driverStats = {},
   locale,
 }: VehicleSelectorProps) {
-  if (drivers.length === 0) return null
+  // With a single driver, choosing between "All" and that one driver adds no value
+  if (drivers.length <= 1) return null
 
   const allCount = Object.values(driverStats).reduce((sum, s) => sum + s.total, 0)
   const fallback = locale === 'es' ? 'Conductor' : locale === 'fr' ? 'Conducteur' : 'Driver'
