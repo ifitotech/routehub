@@ -25,10 +25,12 @@ type UnassignedPanelProps = {
 
 export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
   const [dropActive, setDropActive] = useState(false)
-  // Collapsed by default: these are routes with nothing left to do, so the
-  // list itself only needs to appear on demand - the count in the header
-  // is enough at a glance otherwise.
-  const [issuesOpen, setIssuesOpen] = useState(false)
+  // Issues stay open and visible even at zero - it's the one thing here
+  // that needs attention, so it shouldn't require a click to check, or
+  // disappear and make "no card at all" look the same as "nothing to
+  // worry about". Completed has nothing actionable, so it stays collapsed
+  // by default and hidden entirely when there isn't any yet.
+  const [issuesOpen, setIssuesOpen] = useState(true)
   const [completedOpen, setCompletedOpen] = useState(false)
   // Assignees span several branch roles, not just drivers. When a profile has
   // no readable name the role names them, so the picker can't show the same
@@ -139,17 +141,21 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
         </div>
       )}
 
-      {issueRoutes.length > 0 && (
-        <div className={styles.subsection}>
-          <button type="button" className={styles.subsectionToggle} onClick={() => setIssuesOpen(value => !value)} aria-expanded={issuesOpen}>
-            <div className={`${styles.headerIcon} ${styles.headerIconIssue}`}><AlertTriangle size={18} /></div>
-            <div className={styles.headerLabel}>
-              <h3>{issuesLabel}</h3>
-              <span className={styles.count}>{issueRoutes.length}</span>
-            </div>
-            <ChevronDown size={16} className={issuesOpen ? styles.chevronOpen : styles.chevron} />
-          </button>
-          {issuesOpen && (
+      <div className={styles.subsection}>
+        <button type="button" className={styles.subsectionToggle} onClick={() => setIssuesOpen(value => !value)} aria-expanded={issuesOpen}>
+          <div className={`${styles.headerIcon} ${styles.headerIconIssue}`}><AlertTriangle size={18} /></div>
+          <div className={styles.headerLabel}>
+            <h3>{issuesLabel}</h3>
+            <span className={styles.count}>{issueRoutes.length}</span>
+          </div>
+          <ChevronDown size={16} className={issuesOpen ? styles.chevronOpen : styles.chevron} />
+        </button>
+        {issuesOpen && (
+          issueRoutes.length === 0 ? (
+            <p className={styles.empty}>
+              {locale === 'es' ? 'Sin incidencias.' : locale === 'fr' ? 'Aucun incident.' : 'No issues.'}
+            </p>
+          ) : (
             <div className={styles.list}>
               {issueRoutes.map(route => (
                 <div key={route.id} className={styles.item}>
@@ -158,9 +164,9 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
 
       {completedRoutes.length > 0 && (
         <div className={styles.subsection}>
