@@ -296,8 +296,11 @@
     padding-inline: 16px;
   }
 
+  /* viewport-fit=cover renders content under the notch/status bar unless
+     something reserves that space - the flat 18px here left the page's own
+     eyebrow/title rendering partly behind the system status bar. */
   .content {
-    padding-top: 18px;
+    padding-top: calc(18px + env(safe-area-inset-top));
   }
 
   /* Centered pill with a capped width instead of stretching edge to edge -

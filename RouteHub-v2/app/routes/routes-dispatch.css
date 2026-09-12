@@ -18,6 +18,16 @@
   flex-direction:column!important;
   gap:16px!important;
 }
+
+/* Below the desktop sidebar breakpoint, ManagerShell's own fixed bottom nav
+   (plus the floating "+" FAB above it) sits over the last ~90px of the
+   viewport - the flat 20px above left whatever content landed there (the
+   empty-state text, a route row) rendered right underneath it. */
+@media (max-width: 1023px){
+  [data-routes-dispatch]{
+    padding:0 0 calc(100px + env(safe-area-inset-bottom))!important;
+  }
+}
 [data-routes-dispatch] article,
 [data-routes-dispatch] section{
   min-width:0;

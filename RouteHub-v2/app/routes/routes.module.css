@@ -890,3 +890,36 @@
 .attentionBanner:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.08)}
 .attentionBanner span{flex:1}
 .attentionBanner[data-tone='alert']{background:#fff0f2;color:#dc2626;border:1px solid #fecaca}
+
+/* Consolidated mobile header - kept last in this file so it reliably wins
+   over the older rules above instead of fighting them. Two earlier rules
+   disagreed on whether .headerActions was a grid or a flex row, and .header
+   never had its desktop justify-content:space-between reset for the mobile
+   column layout, which together let a title/search/actions column read as
+   far taller (and more spread out) than its actual content. Explicit values
+   here replace the guesswork: a tight column, and one horizontally
+   scrollable action row instead of a row (or grid) fighting for width. */
+@media (max-width: 640px){
+  .header{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    height:auto!important;
+    gap:10px!important;
+  }
+  .header h1{font-size:26px}
+  .eyebrow{margin:0 0 3px}
+  .headerTools{width:100%}
+  .headerActions{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    width:100%;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .headerActions::-webkit-scrollbar{display:none}
+  .headerActions>*{flex:0 0 auto!important}
+}
