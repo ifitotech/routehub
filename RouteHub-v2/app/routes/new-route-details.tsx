@@ -1,6 +1,6 @@
 'use client'
 
-import {MapPin, Search, UserPlus, Users} from 'lucide-react'
+import {ChevronRight, MapPin, Search, SlidersHorizontal, UserPlus, Users} from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import GoogleAddressInput from '../google-address-input'
 import styles from './routes.module.css'
@@ -14,8 +14,9 @@ const LocationConfirmMap = nextDynamic(() => import('../location-confirm-map'), 
 // of two unrelated blocks, plus the optional/contact fields and PO/priority/
 // notes collapsed under "More details".
 export default function NewRouteDetails(p: any) {
-  const {locale,c,form,setForm,originMode,setOriginSource,oc,branches,contacts,pendingLocation,setPendingLocation,useConfirmedDestination,updateDestination,destinationSuggestions,selectDestinationContact,selectExternalDestination,searchContext,setSelectedDestinationLocation,saveContactOpen,setSaveContactOpen,contactSaveMessage,newContactName,setNewContactName,savingContact,saveDestinationAsContact,selectedContact} = p
+  const {locale,c,form,setForm,originMode,setOriginSource,oc,branches,contacts,detailsOpen,setDetailsOpen,pendingLocation,setPendingLocation,useConfirmedDestination,updateDestination,destinationSuggestions,selectDestinationContact,selectExternalDestination,searchContext,setSelectedDestinationLocation,saveContactOpen,setSaveContactOpen,contactSaveMessage,newContactName,setNewContactName,savingContact,saveDestinationAsContact,selectedContact} = p
   const branchForValue = (value: string) => branches?.find((branch: {address?: string | null; name: string}) => (branch.address || branch.name) === value)
+  const moreDetailsSummary = locale==='es' ? 'Orden, prioridad y notas' : locale==='fr' ? 'Commande, priorité et notes' : 'Order number, priority and notes'
 
   return (
     <div>
@@ -63,6 +64,24 @@ export default function NewRouteDetails(p: any) {
               <label className={styles.field}><span>{locale==='es'?'Teléfono del contacto':'Contact phone'} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} placeholder="(000) 000-0000" onChange={event => setForm((current: any) => ({...current, destination_phone:event.target.value}))}/></label>
             </div>}
           </div>}
+
+          <div>
+            <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} aria-controls="route-more-details" onClick={event => { event.stopPropagation(); setDetailsOpen((value: boolean) => !value) }}>
+              <span className={ui.detailsToggleLeft}><SlidersHorizontal size={17}/><span><span className={ui.detailsToggleTitle}>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</span><small className={ui.detailsToggleHint}>{moreDetailsSummary}</small></span></span>
+              <ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/>
+            </button>
+            {detailsOpen && <div id="route-more-details" className={styles.optionalDetails}>
+              {form.type!=='pickup'&&form.type!=='delivery'&&<label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
+              <label className={styles.field}>
+                <span>{locale==='es'?'Prioridad':locale==='fr'?'Priorité':'Priority'}</span>
+                <select value={form.priority} onChange={event => setForm((current: any) => ({...current, priority: event.target.value}))}>
+                  <option value="normal">{c.normal}</option>
+                  <option value="priority">{c.priorityName}</option>
+                  <option value="urgent">{c.urgent}</option>
+                </select>
+              </label>
+            </div>}
+          </div>
         </div>
       </div>
     </div>
