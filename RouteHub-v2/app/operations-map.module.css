@@ -35,6 +35,19 @@
   max-height: none !important;
 }
 
+/* Leaflet's default attribution reads at roughly the same size as the map's
+   own labels, which pulls the eye to "OpenStreetMap contributors" instead
+   of the routes on the map. The credit stays legible (required), just
+   small and quiet in the corner instead of competing for attention. */
+.map :global(.leaflet-control-attribution) {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 80%);
+  font-size: 9px;
+  line-height: 14px;
+  opacity: 0.75;
+}
+
 .googleMap {
   position: absolute;
   inset: 0;
