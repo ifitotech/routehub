@@ -1,6 +1,6 @@
 'use client'
 
-import {MapPin, Search, UserPlus, Users} from 'lucide-react'
+import {MapPin, Search, UserPlus} from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import GoogleAddressInput from '../google-address-input'
 import styles from './routes.module.css'
@@ -45,10 +45,6 @@ export default function NewRouteDetails(p: any) {
               <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
               <div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/></div>
             </label>
-            {selectedContact && <section className={styles.selectedContactCard}>
-              <div className={styles.selectedContactIcon}><Users size={18}/></div>
-              <div className={styles.selectedContactInfo}><strong>{selectedContact.company_name}</strong><span>{selectedContact.address}</span></div>
-            </section>}
             {pendingLocation && <section className={styles.locationConfirmation}>
               <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
               <LocationConfirmMap coordinate={pendingLocation.coordinate} label={pendingLocation.name || pendingLocation.formattedAddress} onCoordinateChange={coordinate => setPendingLocation((current: any) => current ? {...current, coordinate} : current)}/>
