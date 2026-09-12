@@ -16,41 +16,36 @@ export default function NewRouteFields(p: any) {
     <>
       <section className={styles.builderSection}>
         <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>2</span><div><h3>{locale==='es' ? 'Ubicaciones' : locale==='fr' ? 'Emplacements' : 'Locations'}</h3></div></div>
-        {/* Starting point and destination used to always stack full-width,
-            which made sense in a 430px drawer but wastes the wider inline
-            panel's room - side by side now that there's space for both. */}
-        <div className={ui.locationsRow}>
-          <fieldset className={`${styles.fieldset} ${ui.originPrimary}`}>
-            <legend>{c.startingPoint}</legend>
-            <div className={styles.segmented}>{(['branch','previous','contact','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
-            {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{(branches||[]).map((branch: any) => <option key={branch.id} value={branch.address || branch.name}>{branch.name}</option>)}</select></div>}
-            {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
-            {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{(contacts||[]).map((contact: any) => <option key={contact.id} value={contact.address}>{contact.company_name}</option>)}</select></div>}
-            {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} onValueChange={value => setForm((current: any) => ({...current, origin:value}))}/></div>}
-          </fieldset>
-          {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={styles.inputWrap}><MapPin size={18}/><select value={form.destination} onChange={event=>{const branch=branchForValue(event.target.value);setSelectedDestinationLocation(branchLocation(branch));setForm((current: any)=>({...current,destination:event.target.value,destination_label:branch?.name||'',destination_phone:'',contact_id:''}))}}>{(branches||[]).map((branch: any)=><option key={branch.id} value={branch.address||branch.name}>{branch.name}</option>)}</select></div></label> : <div>
-            <label className={styles.field}>
-              <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
-              <div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/></div>
-            </label>
-            {pendingLocation && <section className={styles.locationConfirmation}>
-              <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
-              <LocationConfirmMap coordinate={pendingLocation.coordinate} label={pendingLocation.name || pendingLocation.formattedAddress} onCoordinateChange={coordinate => setPendingLocation((current: any) => current ? {...current, coordinate} : current)}/>
-              <div className={styles.locationConfirmationActions}><button type="button" className={styles.secondaryButton} onClick={() => setPendingLocation(null)}>{locale==='es'?'Cambiar':'Change'}</button><button type="button" className={styles.primaryButton} onClick={useConfirmedDestination}>{locale==='es'?'Usar esta ubicación':'Use this location'}</button></div>
-            </section>}
-            {!selectedContact && !pendingLocation && form.destination.trim() && <div className={styles.addContactBlock}>
-              {!saveContactOpen ? <button type="button" className={styles.addContactButton} onClick={() => {setSaveContactOpen(true)}}><UserPlus size={17}/>{c.addToContacts}</button> : <div className={styles.saveContactPanel}>
-                <label className={styles.field}><span>{c.contactName}</span><input value={newContactName} placeholder={c.contactNamePlaceholder} onChange={event => setNewContactName(event.target.value)}/></label>
-                <button type="button" className={styles.primaryButton} disabled={!newContactName.trim() || savingContact} onClick={() => void saveDestinationAsContact()}>{savingContact ? c.savingContact : c.saveContact}</button>
-              </div>}
-            </div>}
-            {contactSaveMessage && <small className={styles.contactSaveMessage}>{contactSaveMessage}</small>}
-            {form.type==='delivery'&&<div className={ui.deliveryDetailsRow}>
-              <label className={styles.field}><span>{locale==='es'?'Nombre del contacto':'Contact name'} <em>{c.optional}</em></span><input value={form.stop_contact_name} placeholder={locale==='es'?'Quién recibe':'Who receives it'} onChange={event => setForm((current: any) => ({...current, stop_contact_name:event.target.value}))}/></label>
-              <label className={styles.field}><span>{locale==='es'?'Teléfono del contacto':'Contact phone'} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} placeholder="(000) 000-0000" onChange={event => setForm((current: any) => ({...current, destination_phone:event.target.value}))}/></label>
+        <fieldset className={`${styles.fieldset} ${ui.originPrimary}`}>
+          <legend>{c.startingPoint}</legend>
+          <div className={styles.segmented}>{(['branch','previous','contact','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
+          {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{(branches||[]).map((branch: any) => <option key={branch.id} value={branch.address || branch.name}>{branch.name}</option>)}</select></div>}
+          {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
+          {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{(contacts||[]).map((contact: any) => <option key={contact.id} value={contact.address}>{contact.company_name}</option>)}</select></div>}
+          {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} onValueChange={value => setForm((current: any) => ({...current, origin:value}))}/></div>}
+        </fieldset>
+        {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={styles.inputWrap}><MapPin size={18}/><select value={form.destination} onChange={event=>{const branch=branchForValue(event.target.value);setSelectedDestinationLocation(branchLocation(branch));setForm((current: any)=>({...current,destination:event.target.value,destination_label:branch?.name||'',destination_phone:'',contact_id:''}))}}>{(branches||[]).map((branch: any)=><option key={branch.id} value={branch.address||branch.name}>{branch.name}</option>)}</select></div></label> : <>
+          <label className={styles.field}>
+            <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
+            <div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/></div>
+          </label>
+          {pendingLocation && <section className={styles.locationConfirmation}>
+            <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
+            <LocationConfirmMap coordinate={pendingLocation.coordinate} label={pendingLocation.name || pendingLocation.formattedAddress} onCoordinateChange={coordinate => setPendingLocation((current: any) => current ? {...current, coordinate} : current)}/>
+            <div className={styles.locationConfirmationActions}><button type="button" className={styles.secondaryButton} onClick={() => setPendingLocation(null)}>{locale==='es'?'Cambiar':'Change'}</button><button type="button" className={styles.primaryButton} onClick={useConfirmedDestination}>{locale==='es'?'Usar esta ubicación':'Use this location'}</button></div>
+          </section>}
+          {!selectedContact && !pendingLocation && form.destination.trim() && <div className={styles.addContactBlock}>
+            {!saveContactOpen ? <button type="button" className={styles.addContactButton} onClick={() => {setSaveContactOpen(true)}}><UserPlus size={17}/>{c.addToContacts}</button> : <div className={styles.saveContactPanel}>
+              <label className={styles.field}><span>{c.contactName}</span><input value={newContactName} placeholder={c.contactNamePlaceholder} onChange={event => setNewContactName(event.target.value)}/></label>
+              <button type="button" className={styles.primaryButton} disabled={!newContactName.trim() || savingContact} onClick={() => void saveDestinationAsContact()}>{savingContact ? c.savingContact : c.saveContact}</button>
             </div>}
           </div>}
-        </div>
+          {contactSaveMessage && <small className={styles.contactSaveMessage}>{contactSaveMessage}</small>}
+          {form.type==='delivery'&&<div className={ui.deliveryDetailsRow}>
+            <label className={styles.field}><span>{locale==='es'?'Nombre del contacto':'Contact name'} <em>{c.optional}</em></span><input value={form.stop_contact_name} placeholder={locale==='es'?'Quién recibe':'Who receives it'} onChange={event => setForm((current: any) => ({...current, stop_contact_name:event.target.value}))}/></label>
+            <label className={styles.field}><span>{locale==='es'?'Teléfono del contacto':'Contact phone'} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} placeholder="(000) 000-0000" onChange={event => setForm((current: any) => ({...current, destination_phone:event.target.value}))}/></label>
+          </div>}
+        </>}
       </section>
       {/* Date and time are filled in for nearly every route, unlike PO/notes
           below - they used to hide behind the same "More details" toggle,

@@ -17,10 +17,6 @@
 .originPrimary{padding-bottom:4px}
 .originPrimary .segmented{margin-bottom:2px}
 .originPrimary + .field{margin-top:2px}
-/* Starting point / destination side by side once the panel has real width -
-   the fieldset and destination block stay full-width stacked below 900px. */
-.locationsRow{display:grid;gap:14px}
-@media(min-width:900px){.locationsRow{grid-template-columns:1fr 1fr;align-items:start}}
 .deliveryDetailsRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
 .deliveryDetailsRow .field{min-width:0}
 .builderSection .field:has(.inputWrap input){gap:4px}
