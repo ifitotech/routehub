@@ -28,7 +28,7 @@
    a separate overlay. Both columns animate back to the resting three-column
    layout once the form closes. */
 .workspace[data-focus='true'] {
-  grid-template-columns: 0fr 2fr 1fr;
+  grid-template-columns: 0fr 2.6fr 1fr;
   gap: 8px 20px;
 }
 
@@ -82,7 +82,7 @@
   }
 
   .workspace[data-focus='true'] {
-    grid-template-columns: 0fr 2fr 1fr;
+    grid-template-columns: 0fr 2.4fr 1fr;
   }
 }
 
