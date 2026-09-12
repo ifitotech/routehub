@@ -17,11 +17,8 @@ export default function NewRouteDetails(p: any) {
   const {locale,c,form,setForm,originMode,setOriginSource,oc,branches,contacts,pendingLocation,setPendingLocation,useConfirmedDestination,updateDestination,destinationSuggestions,selectDestinationContact,selectExternalDestination,searchContext,setSelectedDestinationLocation,saveContactOpen,setSaveContactOpen,contactSaveMessage,newContactName,setNewContactName,savingContact,saveDestinationAsContact,selectedContact} = p
   const branchForValue = (value: string) => branches?.find((branch: {address?: string | null; name: string}) => (branch.address || branch.name) === value)
 
-  const isHere = originMode === 'branch'
   const originLabel = locale==='es' ? 'Origen' : locale==='fr' ? 'Origine' : 'Origin'
   const destLabel = locale==='es' ? 'Destino' : locale==='fr' ? 'Destination' : 'Destination'
-  const hereLabel = locale==='es' ? 'Aquí (sucursal)' : locale==='fr' ? 'Ici (succursale)' : 'Here (branch)'
-  const otherLabel = locale==='es' ? 'Otro punto' : locale==='fr' ? 'Autre point' : 'Somewhere else'
   const whoReceivesLabel = locale==='es' ? '¿Quién recibe?' : locale==='fr' ? 'Qui reçoit ?' : 'Who receives it?'
 
   return (
@@ -36,17 +33,7 @@ export default function NewRouteDetails(p: any) {
         <div className={ui.timelineContent}>
           <fieldset className={`${styles.fieldset} ${ui.originPrimary}`}>
             <legend className={ui.timelineTag}>{originLabel}</legend>
-            {/* "Here" (the branch) covers most routes, so it's a direct
-                choice against "somewhere else" instead of three chips
-                competing equally - picking "somewhere else" reveals Last
-                route/Custom as sub-options instead of sharing that row. */}
-            <div className={ui.originToggle}>
-              <button type="button" className={isHere ? ui.originToggleActive : ''} aria-pressed={isHere} onClick={() => setOriginSource('branch')}>{hereLabel}</button>
-              <button type="button" className={!isHere ? ui.originToggleActive : ''} aria-pressed={!isHere} onClick={() => setOriginSource(originMode === 'branch' ? 'previous' : originMode)}>{otherLabel}</button>
-            </div>
-            {!isHere && <div className={ui.originSubChips}>
-              {(['previous','custom'] as OriginMode[]).map(mode => <button type="button" key={mode} className={originMode === mode ? ui.originSubChipActive : ui.originSubChip} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}
-            </div>}
+            <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
             {/* RouteHub is single-branch by design - a full 49px select
                 control with nothing else to pick was space spent on a
                 choice that was never real. Always the compact read-only
