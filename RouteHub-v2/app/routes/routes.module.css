@@ -910,7 +910,13 @@
   }
   .header h1{font-size:26px}
   .eyebrow{margin:0 0 3px}
-  .headerTools{width:100%}
+  /* .headerTools carries flex:1 1 340px from the desktop row layout, where
+     340px is a WIDTH hint - once .header switches to a column here, that
+     same flex-basis is read as a HEIGHT hint instead, stretching this box
+     to 340px tall with its one child (the search input) centered in the
+     middle of it. flex:none drops the inherited grow/shrink/basis so its
+     height goes back to just what the search input needs. */
+  .headerTools{width:100%;flex:none!important}
   .headerActions{
     display:flex!important;
     flex-wrap:nowrap!important;
