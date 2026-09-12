@@ -78,7 +78,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                   History. Link there pre-searched for this route's
                   destination instead of duplicating that whole view here. */}
               {(status === 'completed' || status === 'issue') && (
-                <Link className={styles.detailsLink} href={`/manager/history?q=${encodeURIComponent(destination)}`}>
+                <Link className={styles.detailsLink} href={`/manager/history?q=${encodeURIComponent(destination)}&id=${route.id}`}>
                   {label.details}<ChevronRight size={14} />
                 </Link>
               )}
