@@ -8,16 +8,14 @@
 .typeCardDesc{display:block;font-size:11px;font-weight:500;color:#64748B;line-height:1.3}
 .typeCheck{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:99px;background:#4263EB;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
 
-/* Deliver-to field + saved-contact badge side by side - there's spare
-   width next to the address once it's filled in, so the badge sits there
-   instead of on its own line below. */
-.destinationRow{display:flex;align-items:stretch;gap:10px}
-.destinationRow .inputWrap{flex:1;min-width:0}
-.savedContactBadge{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:88px;min-height:49px;padding:8px 16px 8px 10px;border:1px solid #b9cdf4;border-radius:11px;background:#eaf2ff;color:#0e48c4;font-size:11px;font-weight:700;text-align:center}
-.savedContactBadge span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
-.savedContactClose{position:absolute;top:-6px;right:-6px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;border-radius:99px;background:#64748b;color:#fff;cursor:pointer}
-.savedContactClose:hover{background:#475569}
-@media(max-width:520px){.destinationRow{flex-direction:column}.savedContactBadge{width:100%}}
+/* Saved-contact tag floats on the Deliver-to field's own top border
+   instead of sitting beside the input eating into its width - the field
+   keeps its full width so long addresses read without being clipped. */
+.destinationWrap{position:relative;overflow:visible}
+.savedContactBadge{position:absolute;top:-11px;left:38px;z-index:1;display:inline-flex;align-items:center;gap:6px;max-width:calc(100% - 50px);padding:2px 6px 2px 9px;border:1px solid #b9cdf4;border-radius:999px;background:#eaf2ff;color:#0e48c4;font-size:10px;font-weight:700;line-height:1.6}
+.savedContactBadge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.savedContactClose{flex:none;width:14px;height:14px;display:flex;align-items:center;justify-content:center;border:0;border-radius:99px;background:#0e48c4;color:#fff;cursor:pointer}
+.savedContactClose:hover{background:#0a3699}
 
 /* Two real columns, not two stacked rows: Route type + Route details flow
    together down the left column, Assignment fills the right column on its
