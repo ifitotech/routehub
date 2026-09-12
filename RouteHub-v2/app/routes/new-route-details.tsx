@@ -44,6 +44,11 @@ export default function NewRouteDetails(p: any) {
             <label className={styles.field}>
               <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
               <div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/></div>
+              {/* A one-line reference to which saved contact this address
+                  came from - not a repeat of the address itself (already
+                  filled into the field above), just enough to confirm at a
+                  glance which contact was picked. */}
+              {selectedContact && <small className={ui.savedContactHint}>{locale==='es'?'Contacto guardado':locale==='fr'?'Contact enregistré':'Saved contact'}: {selectedContact.company_name}</small>}
             </label>
             {pendingLocation && <section className={styles.locationConfirmation}>
               <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
