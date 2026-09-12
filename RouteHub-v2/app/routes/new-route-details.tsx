@@ -54,7 +54,7 @@ export default function NewRouteDetails(p: any) {
                     manually erasing the text field first. */}
                 {selectedContact && <div className={ui.savedContactBadge}>
                   <span>{selectedContact.company_name}</span>
-                  <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: ''}))}><X size={11}/></button>
+                  <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: '', destination_phone: '', stop_contact_name: ''}))}><X size={11}/></button>
                 </div>}
               </div>
             </label>
