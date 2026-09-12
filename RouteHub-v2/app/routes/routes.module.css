@@ -235,6 +235,14 @@
 :global(html[data-theme="dark"]) .builderSectionHeader p,:global(html[data-theme="dark"]) .summaryGrid dt,:global(html[data-theme="dark"]) .summaryLocations span{color:var(--rh-text-secondary)}
 .previewCard{--operations-map-height:min(48vh,470px)}
 
+/* The Add Route form used to be a modal/drawer overlay with its own map
+   preview; it now renders inline in the board's center column (dispatch
+   focus mode collapses the sidebar and widens this column, and the route
+   preview reuses the persistent map column on the right instead of a
+   second map). This just gives it a soft entrance instead of popping in. */
+.formViewFade{height:100%;min-height:0;animation:formFadeIn 220ms ease}
+@keyframes formFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
 /* Add Route refresh: cleaner hierarchy, more breathing room, calmer surfaces,
    and a balanced workspace between the route form and preview column. */
 .builder{

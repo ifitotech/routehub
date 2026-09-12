@@ -6,3 +6,4 @@ node_modules
 *.tsbuildinfo
 coverage
 android/app/google-services.json
+supabase/.temp/

@@ -14,17 +14,36 @@
   --board-height: calc(100dvh - 250px);
 
   display: grid;
-  grid-template-columns: 1fr 1.8fr 1fr;
+  grid-template-columns: 1fr 1fr 1.15fr;
   align-items: start;
   gap: 20px;
   width: 100%;
   min-height: 420px;
+  transition: grid-template-columns 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Focus mode: while the Add Route form is open, the sidebar collapses to
+   0 and that space (plus a share of the map's) goes to the form column, so
+   creating a route gets a roomier two-field-per-row layout without opening
+   a separate overlay. Both columns animate back to the resting three-column
+   layout once the form closes. */
+.workspace[data-focus='true'] {
+  grid-template-columns: 0fr 2fr 1fr;
+  gap: 8px 20px;
 }
 
 .sidebar {
   grid-column: 1;
   max-height: var(--board-height);
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  transition: opacity 260ms ease;
+}
+
+.workspace[data-focus='true'] .sidebar {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .center {
@@ -51,12 +70,17 @@
 
 @media (max-width: 1600px) {
   .workspace {
-    grid-template-columns: 1fr 1.6fr 1fr;
+    grid-template-columns: 1fr 1fr 1.1fr;
+  }
+
+  .workspace[data-focus='true'] {
+    grid-template-columns: 0fr 2fr 1fr;
   }
 }
 
 @media (max-width: 1200px) {
-  .workspace {
+  .workspace,
+  .workspace[data-focus='true'] {
     grid-template-columns: 1fr;
     gap: 16px;
     height: auto;
@@ -78,6 +102,13 @@
     position: relative;
     top: auto;
     height: 300px;
+  }
+
+  /* Below the 3-column breakpoint there's no room to animate a column
+     width - the sidebar just gets out of the way entirely while the form
+     is open, the same way the list/map toggle already hides panes here. */
+  .workspace[data-focus='true'] .sidebar {
+    display: none;
   }
 
   /* Below the 3-column breakpoint, list and map compete for the same

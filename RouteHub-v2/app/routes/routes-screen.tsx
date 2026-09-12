@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
-import NewRouteDialog from './new-route-dialog'
+import NewRoutePanel from './new-route-panel'
 import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
 import UnassignedPanel from './unassigned-panel'
@@ -251,113 +251,83 @@ export default function Routes() {
             />
           }
           center={
-            <div
-              className={styles.assignDropZone}
-              data-drop-active={assignDropActive ? 'true' : 'false'}
-              onDragOver={managing ? event => { event.preventDefault(); event.dataTransfer.dropEffect = dropTargetDriverId ? 'move' : 'none'; if (!assignDropActive) setAssignDropActive(true) } : undefined}
-              onDragLeave={managing ? event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setAssignDropActive(false) } : undefined}
-              onDrop={managing ? event => {
-                event.preventDefault()
-                setAssignDropActive(false)
-                const routeId = event.dataTransfer.getData('text/plain')
-                const dropped = unassignedRoutes.find((r: any) => r.id === routeId)
-                if (dropped && dropTargetDriverId) assignRouteToDriver(dropped, dropTargetDriverId)
-              } : undefined}
-            >
-              {assignDropActive && (
-                <p className={styles.assignDropHint} data-tone={dropTargetDriverId ? 'ready' : 'blocked'}>
-                  {dropTargetDriverId
-                    ? (locale==='es'?'Suelta aquí para asignar':locale==='fr'?'Déposez ici pour attribuer':'Drop here to assign')
-                    : (locale==='es'?'Elige un conductor arriba para asignar arrastrando':locale==='fr'?'Choisissez un conducteur ci-dessus pour attribuer par glisser':'Pick a driver above to assign by dragging')}
-                </p>
-              )}
-              {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
-              {loading ? (
-                <section className={styles.routeGrid} aria-label={c.loadError}>
-                  {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
-                </section>
-              ) : assignedRoutes.length > 0 ? (
-                <section className={styles.routeSection}>
-                  <div className={styles.sectionHeading}>
-                    <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
-                    <span>{assignedRoutes.length}</span>
-                  </div>
-                  <RouteRows
-                    items={assignedRoutes}
-                    locale={locale}
-                    c={c}
-                    driverIndex={driverIndex}
-                    onCancel={cancelRoute}
-                    onMove={moveRoute}
-                    onTogglePause={toggleRoutePause}
-                    onUnassign={unassignRoute}
-                    busyRouteId={busyRouteId}
-                    managing={managing}
-                  />
-                </section>
-              ) : (
-                <section className={styles.emptyState}>
-                  <div><RouteIcon size={28}/></div>
-                  <h2>{locale==='es'?'Sin rutas asignadas':locale==='fr'?'Aucun itinéraire attribué':'No assigned routes'}</h2>
-                  <p>{locale==='es'?'Asigna rutas desde la lista de la izquierda para verlas aquí.':locale==='fr'?'Attribuez des itinéraires depuis la liste de gauche pour les voir ici.':'Assign routes from the list on the left to see them here.'}</p>
-                  <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
-                </section>
-              )}
-            </div>
+            open ? (
+              <div className={styles.formViewFade}>
+                <NewRoutePanel
+                  saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={openBuilder}
+                  form={form} setForm={setForm} selectedContact={selectedContact} originMode={originMode} setOriginSource={setOriginSource}
+                  selectDriver={selectDriver} oc={oc} branches={branches} contacts={contacts} defaultBranch={defaultBranch}
+                  detailsOpen={detailsOpen} setDetailsOpen={setDetailsOpen} todayValue={todayValue} drivers={drivers} save={save}
+                  pendingLocation={pendingLocation} setPendingLocation={setPendingLocation} useConfirmedDestination={useConfirmedDestination}
+                  updateDestination={updateDestination} destinationSuggestions={destinationSuggestions} selectDestinationContact={selectDestinationContact}
+                  selectExternalDestination={selectExternalDestination} searchContext={searchContext} selectedDestinationLocation={selectedDestinationLocation}
+                  setSelectedDestinationLocation={setSelectedDestinationLocation} insertBeforeId={insertBeforeId} setInsertBeforeId={setInsertBeforeId}
+                  priorityRoutes={priorityRoutes} saveContactOpen={saveContactOpen} setSaveContactOpen={setSaveContactOpen}
+                  contactSaveMessage={contactSaveMessage} setContactSaveMessage={setContactSaveMessage} newContactName={newContactName}
+                  setNewContactName={setNewContactName} savingContact={savingContact} saveDestinationAsContact={saveDestinationAsContact}
+                />
+              </div>
+            ) : (
+              <div
+                className={styles.assignDropZone}
+                data-drop-active={assignDropActive ? 'true' : 'false'}
+                onDragOver={managing ? event => { event.preventDefault(); event.dataTransfer.dropEffect = dropTargetDriverId ? 'move' : 'none'; if (!assignDropActive) setAssignDropActive(true) } : undefined}
+                onDragLeave={managing ? event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setAssignDropActive(false) } : undefined}
+                onDrop={managing ? event => {
+                  event.preventDefault()
+                  setAssignDropActive(false)
+                  const routeId = event.dataTransfer.getData('text/plain')
+                  const dropped = unassignedRoutes.find((r: any) => r.id === routeId)
+                  if (dropped && dropTargetDriverId) assignRouteToDriver(dropped, dropTargetDriverId)
+                } : undefined}
+              >
+                {assignDropActive && (
+                  <p className={styles.assignDropHint} data-tone={dropTargetDriverId ? 'ready' : 'blocked'}>
+                    {dropTargetDriverId
+                      ? (locale==='es'?'Suelta aquí para asignar':locale==='fr'?'Déposez ici pour attribuer':'Drop here to assign')
+                      : (locale==='es'?'Elige un conductor arriba para asignar arrastrando':locale==='fr'?'Choisissez un conducteur ci-dessus pour attribuer par glisser':'Pick a driver above to assign by dragging')}
+                  </p>
+                )}
+                {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
+                {loading ? (
+                  <section className={styles.routeGrid} aria-label={c.loadError}>
+                    {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
+                  </section>
+                ) : assignedRoutes.length > 0 ? (
+                  <section className={styles.routeSection}>
+                    <div className={styles.sectionHeading}>
+                      <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
+                      <span>{assignedRoutes.length}</span>
+                    </div>
+                    <RouteRows
+                      items={assignedRoutes}
+                      locale={locale}
+                      c={c}
+                      driverIndex={driverIndex}
+                      onCancel={cancelRoute}
+                      onMove={moveRoute}
+                      onTogglePause={toggleRoutePause}
+                      onUnassign={unassignRoute}
+                      busyRouteId={busyRouteId}
+                      managing={managing}
+                    />
+                  </section>
+                ) : (
+                  <section className={styles.emptyState}>
+                    <div><RouteIcon size={28}/></div>
+                    <h2>{locale==='es'?'Sin rutas asignadas':locale==='fr'?'Aucun itinéraire attribué':'No assigned routes'}</h2>
+                    <p>{locale==='es'?'Asigna rutas desde la lista de la izquierda para verlas aquí.':locale==='fr'?'Attribuez des itinéraires depuis la liste de gauche pour les voir ici.':'Assign routes from the list on the left to see them here.'}</p>
+                    <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
+                  </section>
+                )}
+              </div>
+            )
           }
-          map={<RoutesBoard routes={mapRoutes} locale={locale} />}
+          map={<RoutesBoard routes={open ? (planningMapRoutes || []) : mapRoutes} locale={locale} />}
           pane={pane}
+          focus={open}
         />
       </div>
-
-      {open && <NewRouteDialog
-        open={open}
-        saving={saving}
-        setOpen={setOpen}
-        justCreated={justCreated}
-        locale={locale}
-        c={c}
-        openBuilder={openBuilder}
-        previewOpen={previewOpen}
-        setPreviewOpen={setPreviewOpen}
-        form={form}
-        setForm={setForm}
-        selectedContact={selectedContact}
-        originMode={originMode}
-        setOriginSource={setOriginSource}
-        selectDriver={selectDriver}
-        oc={oc}
-        branches={branches}
-        contacts={contacts}
-        defaultBranch={defaultBranch}
-        detailsOpen={detailsOpen}
-        setDetailsOpen={setDetailsOpen}
-        todayValue={todayValue}
-        drivers={drivers}
-        save={save}
-        pendingLocation={pendingLocation}
-        setPendingLocation={setPendingLocation}
-        useConfirmedDestination={useConfirmedDestination}
-        updateDestination={updateDestination}
-        destinationSuggestions={destinationSuggestions}
-        selectDestinationContact={selectDestinationContact}
-        selectExternalDestination={selectExternalDestination}
-        searchContext={searchContext}
-        selectedDestinationLocation={selectedDestinationLocation}
-        setSelectedDestinationLocation={setSelectedDestinationLocation}
-        insertBeforeId={insertBeforeId}
-        setInsertBeforeId={setInsertBeforeId}
-        priorityRoutes={priorityRoutes}
-        saveContactOpen={saveContactOpen}
-        setSaveContactOpen={setSaveContactOpen}
-        contactSaveMessage={contactSaveMessage}
-        setContactSaveMessage={setContactSaveMessage}
-        newContactName={newContactName}
-        setNewContactName={setNewContactName}
-        savingContact={savingContact}
-        saveDestinationAsContact={saveDestinationAsContact}
-        planningMapRoutes={planningMapRoutes}
-      />}
     </ManagerShell>
   )
 }

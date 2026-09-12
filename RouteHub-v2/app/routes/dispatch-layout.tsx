@@ -8,13 +8,16 @@ type DispatchLayoutProps = {
   map: React.ReactNode
   mobileToggle?: React.ReactNode
   pane?: 'list' | 'map'
+  /** True while the Add Route form is open - collapses the sidebar and
+   *  widens the center column instead of opening a separate overlay. */
+  focus?: boolean
 }
 
-export default function DispatchLayout({sidebar, center, map, mobileToggle, pane = 'list'}: DispatchLayoutProps) {
+export default function DispatchLayout({sidebar, center, map, mobileToggle, pane = 'list', focus = false}: DispatchLayoutProps) {
   return (
     <div className={styles.layout} data-pane={pane}>
       {mobileToggle}
-      <div className={styles.workspace}>
+      <div className={styles.workspace} data-focus={focus ? 'true' : 'false'}>
         <div className={styles.sidebar}>{sidebar}</div>
         <div className={styles.center}>{center}</div>
         <div className={styles.map}>{map}</div>
