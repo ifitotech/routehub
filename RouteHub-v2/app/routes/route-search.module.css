@@ -1,4 +1,5 @@
 .container {
+  position: relative;
   display: flex;
   width: 100%;
 }
@@ -67,9 +68,127 @@
   transform: scale(0.95);
 }
 
+/* A history dropdown instead of a silent same-day filter - typing a
+   destination is useless if the only route matching it lives on a
+   different day and just quietly disappears from the current list. */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--rh-card, #fff);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(15, 29, 53, 0.14);
+}
+
+.empty {
+  padding: 14px 12px;
+  text-align: center;
+  color: var(--rh-text-muted, #64748b);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.result {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.result:hover,
+.result:focus-visible {
+  background: #f1f5fb;
+  outline: none;
+}
+
+.resultIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: 8px;
+  background: #eaf2ff;
+  color: var(--rh-primary, #1660f0);
+}
+
+.resultBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.resultDestination {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--rh-text, #0f1d35);
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultDestination svg {
+  flex: none;
+  color: #94a3b8;
+}
+
+.resultMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rh-text-muted, #64748b);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.resultDot {
+  color: #cbd5e1;
+}
+
+.resultStatus {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.status-completed { background: #e6f7ef; color: #0f9d58; }
+.status-issue { background: #fdeceb; color: #d93025; }
+.status-active { background: #eaf2ff; color: #1660f0; }
+.status-paused { background: #fff4e5; color: #b06a00; }
+
 @media (max-width: 768px) {
   .input input {
     font-size: 12px;
     padding: 8px 10px 8px 32px;
+  }
+
+  .dropdown {
+    max-height: 260px;
   }
 }

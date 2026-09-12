@@ -20,6 +20,7 @@ import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
 import {useRoutesWorkspace} from './routes-workspace'
+import {routeDateValue} from './routes-model'
 
 export default function Routes() {
   const w = useRoutesWorkspace()
@@ -113,6 +114,30 @@ export default function Routes() {
   // Live in the sidebar below Unassigned instead - see UnassignedPanel.
   const issueRoutes = useMemo(() => (scopedRoutes.issues || []).filter(matchesSearch), [scopedRoutes, matchesSearch])
   const completedRoutes = useMemo(() => (scopedRoutes.completed || []).filter(matchesSearch), [scopedRoutes, matchesSearch])
+
+  // The search box used to just quietly filter whichever day was already
+  // selected, which made typing a destination feel like it did nothing if
+  // that route lived on a different day. A dropdown of matches across the
+  // whole history makes the search actually findable - picking one jumps
+  // the board straight to that route's day.
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return []
+    return w.routes
+      .filter(route => route.status !== 'cancelled')
+      .filter(route => (route.destination_address || route.destination_name || '').toLowerCase().includes(query))
+      .sort((a, b) => routeDateValue(b).localeCompare(routeDateValue(a)) || (b.scheduled_at || '').localeCompare(a.scheduled_at || ''))
+      .slice(0, 8)
+  }, [w.routes, searchQuery])
+
+  const selectSearchResult = useCallback((route: any) => {
+    const date = routeDateValue(route) || todayValue
+    setSelectedDriverId(null)
+    setSelectedDate(date)
+    setViewingRouteId(route.driver_id ? route.id : null)
+    setOpen(false)
+    setSearchQuery('')
+  }, [todayValue, setOpen])
 
   const viewingRoute = viewingRouteId
     ? [...assignedRoutes, ...issueRoutes, ...completedRoutes].find((r: any) => r.id === viewingRouteId)
@@ -215,7 +240,7 @@ export default function Routes() {
               issues={dailyProgress.issues}
               locale={locale}
             />
-            <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} />
+            <RouteSearch value={searchQuery} onChange={setSearchQuery} locale={locale} c={c} results={searchResults} driverIndex={driverIndex} onSelectResult={selectSearchResult} />
           </div>
           <div className={styles.headerActions}>
             <DriverDropdown
