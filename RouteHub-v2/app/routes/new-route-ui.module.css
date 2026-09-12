@@ -9,11 +9,12 @@
 .typeCardDesc{display:block;font-size:9px;font-weight:500;color:#64748B;line-height:1.25}
 .typeCheck{position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:99px;background:#4263EB;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center}
 
-/* Route type (narrower, ~40%) + Assignment panel (wider, ~60%) share one
-   row, filling the space that used to sit empty next to a compact type
-   row - Route details below then gets the full width to itself. */
+/* Route type (flexible, most of the row) + Assignment panel (fixed,
+   narrower) share one row - Assignment stays a fixed narrow width instead
+   of stretching to take most of the row, which was what made this row
+   look lopsided. Route details below gets the full width to itself. */
 .typeAssignmentRow{display:grid;gap:16px;align-items:start}
-@media(min-width:640px){.typeAssignmentRow{grid-template-columns:0.7fr 1fr}}
+@media(min-width:640px){.typeAssignmentRow{grid-template-columns:minmax(0,1fr) 260px}}
 .driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:24px;padding:0 10px;border-radius:999px;background:#ECFDF3;color:#18A566;font-size:12px;font-weight:650}
 .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px}
 .statusCard{padding:8px;border:1px solid #E5EAF2;border-radius:10px;background:#fff}
