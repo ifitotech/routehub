@@ -29,7 +29,11 @@ export default function NewRouteDetails(p: any) {
         <div className={ui.timelineContent}>
           <fieldset className={`${styles.fieldset} ${ui.originPrimary}`}>
             <legend>{c.startingPoint}</legend>
-            <div className={styles.segmented}>{(['branch','previous','contact','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
+            {/* "Saved place" (contact) dropped from the chip row - with the
+                Assignment panel now sharing this row's width, four chips no
+                longer fit comfortably; branch/previous/custom cover the
+                common cases. */}
+            <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
             {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{(branches||[]).map((branch: any) => <option key={branch.id} value={branch.address || branch.name}>{branch.name}</option>)}</select></div>}
             {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
             {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{(contacts||[]).map((contact: any) => <option key={contact.id} value={contact.address}>{contact.company_name}</option>)}</select></div>}

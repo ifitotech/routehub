@@ -24,7 +24,7 @@
 .detailsToggleLeft{display:inline-flex;align-items:center;gap:8px;font-weight:700}
 .detailsToggleSummary{display:inline-flex;align-items:center;gap:8px;margin-left:auto;color:#64748B;font-size:12px}
 .originPrimary{padding-bottom:4px}
-.originPrimary .segmented{margin-bottom:2px}
+.originPrimary .segmented{margin-bottom:2px;grid-template-columns:repeat(3,minmax(0,1fr))}
 .originPrimary + .field{margin-top:2px}
 .deliveryDetailsRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
 .deliveryDetailsRow .field{min-width:0}
