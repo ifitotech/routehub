@@ -1,6 +1,6 @@
 'use client'
 
-import {MapPin, Search, UserPlus} from 'lucide-react'
+import {MapPin, Search, UserPlus, X} from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import GoogleAddressInput from '../google-address-input'
 import styles from './routes.module.css'
@@ -43,12 +43,18 @@ export default function NewRouteDetails(p: any) {
           {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={styles.inputWrap}><MapPin size={18}/><select value={form.destination} onChange={event=>{const branch=branchForValue(event.target.value);setSelectedDestinationLocation(branchLocation(branch));setForm((current: any)=>({...current,destination:event.target.value,destination_label:branch?.name||'',destination_phone:'',contact_id:''}))}}>{(branches||[]).map((branch: any)=><option key={branch.id} value={branch.address||branch.name}>{branch.name}</option>)}</select></div></label> : <div>
             <label className={styles.field}>
               <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
-              <div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/></div>
-              {/* A one-line reference to which saved contact this address
-                  came from - not a repeat of the address itself (already
-                  filled into the field above), just enough to confirm at a
-                  glance which contact was picked. */}
-              {selectedContact && <small className={ui.savedContactHint}>{locale==='es'?'Contacto guardado':locale==='fr'?'Contact enregistré':'Saved contact'}: {selectedContact.company_name}</small>}
+              <div className={ui.destinationRow}>
+                <div className={styles.inputWrap}><Search size={18}/><GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/></div>
+                {/* Names which saved contact this address came from, next to
+                    the field instead of repeating the address in a card
+                    below it. The X clears both the contact and the address
+                    in one step, so picking the wrong saved place doesn't
+                    require manually erasing the text field first. */}
+                {selectedContact && <div className={ui.savedContactBadge}>
+                  <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: ''}))}><X size={12}/></button>
+                  <span>{selectedContact.company_name}</span>
+                </div>}
+              </div>
             </label>
             {pendingLocation && <section className={styles.locationConfirmation}>
               <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
