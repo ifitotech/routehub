@@ -39,8 +39,12 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
   return (
     <div className={ui.inlinePanel}>
       <div className={ui.inlinePanelHeader}>
+        {/* Eyebrow + title + branch used to be three separate lines, which
+            cost more header height than the context is worth once the
+            branch name is already visible everywhere else in the shell -
+            title and branch now share one compact line. */}
         <div className={ui.titleRow}>
-          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2>{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itinéraire' : 'New route'}</h2>{defaultBranch?.name && <p>{defaultBranch.name}</p>}</div>
+          <div className={ui.compactTitle}><h2>{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itinéraire' : 'New route'}</h2>{defaultBranch?.name && <span>{defaultBranch.name}</span>}</div>
           <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={20}/></button>
         </div>
       </div>

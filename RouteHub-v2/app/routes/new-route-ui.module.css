@@ -50,10 +50,11 @@
    column (in focus mode) instead of a separate modal/drawer, so it shares
    that column's padding, background and scroll behaviour. */
 .inlinePanel{display:flex;flex-direction:column;height:100%;min-height:0;margin:-16px;}
-.inlinePanelHeader{padding:20px 24px 6px}
-.inlinePanelHeader .titleRow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.inlinePanelHeader h2{margin:2px 0 0;font-size:24px;letter-spacing:-.02em}
-.inlinePanelHeader p{margin:3px 0 0;color:#64748B;font-size:13px;font-weight:600}
+.inlinePanelHeader{padding:14px 24px 8px}
+.inlinePanelHeader .titleRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.compactTitle{display:flex;align-items:baseline;gap:9px;min-width:0}
+.compactTitle h2{margin:0;font-size:19px;letter-spacing:-.02em;white-space:nowrap}
+.compactTitle span{overflow:hidden;color:#64748B;font-size:13px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
 .inlinePanelBody{display:grid;gap:22px;padding:18px 24px 22px;overflow-y:auto;width:100%}
 
 .sectionHeading{margin:0 0 14px;color:#0f1d35;font-size:16px;font-weight:800}
