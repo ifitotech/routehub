@@ -67,7 +67,10 @@ export default function ManagerShell({children, active = 'today', branchName, di
         <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
         <span>Route<em>Hub</em></span>
       </Link>
-      <Link href="/routes?new=1" className={styles.newRoute}><Plus size={18} />{copy.newRoute}</Link>
+      {/* The Routes page has its own Add route / Cancel toggle in its header
+          toolbar, so this link would duplicate it there - it only shows up
+          when navigating in from somewhere else. */}
+      {active !== 'routes' && <Link href="/routes?new=1" className={styles.newRoute}><Plus size={18} />{copy.newRoute}</Link>}
       <nav className={styles.nav} aria-label="Primary">
         {nav.map(({id, href, label, Icon}) => <Link href={href} key={id} data-active={active === id ? 'true' : 'false'} aria-current={active === id ? 'page' : undefined}><Icon size={20} /><span>{label}</span></Link>)}
       </nav>
@@ -75,7 +78,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
       <Link href="/settings" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
     </aside>
     <section className={styles.content}>{children}</section>
-    <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>
+    {active !== 'routes' && <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>}
     <nav className={styles.mobileNav} aria-label="Mobile manager navigation">
       {nav.map(({id, href, label, Icon}) => {
         const isActive = active === id || (id === 'routes' && active === 'map')

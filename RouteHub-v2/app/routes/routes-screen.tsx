@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import {useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
-import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRoutePanel from './new-route-panel'
@@ -201,7 +201,9 @@ export default function Routes() {
             <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} onClick={() => { setManaging(on => !on); setPane('list') }}>
               <RouteIcon size={18}/>{c.manage}
             </button>
-            <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
+            {open
+              ? <button className={styles.secondaryButton} type="button" onClick={() => setOpen(false)}><X size={18}/>{locale==='es'?'Cancelar':locale==='fr'?'Annuler':'Cancel'}</button>
+              : <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>}
           </div>
         </header>
 
