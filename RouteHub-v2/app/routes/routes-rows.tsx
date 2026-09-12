@@ -1,6 +1,7 @@
 'use client'
 
-import {ChevronDown, ChevronUp, CornerUpLeft, GripVertical, Pause, Play, X} from 'lucide-react'
+import Link from 'next/link'
+import {ChevronDown, ChevronRight, ChevronUp, CornerUpLeft, GripVertical, Pause, Play, X} from 'lucide-react'
 import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './routes-model'
 import type {RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
@@ -18,10 +19,10 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   managing?: boolean
 }) {
   const label = locale === 'es'
-    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', unassign: 'Mover a sin asignar', drag: 'Arrastra a Sin asignar'}
+    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', unassign: 'Mover a sin asignar', drag: 'Arrastra a Sin asignar', details: 'Ver detalles'}
     : locale === 'fr'
-      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', unassign: 'Déplacer vers non attribué', drag: 'Glisser vers Non attribuées'}
-      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', unassign: 'Move to unassigned', drag: 'Drag to Unassigned'}
+      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', unassign: 'Déplacer vers non attribué', drag: 'Glisser vers Non attribuées', details: 'Voir les détails'}
+      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', unassign: 'Move to unassigned', drag: 'Drag to Unassigned', details: 'View details'}
 
   return (
     <div className={styles.list}>
@@ -71,6 +72,16 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                 {routeDate(route, locale, c)} {routeTime(route, locale, c)}
                 {po ? ` · ${po}` : ''}
               </p>
+              {/* Completed/issue routes have no more actions to take on them
+                  here - what's missing is a way to see how they went (proof
+                  of delivery, photos, signature), which already lives in
+                  History. Link there pre-searched for this route's
+                  destination instead of duplicating that whole view here. */}
+              {(status === 'completed' || status === 'issue') && (
+                <Link className={styles.detailsLink} href={`/manager/history?q=${encodeURIComponent(destination)}`}>
+                  {label.details}<ChevronRight size={14} />
+                </Link>
+              )}
               {canManage ? (
                 <div className={styles.actions}>
                   {canMove ? (

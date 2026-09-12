@@ -1,6 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
+import {useSearchParams} from 'next/navigation'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {AlertTriangle, CalendarDays, Camera, CheckCircle2, ChevronDown, Clock3, FileText, Image as ImageIcon, MapPin, Navigation, Ruler, Search, Signature, UserRound, X} from 'lucide-react'
 import {getSupabase} from '../../../lib/supabase'
@@ -70,8 +73,14 @@ function statusLabel(route: HistoryRoute, c: Copy) { return route.status === 'co
 
 export default function ManagerHistoryPage() {
   const {locale} = useLocale(); const c = copy[locale]
+  // Arriving from a "view details" link on a completed route elsewhere
+  // (dispatch board) passes ?q=<destination> - land already searched for
+  // it instead of an unfiltered list the driver/date filters would hide it
+  // behind, since "all time" isn't the default period.
+  const searchParams = useSearchParams()
+  const initialQuery = searchParams.get('q') || ''
   const [routes, setRoutes] = useState<HistoryRoute[]>([]); const [people, setPeople] = useState<Record<string, TeamMember>>({}); const [message, setMessage] = useState(''); const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState<Period>('30d'); const [fromDate, setFromDate] = useState(''); const [toDate, setToDate] = useState(''); const [search, setSearch] = useState(''); const [status, setStatus] = useState(''); const [kind, setKind] = useState(''); const [driverId, setDriverId] = useState('')
+  const [period, setPeriod] = useState<Period>(initialQuery ? 'all' : '30d'); const [fromDate, setFromDate] = useState(''); const [toDate, setToDate] = useState(''); const [search, setSearch] = useState(initialQuery); const [status, setStatus] = useState(''); const [kind, setKind] = useState(''); const [driverId, setDriverId] = useState('')
   const [evidenceUrls, setEvidenceUrls] = useState<Record<string, string>>({}); const [evidenceLoading, setEvidenceLoading] = useState<string | null>(null)
 
   const load = useCallback(async () => { setLoading(true); try { const membership = await currentMembership(); const client = getSupabase(); const {data, error} = await client.from('routes').select('id,status,driver_id,mission_type,priority,destination_name,destination_address,destination_phone,origin_name,origin_address,order_number,notes,driver_note,route_date,scheduled_at,created_at,completed_at,route_started_at,route_completed_at,arrived_at,completion_method,completion_lat,completion_lng,completion_accuracy,completion_distance_m,completion_warning,completion_photo_path,customer_signature_path,finalized_at,finalization_method,finalization_note,finalization_issue,finalization_photo_path').eq('company_id', membership.company_id).in('status', ['completed', 'issue', 'cancelled']).limit(250); if (error) throw error; setRoutes(((data || []) as HistoryRoute[]).sort((a, b) => (parseDate(routeMoment(b))?.getTime() || 0) - (parseDate(routeMoment(a))?.getTime() || 0))); const ids = [...new Set(((data || []) as HistoryRoute[]).map(route => route.driver_id).filter((value): value is string => Boolean(value)))]; if (ids.length) { const {data: members, error: memberError} = await client.from('company_users').select('user_id,users(email)').eq('company_id', membership.company_id).in('user_id', ids); if (memberError) throw memberError; setPeople(Object.fromEntries(((members || []) as TeamMember[]).map(member => [member.user_id, member]))) } else setPeople({}); setMessage('') } catch (error) { setMessage(error instanceof Error ? error.message : c.unableLoad) } finally { setLoading(false) } }, [c.unableLoad])
