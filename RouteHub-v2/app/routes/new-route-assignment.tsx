@@ -10,10 +10,11 @@ import {driverDetails} from './routes-model'
 // their own grey surface so "who and when" reads apart from "where"
 // instead of every field competing in one long column. Cancel/Assign live
 // in the left column below Route details instead (see new-route-panel.tsx)
-// so they always sit at the true bottom of the form, however tall Route
-// details grows once "More details" is open there too.
+// so they always sit at the true bottom of the form. More details is always
+// expanded here - the panel comfortably fits this screen, so hiding it
+// behind a toggle only added a click with nothing gained.
 export default function NewRouteAssignment(p: any) {
-  const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, detailsOpen, setDetailsOpen} = p
+  const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes} = p
   const [driverMenuOpen, setDriverMenuOpen] = useState(false)
   const [dateMode, setDateMode] = useState<'today' | 'custom'>(form.date === todayValue ? 'today' : 'custom')
   // form.date can change from outside this component (tapping a different
@@ -110,11 +111,8 @@ export default function NewRouteAssignment(p: any) {
       </div>
 
       <div>
-        <button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} aria-controls="route-more-details" onClick={event => { event.stopPropagation(); setDetailsOpen((value: boolean) => !value) }}>
-          <span className={ui.detailsToggleLeft}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</span>
-          <ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/>
-        </button>
-        {detailsOpen && <div id="route-more-details" className={ui.moreDetailsPanel}>
+        <h3><SlidersHorizontal size={15}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</h3>
+        <div id="route-more-details" className={ui.moreDetailsPanel}>
           {form.type!=='pickup'&&form.type!=='delivery'&&<label className={`${ui.field} ${ui.fieldSpaced}`}><span>{c.po} <em className={ui.optionalLabel}>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
           <label className={`${ui.field} ${ui.fieldSpaced}`}>
             <span>{locale==='es'?'Prioridad':locale==='fr'?'Priorité':'Priority'}</span>
@@ -128,7 +126,7 @@ export default function NewRouteAssignment(p: any) {
             <span>{locale==='es'?'Nota para el conductor':locale==='fr'?'Note pour le conducteur':'Driver note'} <em className={ui.optionalLabel}>{c.optional}</em></span>
             <textarea value={form.notes} placeholder={locale==='es'?'Código de acceso, estacionamiento o instrucciones…':locale==='fr'?'Code d’accès, stationnement ou instructions…':'Gate code, parking or instructions…'} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/>
           </label>
-        </div>}
+        </div>
       </div>
     </div>
   )
