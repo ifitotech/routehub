@@ -174,7 +174,12 @@ export function useRoutesDerived() {
   const setOriginSource = (mode: OriginMode) => {
     setOriginMode(mode)
     if (mode === 'branch') setForm(current => ({...current, origin: defaultBranch?.address || defaultBranch?.name || ''}))
-    if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || driverLocations[current.driver_id] || ''}))
+    // No fallback to the driver's live GPS coordinate here - that's a raw
+    // "lat,lng" string meant for 'custom' mode, not a human-readable
+    // address. Leaving origin empty when there's no previous route lets the
+    // field show its "No previous route available" placeholder instead of
+    // a coordinate pair.
+    if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || ''}))
     if (mode === 'contact') setForm(current => ({...current, origin: contacts[0]?.address || ''}))
     if (mode === 'custom') setForm(current => ({...current, origin: ''}))
   }
