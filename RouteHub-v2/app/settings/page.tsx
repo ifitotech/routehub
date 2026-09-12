@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Building2, Camera, ChevronRight, History, LogOut, Save, Send, Truck, Users} from 'lucide-react'
+import {Building2, Camera, ChevronRight, History, LogOut, Save, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
@@ -13,7 +13,8 @@ import {requestOnboardingReplay} from '../../lib/onboarding'
 import ManagerShell from '../manager/manager-shell'
 import styles from './settings.module.css'
 
-type BranchSettings = {id: string; name: string; address: string; phone: string; coordinate: MapPoint | null}
+type BranchSettings = {id: string; name: string; address: string; phone: string; coordinate: MapPoint | null; primary_driver_id: string | null; auto_close_time: string | null}
+type DriverOption = {user_id: string; name: string}
 
 export default function Settings() {
   const {locale, t, setLocale} = useLocale()
@@ -25,6 +26,7 @@ export default function Settings() {
   const [phone, setPhone] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [branch, setBranch] = useState<BranchSettings>()
+  const [driverOptions, setDriverOptions] = useState<DriverOption[]>([])
   const [editingProfile, setEditingProfile] = useState(false)
   const [editingBranch, setEditingBranch] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
@@ -34,10 +36,10 @@ export default function Settings() {
   const [trialEnd, setTrialEnd] = useState<string | null>(null)
   const [isCeo, setIsCeo] = useState(false)
   const copy = locale === 'es'
-    ? {name:'Nombre completo', phone:'Teléfono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal', branchName:'Nombre de la sucursal', branchAddress:'Dirección de la sucursal', branchPhone:'Teléfono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', tour:'Recorrido de la app', tourHelp:'Vuelve a ver la guía rápida de RouteHub.', tourAction:'Ver recorrido', preferences:'Preferencias', language:'Idioma', notifications:'Notificaciones', app:'App', operations:'Operaciones', reportsHistory:'Reportes e historial', reportsHistoryHelp:'Conteos, actividad, días anteriores y evidencia.', truck:'Camión', truckHelp:'Registros del vehículo.', team:'Equipo e invitaciones', teamHelp:'Miembros, roles e invitaciones.', legal:'Legal', privacy:'Privacidad', terms:'Términos'}
+    ? {name:'Nombre completo', phone:'Teléfono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal', branchName:'Nombre de la sucursal', branchAddress:'Dirección de la sucursal', branchPhone:'Teléfono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', primaryDriver:'Conductor principal', primaryDriverHelp:'Se selecciona automáticamente al crear una ruta.', choosePrimaryDriver:'Sin conductor principal', primaryDriverSaved:'Conductor principal actualizado.', autoClose:'Cierre automático de jornada', autoCloseHelp:'Solo cierra si no quedan rutas pendientes.', autoCloseSaved:'Hora de cierre actualizada.', team:'Equipo e invitaciones', teamHelp:'Miembros, roles e invitaciones.', tour:'Recorrido de la app', tourHelp:'Vuelve a ver la guía rápida de RouteHub.', tourAction:'Ver recorrido', preferences:'Preferencias', language:'Idioma', notifications:'Notificaciones', app:'App', operations:'Operaciones', reportsHistory:'Reportes e historial', reportsHistoryHelp:'Conteos, actividad, días anteriores y evidencia.', legal:'Legal', privacy:'Privacidad', terms:'Términos'}
     : locale === 'fr'
-      ? {name:'Nom complet', phone:'Téléphone', photo:'Changer la photo', edit:'Modifier', save:'Enregistrer le profil', profileSaved:'Profil mis à jour.', branch:'Succursale', branchName:'Nom de la succursale', branchAddress:'Adresse de la succursale', branchPhone:'Téléphone de la succursale', saveBranch:'Enregistrer la succursale', branchSaved:'Succursale mise à jour.', noBranch:'Aucune succursale associée.', tour:'Visite de l’application', tourHelp:'Revoir le guide rapide de RouteHub.', tourAction:'Voir la visite', preferences:'Préférences', language:'Langue', notifications:'Notifications', app:'Application', operations:'Opérations', reportsHistory:'Rapports et historique', reportsHistoryHelp:'Totaux, activité, jours passés et preuves.', truck:'Camion', truckHelp:'Fiche véhicule.', team:'Équipe et invitations', teamHelp:'Membres, rôles et invitations.', legal:'Mentions', privacy:'Confidentialité', terms:'Conditions'}
-      : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.', tour:'App tour', tourHelp:'See the RouteHub quick guide again.', tourAction:'View tour', preferences:'Preferences', language:'Language', notifications:'Notifications', app:'App', operations:'Operations', reportsHistory:'Reports & History', reportsHistoryHelp:'Counts, activity, past days and proof.', truck:'Truck', truckHelp:'Vehicle records.', team:'Team & invitations', teamHelp:'Members, roles and invitations.', legal:'Legal', privacy:'Privacy', terms:'Terms'}
+      ? {name:'Nom complet', phone:'Téléphone', photo:'Changer la photo', edit:'Modifier', save:'Enregistrer le profil', profileSaved:'Profil mis à jour.', branch:'Succursale', branchName:'Nom de la succursale', branchAddress:'Adresse de la succursale', branchPhone:'Téléphone de la succursale', saveBranch:'Enregistrer la succursale', branchSaved:'Succursale mise à jour.', noBranch:'Aucune succursale associée.', primaryDriver:'Conducteur principal', primaryDriverHelp:'Sélectionné automatiquement lors de la création d’un itinéraire.', choosePrimaryDriver:'Aucun conducteur principal', primaryDriverSaved:'Conducteur principal mis à jour.', autoClose:'Fermeture automatique de la journée', autoCloseHelp:'Ferme uniquement si aucun itinéraire ne reste.', autoCloseSaved:'Heure de fermeture mise à jour.', team:'Équipe et invitations', teamHelp:'Membres, rôles et invitations.', tour:'Visite de l’application', tourHelp:'Revoir le guide rapide de RouteHub.', tourAction:'Voir la visite', preferences:'Préférences', language:'Langue', notifications:'Notifications', app:'Application', operations:'Opérations', reportsHistory:'Rapports et historique', reportsHistoryHelp:'Totaux, activité, jours passés et preuves.', legal:'Mentions', privacy:'Confidentialité', terms:'Conditions'}
+      : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.', primaryDriver:'Primary driver', primaryDriverHelp:'Automatically selected when a new route is created.', choosePrimaryDriver:'No primary driver', primaryDriverSaved:'Primary driver updated.', autoClose:'Automatic driving-day close', autoCloseHelp:'Closes only when no routes remain pending.', autoCloseSaved:'Automatic close time updated.', team:'Team & invitations', teamHelp:'Members, roles and invitations.', tour:'App tour', tourHelp:'See the RouteHub quick guide again.', tourAction:'View tour', preferences:'Preferences', language:'Language', notifications:'Notifications', app:'App', operations:'Operations', reportsHistory:'Reports & History', reportsHistoryHelp:'Counts, activity, past days and proof.', legal:'Legal', privacy:'Privacy', terms:'Terms'}
 
   useEffect(() => {
     let active = true
@@ -57,8 +59,8 @@ export default function Settings() {
       const {data: company} = await client.from('companies').select('plan,trial_ends_at').eq('id', membership.company_id).maybeSingle()
       if (company) { setPlan(company.plan || 'free'); setTrialEnd(company.trial_ends_at || null) }
       const branchQuery = membership.branch_id
-        ? client.from('branches').select('id,name,address,phone,latitude,longitude').eq('id', membership.branch_id).maybeSingle()
-        : client.from('branches').select('id,name,address,phone,latitude,longitude').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
+        ? client.from('branches').select('id,name,address,phone,latitude,longitude,primary_driver_id,auto_close_time').eq('id', membership.branch_id).maybeSingle()
+        : client.from('branches').select('id,name,address,phone,latitude,longitude,primary_driver_id,auto_close_time').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
       const {data: branchData} = await branchQuery
       if (branchData) setBranch({
         id: branchData.id,
@@ -66,13 +68,21 @@ export default function Settings() {
         address: branchData.address || '',
         phone: branchData.phone || '',
         coordinate: sanitizeCoordinate({lat: branchData.latitude, lng: branchData.longitude}),
+        primary_driver_id: branchData.primary_driver_id || null,
+        auto_close_time: branchData.auto_close_time || null,
       })
+      // Primary Driver only matters once there is more than one to choose
+      // between - this is the same list Team shows, fetched here too since
+      // that assignment now lives on this page instead.
+      const {data: driverRows} = await client.from('company_users').select('user_id,branch_id,users(email,name)').eq('company_id', membership.company_id).eq('role', 'driver')
+      const scoped = ((driverRows || []) as any[]).filter(row => !branchData || row.branch_id == null || row.branch_id === branchData.id)
+      setDriverOptions(scoped.map(row => ({user_id: row.user_id, name: row.users?.name?.trim() || row.users?.email || t.teamMember})))
     }
     void loadSettings()
     const onPageShow = () => { if (active) void loadSettings() }
     window.addEventListener('pageshow', onPageShow)
     return () => { active = false; window.removeEventListener('pageshow', onPageShow) }
-  }, [])
+  }, [t.teamMember])
 
   const signOut = async () => { await getSupabase().auth.signOut(); window.location.assign('/') }
   const saveProfile = async () => {
@@ -118,13 +128,18 @@ export default function Settings() {
     setMessage(error ? error.message : copy.branchSaved)
     setBranchSaving(false)
   }
-
-  const operations = [
-    {href: '/manager/history', label: copy.reportsHistory, help: copy.reportsHistoryHelp, Icon: History},
-    {href: '/manager/truck', label: copy.truck, help: copy.truckHelp, Icon: Truck},
-    {href: '/manager/team', label: copy.team, help: copy.teamHelp, Icon: Users},
-    {href: '/manager/invitations', label: t.invitations, help: '', Icon: Send},
-  ]
+  const setPrimaryDriver = async (userId: string) => {
+    if (!branch) return
+    const {error} = await getSupabase().from('branches').update({primary_driver_id: userId || null}).eq('id', branch.id)
+    setMessage(error ? error.message : copy.primaryDriverSaved)
+    if (!error) setBranch({...branch, primary_driver_id: userId || null})
+  }
+  const setAutoCloseTime = async (value: string) => {
+    if (!branch) return
+    const {error} = await getSupabase().from('branches').update({auto_close_time: value}).eq('id', branch.id)
+    setMessage(error ? error.message : copy.autoCloseSaved)
+    if (!error) setBranch({...branch, auto_close_time: value})
+  }
 
   return (
     <ManagerShell active="settings" roleLabel={t.managerRole}>
@@ -149,41 +164,6 @@ export default function Settings() {
             </div>
           )}
         </section>
-
-        {!isCeo && (
-          <>
-            <p className={styles.group}>{copy.branch}</p>
-            <section className={styles.card}>
-              {branch ? (
-                <>
-                  <button className={styles.row} type="button" onClick={() => setEditingBranch(value => !value)}>
-                    <span className={styles.icon}><Building2 size={18} /></span>
-                    <span className={styles.copy}><strong>{branch.name || copy.branchName}</strong><small>{branch.address || t.addressNotConfigured}</small></span>
-                    <span className={styles.meta}>{copy.edit}</span>
-                  </button>
-                  {editingBranch && (
-                    <div className={styles.editor}>
-                      <label>{copy.branchName}<input value={branch.name} onChange={event => setBranch({...branch, name: event.target.value})}/></label>
-                      <label>{copy.branchAddress}<GoogleAddressInput value={branch.address} autoComplete="street-address" onValueChange={value => setBranch(current => current ? {...current, address: value, coordinate: null} : current)} onSelectSearchSuggestion={suggestion => setBranch(current => current ? {...current, address: suggestion.label, coordinate: sanitizeCoordinate(suggestion.coordinate)} : current)} placeholder={t.addressPlaceholder}/></label>
-                      <label>{copy.branchPhone}<input type="tel" value={branch.phone} onChange={event => setBranch({...branch, phone: event.target.value})} placeholder="(000) 000-0000"/></label>
-                      <button className={styles.primary} disabled={branchSaving} onClick={saveBranch}><Save size={16}/>{branchSaving ? t.saving : copy.saveBranch}</button>
-                    </div>
-                  )}
-                  <Link className={styles.row} href="/manager/branches">
-                    <span className={styles.copy}><strong>{t.branches}</strong></span>
-                    <ChevronRight size={18} />
-                  </Link>
-                </>
-              ) : <p className={styles.hint}>{copy.noBranch}</p>}
-            </section>
-          </>
-        )}
-
-        {isCeo && (
-          <section className={styles.card}>
-            <div className={styles.row}><span className={styles.copy}><strong>CEO / Platform administrator</strong><small>Companies, branches, approvals and audit.</small></span></div>
-          </section>
-        )}
 
         <p className={styles.group}>{copy.preferences}</p>
         <section className={styles.card}>
@@ -213,15 +193,63 @@ export default function Settings() {
 
         {!isCeo && (
           <>
+            {/* Everything about running this one branch, together: its own
+                details, who's picked as the default driver, when its
+                driving day auto-closes, and the team that works it -
+                instead of the branch address living here while the driver
+                priority and auto-close time lived on a different page. */}
+            <p className={styles.group}>{copy.branch}</p>
+            <section className={styles.card}>
+              {branch ? (
+                <>
+                  <button className={styles.row} type="button" onClick={() => setEditingBranch(value => !value)}>
+                    <span className={styles.icon}><Building2 size={18} /></span>
+                    <span className={styles.copy}><strong>{branch.name || copy.branchName}</strong><small>{branch.address || t.addressNotConfigured}</small></span>
+                    <span className={styles.meta}>{copy.edit}</span>
+                  </button>
+                  {editingBranch && (
+                    <div className={styles.editor}>
+                      <label>{copy.branchName}<input value={branch.name} onChange={event => setBranch({...branch, name: event.target.value})}/></label>
+                      <label>{copy.branchAddress}<GoogleAddressInput value={branch.address} autoComplete="street-address" onValueChange={value => setBranch(current => current ? {...current, address: value, coordinate: null} : current)} onSelectSearchSuggestion={suggestion => setBranch(current => current ? {...current, address: suggestion.label, coordinate: sanitizeCoordinate(suggestion.coordinate)} : current)} placeholder={t.addressPlaceholder}/></label>
+                      <label>{copy.branchPhone}<input type="tel" value={branch.phone} onChange={event => setBranch({...branch, phone: event.target.value})} placeholder="(000) 000-0000"/></label>
+                      <button className={styles.primary} disabled={branchSaving} onClick={saveBranch}><Save size={16}/>{branchSaving ? t.saving : copy.saveBranch}</button>
+                    </div>
+                  )}
+                  {driverOptions.length > 1 && (
+                    <div className={styles.row}>
+                      <span className={styles.copy}><strong>{copy.primaryDriver}</strong><small>{copy.primaryDriverHelp}</small></span>
+                    </div>
+                  )}
+                  {driverOptions.length > 1 && (
+                    <div className={styles.editor}>
+                      <select value={branch.primary_driver_id || ''} onChange={event => void setPrimaryDriver(event.target.value)}>
+                        <option value="">{copy.choosePrimaryDriver}</option>
+                        {driverOptions.map(driver => <option key={driver.user_id} value={driver.user_id}>★ {driver.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div className={styles.row}>
+                    <span className={styles.copy}><strong>{copy.autoClose}</strong><small>{copy.autoCloseHelp}</small></span>
+                  </div>
+                  <div className={styles.editor}>
+                    <input type="time" value={(branch.auto_close_time || '18:00').slice(0, 5)} onChange={event => void setAutoCloseTime(event.target.value)}/>
+                  </div>
+                  <Link className={styles.row} href="/manager/team">
+                    <span className={styles.icon}><Users size={18} /></span>
+                    <span className={styles.copy}><strong>{copy.team}</strong><small>{copy.teamHelp}</small></span>
+                    <ChevronRight size={18} />
+                  </Link>
+                </>
+              ) : <p className={styles.hint}>{copy.noBranch}</p>}
+            </section>
+
             <p className={styles.group}>{copy.operations}</p>
             <section className={styles.card}>
-              {operations.map(({href, label, help, Icon}) => (
-                <Link key={href} className={styles.row} href={href}>
-                  <span className={styles.icon}><Icon size={18} /></span>
-                  <span className={styles.copy}><strong>{label}</strong>{help ? <small>{help}</small> : null}</span>
-                  <ChevronRight size={18} />
-                </Link>
-              ))}
+              <Link className={styles.row} href="/manager/history">
+                <span className={styles.icon}><History size={18} /></span>
+                <span className={styles.copy}><strong>{copy.reportsHistory}</strong><small>{copy.reportsHistoryHelp}</small></span>
+                <ChevronRight size={18} />
+              </Link>
             </section>
 
             <p className={styles.group}>{t.planBilling}</p>
@@ -232,6 +260,12 @@ export default function Settings() {
               </div>
             </section>
           </>
+        )}
+
+        {isCeo && (
+          <section className={styles.card}>
+            <div className={styles.row}><span className={styles.copy}><strong>CEO / Platform administrator</strong><small>Companies, branches, approvals and audit.</small></span></div>
+          </section>
         )}
 
         <p className={styles.group}>{t.support}</p>

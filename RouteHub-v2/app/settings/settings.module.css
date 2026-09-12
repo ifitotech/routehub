@@ -20,8 +20,9 @@
 .seg button[data-on='true']{background:var(--rh-blue);color:#fff}
 .editor{display:grid;gap:10px;padding:4px 16px 16px}
 .editor label{display:grid;gap:6px;font-size:12px;font-weight:650;color:var(--rh-ink-soft)}
-.editor input{min-height:42px;border:1px solid var(--rh-line);border-radius:var(--rh-r-md);padding:0 12px;background:var(--rh-card);color:var(--rh-ink);font:inherit}
-.editor input:focus{outline:2px solid var(--rh-blue);outline-offset:1px;border-color:var(--rh-blue)}
+.editor input,.editor select{min-height:42px;border:1px solid var(--rh-line);border-radius:var(--rh-r-md);padding:0 12px;background:var(--rh-card);color:var(--rh-ink);font:inherit}
+.editor input:focus,.editor select:focus{outline:2px solid var(--rh-blue);outline-offset:1px;border-color:var(--rh-blue)}
+.editor small{color:var(--rh-ink-soft);font-size:11px;font-weight:500}
 .photo{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
 .photo input{display:none}
 .primary{height:42px;border:0;border-radius:var(--rh-r-md);background:var(--rh-blue);color:#fff;font-weight:700;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px}
