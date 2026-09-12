@@ -53,9 +53,19 @@ export function useRoutesDerived() {
   ], [branches, contacts])
   const oc = originCopy[locale]
   const defaultBranch = branches.find(branch => branch.id === branchId) || branches[0]
-  const findPreviousRoute = (driverId: string, date: string) => routes
-    .filter(route => route.driver_id === driverId && routeDateValue(route) === date && (!branchId || !route.branch_id || route.branch_id === branchId))
-    .sort((a, b) => Number(b.position || 0) - Number(a.position || 0))[0]
+  // "Last route" means physical continuity: the vehicle is still where its
+  // last stop left it, so that address is a sensible starting point. That
+  // only holds within the same operating day - a route scheduled for a
+  // different date (even the very next day) gives the driver time to
+  // return to the branch, so it should never inherit today's or any other
+  // day's last destination. Only look up a previous route when planning
+  // for today; every other date starts from the branch by default.
+  const findPreviousRoute = (driverId: string, date: string) => {
+    if (date !== localSchedule().date) return undefined
+    return routes
+      .filter(route => route.driver_id === driverId && routeDateValue(route) === date && (!branchId || !route.branch_id || route.branch_id === branchId))
+      .sort((a, b) => Number(b.position || 0) - Number(a.position || 0))[0]
+  }
   const previousRoute = useMemo(() => findPreviousRoute(form.driver_id, form.date), [branchId, routes, form.driver_id, form.date])
   useEffect(() => {
     if (!form.driver_id || (originMode !== 'branch' && originMode !== 'previous')) return
