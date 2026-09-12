@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {GripVertical, Truck} from 'lucide-react'
+import {AlertTriangle, CheckCircle2, ChevronRight, GripVertical, Truck} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -13,9 +13,17 @@ type UnassignedPanelProps = {
   busyRouteId?: string
   managing?: boolean
   locale: string
+  // Completed/issue routes have nothing left to do in the active board, so
+  // they live here instead - out of the way of today's active work, but
+  // still one click from their proof-of-delivery details. Without these,
+  // this panel goes empty the moment every route is assigned, which reads
+  // as broken rather than "caught up".
+  issueRoutes?: RouteRecord[]
+  completedRoutes?: RouteRecord[]
+  onViewDetails?: (routeId: string) => void
 }
 
-export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale}: UnassignedPanelProps) {
+export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
   const [dropActive, setDropActive] = useState(false)
   // Assignees span several branch roles, not just drivers. When a profile has
   // no readable name the role names them, so the picker can't show the same
@@ -36,6 +44,9 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
   }
   const assignLabel = locale === 'es' ? 'Asignar' : locale === 'fr' ? 'Attribuer' : 'Assign'
   const pickLabel = locale === 'es' ? 'Asignar a...' : locale === 'fr' ? 'Attribuer à...' : 'Assign to...'
+  const detailsLabel = locale === 'es' ? 'Ver detalles' : locale === 'fr' ? 'Voir les détails' : 'View details'
+  const issuesLabel = locale === 'es' ? 'Incidencias' : locale === 'fr' ? 'Incidents' : 'Issues'
+  const completedLabel = locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed'
 
   const dropHint = locale === 'es'
     ? 'Suelta aquí para quitar el conductor'
@@ -120,6 +131,46 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
               </div>
             )
           })}
+        </div>
+      )}
+
+      {issueRoutes.length > 0 && (
+        <div className={styles.subsection}>
+          <div className={styles.header}>
+            <div className={`${styles.headerIcon} ${styles.headerIconIssue}`}><AlertTriangle size={18} /></div>
+            <div className={styles.headerLabel}>
+              <h3>{issuesLabel}</h3>
+              <span className={styles.count}>{issueRoutes.length}</span>
+            </div>
+          </div>
+          <div className={styles.list}>
+            {issueRoutes.map(route => (
+              <div key={route.id} className={styles.item}>
+                <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+                {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {completedRoutes.length > 0 && (
+        <div className={styles.subsection}>
+          <div className={styles.header}>
+            <div className={`${styles.headerIcon} ${styles.headerIconDone}`}><CheckCircle2 size={18} /></div>
+            <div className={styles.headerLabel}>
+              <h3>{completedLabel}</h3>
+              <span className={styles.count}>{completedRoutes.length}</span>
+            </div>
+          </div>
+          <div className={styles.list}>
+            {completedRoutes.map(route => (
+              <div key={route.id} className={styles.item}>
+                <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+                {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </aside>

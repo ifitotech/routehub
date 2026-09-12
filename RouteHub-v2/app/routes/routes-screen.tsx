@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import {useEffect, useMemo, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import Link from 'next/link'
 import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from 'lucide-react'
 import RouteRows from './routes-rows'
@@ -90,28 +90,33 @@ export default function Routes() {
   // Routes waiting for a driver - the left panel's job
   const unassignedRoutes = scopedRoutes.unassigned || []
 
-  // Routes already assigned - the center queue, reorderable when managing.
-  // Active work first, then what's queued, then issues, then what's done.
+  const matchesSearch = useCallback((r: any) => {
+    if (!searchQuery.trim()) return true
+    const destination = (r.destination_address || r.destination_name || '').toLowerCase()
+    return destination.includes(searchQuery.toLowerCase())
+  }, [searchQuery])
+
+  // Center queue is today's active work only now - issues and completed
+  // routes have nothing left to do here, so they moved to the sidebar
+  // panel below Unassigned instead of sitting mixed into this list.
   const assignedRoutes = useMemo(() => {
     let combined = [
       ...(scopedRoutes['in-progress'] || []),
       ...(scopedRoutes.pending || []),
-      ...(scopedRoutes.issues || []),
-      ...(scopedRoutes.completed || []),
     ]
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      combined = combined.filter((r: any) => {
-        const destination = (r.destination_address || r.destination_name || '').toLowerCase()
-        return destination.includes(query)
-      })
-    }
+    if (searchQuery.trim()) combined = combined.filter(matchesSearch)
 
     return combined
-  }, [scopedRoutes, searchQuery])
+  }, [scopedRoutes, searchQuery, matchesSearch])
 
-  const viewingRoute = viewingRouteId ? assignedRoutes.find((r: any) => r.id === viewingRouteId) : null
+  // Live in the sidebar below Unassigned instead - see UnassignedPanel.
+  const issueRoutes = useMemo(() => (scopedRoutes.issues || []).filter(matchesSearch), [scopedRoutes, matchesSearch])
+  const completedRoutes = useMemo(() => (scopedRoutes.completed || []).filter(matchesSearch), [scopedRoutes, matchesSearch])
+
+  const viewingRoute = viewingRouteId
+    ? [...assignedRoutes, ...issueRoutes, ...completedRoutes].find((r: any) => r.id === viewingRouteId)
+    : null
 
   // Calculate driver stats for current date
   const driverStats = useMemo(() => {
@@ -273,6 +278,9 @@ export default function Routes() {
               busyRouteId={busyRouteId}
               managing={managing}
               locale={locale}
+              issueRoutes={issueRoutes}
+              completedRoutes={completedRoutes}
+              onViewDetails={setViewingRouteId}
             />
           }
           center={

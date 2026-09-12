@@ -159,6 +159,46 @@
   cursor: not-allowed;
 }
 
+/* Issues / Completed live below Unassigned in the same panel instead of
+   leaving it empty once every route is assigned - a light divider keeps
+   them read as separate groups within one surface. */
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rh-border, #dde5ee);
+}
+
+.headerIconIssue {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.headerIconDone {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.detailsButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--rh-primary, #1660f0);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detailsButton:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .panel {
     border-radius: 12px;
