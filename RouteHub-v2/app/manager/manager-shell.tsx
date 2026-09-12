@@ -63,19 +63,27 @@ export default function ManagerShell({children, active = 'today', branchName, di
 
   return <main className={styles.shell} data-manager-section={active}>
     <aside className={styles.sidebar} aria-label="Manager navigation">
-      <Link href="/routes" className={styles.brand} aria-label="RouteHub manager dashboard">
-        <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
-        <span>Route<em>Hub</em></span>
-      </Link>
-      {/* The Routes page has its own Add route / Cancel toggle in its header
-          toolbar, so this link would duplicate it there - it only shows up
-          when navigating in from somewhere else. */}
-      {active !== 'routes' && <Link href="/routes?new=1" className={styles.newRoute}><Plus size={18} />{copy.newRoute}</Link>}
+      <div className={styles.sidebarStart}>
+        <Link href="/routes" className={styles.brand} aria-label="RouteHub manager dashboard">
+          <Image src="/routehub-regular-new.jpg" alt="" width={40} height={40} priority />
+          <span>Route<em>Hub</em></span>
+        </Link>
+        {/* The Routes page has its own Add route / Cancel toggle in its header
+            toolbar, so this link would duplicate it there - it only shows up
+            when navigating in from somewhere else. */}
+        {active !== 'routes' && <Link href="/routes?new=1" className={styles.newRoute}><Plus size={18} />{copy.newRoute}</Link>}
+      </div>
+      {/* A true center column (grid: 1fr auto 1fr) instead of sitting right
+          next to the logo - nav stays centered in the bar regardless of how
+          wide the brand/new-route group on the left or the workspace/
+          profile group on the right end up being. */}
       <nav className={styles.nav} aria-label="Primary">
         {nav.map(({id, href, label, Icon}) => <Link href={href} key={id} data-active={active === id ? 'true' : 'false'} aria-current={active === id ? 'page' : undefined}><Icon size={20} /><span>{label}</span></Link>)}
       </nav>
-      <div className={styles.workspaceMeta}><span>{copy.workspace}</span><strong>{branchName || t.mainBranch}</strong></div>
-      <Link href="/settings" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
+      <div className={styles.sidebarEnd}>
+        <div className={styles.workspaceMeta}><span>{copy.workspace}</span><strong>{branchName || t.mainBranch}</strong></div>
+        <Link href="/settings" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
+      </div>
     </aside>
     <section className={styles.content}>{children}</section>
     {active !== 'routes' && <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>}
