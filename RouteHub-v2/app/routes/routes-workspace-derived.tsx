@@ -184,14 +184,19 @@ export function useRoutesDerived() {
   const setOriginSource = (mode: OriginMode) => {
     setOriginMode(mode)
     if (mode === 'branch') setForm(current => ({...current, origin: defaultBranch?.address || defaultBranch?.name || ''}))
-    // No fallback to the driver's live GPS coordinate here - that's a raw
-    // "lat,lng" string meant for 'custom' mode, not a human-readable
-    // address. Leaving origin empty when there's no previous route lets the
-    // field show its "No previous route available" placeholder instead of
-    // a coordinate pair.
+    // No fallback to the driver's live GPS coordinate here for 'previous' -
+    // that's a raw "lat,lng" string meant for 'custom' mode, not a
+    // human-readable address. Leaving origin empty when there's no previous
+    // route lets the field show its "No previous route available"
+    // placeholder instead of a coordinate pair.
     if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || ''}))
     if (mode === 'contact') setForm(current => ({...current, origin: contacts[0]?.address || ''}))
-    if (mode === 'custom') setForm(current => ({...current, origin: ''}))
+    // 'Custom' pre-fills with the driver's live GPS coordinate when one is
+    // available (they're on an active/paused driving session) - the manager
+    // can still overwrite it with a typed address if the GPS fix isn't
+    // accurate enough. Empty otherwise, so it doesn't look pre-filled with
+    // nothing meaningful.
+    if (mode === 'custom') setForm(current => ({...current, origin: selectedDriverGps ? `${selectedDriverGps.lat}, ${selectedDriverGps.lng}` : ''}))
   }
 
   const selectDriver = (driverId: string) => {
