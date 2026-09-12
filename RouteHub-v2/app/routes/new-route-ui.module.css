@@ -1,4 +1,4 @@
-.routeTypeDriverRow{display:grid;gap:12px;align-items:end}
+.routeTypeDriverRow{display:grid;gap:12px;align-items:stretch}
 .typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:68px;padding:8px;border-radius:12px;border:1px solid #E5EAF2;background:#fff;cursor:pointer;color:#172033;text-align:center}
 .typeCardActive{background:#F4F7FF;border:1.5px solid #4263EB;color:#3157E8}

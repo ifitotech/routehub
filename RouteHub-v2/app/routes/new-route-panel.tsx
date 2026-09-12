@@ -46,13 +46,10 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
         </div>
       </div> : <div className={ui.inlinePanelBody}>
         <section className={styles.builderSection}>
-          {/* One header for both columns below, instead of "Route type"
-              owning its own header while Driver only had a small inline
-              label - that mismatch in header height was what pushed the
-              driver select out of line with the type cards beside it. */}
-          <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Tipo de ruta y conductor' : locale==='fr' ? 'Type d’itinéraire et conducteur' : 'Route type & driver'}</h3></div></div>
           <div className={ui.routeTypeDriverRow}>
-            <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
+            <div>
+              <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Tipo de ruta' : 'Route type'}</h3></div></div>
+              <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
                 if(type.value === 'return') {
                   setSelectedDestinationLocation(branchLocation(defaultBranch))
                   setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
@@ -60,6 +57,7 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
                 }
                 setForm((current: any) => ({...current, type:type.value}))
               }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={22}/>:type.value==='return'?<Store size={22}/>:<Truck size={22}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{typeDesc(type.value)}</span></button>)}</div>
+            </div>
             <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm((current: any) => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{(drivers||[]).map((driver: any,index: number) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; return <option key={driver.user_id} value={driver.user_id}>{`${details.name||fallback}${isPrimary?' — Primary Driver':''}`}</option> })}</select></div></label>
           </div>
           {selectedContact && <section className={styles.selectedContactCard}>
