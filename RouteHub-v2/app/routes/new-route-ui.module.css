@@ -75,6 +75,30 @@
 .timelineLine{flex:1;width:0;min-height:24px;border-left:2px dashed #cbd5e1;margin:6px 0}
 .timelineContent{display:grid;gap:20px;min-width:0}
 
+/* Explicit Origin/Destination tags next to each point on the timeline -
+   the dot shape alone (hollow vs filled) hinted at direction but needed
+   reading the surrounding labels to confirm which was which. */
+.timelineTag{display:block;margin-bottom:6px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748b}
+.timelineTagDest{color:#1660f0}
+
+/* Starting point collapses to a real decision (here vs. somewhere else)
+   instead of three chips competing equally, when "here" (the branch) is
+   the common case. Choosing "Otro punto" reveals Last route/Custom as
+   sub-options instead of sharing the same row. */
+.originToggle{display:flex;border:1px solid #dbe3ed;border-radius:11px;padding:3px;background:#fff;margin-bottom:8px}
+.originToggle button{flex:1;min-height:36px;border:0;border-radius:8px;background:transparent;color:#475569;font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.originToggleActive{background:#1660f0!important;color:#fff!important}
+.originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:8px}
+.originSubChip{min-height:32px;border:1px solid #dbe3ed;border-radius:8px;background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;cursor:pointer}
+.originSubChipActive{background:#eaf2ff!important;color:#1660f0!important;border-color:#b9cdf4!important}
+
+/* Groups the destination address with who receives it there, instead of
+   Contact name/phone sitting as two loose fields after the address with
+   no visual link back to it. */
+.destCard{border:1px solid #e2e8f0;border-radius:14px;padding:14px;background:#fbfcfe;display:grid;gap:12px}
+.contactBlock{padding-top:12px;border-top:1px dashed #dbe3ed;display:grid;gap:8px}
+.contactBlockLabel{display:flex;align-items:center;gap:6px;margin:0;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#64748b}
+
 .assignmentPanel{padding:18px;border-radius:16px;background:#f6f8fb;border:1px solid #e7edf4;display:grid;gap:20px;align-content:start;min-width:0}
 .assignmentPanel h3{margin:0 0 8px;font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.04em}
 

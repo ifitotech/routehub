@@ -17,6 +17,13 @@ export default function NewRouteDetails(p: any) {
   const {locale,c,form,setForm,originMode,setOriginSource,oc,branches,contacts,pendingLocation,setPendingLocation,useConfirmedDestination,updateDestination,destinationSuggestions,selectDestinationContact,selectExternalDestination,searchContext,setSelectedDestinationLocation,saveContactOpen,setSaveContactOpen,contactSaveMessage,newContactName,setNewContactName,savingContact,saveDestinationAsContact,selectedContact} = p
   const branchForValue = (value: string) => branches?.find((branch: {address?: string | null; name: string}) => (branch.address || branch.name) === value)
 
+  const isHere = originMode === 'branch'
+  const originLabel = locale==='es' ? 'Origen' : locale==='fr' ? 'Origine' : 'Origin'
+  const destLabel = locale==='es' ? 'Destino' : locale==='fr' ? 'Destination' : 'Destination'
+  const hereLabel = locale==='es' ? 'Aquí (sucursal)' : locale==='fr' ? 'Ici (succursale)' : 'Here (branch)'
+  const otherLabel = locale==='es' ? 'Otro punto' : locale==='fr' ? 'Autre point' : 'Somewhere else'
+  const whoReceivesLabel = locale==='es' ? '¿Quién recibe?' : locale==='fr' ? 'Qui reçoit ?' : 'Who receives it?'
+
   return (
     <div>
       <h3 className={ui.sectionHeading}>{locale==='es' ? 'Detalles de la ruta' : locale==='fr' ? 'Détails de l’itinéraire' : 'Route details'}</h3>
@@ -28,12 +35,18 @@ export default function NewRouteDetails(p: any) {
         </div>
         <div className={ui.timelineContent}>
           <fieldset className={`${styles.fieldset} ${ui.originPrimary}`}>
-            <legend>{c.startingPoint}</legend>
-            {/* "Saved place" (contact) dropped from the chip row - with the
-                Assignment panel now sharing this row's width, four chips no
-                longer fit comfortably; branch/previous/custom cover the
-                common cases. */}
-            <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
+            <legend className={ui.timelineTag}>{originLabel}</legend>
+            {/* "Here" (the branch) covers most routes, so it's a direct
+                choice against "somewhere else" instead of three chips
+                competing equally - picking "somewhere else" reveals Last
+                route/Custom as sub-options instead of sharing that row. */}
+            <div className={ui.originToggle}>
+              <button type="button" className={isHere ? ui.originToggleActive : ''} aria-pressed={isHere} onClick={() => setOriginSource('branch')}>{hereLabel}</button>
+              <button type="button" className={!isHere ? ui.originToggleActive : ''} aria-pressed={!isHere} onClick={() => setOriginSource(originMode === 'branch' ? 'previous' : originMode)}>{otherLabel}</button>
+            </div>
+            {!isHere && <div className={ui.originSubChips}>
+              {(['previous','custom'] as OriginMode[]).map(mode => <button type="button" key={mode} className={originMode === mode ? ui.originSubChipActive : ui.originSubChip} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}
+            </div>}
             {/* RouteHub is single-branch by design - a full 49px select
                 control with nothing else to pick was space spent on a
                 choice that was never real. Always the compact read-only
@@ -47,42 +60,51 @@ export default function NewRouteDetails(p: any) {
             {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} onValueChange={value => setForm((current: any) => ({...current, origin:value}))}/></div>}
           </fieldset>
 
-          {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={styles.inputWrap}><MapPin size={18}/><select value={form.destination} onChange={event=>{const branch=branchForValue(event.target.value);setSelectedDestinationLocation(branchLocation(branch));setForm((current: any)=>({...current,destination:event.target.value,destination_label:branch?.name||'',destination_phone:'',contact_id:''}))}}>{(branches||[]).map((branch: any)=><option key={branch.id} value={branch.address||branch.name}>{branch.name}</option>)}</select></div></label> : <div>
-            <label className={styles.field}>
-              <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
-              <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>
-                <Search size={18}/>
-                <GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/>
-                {/* Floats on the field's own top border like a tag, instead
-                    of sitting beside the input and eating into its width -
-                    the field keeps its full width to read long addresses.
-                    The X clears both the contact and the address in one
-                    step, so picking the wrong saved place doesn't require
-                    manually erasing the text field first. */}
-                {selectedContact && <div className={ui.savedContactBadge}>
-                  <span>{selectedContact.company_name}</span>
-                  <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: '', destination_phone: '', stop_contact_name: ''}))}><X size={11}/></button>
+          <div>
+            <span className={`${ui.timelineTag} ${ui.timelineTagDest}`}>{destLabel}</span>
+            {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={styles.inputWrap}><MapPin size={18}/><select value={form.destination} onChange={event=>{const branch=branchForValue(event.target.value);setSelectedDestinationLocation(branchLocation(branch));setForm((current: any)=>({...current,destination:event.target.value,destination_label:branch?.name||'',destination_phone:'',contact_id:''}))}}>{(branches||[]).map((branch: any)=><option key={branch.id} value={branch.address||branch.name}>{branch.name}</option>)}</select></div></label> : <div className={ui.destCard}>
+              <label className={styles.field}>
+                <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
+                <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>
+                  <Search size={18}/>
+                  <GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/>
+                  {/* Floats on the field's own top border like a tag, instead
+                      of sitting beside the input and eating into its width -
+                      the field keeps its full width to read long addresses.
+                      The X clears both the contact and the address in one
+                      step, so picking the wrong saved place doesn't require
+                      manually erasing the text field first. */}
+                  {selectedContact && <div className={ui.savedContactBadge}>
+                    <span>{selectedContact.company_name}</span>
+                    <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: '', destination_phone: '', stop_contact_name: ''}))}><X size={11}/></button>
+                  </div>}
+                </div>
+              </label>
+              {pendingLocation && <section className={styles.locationConfirmation}>
+                <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
+                <LocationConfirmMap coordinate={pendingLocation.coordinate} label={pendingLocation.name || pendingLocation.formattedAddress} onCoordinateChange={coordinate => setPendingLocation((current: any) => current ? {...current, coordinate} : current)}/>
+                <div className={styles.locationConfirmationActions}><button type="button" className={styles.secondaryButton} onClick={() => setPendingLocation(null)}>{locale==='es'?'Cambiar':'Change'}</button><button type="button" className={styles.primaryButton} onClick={useConfirmedDestination}>{locale==='es'?'Usar esta ubicación':'Use this location'}</button></div>
+              </section>}
+              {!selectedContact && !pendingLocation && form.destination.trim() && <div className={styles.addContactBlock}>
+                {!saveContactOpen ? <button type="button" className={styles.addContactButton} onClick={() => {setSaveContactOpen(true)}}><UserPlus size={17}/>{c.addToContacts}</button> : <div className={styles.saveContactPanel}>
+                  <label className={styles.field}><span>{c.contactName}</span><input value={newContactName} placeholder={c.contactNamePlaceholder} onChange={event => setNewContactName(event.target.value)}/></label>
+                  <button type="button" className={styles.primaryButton} disabled={!newContactName.trim() || savingContact} onClick={() => void saveDestinationAsContact()}>{savingContact ? c.savingContact : c.saveContact}</button>
                 </div>}
-              </div>
-            </label>
-            {pendingLocation && <section className={styles.locationConfirmation}>
-              <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
-              <LocationConfirmMap coordinate={pendingLocation.coordinate} label={pendingLocation.name || pendingLocation.formattedAddress} onCoordinateChange={coordinate => setPendingLocation((current: any) => current ? {...current, coordinate} : current)}/>
-              <div className={styles.locationConfirmationActions}><button type="button" className={styles.secondaryButton} onClick={() => setPendingLocation(null)}>{locale==='es'?'Cambiar':'Change'}</button><button type="button" className={styles.primaryButton} onClick={useConfirmedDestination}>{locale==='es'?'Usar esta ubicación':'Use this location'}</button></div>
-            </section>}
-            {!selectedContact && !pendingLocation && form.destination.trim() && <div className={styles.addContactBlock}>
-              {!saveContactOpen ? <button type="button" className={styles.addContactButton} onClick={() => {setSaveContactOpen(true)}}><UserPlus size={17}/>{c.addToContacts}</button> : <div className={styles.saveContactPanel}>
-                <label className={styles.field}><span>{c.contactName}</span><input value={newContactName} placeholder={c.contactNamePlaceholder} onChange={event => setNewContactName(event.target.value)}/></label>
-                <button type="button" className={styles.primaryButton} disabled={!newContactName.trim() || savingContact} onClick={() => void saveDestinationAsContact()}>{savingContact ? c.savingContact : c.saveContact}</button>
+              </div>}
+              {contactSaveMessage && <small className={styles.contactSaveMessage}>{contactSaveMessage}</small>}
+              {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm((current: any) => ({...current, order_number:event.target.value}))}/></label>}
+              {/* Contact name/phone grouped under the destination they
+                  belong to, instead of two fields sitting loose after the
+                  address with nothing visually tying them back to it. */}
+              {form.type==='delivery'&&<div className={ui.contactBlock}>
+                <p className={ui.contactBlockLabel}>{whoReceivesLabel} <em style={{textTransform:'none',fontWeight:600,color:'#94a3b8'}}>{c.optional}</em></p>
+                <div className={ui.deliveryDetailsRow}>
+                  <label className={styles.field}><span>{locale==='es'?'Nombre':'Name'}</span><input value={form.stop_contact_name} placeholder={locale==='es'?'Quién recibe':'Who receives it'} onChange={event => setForm((current: any) => ({...current, stop_contact_name:event.target.value}))}/></label>
+                  <label className={styles.field}><span>{locale==='es'?'Teléfono':'Phone'}</span><input type="tel" value={form.destination_phone} placeholder="(000) 000-0000" onChange={event => setForm((current: any) => ({...current, destination_phone:event.target.value}))}/></label>
+                </div>
               </div>}
             </div>}
-            {contactSaveMessage && <small className={styles.contactSaveMessage}>{contactSaveMessage}</small>}
-            {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm((current: any) => ({...current, order_number:event.target.value}))}/></label>}
-            {form.type==='delivery'&&<div className={ui.deliveryDetailsRow}>
-              <label className={styles.field}><span>{locale==='es'?'Nombre del contacto':'Contact name'} <em>{c.optional}</em></span><input value={form.stop_contact_name} placeholder={locale==='es'?'Quién recibe':'Who receives it'} onChange={event => setForm((current: any) => ({...current, stop_contact_name:event.target.value}))}/></label>
-              <label className={styles.field}><span>{locale==='es'?'Teléfono del contacto':'Contact phone'} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} placeholder="(000) 000-0000" onChange={event => setForm((current: any) => ({...current, destination_phone:event.target.value}))}/></label>
-            </div>}
-          </div>}
+          </div>
         </div>
       </div>
     </div>
