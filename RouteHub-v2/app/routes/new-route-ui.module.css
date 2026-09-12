@@ -1,10 +1,19 @@
-.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:68px;padding:8px;border-radius:12px;border:1px solid #E5EAF2;background:#fff;cursor:pointer;color:#172033;text-align:center}
+/* Route type now shares its row with the Assignment panel instead of
+   spanning the full width on its own - narrower cards, smaller type, so
+   icon + title + description still fit without wrapping awkwardly. */
+.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+.typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;padding:6px 4px;border-radius:11px;border:1px solid #E5EAF2;background:#fff;cursor:pointer;color:#172033;text-align:center;min-width:0}
 .typeCardActive{background:#F4F7FF;border:1.5px solid #4263EB;color:#3157E8}
 .typeCardIcon{display:inline-flex}
-.typeCardTitle{font-size:13px;font-weight:700;line-height:1.2}
-.typeCardDesc{display:block;font-size:11px;font-weight:500;color:#64748B;line-height:1.3}
-.typeCheck{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:99px;background:#4263EB;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
+.typeCardTitle{font-size:11px;font-weight:700;line-height:1.2}
+.typeCardDesc{display:block;font-size:9px;font-weight:500;color:#64748B;line-height:1.25}
+.typeCheck{position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:99px;background:#4263EB;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center}
+
+/* Route type (narrower, ~40%) + Assignment panel (wider, ~60%) share one
+   row, filling the space that used to sit empty next to a compact type
+   row - Route details below then gets the full width to itself. */
+.typeAssignmentRow{display:grid;gap:16px;align-items:start}
+@media(min-width:640px){.typeAssignmentRow{grid-template-columns:0.7fr 1fr}}
 .driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:24px;padding:0 10px;border-radius:999px;background:#ECFDF3;color:#18A566;font-size:12px;font-weight:650}
 .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px}
 .statusCard{padding:8px;border:1px solid #E5EAF2;border-radius:10px;background:#fff}
@@ -32,12 +41,6 @@
 .inlinePanelHeader h2{margin:2px 0 0;font-size:24px;letter-spacing:-.02em}
 .inlinePanelHeader p{margin:3px 0 0;color:#64748B;font-size:13px;font-weight:600}
 .inlinePanelBody{display:grid;gap:22px;padding:18px 24px 22px;overflow-y:auto;width:100%}
-
-/* Route details (left) + Assignment (right): the assignment panel is a
-   distinct grey surface so driver/schedule reads as "who and when" apart
-   from "where", instead of every field competing in one long column. */
-.detailsGrid{display:grid;gap:22px;align-items:start}
-@media(min-width:900px){.detailsGrid{grid-template-columns:minmax(0,1fr) 300px}}
 
 .sectionHeading{margin:0 0 14px;color:#0f1d35;font-size:16px;font-weight:800}
 
@@ -84,6 +87,7 @@
 .assignmentPanel textarea,.assignmentPanel select,.assignmentPanel input{width:100%;min-height:46px;padding:11px 13px;border:1px solid #dbe3ed;border-radius:11px;background:#fff;color:#0f172a;font-size:13px;outline:none}
 .assignmentPanel textarea{min-height:88px;resize:vertical;font-family:inherit}
 .assignmentPanel textarea::placeholder{color:#94a3b8}
+.moreDetailsPanel{display:grid;gap:4px;padding-top:2px}
 
 /* "Driver will be notified" + Cancel/Publish - this row used to be plain
    Cancel/Publish with no framing, which hid that dispatching also pings
