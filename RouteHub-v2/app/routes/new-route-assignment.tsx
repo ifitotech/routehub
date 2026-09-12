@@ -16,6 +16,13 @@ export default function NewRouteAssignment(p: any) {
   const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, detailsOpen, setDetailsOpen} = p
   const [driverMenuOpen, setDriverMenuOpen] = useState(false)
   const [dateMode, setDateMode] = useState<'today' | 'custom'>(form.date === todayValue ? 'today' : 'custom')
+  // form.date can change from outside this component (tapping a different
+  // day in the calendar strip above while the form is open) - keep the
+  // Today/Choose date toggle in sync with it instead of freezing at
+  // whichever mode was true when this component first mounted.
+  useEffect(() => {
+    setDateMode(form.date === todayValue ? 'today' : 'custom')
+  }, [form.date, todayValue])
   // A new route always starts as "as soon as possible" - form.time defaults
   // to the current clock time (see localSchedule()), which isn't a real
   // scheduling choice, just the moment the form happened to open. Clear it

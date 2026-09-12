@@ -39,6 +39,15 @@ export default function Routes() {
 
   const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId, driverIndex, loading} = w
 
+  // Add Route opens defaulted to whichever date was selected in the
+  // calendar strip - but tapping a different day in that strip while the
+  // form is still open used to leave it stuck on the day it opened with.
+  // Keep it live: any calendar tap updates the open form's date too.
+  useEffect(() => {
+    if (open) setForm(current => current.date === selectedDate ? current : {...current, date: selectedDate})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, open])
+
   // Get routes for selected date and status from new unified data structure
   const routesByDateAndStatus = useMemo(() => w.routesByDateAndStatus, [w.routesByDateAndStatus])
 
