@@ -1,4 +1,3 @@
-.routeTypeDriverRow{display:grid;gap:12px;align-items:stretch}
 .typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:68px;padding:8px;border-radius:12px;border:1px solid #E5EAF2;background:#fff;cursor:pointer;color:#172033;text-align:center}
 .typeCardActive{background:#F4F7FF;border:1.5px solid #4263EB;color:#3157E8}
@@ -23,16 +22,73 @@
 .builderSection .field:has(.inputWrap input) .inputWrap{min-height:42px}
 @media(max-width:480px){.originCompact{grid-template-columns:1fr}.detailsToggleSummary{font-size:11px;gap:4px;flex-wrap:wrap}.typeCardDesc{display:none}}
 @media(max-width:640px){.deliveryDetailsRow{grid-template-columns:1fr}}
-@media(min-width:900px){.routeTypeDriverRow{grid-template-columns:minmax(0,1.7fr) minmax(240px,.8fr)}}
 
 /* Inline Add Route panel: lives inside the dispatch board's own center
    column (in focus mode) instead of a separate modal/drawer, so it shares
-   that column's padding, background and scroll behaviour. A two-column
-   grid here used default grid stretch to force the collapsed "More
-   details" toggle to match the much taller "Locations" section's height -
-   a single column with a comfortable max-width avoids that entirely while
-   still using the wider focus-mode column. */
+   that column's padding, background and scroll behaviour. */
 .inlinePanel{display:flex;flex-direction:column;height:100%;min-height:0;margin:-16px;}
-.inlinePanelHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 14px;border-bottom:1px solid var(--rh-border,#dde5ee)}
-.inlinePanelHeader h2{margin:2px 0 0;font-size:19px}
-.inlinePanelBody{display:grid;gap:16px;padding:16px;overflow-y:auto;max-width:760px;margin-inline:auto;width:100%}
+.inlinePanelHeader{padding:18px 20px 4px}
+.inlinePanelHeader .titleRow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.inlinePanelHeader h2{margin:2px 0 0;font-size:26px;letter-spacing:-.02em}
+.inlinePanelHeader p{margin:2px 0 0;color:#64748B;font-size:13px;font-weight:600}
+.inlinePanelBody{display:grid;gap:20px;padding:16px 20px 20px;overflow-y:auto;width:100%}
+
+/* Route details (left) + Assignment (right): the assignment panel is a
+   distinct grey surface so driver/schedule reads as "who and when" apart
+   from "where", instead of every field competing in one long column. */
+.detailsGrid{display:grid;gap:24px;align-items:start}
+@media(min-width:900px){.detailsGrid{grid-template-columns:minmax(0,1fr) 300px}}
+
+.sectionHeading{margin:0 0 16px;color:#0f1d35;font-size:16px;font-weight:800}
+
+/* A small vertical timeline (hollow dot -> dashed line -> filled pin) ties
+   the starting point visually to the destination, the way a route actually
+   reads top to bottom, instead of two identical-looking blocks stacked
+   with no visual relationship. */
+.timelineRow{display:grid;grid-template-columns:20px minmax(0,1fr);gap:16px}
+.timelineTrack{display:flex;flex-direction:column;align-items:center;padding-top:6px}
+.timelineDotEmpty{width:14px;height:14px;flex:none;border:2px solid #94a3b8;border-radius:50%;background:#fff}
+.timelineDotFilled{width:16px;height:16px;flex:none;border-radius:50%;background:#1660f0;box-shadow:0 0 0 4px rgba(22,96,240,.14)}
+.timelineLine{flex:1;width:0;min-height:24px;border-left:2px dashed #cbd5e1;margin:6px 0}
+.timelineContent{display:grid;gap:20px;min-width:0}
+
+.assignmentPanel{padding:18px;border-radius:16px;background:#f6f8fb;border:1px solid #e7edf4;display:grid;gap:20px;align-content:start;min-width:0}
+.assignmentPanel h3{margin:0 0 8px;font-size:13px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.04em}
+
+.driverCard{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;text-align:left;color:inherit}
+.driverCard:hover{border-color:#b7cdf1}
+.driverCard .avatar{width:36px;height:36px;flex:none;border-radius:50%;background:#eaf2ff;color:#1660f0;display:grid;place-items:center;font-weight:800;font-size:12px}
+.driverCard .driverInfo{display:grid;gap:1px;flex:1;min-width:0}
+.driverCard .driverInfo strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.driverCard .driverInfo span{font-size:11px;color:#64748B}
+.driverCard>svg{flex:none;color:#94a3b8}
+.driverMenu{display:grid;gap:4px;margin-top:8px;padding:6px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,.1)}
+.driverMenuItem{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:9px;background:transparent;color:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
+.driverMenuItem:hover{background:#f1f5f9}
+.driverMenuItemActive{background:#eaf2ff;color:#1660f0}
+
+/* Today/Choose date reads as a real decision (most routes are for today),
+   while the date input itself only appears once "Choose date" is picked -
+   it used to always show a bare <input type=date>. */
+.scheduleToggle{display:flex;gap:2px;padding:3px;border:1px solid #dbe3ed;border-radius:11px;background:#fff}
+.scheduleToggle button{flex:1;min-height:36px;border:0;border-radius:8px;background:transparent;color:#475569;font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.scheduleToggleActive{background:#1660f0!important;color:#fff!important}
+
+.field{display:block;min-width:0}
+.fieldSpaced{margin-top:10px}
+.optionalLabel{text-transform:none;font-weight:600;color:#94a3b8}
+.detailsToggleTitle{display:block}
+.detailsToggleHint{font-weight:600;color:#94a3b8}
+.assignmentPanel .field{margin:0}
+.assignmentPanel .field>span{display:block;margin:0 0 6px;font-size:11px;font-weight:800;color:#334155}
+.assignmentPanel textarea,.assignmentPanel select,.assignmentPanel input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #dbe3ed;border-radius:11px;background:#fff;color:#0f172a;font-size:13px;outline:none}
+.assignmentPanel textarea{min-height:72px;resize:vertical;font-family:inherit}
+.assignmentPanel textarea::placeholder{color:#94a3b8}
+
+/* "Driver will be notified" + Cancel/Publish - this row used to be plain
+   Cancel/Publish with no framing, which hid that dispatching also pings
+   the driver's phone the moment the form is submitted. */
+.formFooter{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:16px;margin-top:4px;border-top:1px solid #eef2f7}
+.footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:12px;font-weight:700}
+.footerActions{display:flex;gap:10px}
+.footerActions .secondaryButton,.footerActions .publishButton{min-width:120px;margin:0}
