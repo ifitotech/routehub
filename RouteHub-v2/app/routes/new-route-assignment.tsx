@@ -1,7 +1,7 @@
 'use client'
 
 import {ChevronRight} from 'lucide-react'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import ui from './new-route-ui.module.css'
 import {driverDetails} from './routes-model'
 
@@ -12,7 +12,15 @@ export default function NewRouteAssignment(p: any) {
   const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes} = p
   const [driverMenuOpen, setDriverMenuOpen] = useState(false)
   const [dateMode, setDateMode] = useState<'today' | 'custom'>(form.date === todayValue ? 'today' : 'custom')
-  const [timeMode, setTimeMode] = useState<'asap' | 'specific'>(form.time ? 'specific' : 'asap')
+  // A new route always starts as "as soon as possible" - form.time defaults
+  // to the current clock time (see localSchedule()), which isn't a real
+  // scheduling choice, just the moment the form happened to open. Clear it
+  // once on mount so the dropdown doesn't open already looking scheduled.
+  const [timeMode, setTimeMode] = useState<'asap' | 'specific'>('asap')
+  useEffect(() => {
+    if (form.time) setForm((current: any) => ({...current, time: ''}))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const driverList = (drivers || []) as any[]
   const selectedDriver = driverList.find(driver => driver.user_id === form.driver_id)
