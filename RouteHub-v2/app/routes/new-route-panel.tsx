@@ -6,6 +6,7 @@ import ui from './new-route-ui.module.css'
 import {routeTypes, typeLabel} from './routes-model'
 import NewRouteDetails from './new-route-details'
 import NewRouteAssignment from './new-route-assignment'
+import NewRouteDriverPicker from './new-route-driver-picker'
 import {branchLocation} from './routes-model'
 import type {useRoutesWorkspace} from './routes-workspace'
 
@@ -53,14 +54,22 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
           <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{locale==='es' ? 'Añadir otra' : 'Add another'}</button>
         </div>
       </div> : <div className={ui.inlinePanelBody}>
-        <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
-          if(type.value === 'return') {
-            setSelectedDestinationLocation(branchLocation(defaultBranch))
-            setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
-            return
-          }
-          setForm((current: any) => ({...current, type:type.value}))
-        }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={22}/>:type.value==='return'?<Store size={22}/>:<Truck size={22}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{type.value==='pickup' ? (locale==='es'?'Recoger materiales':'Collect materials') : type.value==='return' ? (locale==='es'?'Regresar a tu sucursal':'Back to your branch') : (locale==='es'?'Entregar al cliente':'Deliver to customer')}</span></button>)}</div>
+        {/* Route type used to be three tall cards spanning the full width
+            on their own row, which cost as much vertical space as the
+            entire Driver section below it. Compact now, and sharing a row
+            with the driver picker instead of Driver living only in the
+            Assignment panel - that saved a whole panel section's height. */}
+        <div className={ui.typeDriverRow}>
+          <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
+            if(type.value === 'return') {
+              setSelectedDestinationLocation(branchLocation(defaultBranch))
+              setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
+              return
+            }
+            setForm((current: any) => ({...current, type:type.value}))
+          }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={18}/>:type.value==='return'?<Store size={18}/>:<Truck size={18}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span></button>)}</div>
+          <NewRouteDriverPicker {...p} />
+        </div>
 
         <div className={ui.detailsGrid}>
           <NewRouteDetails {...p} />

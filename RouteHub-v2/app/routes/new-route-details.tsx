@@ -58,6 +58,7 @@ export default function NewRouteDetails(p: any) {
               </div>}
             </div>}
             {contactSaveMessage && <small className={styles.contactSaveMessage}>{contactSaveMessage}</small>}
+            {form.type==='pickup'&&<label className={styles.field}><span>{c.po}</span><input value={form.order_number} placeholder={c.poExample} onChange={event => setForm((current: any) => ({...current, order_number:event.target.value}))}/></label>}
             {form.type==='delivery'&&<div className={ui.deliveryDetailsRow}>
               <label className={styles.field}><span>{locale==='es'?'Nombre del contacto':'Contact name'} <em>{c.optional}</em></span><input value={form.stop_contact_name} placeholder={locale==='es'?'Quién recibe':'Who receives it'} onChange={event => setForm((current: any) => ({...current, stop_contact_name:event.target.value}))}/></label>
               <label className={styles.field}><span>{locale==='es'?'Teléfono del contacto':'Contact phone'} <em>{c.optional}</em></span><input type="tel" value={form.destination_phone} placeholder="(000) 000-0000" onChange={event => setForm((current: any) => ({...current, destination_phone:event.target.value}))}/></label>
@@ -70,7 +71,7 @@ export default function NewRouteDetails(p: any) {
               <ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/>
             </button>
             {detailsOpen && <div id="route-more-details" className={styles.optionalDetails}>
-              {form.type!=='pickup'&&<label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
+              {form.type!=='pickup'&&form.type!=='delivery'&&<label className={styles.field}><span>{c.po} <em>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
               <label className={styles.field}>
                 <span>{locale==='es'?'Prioridad':locale==='fr'?'Priorité':'Priority'}</span>
                 <select value={form.priority} onChange={event => setForm((current: any) => ({...current, priority: event.target.value}))}>
