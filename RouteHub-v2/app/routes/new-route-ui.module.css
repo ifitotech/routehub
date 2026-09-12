@@ -1,20 +1,22 @@
-/* Route type now shares its row with the Assignment panel instead of
-   spanning the full width on its own - narrower cards, smaller type, so
-   icon + title + description still fit without wrapping awkwardly. */
-.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+/* Narrower cards, smaller type, capped width - Route type no longer needs
+   the full column width it sits in (see .mainLeftCol), just enough for
+   icon + title + description to fit without wrapping awkwardly. */
+.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0;max-width:60%}
 .typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;padding:6px 4px;border-radius:11px;border:1px solid #E5EAF2;background:#fff;cursor:pointer;color:#172033;text-align:center;min-width:0}
 .typeCardActive{background:#F4F7FF;border:1.5px solid #4263EB;color:#3157E8}
 .typeCardIcon{display:inline-flex}
 .typeCardTitle{font-size:11px;font-weight:700;line-height:1.2}
 .typeCardDesc{display:block;font-size:9px;font-weight:500;color:#64748B;line-height:1.25}
 .typeCheck{position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:99px;background:#4263EB;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center}
+@media(max-width:640px){.typeCards{max-width:none}}
 
-/* Route type (flexible, most of the row) + Assignment panel (fixed,
-   narrower) share one row - Assignment stays a fixed narrow width instead
-   of stretching to take most of the row, which was what made this row
-   look lopsided. Route details below gets the full width to itself. */
-.typeAssignmentRow{display:grid;gap:16px;align-items:start}
-@media(min-width:640px){.typeAssignmentRow{grid-template-columns:minmax(0,1fr) 260px}}
+/* Two real columns, not two stacked rows: Route type + Route details flow
+   together down the left column, Assignment fills the right column on its
+   own timeline. This is what stops Route details from ever having to wait
+   on Assignment's height - each column just flows independently. */
+.mainGrid{display:grid;gap:16px;align-items:start}
+@media(min-width:640px){.mainGrid{grid-template-columns:minmax(0,1fr) 260px}}
+.mainLeftCol{display:grid;gap:22px;min-width:0}
 .driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:8px;height:24px;padding:0 10px;border-radius:999px;background:#ECFDF3;color:#18A566;font-size:12px;font-weight:650}
 .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px}
 .statusCard{padding:8px;border:1px solid #E5EAF2;border-radius:10px;background:#fff}

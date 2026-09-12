@@ -53,24 +53,26 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
           <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{locale==='es' ? 'Añadir otra' : 'Add another'}</button>
         </div>
       </div> : <div className={ui.inlinePanelBody}>
-        {/* Route type cards are narrower now (~40% of the row) so they no
-            longer need their own full-width row - the Assignment panel
-            (Driver, Schedule, More details, Driver note) moves up to fill
-            the rest of this row instead of leaving it empty, and Route
-            details below gets the full width to itself. */}
-        <div className={ui.typeAssignmentRow}>
-          <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
-            if(type.value === 'return') {
-              setSelectedDestinationLocation(branchLocation(defaultBranch))
-              setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
-              return
-            }
-            setForm((current: any) => ({...current, type:type.value}))
-          }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={18}/>:type.value==='return'?<Store size={18}/>:<Truck size={18}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{type.value==='pickup' ? (locale==='es'?'Recoger materiales':'Collect materials') : type.value==='return' ? (locale==='es'?'Regresar a tu sucursal':'Back to your branch') : (locale==='es'?'Entregar al cliente':'Deliver to customer')}</span></button>)}</div>
+        {/* True two-column layout instead of two stacked rows: Route type +
+            Route details flow together down the left column, Assignment
+            fills the right column independently. Putting Route details in
+            its own full-width row below a shared row left it waiting on
+            whichever side of that row was taller (Assignment), which opened
+            up a large empty gap above it whenever Assignment ran long. */}
+        <div className={ui.mainGrid}>
+          <div className={ui.mainLeftCol}>
+            <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
+              if(type.value === 'return') {
+                setSelectedDestinationLocation(branchLocation(defaultBranch))
+                setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
+                return
+              }
+              setForm((current: any) => ({...current, type:type.value}))
+            }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={18}/>:type.value==='return'?<Store size={18}/>:<Truck size={18}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{type.value==='pickup' ? (locale==='es'?'Recoger materiales':'Collect materials') : type.value==='return' ? (locale==='es'?'Regresar a tu sucursal':'Back to your branch') : (locale==='es'?'Entregar al cliente':'Deliver to customer')}</span></button>)}</div>
+            <NewRouteDetails {...p} />
+          </div>
           <NewRouteAssignment {...p} />
         </div>
-
-        <NewRouteDetails {...p} />
 
         <div className={ui.formFooter}>
           <span className={ui.footerNotice}><Bell size={14}/>{notice}</span>
