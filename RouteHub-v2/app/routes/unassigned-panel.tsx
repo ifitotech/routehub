@@ -25,12 +25,11 @@ type UnassignedPanelProps = {
 
 export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
   const [dropActive, setDropActive] = useState(false)
-  // Issues stay open and visible even at zero - it's the one thing here
-  // that needs attention, so it shouldn't require a click to check, or
-  // disappear and make "no card at all" look the same as "nothing to
-  // worry about". Completed has nothing actionable, so it stays collapsed
-  // by default and hidden entirely when there isn't any yet.
-  const [issuesOpen, setIssuesOpen] = useState(true)
+  // Both start collapsed - an open list (especially Issues, which can run
+  // long) crowded out Unassigned above it and made the panel feel heavy to
+  // scan. The header (with its count) always shows on its own either way,
+  // so nothing goes missing - it's just a click away instead of forced open.
+  const [issuesOpen, setIssuesOpen] = useState(false)
   const [completedOpen, setCompletedOpen] = useState(false)
   // Assignees span several branch roles, not just drivers. When a profile has
   // no readable name the role names them, so the picker can't show the same
