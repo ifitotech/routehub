@@ -281,11 +281,16 @@
     padding-top: 18px;
   }
 
+  /* Centered pill with a capped width instead of stretching edge to edge -
+     on a wider tablet (a Tab S11 in portrait is well within this
+     breakpoint) full width spread the four tabs far apart from each
+     other, which read as unbalanced rather than a tight nav bar. */
   .mobileNav {
     position: fixed;
     z-index: 20;
-    left: 10px;
-    right: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 420px);
     bottom: calc(8px + env(safe-area-inset-bottom));
     display: grid;
     grid-template-columns: repeat(4, 1fr);
