@@ -44,7 +44,7 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
         <p>{locale==='es' ? 'La ruta ya aparece para el conductor asignado.' : 'The route is now available to the assigned driver.'}</p>
         <div className={styles.successActions}>
           <button className={styles.secondaryButton} type="button" onClick={() => setOpen(false)}>{locale==='es' ? 'Listo' : 'Done'}</button>
-          <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{locale==='es' ? 'Añadir otra' : 'Add another'}</button>
+          <button className={styles.primaryButton} type="button" onClick={() => openBuilder()}><Plus size={18}/>{locale==='es' ? 'Añadir otra' : 'Add another'}</button>
         </div>
       </div> : <div className={ui.inlinePanelBody}>
         {/* True two-column layout instead of two stacked rows: Route type +

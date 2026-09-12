@@ -62,11 +62,20 @@ export function useRoutesWorkspace() {
     }
   }
 
-  const openBuilder = () => {
+  // Takes the calendar's currently selected date so opening the form while
+  // browsing, say, next Tuesday starts a route for next Tuesday instead of
+  // always defaulting to today.
+  const openBuilder = (dateOverride?: string) => {
     const nextPriority: FormState['priority'] = searchParams.get('priority') === 'urgent' ? 'urgent' : 'normal'
     const next = initialForm(nextPriority)
+    const todayValue = next.date
+    if (dateOverride) next.date = dateOverride
     const driverId = chooseDefaultAssignee(drivers, defaultBranch?.primary_driver_id)?.user_id || form.driver_id || ''
-    const lastForDriver = routes.filter(route => route.driver_id === driverId && routeDateValue(route) === next.date).sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0]
+    // "Last route" only makes sense for today - a route scheduled for any
+    // other date gives the driver time to return to the branch first.
+    const lastForDriver = next.date === todayValue
+      ? routes.filter(route => route.driver_id === driverId && routeDateValue(route) === next.date).sort((a,b) => Number(b.position || 0) - Number(a.position || 0))[0]
+      : undefined
     setOriginMode(lastForDriver ? 'previous' : 'branch')
     setForm({...next, driver_id: driverId, origin: lastForDriver?.destination_address || lastForDriver?.destination_name || defaultBranch?.address || defaultBranch?.name || ''})
     setMessage('')

@@ -203,7 +203,7 @@ export default function Routes() {
             </button>
             {open
               ? <button className={styles.secondaryButton} type="button" onClick={() => setOpen(false)}><X size={18}/>{locale==='es'?'Cancelar':locale==='fr'?'Annuler':'Cancel'}</button>
-              : <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>}
+              : <button className={styles.primaryButton} type="button" onClick={() => openBuilder(selectedDate)}><Plus size={18}/>{c.add}</button>}
           </div>
         </header>
 
@@ -256,7 +256,7 @@ export default function Routes() {
             open ? (
               <div className={styles.formViewFade}>
                 <NewRoutePanel
-                  saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={openBuilder}
+                  saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={() => openBuilder(selectedDate)}
                   form={form} setForm={setForm} selectedContact={selectedContact} originMode={originMode} setOriginSource={setOriginSource}
                   selectDriver={selectDriver} oc={oc} branches={branches} contacts={contacts} defaultBranch={defaultBranch}
                   detailsOpen={detailsOpen} setDetailsOpen={setDetailsOpen} todayValue={todayValue} drivers={drivers} save={save}
@@ -319,7 +319,7 @@ export default function Routes() {
                     <div><RouteIcon size={28}/></div>
                     <h2>{locale==='es'?'Sin rutas asignadas':locale==='fr'?'Aucun itinéraire attribué':'No assigned routes'}</h2>
                     <p>{locale==='es'?'Asigna rutas desde la lista de la izquierda para verlas aquí.':locale==='fr'?'Attribuez des itinéraires depuis la liste de gauche pour les voir ici.':'Assign routes from the list on the left to see them here.'}</p>
-                    <button className={styles.primaryButton} type="button" onClick={openBuilder}><Plus size={18}/>{c.add}</button>
+                    <button className={styles.primaryButton} type="button" onClick={() => openBuilder(selectedDate)}><Plus size={18}/>{c.add}</button>
                   </section>
                 )}
               </div>
