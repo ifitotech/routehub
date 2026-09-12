@@ -8,6 +8,11 @@
 .typeCardDesc{display:block;font-size:11px;font-weight:500;color:#64748B;line-height:1.3}
 .typeCheck{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:99px;background:#4263EB;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
 
+/* Read-only stand-in for a select control that has nothing else to pick -
+   a single branch, for example. Same info, a fraction of the height. */
+.compactValue{display:flex;align-items:center;gap:8px;min-height:28px;color:#475569;font-size:13px;font-weight:600}
+.compactValue svg{flex:none;color:#94a3b8}
+
 /* Saved-contact tag sits inside the address TEXT FIELD itself, in the
    blank space to the right of the typed address - not over the separate
    Search button that sits beside it. .destinationWrap wraps both the

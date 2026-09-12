@@ -34,7 +34,17 @@ export default function NewRouteDetails(p: any) {
                 longer fit comfortably; branch/previous/custom cover the
                 common cases. */}
             <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
-            {originMode === 'branch' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{(branches||[]).map((branch: any) => <option key={branch.id} value={branch.address || branch.name}>{branch.name}</option>)}</select></div>}
+            {/* Most workspaces have exactly one branch, so a full 49px
+                select control (with a dropdown that has nothing else to
+                pick) was space spent on a choice that isn't really a
+                choice - a compact read-only line shows the same info in a
+                fraction of the height. The real select only shows up once
+                there's more than one branch to actually choose between. */}
+            {originMode === 'branch' && ((branches||[]).length > 1 ? (
+              <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseBranch}</option>{(branches||[]).map((branch: any) => <option key={branch.id} value={branch.address || branch.name}>{branch.name}</option>)}</select></div>
+            ) : (
+              <div className={ui.compactValue}><MapPin size={14}/><span>{(branches||[])[0]?.name || form.origin || oc.chooseBranch}</span></div>
+            ))}
             {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
             {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{(contacts||[]).map((contact: any) => <option key={contact.id} value={contact.address}>{contact.company_name}</option>)}</select></div>}
             {originMode === 'custom' && <div className={styles.inputWrap}><MapPin size={18}/><GoogleAddressInput value={form.origin} placeholder={c.originPlaceholder} onValueChange={value => setForm((current: any) => ({...current, origin:value}))}/></div>}
