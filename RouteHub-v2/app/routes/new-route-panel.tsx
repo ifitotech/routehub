@@ -1,6 +1,6 @@
 'use client'
 
-import {Check, CheckCircle2, Package, Plus, Store, Truck, X} from 'lucide-react'
+import {Bell, Check, CheckCircle2, Package, Plus, Store, Truck, X} from 'lucide-react'
 import styles from './routes.module.css'
 import ui from './new-route-ui.module.css'
 import {routeTypes, typeLabel} from './routes-model'
@@ -28,7 +28,13 @@ type NewRoutePanelProps = Pick<Workspace,
 >
 
 export default function NewRoutePanel(p: NewRoutePanelProps) {
-  const {saving, setOpen, justCreated, locale, c, openBuilder, form, setForm, defaultBranch, setSelectedDestinationLocation} = p
+  const {saving, setOpen, justCreated, locale, c, openBuilder, form, setForm, defaultBranch, setSelectedDestinationLocation, save} = p
+  const notice = locale==='es' ? 'El conductor será notificado' : locale==='fr' ? 'Le conducteur sera notifié' : 'Driver will be notified'
+  const assignLabel = form.type==='pickup'
+    ? (locale==='es'?'Asignar recogida':locale==='fr'?'Attribuer la collecte':'Assign pickup')
+    : form.type==='return'
+      ? (locale==='es'?'Asignar regreso':locale==='fr'?'Attribuer le retour':'Assign return')
+      : (locale==='es'?'Asignar entrega':locale==='fr'?'Attribuer la livraison':'Assign delivery')
 
   return (
     <div className={ui.inlinePanel}>
@@ -64,6 +70,17 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
               setForm((current: any) => ({...current, type:type.value}))
             }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={18}/>:type.value==='return'?<Store size={18}/>:<Truck size={18}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{type.value==='pickup' ? (locale==='es'?'Recoger materiales':'Collect materials') : type.value==='return' ? (locale==='es'?'Regresar a tu sucursal':'Back to your branch') : (locale==='es'?'Entregar al cliente':'Deliver to customer')}</span></button>)}</div>
             <NewRouteDetails {...p} />
+            {/* Sits at the true bottom of the left column - below Route
+                details, whatever height it grows to once "More details" is
+                open there too - instead of in the shorter Assignment
+                column, where it used to sit above a large empty gap. */}
+            <div className={ui.formFooter}>
+              <span className={ui.footerNotice}><Bell size={14}/>{notice}</span>
+              <div className={ui.footerActions}>
+                <button className={styles.secondaryButton} type="button" disabled={saving} onClick={() => setOpen(false)}>{locale==='es' ? 'Cancelar' : locale==='fr' ? 'Annuler' : 'Cancel'}</button>
+                <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? c.publishing : <><Truck size={19}/>{assignLabel}</>}</button>
+              </div>
+            </div>
           </div>
           <NewRouteAssignment {...p} />
         </div>

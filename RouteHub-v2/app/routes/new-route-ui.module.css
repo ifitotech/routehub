@@ -108,7 +108,11 @@
    the Assignment panel instead of its own row below the whole form, which
    fills this column's leftover height instead of adding height that pushed
    the panel past its available space and forced a scrollbar. */
-.assignmentFooter{display:grid;gap:10px;padding-top:16px;margin-top:2px;border-top:1px solid #e7edf4}
-.footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:11px;font-weight:700}
-.footerActions{display:grid;gap:8px}
-.footerActions .secondaryButton,.footerActions .publishButton{width:100%;margin:0}
+/* Cancel/Assign sit at the true bottom of the left column (below Route
+   details, however tall it grows once "More details" is open) instead of
+   in a separate row under the whole two-column layout - that used to add
+   height past the panel's available space and force a scrollbar. */
+.formFooter{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:16px;margin-top:2px;border-top:1px solid #eef2f7}
+.footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:12px;font-weight:700}
+.footerActions{display:flex;gap:10px}
+.footerActions .secondaryButton,.footerActions .publishButton{min-width:120px;margin:0}
