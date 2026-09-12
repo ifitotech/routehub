@@ -142,7 +142,13 @@
    details, however tall it grows once "More details" is open) instead of
    in a separate row under the whole two-column layout - that used to add
    height past the panel's available space and force a scrollbar. */
-.formFooter{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:16px;margin-top:2px;border-top:1px solid #eef2f7}
+/* Sticky instead of merely "last in the column": on a tall left column
+   (type cards + full route details) the footer still fell past the
+   visible area on tablets, so reaching Cancel/Assign meant hunting for a
+   scrollbar first. Pinning it to the bottom of the panel's own scroll
+   area keeps it one tap away regardless of how tall the form above it
+   grows or how short the screen is. */
+.formFooter{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 24px;margin:2px -24px 0;border-top:1px solid #eef2f7;background:#fff;box-shadow:0 -6px 16px -8px rgba(15,29,53,.12)}
 .footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:12px;font-weight:700}
 .footerActions{display:flex;gap:10px}
 .footerActions .secondaryButton,.footerActions .publishButton{min-width:120px;margin:0}
