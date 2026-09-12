@@ -165,10 +165,12 @@
   }
 
   /* The strip carries nine days on desktop (a day of context either side of
-     the week). Nine won't fit across a phone, so the two context days are
-     dropped here and it's back to a plain seven-day week. */
-  .day:first-child,
-  .day:last-child {
+     the week). A phone-width row of seven still read as cluttered - each
+     card barely wider than its own number - so this drops the two outer
+     days on each side instead of just one, leaving five centred on the
+     selected date. */
+  .day:nth-child(-n + 2),
+  .day:nth-last-child(-n + 2) {
     display: none;
   }
 
