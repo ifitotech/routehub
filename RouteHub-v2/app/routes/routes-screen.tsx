@@ -44,7 +44,12 @@ export default function Routes() {
   // form is still open used to leave it stuck on the day it opened with.
   // Keep it live: any calendar tap updates the open form's date too.
   useEffect(() => {
-    if (open) setForm(current => current.date === selectedDate ? current : {...current, date: selectedDate})
+    if (!open) return
+    // A route can't be scheduled in the past - closing the form here
+    // instead of just refusing to update its date, since there's nothing
+    // useful left for it to do once the calendar has moved before today.
+    if (selectedDate < todayValue) { setOpen(false); return }
+    setForm(current => current.date === selectedDate ? current : {...current, date: selectedDate})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, open])
 
