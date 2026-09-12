@@ -75,6 +75,7 @@ export type RouteRecord = {
   destination_lng: number | null
   destination_location_source: GeocodedLocation['source'] | null
   destination_location_external_id: string | null
+  destination_phone?: string | null
   origin_lat: number | null
   origin_lng: number | null
   scheduled_at: string | null
@@ -82,6 +83,23 @@ export type RouteRecord = {
   position: number | null
   notes: string | null
   order_number: string | null
+  driver_note?: string | null
+  route_started_at?: string | null
+  route_completed_at?: string | null
+  completed_at?: string | null
+  arrived_at?: string | null
+  completion_method?: string | null
+  completion_lat?: number | null
+  completion_lng?: number | null
+  completion_accuracy?: number | null
+  completion_distance_m?: number | null
+  completion_warning?: string | null
+  completion_photo_path?: string | null
+  customer_signature_path?: string | null
+  finalized_at?: string | null
+  finalization_note?: string | null
+  finalization_issue?: string | null
+  finalization_photo_path?: string | null
 }
 
 export type FormState = {

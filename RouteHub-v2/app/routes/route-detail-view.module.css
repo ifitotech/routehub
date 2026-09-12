@@ -1,0 +1,29 @@
+.panel{display:grid;gap:18px;padding:4px}
+.backButton{display:inline-flex;align-items:center;gap:6px;width:max-content;min-height:36px;padding:0 4px;border:0;background:transparent;color:#1660f0;font-size:13px;font-weight:800;cursor:pointer}
+.backButton:hover{text-decoration:underline}
+.headerRow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.type{display:block;margin:0 0 4px;color:#1660f0;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.headerRow h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.status{flex:none;padding:4px 10px;border-radius:999px;background:#eef4ff;color:#1660f0;font-size:11px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+.status_completed{background:#ecfdf5;color:#059669}
+.status_issue{background:#fef2f2;color:#dc2626}
+.message{margin:0;padding:10px 14px;border:1px solid #fecaca;border-radius:11px;background:#fef2f2;color:#dc2626;font-size:13px}
+
+.panel section{display:grid;gap:10px}
+.panel h3{display:flex;align-items:center;gap:6px;margin:0;color:#0f1d35;font-size:14px;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px 16px}
+.grid>div{min-width:0;display:grid;gap:3px}
+.grid span{display:flex;align-items:center;gap:5px;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.grid strong{overflow-wrap:anywhere;color:#0f1d35;font-size:13px;font-weight:700}
+.full{grid-column:1/-1}
+.full a{display:inline-flex;align-items:center;gap:5px;margin-top:4px;color:#1660f0;font-size:12px;font-weight:700;text-decoration:none}
+.full a:hover{text-decoration:underline}
+
+.evidenceActions{display:flex;flex-wrap:wrap;gap:8px}
+.evidenceButton{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;border:1px solid #b9cdf4;border-radius:11px;background:#eaf2ff;color:#0e48c4;font-size:12px;font-weight:800;cursor:pointer}
+.evidenceButton:hover{background:#dbe8ff}
+.evidenceImage{width:100%;max-width:360px;margin-top:4px;border-radius:14px;border:1px solid #e2e8f0}
+
+.issueSection{padding:14px;border:1px solid #fecaca;border-radius:14px;background:#fef2f2}
+.issueSection h3{color:#dc2626}
+.issueSection p{margin:0;color:#7f1d1d;font-size:13px}

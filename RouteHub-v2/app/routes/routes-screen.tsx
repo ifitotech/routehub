@@ -8,6 +8,7 @@ import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import NewRoutePanel from './new-route-panel'
+import RouteDetailView from './route-detail-view'
 import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
 import UnassignedPanel from './unassigned-panel'
@@ -28,6 +29,7 @@ export default function Routes() {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [assignDropActive, setAssignDropActive] = useState(false)
+  const [viewingRouteId, setViewingRouteId] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -45,6 +47,11 @@ export default function Routes() {
   // Keep it live: any calendar tap updates the open form's date too.
   useEffect(() => {
     if (!open) return
+    // Opening Add Route while a completed route's details were showing
+    // would otherwise leave both "open" - the details view takes priority
+    // in the center column's render order, so the form would silently
+    // never appear.
+    setViewingRouteId(null)
     // A route can't be scheduled in the past - closing the form here
     // instead of just refusing to update its date, since there's nothing
     // useful left for it to do once the calendar has moved before today.
@@ -103,6 +110,8 @@ export default function Routes() {
 
     return combined
   }, [scopedRoutes, searchQuery])
+
+  const viewingRoute = viewingRouteId ? assignedRoutes.find((r: any) => r.id === viewingRouteId) : null
 
   // Calculate driver stats for current date
   const driverStats = useMemo(() => {
@@ -267,7 +276,9 @@ export default function Routes() {
             />
           }
           center={
-            open ? (
+            viewingRoute ? (
+              <RouteDetailView route={viewingRoute} locale={locale} c={c} driverIndex={driverIndex} onClose={() => setViewingRouteId(null)}/>
+            ) : open ? (
               <div className={styles.formViewFade}>
                 <NewRoutePanel
                   saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={() => openBuilder(selectedDate)}
@@ -324,6 +335,7 @@ export default function Routes() {
                       onMove={moveRoute}
                       onTogglePause={toggleRoutePause}
                       onUnassign={unassignRoute}
+                      onViewDetails={setViewingRouteId}
                       busyRouteId={busyRouteId}
                       managing={managing}
                     />
@@ -341,7 +353,7 @@ export default function Routes() {
           }
           map={<RoutesBoard routes={open ? (planningMapRoutes || []) : mapRoutes} locale={locale} />}
           pane={pane}
-          focus={open}
+          focus={open || Boolean(viewingRoute)}
         />
       </div>
     </ManagerShell>
