@@ -124,12 +124,11 @@ export default function NewRouteAssignment(p: any) {
               <option value="urgent">{c.urgent}</option>
             </select>
           </label>
+          <label className={`${ui.field} ${ui.fieldSpaced}`}>
+            <span>{locale==='es'?'Nota para el conductor':locale==='fr'?'Note pour le conducteur':'Driver note'} <em className={ui.optionalLabel}>{c.optional}</em></span>
+            <textarea value={form.notes} placeholder={locale==='es'?'Código de acceso, estacionamiento o instrucciones…':locale==='fr'?'Code d’accès, stationnement ou instructions…':'Gate code, parking or instructions…'} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/>
+          </label>
         </div>}
-      </div>
-
-      <div>
-        <h3>{locale==='es'?'Nota para el conductor':locale==='fr'?'Note pour le conducteur':'Driver note'} <span className={ui.optionalLabel}>{c.optional}</span></h3>
-        <textarea value={form.notes} placeholder={locale==='es'?'Código de acceso, estacionamiento o instrucciones…':locale==='fr'?'Code d’accès, stationnement ou instructions…':'Gate code, parking or instructions…'} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/>
       </div>
 
       <div className={ui.assignmentFooter}>
