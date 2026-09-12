@@ -1,6 +1,6 @@
 'use client'
 
-import {CheckCircle2, Package, Plus, Route as RouteIcon, Store, Truck, UserRound, Users, X} from 'lucide-react'
+import {Check, CheckCircle2, Package, Plus, Route as RouteIcon, Store, Truck, UserRound, Users, X} from 'lucide-react'
 import styles from './routes.module.css'
 import ui from './new-route-ui.module.css'
 import {driverDetails, routeTypes, typeLabel} from './routes-model'
@@ -28,6 +28,7 @@ type NewRoutePanelProps = Pick<Workspace,
 
 export default function NewRoutePanel(p: NewRoutePanelProps) {
   const {saving, setOpen, justCreated, locale, c, openBuilder, form, setForm, selectedContact, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, setSelectedDestinationLocation} = p
+  const typeDesc = (value: string) => value==='pickup' ? (locale==='es'?'Recoger en un punto':'Pick up items from a location') : value==='return' ? (locale==='es'?'Regresar a la tienda':'Return to store') : (locale==='es'?'Entregar al cliente':'Deliver to customer')
 
   return (
     <div className={ui.inlinePanel}>
@@ -46,16 +47,16 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
       </div> : <div className={ui.inlinePanelBody}>
         <section className={styles.builderSection}>
           <div className={ui.routeTypeDriverRow}>
-            <div className={styles.field}>
-              <span>{locale==='es' ? 'Tipo de ruta' : 'Route type'}</span>
-              <div className={ui.typeSeg}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeSegOptActive : ui.typeSegOpt} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
+            <div>
+              <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Tipo de ruta' : 'Route type'}</h3></div></div>
+              <div className={ui.typeCards}>{routeTypes.map(type => <button className={form.type === type.value ? ui.typeCardActive : ui.typeCard} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => {
                 if(type.value === 'return') {
                   setSelectedDestinationLocation(branchLocation(defaultBranch))
                   setForm((current: any) => ({...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''}))
                   return
                 }
                 setForm((current: any) => ({...current, type:type.value}))
-              }}>{type.value==='pickup'?<Package size={16}/>:type.value==='return'?<Store size={16}/>:<Truck size={16}/>}{typeLabel(type.value,c)}</button>)}</div>
+              }}>{form.type === type.value ? <span className={ui.typeCheck} aria-hidden="true"><Check size={12}/></span> : null}<span className={ui.typeCardIcon}>{type.value==='pickup'?<Package size={22}/>:type.value==='return'?<Store size={22}/>:<Truck size={22}/>}</span><span className={ui.typeCardTitle}>{typeLabel(type.value,c)}</span><span className={ui.typeCardDesc}>{typeDesc(type.value)}</span></button>)}</div>
             </div>
             <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm((current: any) => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{(drivers||[]).map((driver: any,index: number) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; return <option key={driver.user_id} value={driver.user_id}>{`${details.name||fallback}${isPrimary?' — Primary Driver':''}`}</option> })}</select></div></label>
           </div>
