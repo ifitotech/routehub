@@ -5,6 +5,7 @@ import Link from 'next/link'
 import ManagerShell from '../../manager-shell'
 import {getSupabase} from '../../../../lib/supabase'
 import {uploadTruckReceipt} from '../../../../lib/truck-receipts'
+import styles from '../truck.module.css'
 
 type TruckRow = {
   id: string
@@ -130,27 +131,27 @@ export default function TruckRecordsPage() {
 
   return (
     <ManagerShell active="truck">
-      <div className="truckPage">
-        <div className="truckHeader">
+      <div className={styles.page}>
+        <div className={styles.header}>
           <div>
-            <p className="truckEyebrow">OPERATIONS</p>
+            <p className={styles.eyebrow}>OPERATIONS</p>
             <h1>Truck records</h1>
             <span>Log fuel or maintenance for the active branch truck.</span>
           </div>
-          <Link href="/manager/truck" className="truckPrimary">
+          <Link href="/manager/truck" className={styles.primaryButton}>
             Back to truck
           </Link>
         </div>
 
-        <div className="truckRecordForm">
-          <div className="truckRecordTabs">
-            <button type="button" onClick={() => setKind('fuel')} className={kind === 'fuel' ? 'active' : ''}>
+        <div className={styles.recordForm}>
+          <div className={styles.recordTabs}>
+            <button type="button" onClick={() => setKind('fuel')} className={kind === 'fuel' ? styles.active : ''}>
               Fuel
             </button>
             <button
               type="button"
               onClick={() => setKind('maintenance')}
-              className={kind === 'maintenance' ? 'active' : ''}
+              className={kind === 'maintenance' ? styles.active : ''}
             >
               Maintenance
             </button>
@@ -184,16 +185,16 @@ export default function TruckRecordsPage() {
 
           <button
             type="button"
-            className="truckPrimary"
+            className={styles.primaryButton}
             disabled={busy || !odometer || (kind === 'fuel' && !amount) || (kind === 'maintenance' && !serviceType)}
             onClick={saveRecord}
           >
             {busy ? 'Saving…' : 'Save record'}
           </button>
 
-          {message ? <p className="truckRecordMessage">{message}</p> : null}
-          {receipt ? <p className="truckMuted">Selected file: {receipt.name}</p> : null}
-          {truck ? <p className="truckMuted">Active truck: {truck.name}</p> : null}
+          {message ? <p className={styles.recordMessage}>{message}</p> : null}
+          {receipt ? <p className={styles.muted}>Selected file: {receipt.name}</p> : null}
+          {truck ? <p className={styles.muted}>Active truck: {truck.name}</p> : null}
         </div>
       </div>
     </ManagerShell>

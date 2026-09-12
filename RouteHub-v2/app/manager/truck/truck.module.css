@@ -1,0 +1,58 @@
+.page{max-width:1180px;margin:0 auto;padding:8px 0 56px;color:#0f1d35}
+
+.header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}
+.eyebrow{margin:0 0 7px;color:#1660f0;font-size:11px;font-weight:850;letter-spacing:.14em}
+.header h1{margin:0;font-size:clamp(34px,3.5vw,48px)}
+.header span,.muted,.recordMessage{color:#667892;font-size:14px}
+.headerActions{display:flex;flex-wrap:wrap;gap:10px}
+.formRow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.secondaryButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;border:1px solid #dde5ee;border-radius:13px;background:#fff;color:#0f1d35;font:inherit;font-weight:800;text-decoration:none}
+.primaryButton{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 16px;border:0;border-radius:13px;background:#1660f0;color:#fff;font:inherit;font-weight:800}
+.primaryButton:disabled{opacity:.6;cursor:not-allowed}
+.hero,.panel,.recordForm{border:1px solid #dde5ee;border-radius:20px;background:#fff;box-shadow:0 10px 28px #0f1d350f}
+.hero{display:flex;align-items:center;gap:16px;padding:24px}
+.heroIcon{display:grid;place-items:center;width:58px;height:58px;flex:none;border-radius:17px;background:#eaf2ff;color:#1660f0}
+.hero p,.panel header p,.recordTabs button{margin:0;color:#667892;font-size:10px;font-weight:850;letter-spacing:.12em}
+.hero h2,.panel h2{margin:4px 0;color:#0f1d35;font-size:21px}
+.hero span{color:#667892}
+.odometer{margin-left:auto;display:grid;justify-items:end;gap:2px;flex:none}
+.odometer small,.odometer span{color:#667892;font-size:12px}
+.odometer strong{font-size:25px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.panel{padding:20px;min-width:0}
+.panel header{display:flex;align-items:center;justify-content:space-between;padding-bottom:13px;border-bottom:1px solid #e8edf3}
+.panel header>svg{color:#1660f0;flex:none}
+.row{display:grid;grid-template-columns:1fr 1.2fr auto;gap:10px;padding:14px 0;border-bottom:1px solid #eef2f7;font-size:13px;align-items:center}
+.row:last-child{border-bottom:0}
+.row span,.row small{color:#667892}
+.row strong{color:#0f1d35}
+.receiptLink{margin-left:10px;color:#1660f0;font-weight:700;text-decoration:none}
+.empty{display:grid;place-items:center;gap:8px;padding:70px 20px;border:1px dashed #cbd8e6;border-radius:20px;color:#667892;text-align:center}
+.empty strong{color:#0f1d35}
+.errorBanner{padding:12px 14px;border:1px solid #fecaca;border-radius:12px;background:#fff0f0;color:#b42318}
+.recordForm{max-width:720px;padding:20px;display:grid;gap:16px}
+.recordTabs{display:inline-flex;gap:8px;padding:4px;border:1px solid #dde5ee;border-radius:999px;background:#f7f9fc;width:max-content}
+.recordTabs button{padding:10px 14px;border:0;border-radius:999px;background:transparent;color:#667892}
+.recordTabs button.active{background:#eaf2ff;color:#1660f0}
+.recordForm label{display:grid;gap:8px;color:#0f1d35;font-size:14px;font-weight:700}
+.recordForm input{min-height:46px;padding:0 14px;border:1px solid #dde5ee;border-radius:14px;background:#fff;color:#0f1d35;font:inherit}
+.recordForm input[type=file]{padding:10px 12px}
+
+/* Mirrors the Dashboard's mobile header treatment: a tight column instead
+   of a row that just wraps, and action buttons in a scrollable row instead
+   of stretching full-width one under the other - the same fix that made
+   Routes' header stop reading as cluttered on a phone. */
+@media(max-width:700px){
+  .page{padding:18px 0 90px}
+  .header{align-items:stretch;flex-direction:column;gap:14px}
+  .header h1{font-size:26px}
+  .headerActions{flex-wrap:nowrap;width:100%;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .headerActions::-webkit-scrollbar{display:none}
+  .headerActions>*{flex:0 0 auto;width:auto}
+  .grid{grid-template-columns:1fr}
+  .hero{padding:18px;align-items:flex-start;flex-wrap:wrap}
+  .odometer{margin-left:0}
+  .odometer strong{font-size:21px}
+  .recordForm{padding:16px}
+  .recordTabs{width:100%;justify-content:space-between}
+}
