@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {useEffect} from 'react'
-import {ChevronDown, Clock, MoreHorizontal, Plus, Route as RouteIcon, Users} from 'lucide-react'
+import {ChevronDown, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import './manager-theme.css'
 import styles from './manager-shell.module.css'
@@ -44,10 +44,10 @@ export default function ManagerShell({children, active = 'today', branchName, di
   useThemePreference()
   useManagerLightTheme()
   const copy = locale === 'es'
-    ? {today: 'Hoy', dashboard: 'Panel', map: 'Mapa', contacts: 'Contactos', history: 'Historial', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
+    ? {today: 'Hoy', dashboard: 'Panel', map: 'Mapa', contacts: 'Contactos', truck: 'Camión', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
-      ? {today: 'Aujourd’hui', dashboard: 'Tableau de bord', map: 'Carte', contacts: 'Contacts', history: 'Historique', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
-      : {today: 'Today', dashboard: 'Dashboard', map: 'Map', contacts: 'Contacts', history: 'History', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
+      ? {today: 'Aujourd’hui', dashboard: 'Tableau de bord', map: 'Carte', contacts: 'Contacts', truck: 'Camion', reports: 'Rapports', settings: 'Paramètres', newRoute: 'Nouvel itinéraire', workspace: 'Espace de travail', role: 'Manager de succursale'}
+      : {today: 'Today', dashboard: 'Dashboard', map: 'Map', contacts: 'Contacts', truck: 'Truck', reports: 'Reports', settings: 'Settings', newRoute: 'New route', workspace: 'Workspace', role: 'Branch Manager'}
   const name = displayName?.trim() || t.managerRole
   const initials = name.slice(0, 2).toUpperCase()
   const role = roleLabel || copy.role
@@ -57,7 +57,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
   const nav = [
     {id: 'routes' as const, href: '/routes', label: copy.dashboard, Icon: RouteIcon},
     {id: 'contacts' as const, href: '/contacts', label: copy.contacts, Icon: Users},
-    {id: 'history' as const, href: '/manager/history', label: copy.history, Icon: Clock},
+    {id: 'truck' as const, href: '/manager/truck', label: copy.truck, Icon: Truck},
     {id: 'settings' as const, href: '/settings', label: t.more, Icon: MoreHorizontal},
   ]
 
