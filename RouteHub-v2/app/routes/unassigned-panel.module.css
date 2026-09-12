@@ -170,6 +170,29 @@
   border-top: 1px solid var(--rh-border, #dde5ee);
 }
 
+.subsectionToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chevron,
+.chevronOpen {
+  flex: none;
+  color: #94a3b8;
+  transition: transform 140ms ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
 .headerIconIssue {
   background: rgba(220, 38, 38, 0.1);
   color: #dc2626;

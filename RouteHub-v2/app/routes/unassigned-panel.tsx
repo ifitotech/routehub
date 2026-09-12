@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {AlertTriangle, CheckCircle2, ChevronRight, GripVertical, Truck} from 'lucide-react'
+import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, GripVertical, Truck} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -25,6 +25,11 @@ type UnassignedPanelProps = {
 
 export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
   const [dropActive, setDropActive] = useState(false)
+  // Collapsed by default: these are routes with nothing left to do, so the
+  // list itself only needs to appear on demand - the count in the header
+  // is enough at a glance otherwise.
+  const [issuesOpen, setIssuesOpen] = useState(false)
+  const [completedOpen, setCompletedOpen] = useState(false)
   // Assignees span several branch roles, not just drivers. When a profile has
   // no readable name the role names them, so the picker can't show the same
   // word several times over.
@@ -136,41 +141,47 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
 
       {issueRoutes.length > 0 && (
         <div className={styles.subsection}>
-          <div className={styles.header}>
+          <button type="button" className={styles.subsectionToggle} onClick={() => setIssuesOpen(value => !value)} aria-expanded={issuesOpen}>
             <div className={`${styles.headerIcon} ${styles.headerIconIssue}`}><AlertTriangle size={18} /></div>
             <div className={styles.headerLabel}>
               <h3>{issuesLabel}</h3>
               <span className={styles.count}>{issueRoutes.length}</span>
             </div>
-          </div>
-          <div className={styles.list}>
-            {issueRoutes.map(route => (
-              <div key={route.id} className={styles.item}>
-                <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
-                {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
-              </div>
-            ))}
-          </div>
+            <ChevronDown size={16} className={issuesOpen ? styles.chevronOpen : styles.chevron} />
+          </button>
+          {issuesOpen && (
+            <div className={styles.list}>
+              {issueRoutes.map(route => (
+                <div key={route.id} className={styles.item}>
+                  <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+                  {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {completedRoutes.length > 0 && (
         <div className={styles.subsection}>
-          <div className={styles.header}>
+          <button type="button" className={styles.subsectionToggle} onClick={() => setCompletedOpen(value => !value)} aria-expanded={completedOpen}>
             <div className={`${styles.headerIcon} ${styles.headerIconDone}`}><CheckCircle2 size={18} /></div>
             <div className={styles.headerLabel}>
               <h3>{completedLabel}</h3>
               <span className={styles.count}>{completedRoutes.length}</span>
             </div>
-          </div>
-          <div className={styles.list}>
-            {completedRoutes.map(route => (
-              <div key={route.id} className={styles.item}>
-                <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
-                {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
-              </div>
-            ))}
-          </div>
+            <ChevronDown size={16} className={completedOpen ? styles.chevronOpen : styles.chevron} />
+          </button>
+          {completedOpen && (
+            <div className={styles.list}>
+              {completedRoutes.map(route => (
+                <div key={route.id} className={styles.item}>
+                  <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+                  {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </aside>
