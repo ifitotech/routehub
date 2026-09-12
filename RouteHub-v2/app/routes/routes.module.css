@@ -370,10 +370,10 @@
 }
 
 .segmented .segmentActive{
-  border-color:#8cb0ef;
-  background:#eaf2ff;
-  color:#0e48c4;
-  box-shadow:0 0 0 1px #bcd0f7 inset,0 4px 10px rgb(37 99 235 / 7%);
+  border-color:#1660f0;
+  background:#1660f0;
+  color:#fff;
+  box-shadow:none;
 }
 
 .field input,.field select,.field textarea,
