@@ -1,16 +1,26 @@
 'use client'
 
-import {ChevronRight, SlidersHorizontal} from 'lucide-react'
+import {Bell, ChevronRight, SlidersHorizontal, Truck} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import styles from './routes.module.css'
 import ui from './new-route-ui.module.css'
 import {driverDetails} from './routes-model'
 
-// Driver / Schedule / More details (PO, priority) / Driver note, grouped in
-// their own grey surface so "who and when" reads apart from "where" instead
-// of every field competing in one long column.
+// Driver / Schedule / More details (PO, priority) / Driver note / Cancel+
+// Assign, grouped in their own grey surface so "who and when" reads apart
+// from "where" instead of every field competing in one long column. The
+// Cancel/Assign actions live here (instead of a separate footer row below
+// the whole form) because this column runs shorter than Route details -
+// putting them here fills that leftover space instead of adding a new row
+// that pushed the panel past its available height and caused a scrollbar.
 export default function NewRouteAssignment(p: any) {
-  const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, detailsOpen, setDetailsOpen} = p
+  const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes, detailsOpen, setDetailsOpen, saving, setOpen, save} = p
+  const notice = locale==='es' ? 'El conductor será notificado' : locale==='fr' ? 'Le conducteur sera notifié' : 'Driver will be notified'
+  const assignLabel = form.type==='pickup'
+    ? (locale==='es'?'Asignar recogida':locale==='fr'?'Attribuer la collecte':'Assign pickup')
+    : form.type==='return'
+      ? (locale==='es'?'Asignar regreso':locale==='fr'?'Attribuer le retour':'Assign return')
+      : (locale==='es'?'Asignar entrega':locale==='fr'?'Attribuer la livraison':'Assign delivery')
   const [driverMenuOpen, setDriverMenuOpen] = useState(false)
   const [dateMode, setDateMode] = useState<'today' | 'custom'>(form.date === todayValue ? 'today' : 'custom')
   // A new route always starts as "as soon as possible" - form.time defaults
@@ -120,6 +130,14 @@ export default function NewRouteAssignment(p: any) {
       <div>
         <h3>{locale==='es'?'Nota para el conductor':locale==='fr'?'Note pour le conducteur':'Driver note'} <span className={ui.optionalLabel}>{c.optional}</span></h3>
         <textarea value={form.notes} placeholder={locale==='es'?'Código de acceso, estacionamiento o instrucciones…':locale==='fr'?'Code d’accès, stationnement ou instructions…':'Gate code, parking or instructions…'} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/>
+      </div>
+
+      <div className={ui.assignmentFooter}>
+        <span className={ui.footerNotice}><Bell size={14}/>{notice}</span>
+        <div className={ui.footerActions}>
+          <button className={styles.secondaryButton} type="button" disabled={saving} onClick={() => setOpen(false)}>{locale==='es' ? 'Cancelar' : locale==='fr' ? 'Annuler' : 'Cancel'}</button>
+          <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? c.publishing : <><Truck size={19}/>{assignLabel}</>}</button>
+        </div>
       </div>
     </div>
   )

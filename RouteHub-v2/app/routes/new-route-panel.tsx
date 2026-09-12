@@ -1,6 +1,6 @@
 'use client'
 
-import {Bell, Check, CheckCircle2, Package, Plus, Store, Truck, X} from 'lucide-react'
+import {Check, CheckCircle2, Package, Plus, Store, Truck, X} from 'lucide-react'
 import styles from './routes.module.css'
 import ui from './new-route-ui.module.css'
 import {routeTypes, typeLabel} from './routes-model'
@@ -28,13 +28,7 @@ type NewRoutePanelProps = Pick<Workspace,
 >
 
 export default function NewRoutePanel(p: NewRoutePanelProps) {
-  const {saving, setOpen, justCreated, locale, c, openBuilder, form, setForm, defaultBranch, save, setSelectedDestinationLocation} = p
-  const notice = locale==='es' ? 'El conductor será notificado' : locale==='fr' ? 'Le conducteur sera notifié' : 'Driver will be notified'
-  const assignLabel = form.type==='pickup'
-    ? (locale==='es'?'Asignar recogida':locale==='fr'?'Attribuer la collecte':'Assign pickup')
-    : form.type==='return'
-      ? (locale==='es'?'Asignar regreso':locale==='fr'?'Attribuer le retour':'Assign return')
-      : (locale==='es'?'Asignar entrega':locale==='fr'?'Attribuer la livraison':'Assign delivery')
+  const {saving, setOpen, justCreated, locale, c, openBuilder, form, setForm, defaultBranch, setSelectedDestinationLocation} = p
 
   return (
     <div className={ui.inlinePanel}>
@@ -72,14 +66,6 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
             <NewRouteDetails {...p} />
           </div>
           <NewRouteAssignment {...p} />
-        </div>
-
-        <div className={ui.formFooter}>
-          <span className={ui.footerNotice}><Bell size={14}/>{notice}</span>
-          <div className={ui.footerActions}>
-            <button className={styles.secondaryButton} type="button" disabled={saving} onClick={() => setOpen(false)}>{locale==='es' ? 'Cancelar' : locale==='fr' ? 'Annuler' : 'Cancel'}</button>
-            <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? c.publishing : <><Truck size={19}/>{assignLabel}</>}</button>
-          </div>
         </div>
       </div>}
     </div>

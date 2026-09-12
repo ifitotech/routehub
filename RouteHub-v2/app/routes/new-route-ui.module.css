@@ -90,10 +90,12 @@
 .assignmentPanel textarea::placeholder{color:#94a3b8}
 .moreDetailsPanel{display:grid;gap:4px;padding-top:2px}
 
-/* "Driver will be notified" + Cancel/Publish - this row used to be plain
-   Cancel/Publish with no framing, which hid that dispatching also pings
-   the driver's phone the moment the form is submitted. */
-.formFooter{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:18px;margin-top:4px;border-top:1px solid #eef2f7}
-.footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:12px;font-weight:700}
-.footerActions{display:flex;gap:10px}
-.footerActions .secondaryButton,.footerActions .publishButton{min-width:120px;margin:0}
+/* "Driver will be notified" + Cancel/Assign, stacked (not side by side like
+   a wide footer) since this column is only 260px - lives at the bottom of
+   the Assignment panel instead of its own row below the whole form, which
+   fills this column's leftover height instead of adding height that pushed
+   the panel past its available space and forced a scrollbar. */
+.assignmentFooter{display:grid;gap:10px;padding-top:16px;margin-top:2px;border-top:1px solid #e7edf4}
+.footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:11px;font-weight:700}
+.footerActions{display:grid;gap:8px}
+.footerActions .secondaryButton,.footerActions .publishButton{width:100%;margin:0}
