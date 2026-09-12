@@ -322,9 +322,15 @@ export default function Routes() {
                   </section>
                 ) : assignedRoutes.length > 0 ? (
                   <section className={styles.routeSection}>
+                    {/* Matches Unassigned's header shape (icon chip + label +
+                        count) instead of a bare heading + badge - the two
+                        panels used to read as two different surfaces. */}
                     <div className={styles.sectionHeading}>
-                      <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
-                      <span>{assignedRoutes.length}</span>
+                      <div className={styles.sectionIcon}><RouteIcon size={18}/></div>
+                      <div className={styles.sectionLabelGroup}>
+                        <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
+                        <span>{assignedRoutes.length}</span>
+                      </div>
                     </div>
                     <RouteRows
                       items={assignedRoutes}

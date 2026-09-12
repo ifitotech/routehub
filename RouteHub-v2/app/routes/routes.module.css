@@ -115,7 +115,7 @@
   }
   .header { margin-bottom: 28px; }
   .header h1 { font-size: clamp(36px, 3.2vw, 48px); }
-  .routeSection { margin-top: 28px; }
+  .routeSection { margin-top: 0; }
   .routeCard { min-height: 104px; }
 }
 
@@ -188,10 +188,17 @@
 /* Route planning is intentionally separate from live tracking.  These compact
    section headers make the date/state grouping clear without repeating the
    operational map used by Dashboard and Map. */
-.routeSection{margin-top:24px}
-.sectionHeading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 12px}
-.sectionHeading h2{margin:0;font-size:18px;line-height:1.2;color:var(--rh-text,#14233b)}
-.sectionHeading span{padding:6px 10px;border-radius:999px;background:#eaf2ff;color:#0e48c4;font-size:11px;font-weight:800;white-space:nowrap}
+/* Sits pegged to the top of the center column, same as Unassigned's panel
+   in the sidebar - this used to carry margin-top from a stacked-sections
+   layout ("Today"/"Upcoming"/...) that no longer applies here. */
+.routeSection{margin-top:0}
+/* Matches Unassigned's header shape: icon chip + label + count, instead of
+   a bare heading that made the two panels read as different surfaces. */
+.sectionHeading{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+.sectionIcon{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(100,116,139,.1);color:#64748b}
+.sectionLabelGroup{display:flex;align-items:baseline;justify-content:space-between;flex:1;gap:8px}
+.sectionHeading h2{margin:0;font-size:14px;font-weight:600;line-height:1.2;color:var(--rh-text,#14233b)}
+.sectionHeading span{padding:2px 8px;border-radius:999px;background:#eaf2ff;color:#0e48c4;font-size:12px;font-weight:700;white-space:nowrap}
 :global(html[data-theme="dark"]) .sectionHeading span{background:#17345c;color:#bfdbfe}
 :global(html[data-theme="dark"]) .sectionHeading h2{color:var(--rh-text,#f8fafc)}
 .routeTopbar{display:flex;align-items:center;justify-content:space-between;min-height:64px;margin:0 0 28px;padding:0 4px;border-bottom:1px solid var(--rh-border,#e2e8f0)}
@@ -539,9 +546,8 @@
   .listHeading h2 { font-size: 24px; }
   .listHeading p { font-size: 14px; }
 
-  .routeSection { margin-top: 34px; }
+  .routeSection { margin-top: 0; }
   .sectionHeading { margin-bottom: 15px; }
-  .sectionHeading h2 { font-size: 19px; }
   .routeGrid { grid-template-columns: 1fr; gap: 11px; }
 
   .routeCard {
