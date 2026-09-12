@@ -56,6 +56,14 @@
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
 }
 
+/* While the Add Route form is open, match the map's full height instead of
+   shrinking to the form's own content height - side by side with the
+   always-full-height map, a shorter form read as cramped even after
+   trimming its internal spacing. */
+.workspace[data-focus='true'] .center {
+  height: var(--board-height);
+}
+
 .map {
   grid-column: 3;
   align-self: stretch;
