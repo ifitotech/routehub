@@ -1,14 +1,16 @@
 'use client'
 
+import {ChevronRight} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import ui from './new-route-ui.module.css'
+import {driverDetails} from './routes-model'
 
-// Schedule / position-in-route / Driver note, grouped in their own grey
-// surface. Driver itself now sits in its own row next to route type (see
-// new-route-driver-picker.tsx) instead of here - that saved a whole extra
-// panel section's worth of vertical space.
+// Driver / Schedule / Driver note, grouped in their own grey surface so
+// "who and when" reads apart from "where" instead of every field competing
+// in one long column.
 export default function NewRouteAssignment(p: any) {
-  const {locale, c, form, setForm, todayValue, insertBeforeId, setInsertBeforeId, priorityRoutes} = p
+  const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes} = p
+  const [driverMenuOpen, setDriverMenuOpen] = useState(false)
   const [dateMode, setDateMode] = useState<'today' | 'custom'>(form.date === todayValue ? 'today' : 'custom')
   // A new route always starts as "as soon as possible" - form.time defaults
   // to the current clock time (see localSchedule()), which isn't a real
@@ -19,6 +21,18 @@ export default function NewRouteAssignment(p: any) {
     if (form.time) setForm((current: any) => ({...current, time: ''}))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const driverList = (drivers || []) as any[]
+  const selectedDriver = driverList.find(driver => driver.user_id === form.driver_id)
+  const selectedDetails = selectedDriver ? driverDetails(selectedDriver, selectedDriver.role === 'driver' ? c.teamDriver : c.driver) : null
+  const selectedName = selectedDetails?.name || c.chooseDriver
+  const initials = selectedName.split(/\s+/).map((part: string) => part[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'TD'
+  const isPrimary = selectedDriver && selectedDriver.user_id === defaultBranch?.primary_driver_id
+
+  const chooseDriver = (userId: string) => {
+    setForm((current: any) => ({...current, driver_id: userId}))
+    setDriverMenuOpen(false)
+  }
 
   const setToday = () => {
     setDateMode('today')
@@ -38,6 +52,36 @@ export default function NewRouteAssignment(p: any) {
   return (
     <div className={ui.assignmentPanel}>
       <div>
+        <h3>{c.driver}</h3>
+        <button type="button" className={ui.driverCard} onClick={() => setDriverMenuOpen(value => !value)} aria-expanded={driverMenuOpen}>
+          <span className={ui.avatar}>{initials}</span>
+          <span className={ui.driverInfo}>
+            <strong>{selectedName}</strong>
+            <span>{isPrimary ? (locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary driver') : selectedDriver ? (selectedDriver.role==='driver'?c.teamDriver:c.driver) : (locale==='es'?'Sin asignar':locale==='fr'?'Non assigné':'Not assigned')}</span>
+          </span>
+          <ChevronRight size={16}/>
+        </button>
+        {driverMenuOpen && <div className={ui.driverMenu}>
+          {driverList.map((driver, index) => {
+            const fallback = `${c.driver} ${index + 1}`
+            const details = driverDetails(driver, driver.role === 'driver' ? c.teamDriver : fallback)
+            const primary = driver.user_id === defaultBranch?.primary_driver_id
+            return (
+              <button key={driver.user_id} type="button" className={driver.user_id === form.driver_id ? ui.driverMenuItemActive : ui.driverMenuItem} onClick={() => chooseDriver(driver.user_id)}>
+                {details.name || fallback}{primary ? ' — Primary' : ''}
+              </button>
+            )
+          })}
+        </div>}
+        {form.driver_id && form.date === todayValue && priorityRoutes?.length > 0 && <label className={`${ui.field} ${ui.fieldSpaced}`}>
+          <select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}>
+            <option value="">{locale==='es' ? 'Agregar al final' : 'Add to end'}</option>
+            {priorityRoutes.map((route: any) => <option key={route.id} value={route.id}>{locale==='es'?'Antes de':'Before'} {route.destination_name || route.destination_address}</option>)}
+          </select>
+        </label>}
+      </div>
+
+      <div>
         <h3>{locale==='es'?'Horario':locale==='fr'?'Horaire':'Schedule'}</h3>
         <div className={ui.scheduleToggle}>
           <button type="button" className={dateMode==='today' ? ui.scheduleToggleActive : ''} onClick={setToday}>{locale==='es'?'Hoy':locale==='fr'?'Aujourd’hui':'Today'}</button>
@@ -52,12 +96,6 @@ export default function NewRouteAssignment(p: any) {
           </select>
         </label>
         {timeMode==='specific' && <label className={`${ui.field} ${ui.fieldSpaced}`}><input type="time" value={form.time} onChange={event => setForm((current: any) => ({...current, time: event.target.value}))}/></label>}
-        {form.driver_id && form.date === todayValue && priorityRoutes?.length > 0 && <label className={`${ui.field} ${ui.fieldSpaced}`}>
-          <select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}>
-            <option value="">{locale==='es' ? 'Agregar al final' : 'Add to end'}</option>
-            {priorityRoutes.map((route: any) => <option key={route.id} value={route.id}>{locale==='es'?'Antes de':'Before'} {route.destination_name || route.destination_address}</option>)}
-          </select>
-        </label>}
       </div>
 
       <div>
