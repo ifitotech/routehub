@@ -14,8 +14,9 @@ const roleChoices = roleLabelOptions('en')
 const roleLabelFor = (role: Role) => roleChoices.find(choice => choice.role === role)?.label || role
 
 type Member = {userId: string; role: Role; email: string; name: string | null; phone: string | null; password: string | null}
-type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; is_test: boolean; invite?: {email: string; status: string} | null; members: Member[]}
+type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; is_test: boolean; active: boolean; invite?: {email: string; status: string} | null; members: Member[]}
 type Credential = {role: Role; email: string; password: string}
+type BranchOption = {id: string; label: string}
 
 // One place both the single "add login" form and the "create full test
 // team" bulk action call through, so both stay in sync with how a beta
@@ -38,12 +39,23 @@ export default function OrganizationPage() {
   const [branches, setBranches] = useState<Branch[]>([])
   const [usage, setUsage] = useState({routes: 0, drivers: 0, members: 0})
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({name: '', number: '', address: '', email: '', isTest: false})
+  const [form, setForm] = useState({name: '', number: '', address: '', email: '', isTest: false, active: false})
   const [message, setMessage] = useState('')
   const [resending, setResending] = useState<string | null>(null)
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({name: '', number: '', address: '', isTest: false})
+  const [editForm, setEditForm] = useState({name: '', number: '', address: '', isTest: false, active: false})
   const [savingBranch, setSavingBranch] = useState(false)
+  const [togglingActiveId, setTogglingActiveId] = useState<string | null>(null)
+
+  // "Import contacts" - copies another branch's saved contacts into this
+  // one instead of re-entering them by hand. The source can be any branch
+  // in any company the CEO manages (e.g. an old test session), not just
+  // this one - each branch keeps its own copy afterward, no shared rows.
+  const [branchOptions, setBranchOptions] = useState<BranchOption[]>([])
+  const [importBranchId, setImportBranchId] = useState<string | null>(null)
+  const [importSourceId, setImportSourceId] = useState('')
+  const [importBusy, setImportBusy] = useState(false)
+  const [importResult, setImportResult] = useState<{branchId: string; count: number} | null>(null)
 
   // Editing the organization itself - just name + a short abbreviation
   // ("CES" for "City Electric Supply") so branch codes and generated
@@ -96,7 +108,7 @@ export default function OrganizationPage() {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
       client.from('companies').select('name,abbreviation').eq('id', id).maybeSingle(),
-      client.from('branches').select('id,name,branch_number,address,is_test').eq('company_id', id).order('name'),
+      client.from('branches').select('id,name,branch_number,address,is_test,active').eq('company_id', id).order('name'),
       client.from('invitations').select('branch_id,email,status,created_at').eq('company_id', id).order('created_at', {ascending: false}),
       client.from('routes').select('id', {count: 'exact', head: true}).eq('company_id', id),
       client.from('company_users').select('user_id,branch_id,role,users(email,name,phone)').eq('company_id', id),
@@ -118,10 +130,20 @@ export default function OrganizationPage() {
       list.push({userId: row.user_id, role: row.role, email: row.users?.email || '', name: row.users?.name || null, phone: row.users?.phone || null, password: passwordByUser.get(row.user_id) || null})
       membersByBranch.set(row.branch_id, list)
     })
-    setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null; is_test: boolean}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
+    setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null; is_test: boolean; active: boolean}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
     setUsage({routes: routes || 0, drivers: (members || []).filter((row: any) => row.role === 'driver').length, members: (members || []).length})
   }
   useEffect(() => { void load() }, [id])
+
+  // Every branch across every company, for "Import contacts" - the old
+  // branch a CEO wants to copy from is often in a different company
+  // entirely (an old test session), not just another branch here.
+  useEffect(() => {
+    void (async () => {
+      const {data} = await getSupabase().from('branches').select('id,name,companies(name)').order('name')
+      setBranchOptions((data || []).map((row: any) => ({id: row.id, label: `${row.companies?.name || 'Company'} — ${row.name}`})))
+    })()
+  }, [])
 
   // Suggests an email as branch/role change, but never overwrites what the
   // CEO already typed - editing the field by hand opts out of auto-fill.
@@ -237,7 +259,7 @@ export default function OrganizationPage() {
   }
   const startEditBranch = (branch: Branch) => {
     setEditingBranchId(branch.id)
-    setEditForm({name: branch.name, number: branch.branch_number || '', address: branch.address || '', isTest: branch.is_test})
+    setEditForm({name: branch.name, number: branch.branch_number || '', address: branch.address || '', isTest: branch.is_test, active: branch.active})
     setMessage('')
   }
   const saveBranch = async () => {
@@ -248,6 +270,7 @@ export default function OrganizationPage() {
       branch_number: editForm.number.trim() || null,
       address: editForm.address.trim() || null,
       is_test: editForm.isTest,
+      active: editForm.active,
     }).eq('id', editingBranchId)
     setMessage(error ? error.message : 'Branch updated.')
     setSavingBranch(false)
@@ -270,7 +293,7 @@ export default function OrganizationPage() {
   const addBranch = async () => {
     if (!form.name.trim()) return
     let activationCode: string | undefined
-    const {data: createdBranchId, error} = await getSupabase().rpc('platform_create_branch', {company_id: id, branch_name: form.name.trim(), branch_number: form.number.trim() || null, branch_address: form.address.trim() || null, manager_email: form.email.trim() || null})
+    const {data: createdBranchId, error} = await getSupabase().rpc('platform_create_branch', {company_id: id, branch_name: form.name.trim(), branch_number: form.number.trim() || null, branch_address: form.address.trim() || null, manager_email: form.email.trim() || null, branch_active: form.active})
     if (error) { setMessage(error.message); return }
     if (form.isTest) await getSupabase().from('branches').update({is_test: true}).eq('id', createdBranchId)
     if (form.email.trim()) {
@@ -279,7 +302,41 @@ export default function OrganizationPage() {
       activationCode = (invite.data as {activationCode?: string} | null)?.activationCode
     }
     setMessage(form.email.trim() ? `Branch created. Activation code: ${activationCode || 'not generated'}. Share it securely; it expires in 24 hours.` : 'Branch created.')
-    setForm({name: '', number: '', address: '', email: '', isTest: false}); setOpen(false); await load()
+    setForm({name: '', number: '', address: '', email: '', isTest: false, active: false}); setOpen(false); await load()
+  }
+  const toggleActive = async (branch: Branch) => {
+    setTogglingActiveId(branch.id)
+    const {error} = await getSupabase().from('branches').update({active: !branch.active}).eq('id', branch.id)
+    setMessage(error ? error.message : `${branch.name} is now ${!branch.active ? 'active' : 'inactive'}.`)
+    setTogglingActiveId(null)
+    if (!error) await load()
+  }
+  const openImport = (branch: Branch) => {
+    const opening = importBranchId !== branch.id
+    setImportBranchId(opening ? branch.id : null)
+    setImportSourceId('')
+    setImportResult(null)
+    setMessage('')
+  }
+  const importContacts = async (branch: Branch) => {
+    if (!importSourceId || importBusy) return
+    setImportBusy(true)
+    setMessage('')
+    try {
+      const client = getSupabase()
+      const {data: sourceContacts, error: sourceError} = await client.from('contacts').select('company_name,contact_name,address,phone,location_code,latitude,longitude,location_source,location_external_id').eq('branch_id', importSourceId)
+      if (sourceError) throw sourceError
+      if (!sourceContacts || !sourceContacts.length) { setMessage('That branch has no saved contacts to copy.'); return }
+      const copies = sourceContacts.map(contact => ({...contact, company_id: id, branch_id: branch.id}))
+      const {error: insertError} = await client.from('contacts').insert(copies)
+      if (insertError) throw insertError
+      setImportResult({branchId: branch.id, count: copies.length})
+      setImportBranchId(null)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to import contacts.')
+    } finally {
+      setImportBusy(false)
+    }
   }
 
   return (
@@ -319,7 +376,7 @@ export default function OrganizationPage() {
         <article><span>Branches</span><strong>{branches.length}</strong><small>Registered locations</small></article>
       </section>
 
-      {open && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>New branch</h2><p>Add the branch and invite its manager.</p></div><Building2 size={22}/></header><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={form.name} onChange={e => setForm({...form, name: e.target.value})}/></label><label className={styles.field}>Branch code<input placeholder="OPA" value={form.number} onChange={e => setForm({...form, number: e.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street" value={form.address} onChange={e => setForm({...form, address: e.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})}/></label><label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={form.isTest} onChange={e => setForm({...form, isTest: e.target.checked})} style={{width: 18, height: 18}}/>Test branch</label><button className={styles.primaryButton} disabled={!form.name.trim()} onClick={() => void addBranch()}>Create branch</button></div></section>}
+      {open && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>New branch</h2><p>Add the branch and invite its manager.</p></div><Building2 size={22}/></header><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={form.name} onChange={e => setForm({...form, name: e.target.value})}/></label><label className={styles.field}>Branch code<input placeholder="OPA" value={form.number} onChange={e => setForm({...form, number: e.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street" value={form.address} onChange={e => setForm({...form, address: e.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})}/></label><label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={form.isTest} onChange={e => setForm({...form, isTest: e.target.checked})} style={{width: 18, height: 18}}/>Test branch</label><label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={form.active} onChange={e => setForm({...form, active: e.target.checked})} style={{width: 18, height: 18}}/>Active (open for business now)</label><button className={styles.primaryButton} disabled={!form.name.trim()} onClick={() => void addBranch()}>Create branch</button></div></section>}
 
       {message && <p className={styles.statusMessage}>{message}</p>}
 
@@ -336,6 +393,7 @@ export default function OrganizationPage() {
               <label className={styles.field}>Branch code<input placeholder="OPA" value={editForm.number} onChange={e => setEditForm({...editForm, number: e.target.value})}/></label>
               <label className={styles.field}>Branch address<input placeholder="123 Main Street" value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})}/></label>
               <label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={editForm.isTest} onChange={e => setEditForm({...editForm, isTest: e.target.checked})} style={{width: 18, height: 18}}/>Test branch</label>
+              <label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={editForm.active} onChange={e => setEditForm({...editForm, active: e.target.checked})} style={{width: 18, height: 18}}/>Active (open for business now)</label>
               <div style={{display: 'flex', gap: 10}}>
                 <button className={styles.primaryButton} disabled={savingBranch || !editForm.name.trim()} onClick={() => void saveBranch()}>{savingBranch ? 'Saving…' : 'Save changes'}</button>
                 <button className={styles.secondaryButton} onClick={() => setEditingBranchId(null)}>Cancel</button>
@@ -359,6 +417,7 @@ export default function OrganizationPage() {
               </div>
               <div className={styles.rowAside}>
                 <span className={styles.badge} data-status={branch.is_test ? 'Trial' : 'Active'}>{branch.is_test ? 'Test' : 'Real'}</span>
+                <button type="button" className={styles.badge} data-status={branch.active ? 'Active' : 'Paused'} disabled={togglingActiveId === branch.id} onClick={() => void toggleActive(branch)} title="Click to toggle whether this branch is open for business" style={{border: 0, cursor: 'pointer'}}>{togglingActiveId === branch.id ? '…' : branch.active ? 'Active' : 'Not open yet'}</button>
                 <span className={styles.badge} data-status={pending ? 'Pending' : 'Active'}>{pending ? 'Pending' : 'Active'}</span>
                 <button className={styles.secondaryButton} onClick={() => startEditBranch(branch)}><Pencil size={15}/> Edit</button>
                 {pending && <button className={styles.secondaryButton} disabled={resending === branch.id} onClick={() => void resendInvite(branch)}><RefreshCw size={15}/>{resending === branch.id ? 'Sending…' : 'Resend email'}</button>}
@@ -451,7 +510,26 @@ export default function OrganizationPage() {
                 <div className={styles.branchActions}>
                   <button className={styles.secondaryButton} onClick={() => openAddLogin(branch)}><Users size={15}/> {addLoginBranchId === branch.id ? 'Close' : 'Add login'}</button>
                   <button className={styles.secondaryButton} disabled={bulkBusyBranchId === branch.id} onClick={() => void createFullTeam(branch)}>{bulkBusyBranchId === branch.id ? 'Creating team…' : 'Create full test team'}</button>
+                  <button className={styles.secondaryButton} onClick={() => openImport(branch)}>{importBranchId === branch.id ? 'Close' : 'Import contacts'}</button>
                 </div>
+
+                {importBranchId === branch.id && (
+                  <div className={styles.inlineForm}>
+                    <label className={styles.field}>Copy contacts from
+                      <select value={importSourceId} onChange={e => setImportSourceId(e.target.value)}>
+                        <option value="">Choose a branch…</option>
+                        {branchOptions.filter(option => option.id !== branch.id).map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+                      </select>
+                    </label>
+                    <div style={{display: 'flex', alignItems: 'flex-end'}}>
+                      <button className={styles.primaryButton} style={{width: '100%'}} disabled={!importSourceId || importBusy} onClick={() => void importContacts(branch)}>{importBusy ? 'Copying…' : 'Copy contacts'}</button>
+                    </div>
+                  </div>
+                )}
+
+                {importResult && importResult.branchId === branch.id && (
+                  <p className={styles.subtitle} style={{margin: '8px 0 0'}}>Copied {importResult.count} contact{importResult.count === 1 ? '' : 's'} into {branch.name}.</p>
+                )}
 
                 {addLoginBranchId === branch.id && (
                   <div className={styles.inlineForm}>
