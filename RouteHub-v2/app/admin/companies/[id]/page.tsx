@@ -12,7 +12,8 @@ import type {Role} from '../../../../lib/types'
 
 const roleChoices = roleLabelOptions('en')
 
-type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; invite?: {email: string; status: string} | null}
+type Member = {userId: string; role: Role; email: string; name: string | null}
+type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; invite?: {email: string; status: string} | null; members: Member[]}
 export default function OrganizationPage() {
   const {id} = useParams<{id: string}>()
   const [company, setCompany] = useState<{name: string} | null>(null)
@@ -30,6 +31,8 @@ export default function OrganizationPage() {
   const [testUserRole, setTestUserRole] = useState<Role>('driver')
   const [testUserBusy, setTestUserBusy] = useState(false)
   const [testUserResult, setTestUserResult] = useState<{email: string; password: string} | null>(null)
+  const [testUserEmail, setTestUserEmail] = useState('')
+  const [testUserEmailTouched, setTestUserEmailTouched] = useState(false)
   const load = async () => {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
@@ -37,15 +40,31 @@ export default function OrganizationPage() {
       client.from('branches').select('id,name,branch_number,address').eq('company_id', id).order('name'),
       client.from('invitations').select('branch_id,email,status,created_at').eq('company_id', id).order('created_at', {ascending: false}),
       client.from('routes').select('id', {count: 'exact', head: true}).eq('company_id', id),
-      client.from('company_users').select('role').eq('company_id', id),
+      client.from('company_users').select('user_id,branch_id,role,users(email,name)').eq('company_id', id),
     ])
     const latest = new Map<string, {email: string; status: string}>()
     ;(invites || []).forEach((invite: {branch_id: string | null; email: string; status: string}) => { if (invite.branch_id && !latest.has(invite.branch_id)) latest.set(invite.branch_id, {email: invite.email, status: invite.status}) })
-    setCompany(org); setBranches((rows || []).map((branch: Branch) => ({...branch, invite: latest.get(branch.id) || null})))
-    setUsage({routes: routes || 0, drivers: (members || []).filter(row => row.role === 'driver').length, members: (members || []).length})
+    const membersByBranch = new Map<string, Member[]>()
+    ;(members || []).forEach((row: any) => {
+      if (!row.branch_id) return
+      const list = membersByBranch.get(row.branch_id) || []
+      list.push({userId: row.user_id, role: row.role, email: row.users?.email || '', name: row.users?.name || null})
+      membersByBranch.set(row.branch_id, list)
+    })
+    setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
+    setUsage({routes: routes || 0, drivers: (members || []).filter((row: any) => row.role === 'driver').length, members: (members || []).length})
   }
   useEffect(() => { void load() }, [id])
   useEffect(() => { if (!testUserBranchId && branches.length) setTestUserBranchId(branches[0].id) }, [branches, testUserBranchId])
+  // Suggests an email as branch/role change, but never overwrites what the
+  // CEO already typed - editing the field by hand opts out of auto-fill.
+  useEffect(() => {
+    if (testUserEmailTouched) return
+    const branch = branches.find(b => b.id === testUserBranchId)
+    if (!branch || !company) return
+    const roleSlug = roleChoices.find(choice => choice.role === testUserRole)?.label || testUserRole
+    setTestUserEmail(`${slugify(company.name)}-${slugify(branch.name)}-${slugify(roleSlug)}@routehub.local`)
+  }, [testUserBranchId, testUserRole, branches, company, testUserEmailTouched])
   const resendInvite = async (branch: Branch) => {
     if (!branch.invite?.email || resending) return
     setResending(branch.id)
@@ -75,13 +94,13 @@ export default function OrganizationPage() {
   }
   const createTestUser = async () => {
     const branch = branches.find(b => b.id === testUserBranchId)
-    if (!branch || testUserBusy) return
+    const email = testUserEmail.trim().toLowerCase()
+    if (!branch || testUserBusy || !email) return
+    if (!email.endsWith('@routehub.local')) { setMessage('Test user emails must end in @routehub.local.'); return }
     setTestUserBusy(true)
     setMessage('')
     setTestUserResult(null)
     try {
-      const roleSlug = roleChoices.find(choice => choice.role === testUserRole)?.label || testUserRole
-      const email = `${slugify(company?.name || 'company')}-${slugify(branch.name)}-${slugify(roleSlug)}@routehub.local`
       const password = randomPassword()
       const result = await getSupabase().functions.invoke('send-manager-invite', {
         body: {action: 'create_beta_account', companyId: id, branchId: branch.id, email, password, role: testUserRole},
@@ -90,6 +109,7 @@ export default function OrganizationPage() {
       if (result.error && 'context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
       if (result.error) throw new Error(detail)
       setTestUserResult({email, password})
+      setTestUserEmailTouched(false)
       await load()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to create test user.')
@@ -128,7 +148,10 @@ export default function OrganizationPage() {
                 {roleChoices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}
               </select>
             </label>
-            <button className={styles.primaryButton} disabled={!testUserBranchId || testUserBusy} onClick={() => void createTestUser()}>{testUserBusy ? 'Creating…' : 'Create test user'}</button>
+            <label className={styles.field}>Email
+              <input type="email" value={testUserEmail} onChange={e => {setTestUserEmail(e.target.value); setTestUserEmailTouched(true)}} placeholder="name@routehub.local"/>
+            </label>
+            <button className={styles.primaryButton} disabled={!testUserBranchId || !testUserEmail.trim() || testUserBusy} onClick={() => void createTestUser()}>{testUserBusy ? 'Creating…' : 'Create test user'}</button>
           </div>
           {testUserResult && (
             <div className={styles.panel} style={{marginTop: 14, background: 'var(--bg, #f7f9fc)'}}>
@@ -169,10 +192,15 @@ export default function OrganizationPage() {
           return (
             <article className={styles.rowCard} key={branch.id}>
               <span className={styles.rowIcon}><Building2 size={20}/></span>
-              <div className={styles.identity}>
-                <h2>{branch.name}</h2>
+              <div className={styles.identity} style={{overflow: 'visible', whiteSpace: 'normal'}}>
+                <h2 style={{whiteSpace: 'normal'}}>{branch.name}</h2>
                 <p>Branch {branch.branch_number || '—'} · {branch.address || 'No address'}</p>
                 <p>{branch.invite ? `${pending ? 'Invitation pending' : `Invitation ${branch.invite.status}`} · ${branch.invite.email}` : 'No manager invitation yet'}</p>
+                {branch.members.length > 0 && (
+                  <p style={{whiteSpace: 'normal', marginTop: 4}}>
+                    {branch.members.map(member => `${roleChoices.find(choice => choice.role === member.role)?.label || member.role}: ${member.name || member.email || 'Unknown'}`).join(' · ')}
+                  </p>
+                )}
               </div>
               <div className={styles.rowAside}>
                 <span className={styles.badge} data-status={pending ? 'Pending' : 'Active'}>{pending ? 'Pending' : 'Active'}</span>
