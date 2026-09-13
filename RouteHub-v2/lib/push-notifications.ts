@@ -68,3 +68,24 @@ export async function registerPushNotifications(vapidPublicKey?: string) {
   if (error) throw error
   return subscription
 }
+
+/**
+ * The Settings "notifications" toggle used to just flip local UI state when
+ * turned off, leaving the push subscription (or native token) live server
+ * side - the device kept receiving route alerts even after the switch said
+ * Off. This actually tears the subscription down.
+ */
+export async function disablePushNotifications() {
+  const { data: { user } } = await getSupabase().auth.getUser()
+  if (Capacitor.isNativePlatform()) {
+    if (user) await getSupabase().from('native_push_tokens').delete().eq('user_id', user.id).eq('platform', Capacitor.getPlatform())
+    return
+  }
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+  const registration = await navigator.serviceWorker.getRegistration('/sw.js')
+  const existing = await registration?.pushManager.getSubscription()
+  if (!existing) return
+  const endpoint = existing.endpoint
+  await existing.unsubscribe()
+  if (user) await getSupabase().from('push_subscriptions').delete().eq('user_id', user.id).eq('endpoint', endpoint)
+}

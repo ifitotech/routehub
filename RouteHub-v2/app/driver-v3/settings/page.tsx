@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, CalendarDays, ChevronRight, CircleHelp, Download, FileText, MapPin, Shield} from 'lucide-react'
+import {Bell, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield} from 'lucide-react'
 import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
@@ -9,11 +9,13 @@ import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
 import {getCurrentLocation} from '../../../lib/location'
 import {updateDrivingLocation} from '../../../lib/driving-session'
-import {registerPushNotifications} from '../../../lib/push-notifications'
+import {registerPushNotifications, disablePushNotifications} from '../../../lib/push-notifications'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {settingsCopy} from '../../../lib/drv-settings-copy'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {downloadAndroidUpdate} from '../../../lib/android-update'
+import {submitSupportRequest} from '../../../lib/support'
+import {getSupabase} from '../../../lib/supabase'
 import styles from '../driver-preferences.module.css'
 import confirmStyles from '../../../components/driver-v3/driver-v3.module.css'
 
@@ -34,10 +36,30 @@ export default function DriverV3Settings() {
   const [notifyBusy, setNotifyBusy] = useState(false)
   const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'downloading' | 'current' | 'available' | 'error'>('idle')
   const [latestVersion, setLatestVersion] = useState('')
+  const [workspace, setWorkspace] = useState<{company: string; branch: string}>({company: '', branch: ''})
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportMessage, setSupportMessage] = useState('')
+  const [supportSending, setSupportSending] = useState(false)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') setNotify('on')
   }, [])
+
+  useEffect(() => {
+    if (!companyId) return
+    let gone = false
+    const db = getSupabase()
+    void Promise.all([
+      db.from('companies').select('name').eq('id', companyId).maybeSingle(),
+      branchId ? db.from('branches').select('name').eq('id', branchId).maybeSingle() : Promise.resolve({data: null}),
+    ]).then(([companyResult, branchResult]) => {
+      if (gone) return
+      setWorkspace({company: companyResult.data?.name || '', branch: branchResult.data?.name || ''})
+    })
+    return () => { gone = true }
+  }, [companyId, branchId])
 
   const dayOn = Boolean(drivingSession)
 
@@ -77,8 +99,20 @@ export default function DriverV3Settings() {
   const toggleNotify = async (wantOn: boolean) => {
     if (notifyBusy) return
     if (!wantOn) {
-      setNotify('off')
-      setMessage(copy.notificationsOffHelp)
+      setNotifyBusy(true)
+      try {
+        await disablePushNotifications()
+        setNotify('off')
+        setMessage(copy.notificationsOff)
+      } catch (e) {
+        // The device-level unsubscribe failed (rare) - fall back to telling
+        // the driver how to silence alerts from iOS itself so they are not
+        // stuck thinking Off worked when it may not have.
+        setNotify('off')
+        setMessage(e instanceof Error ? e.message : copy.notificationsOffHelp)
+      } finally {
+        setNotifyBusy(false)
+      }
       return
     }
     setNotifyBusy(true)
@@ -92,6 +126,28 @@ export default function DriverV3Settings() {
     } finally {
       setNotifyBusy(false)
     }
+  }
+
+  const sendSupport = async () => {
+    if (supportSending || !supportMessage.trim()) return
+    setSupportSending(true)
+    try {
+      await submitSupportRequest(supportMessage)
+      setMessage(copy.supportSent)
+      setSupportMessage('')
+      setSupportOpen(false)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
+    } finally {
+      setSupportSending(false)
+    }
+  }
+
+  const signOut = async () => {
+    if (signingOut) return
+    setSigningOut(true)
+    await getSupabase().auth.signOut()
+    window.location.assign('/login')
   }
 
   const checkForUpdates = async () => {
@@ -124,12 +180,25 @@ export default function DriverV3Settings() {
   }
 
   return (
-    <DriverV3Shell active="more" title={t.drvSettings} hideNav={confirmEnd}>
+    <DriverV3Shell active="more" title={t.drvSettings} hideNav={confirmEnd || confirmSignOut}>
       <div className={styles.page}>
         <header className={styles.pageHeader}>
           <p>{locale === 'es' ? 'PREFERENCIAS' : locale === 'fr' ? 'PRÉFÉRENCES' : 'PREFERENCES'}</p>
           <h1>{t.drvSettings}</h1>
         </header>
+
+        {(workspace.company || workspace.branch) && (
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}><h2>{copy.workspace}</h2></div>
+            <div className={styles.row}>
+              <span className={styles.rowIcon}><Building2 size={18} /></span>
+              <span className={styles.rowCopy}>
+                <strong>{workspace.company || copy.company}</strong>
+                {workspace.branch ? <small>{copy.branch}: {workspace.branch}</small> : null}
+              </span>
+            </div>
+          </section>
+        )}
 
         <section className={styles.section}>
           <div className={styles.row}>
@@ -218,6 +287,34 @@ export default function DriverV3Settings() {
         </section>
 
         <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>{copy.contactSupport}</h2>
+            <p>{copy.supportHelp}</p>
+          </div>
+          {supportOpen ? (
+            <>
+              <textarea
+                value={supportMessage}
+                onChange={e => setSupportMessage(e.target.value)}
+                placeholder={copy.supportPlaceholder}
+                rows={4}
+                style={{width: '100%', minHeight: 96, boxSizing: 'border-box', border: '1px solid #dde5ee', borderRadius: 12, padding: 10, font: 'inherit', resize: 'vertical'}}
+              />
+              <button type="button" className={styles.choice} disabled={supportSending || !supportMessage.trim()} onClick={() => void sendSupport()} style={{marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+                <Send size={16} />
+                {supportSending ? copy.supportSending : copy.supportSend}
+              </button>
+            </>
+          ) : (
+            <button type="button" className={styles.row} onClick={() => setSupportOpen(true)}>
+              <span className={styles.rowIcon}><LifeBuoy size={18} /></span>
+              <span className={styles.rowCopy}><strong>{copy.contactSupport}</strong></span>
+              <ChevronRight className={styles.rowChevron} size={19} />
+            </button>
+          )}
+        </section>
+
+        <section className={styles.section}>
           <Link href="/terms" className={styles.row}>
             <span className={styles.rowIcon}><FileText size={18} /></span>
             <span className={styles.rowCopy}><strong>{copy.terms}</strong></span>
@@ -252,6 +349,19 @@ export default function DriverV3Settings() {
           </span>
           <ChevronRight className={styles.rowChevron} size={19} />
         </button>}
+
+        <section className={styles.section}>
+          <button
+            type="button"
+            className={`danger ${styles.row}`}
+            onClick={() => setConfirmSignOut(true)}
+            style={{display: 'flex', alignItems: 'center', gap: 12, width: '100%'}}
+          >
+            <span className={styles.rowIcon}><LogOut size={18} /></span>
+            <span className={styles.rowCopy}><strong>{copy.signOut}</strong></span>
+          </button>
+        </section>
+
         <p className={styles.footer}>RouteHub Driver · {copy.versionLabel} {DRIVER_APP_VERSION}</p>
       </div>
 
@@ -266,6 +376,23 @@ export default function DriverV3Settings() {
               </button>
               <button type="button" className="danger" disabled={dayBusy} onClick={() => void toggleDay(false, true)}>
                 {dayBusy ? t.drvBusy : t.drvEndDrivingDay}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmSignOut && (
+        <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
+          <div className={confirmStyles.confirmSheet}>
+            <h2>{copy.signOutQ}</h2>
+            <p>{copy.signOutBody}</p>
+            <div className={confirmStyles.confirmActions}>
+              <button type="button" className="secondary" disabled={signingOut} onClick={() => setConfirmSignOut(false)}>
+                {t.drvCancel}
+              </button>
+              <button type="button" className="danger" disabled={signingOut} onClick={() => void signOut()}>
+                {signingOut ? copy.signingOut : copy.signOut}
               </button>
             </div>
           </div>
