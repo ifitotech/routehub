@@ -73,17 +73,33 @@ body[data-driver-app='v3'] {
   border-radius: 18px;
   object-fit: cover;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: drv3-splash-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 .driver-v3-splash strong {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.02em;
+  animation: drv3-splash-in 0.5s ease both 0.08s;
 }
 .driver-v3-splash p {
   margin: 0;
   font-size: 14px;
   color: #b9c9e2;
   font-weight: 500;
+  animation: drv3-splash-in 0.5s ease both 0.14s;
+}
+@keyframes drv3-splash-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+/* The app itself (children of DriverSessionGate) replaces the splash the
+   instant a session resolves - without this it would just pop in. */
+.driver-v3-root {
+  animation: drv3-app-in 0.25s ease both;
+}
+@keyframes drv3-app-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .driver-v3-splash .spin {
   width: 22px;

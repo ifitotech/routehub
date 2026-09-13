@@ -85,9 +85,19 @@
   min-height:56px;
   background:transparent!important;
 }
-.nav svg{width:21px;height:21px}
+.nav svg{width:21px;height:21px;transition:transform .18s ease}
+.nav a{transition:color .15s ease,opacity .15s ease,transform .12s ease}
+.nav a:active{transform:scale(.96)}
 .nav .active{color:var(--blue)}
+.nav .active svg{transform:scale(1.1)}
 .navHidden{display:none!important}
+
+/* Every screen swap re-mounts .content (each tab is its own route) - this
+   plays a short settle-in instead of the content just popping into place. */
+@media (prefers-reduced-motion: no-preference) {
+  .content{animation:drv3ContentIn .22s ease both}
+}
+@keyframes drv3ContentIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 .card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 2px 8px #0f1d350a}
 .eyebrow{font-size:11px;line-height:16px;letter-spacing:.12em;color:var(--muted);font-weight:800}
