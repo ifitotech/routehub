@@ -125,16 +125,20 @@ export function useRoutesDerived() {
       }
 
       const bucket = grouped.get(date)!
+      // Whether a route has a driver decides Assigned vs. Unassigned before
+      // anything else - a paused (or otherwise in-progress-looking) route
+      // that was just moved back to Unassigned must land there, not in
+      // "in-progress", just because its status hasn't caught up yet.
       if (route.status === 'completed') {
         bucket.completed.push(route)
       } else if (route.status === 'issue') {
         bucket.issues.push(route)
-      } else if (['active', 'paused'].includes(route.status || '')) {
-        bucket['in-progress'].push(route)
       } else if (route.status === 'cancelled') {
         // skip cancelled
       } else if (!route.driver_id) {
         bucket.unassigned.push(route)
+      } else if (['active', 'paused'].includes(route.status || '')) {
+        bucket['in-progress'].push(route)
       } else {
         bucket.pending.push(route)
       }
