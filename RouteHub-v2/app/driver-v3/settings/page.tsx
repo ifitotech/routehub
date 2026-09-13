@@ -12,7 +12,6 @@ import {updateDrivingLocation} from '../../../lib/driving-session'
 import {registerPushNotifications, disablePushNotifications} from '../../../lib/push-notifications'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {settingsCopy} from '../../../lib/drv-settings-copy'
-import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {downloadAndroidUpdate} from '../../../lib/android-update'
 import {submitSupportRequest} from '../../../lib/support'
 import {USER_GUIDE_URL} from '../../../lib/user-guide'
@@ -259,16 +258,6 @@ export default function DriverV3Settings() {
             </span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </a>
-        </section>
-
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2>{copy.tour}</h2>
-            <p>{copy.tourHelp}</p>
-          </div>
-          <button className={styles.choice} type="button" onClick={requestOnboardingReplay}>
-            {copy.tourAction}
-          </button>
         </section>
 
         <section className={styles.section}>
