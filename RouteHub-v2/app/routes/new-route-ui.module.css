@@ -159,3 +159,15 @@
   .formFooter{position:sticky;bottom:0;z-index:2;padding:16px 24px;margin:2px -24px 0;background:#fff;box-shadow:0 -6px 16px -8px rgba(15,29,53,.12)}
   .inlinePanelBody{padding-bottom:83px}
 }
+
+/* Phone, its own block - same reachability problem as tablet (the form
+   runs taller than what's visible), plus the safe-area inset so the
+   footer clears the home indicator on notched phones instead of sitting
+   flush against it. Buttons go full-width and share the row evenly -
+   thumb-width targets instead of the desktop/tablet min-width. */
+@media (max-width: 640px) {
+  .inlinePanelBody{padding-bottom:calc(75px + env(safe-area-inset-bottom))}
+  .formFooter{position:sticky;bottom:0;z-index:2;padding:12px 16px calc(12px + env(safe-area-inset-bottom));margin:2px -16px 0;background:#fff;box-shadow:0 -6px 16px -8px rgba(15,29,53,.12)}
+  .footerActions{gap:8px}
+  .footerActions .secondaryButton,.footerActions .publishButton{flex:1;min-width:0}
+}
