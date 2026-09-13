@@ -139,7 +139,11 @@
 :global(html[data-theme='dark']) .nav{background:#14243a;border-color:#31445f;box-shadow:0 -8px 26px rgba(0,0,0,.2)}
 :global(html[data-theme='dark']) .card,:global(html[data-theme='dark']) .secondary{background:#18263b;color:#f4f7fb;border-color:#31445f}
 :global(html[data-theme='dark']) .content input,:global(html[data-theme='dark']) .content textarea,:global(html[data-theme='dark']) .content select{background:#102036;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .content [role=alert]{background:#4a252b;color:#ffc1c6;border-color:#80424d}
+:global(html[data-theme='dark']) .content [role=status]{background:#153a2b;color:#8fe7bc}
+:global(html[data-theme='dark']) .content input::placeholder,:global(html[data-theme='dark']) .content textarea::placeholder{color:#8fa2ba;opacity:1}
 :global(html[data-theme='dark']) .danger{background:#3a2027;color:#ffb6bd;border-color:#73343d}
+.content > div:first-child{min-height:100%;}
 .content> a.muted:first-child{
   display:inline-flex;align-items:center;min-height:44px;color:#1667f2;
   font-size:14px;font-weight:700;text-decoration:none;margin-bottom:8px
