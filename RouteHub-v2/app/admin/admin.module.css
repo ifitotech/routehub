@@ -1,3 +1,19 @@
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px clamp(16px, 4vw, 32px);
+  background: #0b1f3a;
+  box-shadow: 0 6px 18px rgb(8 20 40 / 18%);
+}
+.topBrand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 850; font-size: 1.02rem; letter-spacing: -.01em; }
+.topBrand img { border-radius: 9px; }
+.topTag { padding: 6px 12px; border: 1px solid rgb(255 255 255 / 18%); border-radius: 999px; background: rgb(255 255 255 / 8%); color: #a9c4ff; font-size: .74rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+
 .page {
   --ink: #10213b;
   --muted: #667792;

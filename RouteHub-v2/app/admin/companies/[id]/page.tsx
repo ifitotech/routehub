@@ -1,11 +1,16 @@
 'use client'
-import {Building2, ChevronLeft, Pencil, Plus, RefreshCw} from 'lucide-react'
+import {Building2, ChevronLeft, FlaskConical, Pencil, Plus, RefreshCw} from 'lucide-react'
 import Link from 'next/link'
 import {useParams} from 'next/navigation'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../../lib/supabase'
 import AdminShell from '../../admin-shell'
 import styles from '../../admin.module.css'
+import {slugify, randomPassword} from '../../../../lib/beta-account'
+import {roleLabelOptions} from '../../../../lib/role-labels'
+import type {Role} from '../../../../lib/types'
+
+const roleChoices = roleLabelOptions('en')
 
 type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; invite?: {email: string; status: string} | null}
 export default function OrganizationPage() {
@@ -20,6 +25,11 @@ export default function OrganizationPage() {
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({name: '', number: '', address: ''})
   const [savingBranch, setSavingBranch] = useState(false)
+  const [testUserOpen, setTestUserOpen] = useState(false)
+  const [testUserBranchId, setTestUserBranchId] = useState('')
+  const [testUserRole, setTestUserRole] = useState<Role>('driver')
+  const [testUserBusy, setTestUserBusy] = useState(false)
+  const [testUserResult, setTestUserResult] = useState<{email: string; password: string} | null>(null)
   const load = async () => {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
@@ -35,6 +45,7 @@ export default function OrganizationPage() {
     setUsage({routes: routes || 0, drivers: (members || []).filter(row => row.role === 'driver').length, members: (members || []).length})
   }
   useEffect(() => { void load() }, [id])
+  useEffect(() => { if (!testUserBranchId && branches.length) setTestUserBranchId(branches[0].id) }, [branches, testUserBranchId])
   const resendInvite = async (branch: Branch) => {
     if (!branch.invite?.email || resending) return
     setResending(branch.id)
@@ -62,6 +73,30 @@ export default function OrganizationPage() {
     setSavingBranch(false)
     if (!error) { setEditingBranchId(null); await load() }
   }
+  const createTestUser = async () => {
+    const branch = branches.find(b => b.id === testUserBranchId)
+    if (!branch || testUserBusy) return
+    setTestUserBusy(true)
+    setMessage('')
+    setTestUserResult(null)
+    try {
+      const roleSlug = roleChoices.find(choice => choice.role === testUserRole)?.label || testUserRole
+      const email = `${slugify(company?.name || 'company')}-${slugify(branch.name)}-${slugify(roleSlug)}@routehub.local`
+      const password = randomPassword()
+      const result = await getSupabase().functions.invoke('send-manager-invite', {
+        body: {action: 'create_beta_account', companyId: id, branchId: branch.id, email, password, role: testUserRole},
+      })
+      let detail = result.error?.message || ''
+      if (result.error && 'context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
+      if (result.error) throw new Error(detail)
+      setTestUserResult({email, password})
+      await load()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to create test user.')
+    } finally {
+      setTestUserBusy(false)
+    }
+  }
   const addBranch = async () => {
     if (!form.name.trim()) return
     let activationCode: string | undefined
@@ -77,7 +112,33 @@ export default function OrganizationPage() {
   }
   return (
     <AdminShell active="companies">
-      <header className={styles.header}><div><Link style={{display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10, color: 'var(--primary)', fontWeight: 700, fontSize: '.85rem', textDecoration: 'none'}} href="/admin/companies"><ChevronLeft size={16}/> Companies</Link><p className={styles.eyebrow}>CEO / Admin · Organization</p><h1 className={styles.title}>{company?.name || 'Organization'}</h1><p className={styles.subtitle}>Manage branches, managers and members for this company.</p></div><button className={styles.primaryButton} onClick={() => setOpen(!open)}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button></header>
+      <header className={styles.header}><div><Link style={{display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10, color: 'var(--primary)', fontWeight: 700, fontSize: '.85rem', textDecoration: 'none'}} href="/admin/companies"><ChevronLeft size={16}/> Companies</Link><p className={styles.eyebrow}>CEO / Admin · Organization</p><h1 className={styles.title}>{company?.name || 'Organization'}</h1><p className={styles.subtitle}>Manage branches, managers and members for this company.</p></div><div style={{display: 'flex', gap: 10}}><button className={styles.secondaryButton} onClick={() => {setTestUserOpen(!testUserOpen); setTestUserResult(null)}}><FlaskConical size={18}/>{testUserOpen ? 'Close' : 'Add test user'}</button><button className={styles.primaryButton} onClick={() => setOpen(!open)}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button></div></header>
+
+      {testUserOpen && (
+        <section className={styles.panel}>
+          <header className={styles.panelHeader}><div><h2>Add test user</h2><p>Creates a ready-to-use @routehub.local login for any role on an existing branch - City Electric uses Sales, Operations, Counter and Driver, but another company might need a different mix.</p></div><FlaskConical size={22}/></header>
+          <div className={styles.formGrid}>
+            <label className={styles.field}>Branch
+              <select value={testUserBranchId} onChange={e => setTestUserBranchId(e.target.value)} style={{minHeight: 50, padding: '0 14px', borderRadius: 14, border: '1px solid var(--line)'}}>
+                {branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+              </select>
+            </label>
+            <label className={styles.field}>Role
+              <select value={testUserRole} onChange={e => setTestUserRole(e.target.value as Role)} style={{minHeight: 50, padding: '0 14px', borderRadius: 14, border: '1px solid var(--line)'}}>
+                {roleChoices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}
+              </select>
+            </label>
+            <button className={styles.primaryButton} disabled={!testUserBranchId || testUserBusy} onClick={() => void createTestUser()}>{testUserBusy ? 'Creating…' : 'Create test user'}</button>
+          </div>
+          {testUserResult && (
+            <div className={styles.panel} style={{marginTop: 14, background: 'var(--bg, #f7f9fc)'}}>
+              <p className={styles.subtitle}>Test user ready - hand these to the tester directly:</p>
+              <p><strong>Email:</strong> {testUserResult.email}</p>
+              <p><strong>Password:</strong> {testUserResult.password}</p>
+            </div>
+          )}
+        </section>
+      )}
       <section className={styles.adminStats} aria-label="Company usage">
         <article><span>Routes created</span><strong>{usage.routes}</strong><small>All-time</small></article>
         <article><span>Drivers</span><strong>{usage.drivers}</strong><small>Of {usage.members} total members</small></article>

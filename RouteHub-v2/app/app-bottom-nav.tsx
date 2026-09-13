@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {Building2, History, Home, MoreHorizontal, Route as RouteIcon, Settings} from 'lucide-react'
+import {History, Home, MoreHorizontal, Route as RouteIcon, Settings} from 'lucide-react'
 import {useLocale} from '../lib/use-preferences'
 import styles from './app-bottom-nav.module.css'
 
@@ -14,12 +14,17 @@ export default function AppBottomNav() {
   // ManagerShell (sidebar on desktop, bottom bar on mobile), so the shared
   // bottom nav must stay out of the way on those routes.
   const managerSurface = pathname.startsWith('/manager') || pathname === '/routes' || pathname.startsWith('/routes/') || pathname === '/contacts' || pathname === '/reports' || pathname === '/settings' || pathname.startsWith('/settings/')
-  const hasLocalNav = pathname === '/manager' || pathname === '/operations' || pathname === '/sales' || pathname === '/counter' || pathname.startsWith('/driver') || managerSurface
+  // Admin renders its own complete nav via AdminShell (Home, Companies,
+  // Billing, Errors, Support, Admins, Audit, Settings) - this generic
+  // fallback only ever had a stale 3-item subset (an old /admin/companies
+  // link labelled "Company", and a Settings link that pointed at Manager's
+  // /settings instead of /admin/settings), rendering underneath/alongside
+  // AdminShell's own nav instead of staying out of the way like it already
+  // does for Manager and Driver.
+  const hasLocalNav = pathname === '/manager' || pathname === '/operations' || pathname === '/sales' || pathname === '/counter' || pathname.startsWith('/driver') || pathname.startsWith('/admin') || managerSurface
   if (pathname === '/' || pathname === '/login' || pathname === '/auth/callback' || pathname === '/activate-invitation' || pathname === '/product' || pathname === '/how-it-works' || pathname === '/for-drivers' || pathname === '/terms' || hasLocalNav) return null
 
-  const links = pathname.startsWith('/admin')
-    ? [{href: '/admin', label: t.home, Icon: Home}, {href: '/admin/companies', label: t.company, Icon: Building2}, {href: '/settings', label: t.settings, Icon: Settings}]
-    : pathname.startsWith('/manager') || pathname === '/routes' || pathname.startsWith('/routes/') || pathname === '/contacts' || pathname === '/requests' || pathname === '/reports' || pathname === '/settings'
+  const links = pathname.startsWith('/manager') || pathname === '/routes' || pathname.startsWith('/routes/') || pathname === '/contacts' || pathname === '/requests' || pathname === '/reports' || pathname === '/settings'
       ? [
           {href: '/manager', label: t.home, Icon: Home},
           {href: '/routes', label: t.routes, Icon: RouteIcon},

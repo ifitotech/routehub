@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import styles from './admin.module.css'
 
@@ -22,11 +23,20 @@ const nav: {id: AdminSection; href: string; label: string}[] = [
 // One shared shell keeps it present everywhere.
 export default function AdminShell({children, active}: {children: React.ReactNode; active: AdminSection}) {
   return (
-    <main className="app">
-      <div className={styles.page}>{children}</div>
-      <nav className={styles.nav} aria-label="Admin navigation">
-        {nav.map(item => <Link key={item.id} href={item.href} data-active={active === item.id ? 'true' : 'false'}>{item.label}</Link>)}
-      </nav>
-    </main>
+    <>
+      <header className={styles.topBar}>
+        <Link href="/admin" className={styles.topBrand}>
+          <Image src="/routehub-regular-new.jpg" alt="" width={30} height={30} />
+          <span>RouteHub</span>
+        </Link>
+        <span className={styles.topTag}>CEO Admin</span>
+      </header>
+      <main className="app">
+        <div className={styles.page}>{children}</div>
+        <nav className={styles.nav} aria-label="Admin navigation">
+          {nav.map(item => <Link key={item.id} href={item.href} data-active={active === item.id ? 'true' : 'false'}>{item.label}</Link>)}
+        </nav>
+      </main>
+    </>
   )
 }

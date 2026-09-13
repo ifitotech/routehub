@@ -6,22 +6,14 @@ import {getSupabase} from '../../../lib/supabase'
 import Link from 'next/link'
 import AdminShell from '../admin-shell'
 import styles from '../admin.module.css'
+import {slugify, randomPassword} from '../../../lib/beta-account'
+import {roleLabelOptions} from '../../../lib/role-labels'
+import type {Role} from '../../../lib/types'
 
 type Company = {id: string; name: string; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number; isBeta: boolean}
 
 const seed: Company[] = []
-
-function slugify(value: string) {
-  return value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'company'
-}
-
-function randomPassword() {
-  // Readable-enough to copy by hand, random enough not to matter that it's a
-  // beta account - the tester can change it from Settings right after.
-  const bytes = new Uint8Array(9)
-  crypto.getRandomValues(bytes)
-  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, '').slice(0, 12)
-}
+const roleChoices = roleLabelOptions('en')
 
 // One real query instead of a fixed "Active"/"0 members" on every row -
 // subscription_status already exists on companies, and a per-company
@@ -58,6 +50,7 @@ export default function Companies() {
   const [branchMessage, setBranchMessage] = useState('')
   const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
   const [betaMode, setBetaMode] = useState(false)
+  const [betaRole, setBetaRole] = useState<Role>('branch_manager')
   const [betaBusy, setBetaBusy] = useState(false)
   const [betaResult, setBetaResult] = useState<{email: string; password: string} | null>(null)
   const [betaError, setBetaError] = useState('')
@@ -89,7 +82,7 @@ export default function Companies() {
         const email = `${slugify(form.name)}-${slugify(form.branch || 'main')}@routehub.local`
         const password = randomPassword()
         const result = await client.functions.invoke('send-manager-invite', {
-          body: {action: 'create_beta_account', companyId, branchId: branchRow.id, email, password, role: 'branch_manager'},
+          body: {action: 'create_beta_account', companyId, branchId: branchRow.id, email, password, role: betaRole},
         })
         let detail = result.error?.message || ''
         if (result.error && 'context' in result.error) { try { detail = ((await (result.error as {context: Response}).context.json()) as {error?: string}).error || detail } catch {} }
@@ -125,7 +118,7 @@ export default function Companies() {
 
       {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Default branch: {viewing.branch} · Manager: {viewing.manager}</p><h3>Add branch</h3><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={branchForm.name} onChange={event => setBranchForm({...branchForm, name: event.target.value})}/></label><label className={styles.field}>Branch number<input placeholder="Branch number" value={branchForm.number} onChange={event => setBranchForm({...branchForm, number: event.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street, Miami Gardens" value={branchForm.address} onChange={event => setBranchForm({...branchForm, address: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={branchForm.email} onChange={event => setBranchForm({...branchForm, email: event.target.value})}/></label><button className={styles.primaryButton} disabled={!branchForm.name.trim()} onClick={() => void addBranch()}>Add branch and invite manager</button></div>{branchMessage && <p className={styles.statusMessage}>{branchMessage}</p>}<p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
       {open && <section className={styles.panel}>
-        <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : betaMode ? 'Creates the organization, its first branch, and a ready-to-use @routehub.local manager login - no email, no activation code.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}>{betaMode ? <FlaskConical size={21}/> : <Building2 size={21}/>}</span></header>
+        <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : betaMode ? 'Creates the organization, its first branch, and a ready-to-use @routehub.local login for the role below - no email, no activation code.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}>{betaMode ? <FlaskConical size={21}/> : <Building2 size={21}/>}</span></header>
         {!editing && (
           <label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
             <input type="checkbox" checked={betaMode} onChange={event => {setBetaMode(event.target.checked); setBetaResult(null); setBetaError('')}} style={{width: 18, height: 18}}/>
@@ -137,6 +130,13 @@ export default function Companies() {
           <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Hialeah" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label>
           {!betaMode && <label className={styles.field}>Branch manager<input aria-label="Branch manager" placeholder="Manager name" value={form.manager} onChange={event => setForm({...form, manager: event.target.value})}/></label>}
           {!betaMode && <label className={styles.field}>Manager email<input type="email" aria-label="Manager email" placeholder="manager@company.com" value={form.email} onChange={event => setForm({...form, email: event.target.value})}/></label>}
+          {betaMode && (
+            <label className={styles.field}>Role
+              <select aria-label="Role" value={betaRole} onChange={event => setBetaRole(event.target.value as Role)} style={{minHeight: 50, padding: '0 14px', borderRadius: 14, border: '1px solid var(--line)'}}>
+                {roleChoices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}
+              </select>
+            </label>
+          )}
           <button className={styles.primaryButton} disabled={!form.name.trim() || betaBusy} onClick={() => void save()}>{editing ? 'Save changes' : betaBusy ? 'Creating…' : betaMode ? 'Create beta tester' : 'Create company'}</button>
         </div>
         {betaError && <p className={styles.statusMessage}>{betaError}</p>}
