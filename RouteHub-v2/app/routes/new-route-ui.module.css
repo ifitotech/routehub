@@ -60,11 +60,15 @@
 .compactTitle{display:flex;align-items:baseline;gap:9px;min-width:0}
 .compactTitle h2{margin:0;font-size:19px;letter-spacing:-.02em;white-space:nowrap}
 .compactTitle span{overflow:hidden;color:#64748B;font-size:13px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-/* Bottom padding clears the sticky footer's own height - without it, the
-   footer (sticky since it needed to stay reachable on tablets where the
-   form runs taller than the screen) sits on top of the last field
-   instead of after it, on any screen just barely shorter than the form. */
-.inlinePanelBody{display:grid;gap:22px;padding:18px 24px 96px;overflow-y:auto;width:100%}
+/* Bottom padding matches the sticky footer's own rendered height exactly
+   (16px+50px button+16px padding+1px border = 83px) - not a page's worth
+   of guessed extra space. position:sticky has zero visual effect unless
+   the container actually needs to scroll past this point, so on any
+   screen where the form already fits (desktop, most of the time) this
+   reads identically to before the footer became sticky - no overlap, and
+   no extra blank space either. It only ever visibly "sticks" on a screen
+   short enough that the form wouldn't otherwise fit, tablet or not. */
+.inlinePanelBody{display:grid;gap:22px;padding:18px 24px 83px;overflow-y:auto;width:100%}
 
 .sectionHeading{margin:0 0 14px;color:#0f1d35;font-size:16px;font-weight:800}
 
