@@ -39,7 +39,11 @@ export default function Contacts() {
       if (membershipError || !membership) throw new Error(t.noMembership)
       setCanManage(['branch_manager','operations_manager'].includes(membership.role))
       setCompanyId(membership.company_id)
-      const {data, error} = await supabase.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name')
+      // Each branch keeps its own contacts - branch_id.is.null stays in the
+      // mix only for contacts saved before branches had one at all.
+      let contactQuery = supabase.from('contacts').select('id,company_name,contact_name,address,phone').eq('company_id', membership.company_id).order('company_name')
+      if (membership.branch_id) contactQuery = contactQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
+      const {data, error} = await contactQuery
       if (error) throw error
       setItems(data || [])
     } catch (error) { setMessage(error instanceof Error ? error.message : t.unableLoadContacts) }

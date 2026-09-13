@@ -69,12 +69,22 @@ export function useRoutesCore() {
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id || null)
 
+      // Each branch runs separately - a contact or route saved under a
+      // different branch of the same company should never show up here.
+      // branch_id.is.null is kept in the mix only because some contacts
+      // predate branches having one at all (company-wide, not this-branch's).
       let assigneeQuery = client.from('company_users').select('user_id,role,branch_id,users(email,name)').eq('company_id', membership.company_id).in('role', ['driver', 'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'])
-      if (membership.branch_id) assigneeQuery = assigneeQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
+      let contactQuery = client.from('contacts').select('id,company_name,contact_name,address,phone,location_code,latitude,longitude,location_source,location_external_id').eq('company_id', membership.company_id).order('company_name')
+      let routeQuery = client.from('routes').select('id,company_id,branch_id,driver_id,mission_type,priority,status,origin_name,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_lat,destination_lng,destination_location_source,destination_location_external_id,destination_phone,scheduled_at,route_date,position,notes,order_number,driver_note,route_started_at,route_completed_at,completed_at,arrived_at,completion_method,completion_lat,completion_lng,completion_accuracy,completion_distance_m,completion_warning,completion_photo_path,customer_signature_path,finalized_at,finalization_note,finalization_issue,finalization_photo_path').eq('company_id', membership.company_id).in('status', routeListStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true})
+      if (membership.branch_id) {
+        assigneeQuery = assigneeQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
+        contactQuery = contactQuery.or(`branch_id.is.null,branch_id.eq.${membership.branch_id}`)
+        routeQuery = routeQuery.eq('branch_id', membership.branch_id)
+      }
       const [contactResult, driverResult, routeResult, branchResult, locationResult] = await Promise.all([
-        client.from('contacts').select('id,company_name,contact_name,address,phone,location_code,latitude,longitude,location_source,location_external_id').eq('company_id', membership.company_id).order('company_name'),
+        contactQuery,
         assigneeQuery,
-        client.from('routes').select('id,company_id,branch_id,driver_id,mission_type,priority,status,origin_name,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_lat,destination_lng,destination_location_source,destination_location_external_id,destination_phone,scheduled_at,route_date,position,notes,order_number,driver_note,route_started_at,route_completed_at,completed_at,arrived_at,completion_method,completion_lat,completion_lng,completion_accuracy,completion_distance_m,completion_warning,completion_photo_path,customer_signature_path,finalized_at,finalization_note,finalization_issue,finalization_photo_path').eq('company_id', membership.company_id).in('status', routeListStatuses).order('scheduled_at', {ascending:true, nullsFirst:false}).order('position', {ascending:true}),
+        routeQuery,
         client.from('branches').select('id,name,address,primary_driver_id,latitude,longitude,location_source,location_external_id').eq('company_id', membership.company_id).order('name'),
         client.from('driving_sessions').select('driver_id,last_lat,last_lng,last_updated_at,status').eq('company_id', membership.company_id).in('status',['active','paused']).order('last_updated_at',{ascending:false}),
       ])

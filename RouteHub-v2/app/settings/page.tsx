@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import {useRouter, useSearchParams} from 'next/navigation'
 import {useEffect, useState} from 'react'
-import {BookOpen, Building2, Camera, ChevronRight, History, LogOut, Save, Send, Users} from 'lucide-react'
+import {AlertTriangle, BookOpen, Building2, Camera, ChevronRight, History, LogOut, Save, Send, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {submitSupportRequest} from '../../lib/support'
 import {USER_GUIDE_URL} from '../../lib/user-guide'
@@ -19,6 +20,13 @@ type DriverOption = {user_id: string; name: string}
 
 export default function Settings() {
   const {locale, t, setLocale} = useLocale()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  // ManagerShell redirects here with ?setup=branch when this manager's
+  // branch has no address yet - creating a route needs one to start from,
+  // so this gets filled in before anything else, not discovered as a dead
+  // end mid-flow.
+  const setupMode = searchParams.get('setup') === 'branch'
   // Keep the stored theme preference applied globally (Driver still uses it);
   // Manager itself is intentionally light-only, so there is no theme control here.
   useThemePreference()
@@ -70,15 +78,18 @@ export default function Settings() {
         ? client.from('branches').select('id,name,address,phone,latitude,longitude,primary_driver_id,auto_close_time').eq('id', membership.branch_id).maybeSingle()
         : client.from('branches').select('id,name,address,phone,latitude,longitude,primary_driver_id,auto_close_time').eq('company_id', membership.company_id).order('name').limit(1).maybeSingle()
       const {data: branchData} = await branchQuery
-      if (branchData) setBranch({
-        id: branchData.id,
-        name: branchData.name || '',
-        address: branchData.address || '',
-        phone: branchData.phone || '',
-        coordinate: sanitizeCoordinate({lat: branchData.latitude, lng: branchData.longitude}),
-        primary_driver_id: branchData.primary_driver_id || null,
-        auto_close_time: branchData.auto_close_time || null,
-      })
+      if (branchData) {
+        setBranch({
+          id: branchData.id,
+          name: branchData.name || '',
+          address: branchData.address || '',
+          phone: branchData.phone || '',
+          coordinate: sanitizeCoordinate({lat: branchData.latitude, lng: branchData.longitude}),
+          primary_driver_id: branchData.primary_driver_id || null,
+          auto_close_time: branchData.auto_close_time || null,
+        })
+        if (!branchData.address) setEditingBranch(true)
+      }
       // Primary Driver only matters once there is more than one to choose
       // between - this is the same list Team shows, fetched here too since
       // that assignment now lives on this page instead.
@@ -151,7 +162,10 @@ export default function Settings() {
       longitude: coordinate?.lng ?? null,
     }).eq('id', branch.id)
     setMessage(error ? error.message : copy.branchSaved)
-    if (!error) setEditingBranch(false)
+    if (!error) {
+      setEditingBranch(false)
+      if (setupMode && branch.address.trim()) router.replace('/routes')
+    }
     setBranchSaving(false)
   }
   const setPrimaryDriver = async (userId: string) => {
@@ -186,6 +200,16 @@ export default function Settings() {
       <div className={styles.page}>
         <p className={styles.eyebrow}>{t.account.toUpperCase()}</p>
         <h1>{t.settings}</h1>
+
+        {setupMode && !isCeo && (
+          <div className={styles.setupBanner} role="status">
+            <AlertTriangle size={18}/>
+            <span>
+              <strong>{locale === 'es' ? 'Completa tu sucursal para continuar' : locale === 'fr' ? 'Complétez votre succursale pour continuer' : 'Complete your branch to continue'}</strong>
+              {locale === 'es' ? 'Falta la dirección de tu sucursal - agrégala abajo antes de crear rutas.' : locale === 'fr' ? "L'adresse de votre succursale est manquante - ajoutez-la ci-dessous avant de créer des itinéraires." : "Your branch is missing an address - add it below before creating routes."}
+            </span>
+          </div>
+        )}
 
         <p className={styles.group}>{t.profile}</p>
         <section className={styles.card}>

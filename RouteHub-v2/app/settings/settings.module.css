@@ -14,6 +14,8 @@
 .copy{min-width:0;flex:1;display:grid;gap:2px}
 .copy strong{font-size:13.5px;font-weight:600;line-height:1.25}
 .copy small,.hint,.status{color:var(--rh-ink-soft);font-size:12px;line-height:1.35}
+.setupBanner{display:flex;align-items:flex-start;gap:10px;margin:0 0 16px;padding:13px 15px;border:1px solid #fbbf24;border-radius:var(--rh-r-lg);background:#fffbeb;color:#92400e;font-size:13px;line-height:1.4}
+.setupBanner strong{display:block;margin-bottom:2px;font-size:13.5px}
 .meta{color:var(--rh-ink-soft);font-size:12.5px;font-weight:650;flex:none}
 .seg{display:inline-flex;border:1px solid var(--rh-line);border-radius:10px;overflow:hidden}
 .seg button{height:30px;padding:0 12px;border:0;background:var(--rh-card);color:var(--rh-ink-soft);font-size:12px;font-weight:700;font-family:inherit}

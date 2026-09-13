@@ -2,11 +2,36 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import {usePathname, useRouter} from 'next/navigation'
 import {useEffect} from 'react'
 import {ChevronDown, MoreHorizontal, Plus, Route as RouteIcon, Truck, Users} from 'lucide-react'
+import {getSupabase} from '../../lib/supabase'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import './manager-theme.css'
 import styles from './manager-shell.module.css'
+
+// A branch with no address on file breaks route creation silently
+// (nothing to geocode an origin from) - rather than let a manager hit
+// that dead end mid-flow, send them straight to Settings to fill it in
+// before they can use anything else. Each branch is set up on its own;
+// this never looks at another branch's data to fill the gap.
+function useBranchSetupGate(pathname: string) {
+  const router = useRouter()
+  useEffect(() => {
+    if (pathname.startsWith('/settings')) return
+    let active = true
+    void (async () => {
+      const client = getSupabase()
+      const {data: userData} = await client.auth.getUser()
+      if (!userData.user || !active) return
+      const {data: membership} = await client.from('company_users').select('branch_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
+      if (!membership?.branch_id || !active) return
+      const {data: branchRow} = await client.from('branches').select('address').eq('id', membership.branch_id).maybeSingle()
+      if (active && branchRow && !branchRow.address) router.replace('/settings?setup=branch')
+    })()
+    return () => { active = false }
+  }, [pathname, router])
+}
 
 // Manager is intentionally light-only, but the stored theme preference
 // (shared with Driver) still defaults to 'dark' and several older Manager
@@ -41,8 +66,10 @@ type ManagerShellProps = {
 
 export default function ManagerShell({children, active = 'today', branchName, displayName, roleLabel}: ManagerShellProps) {
   const {locale, t} = useLocale()
+  const pathname = usePathname()
   useThemePreference()
   useManagerLightTheme()
+  useBranchSetupGate(pathname)
   const copy = locale === 'es'
     ? {today: 'Hoy', dashboard: 'Panel', map: 'Mapa', contacts: 'Contactos', truck: 'Camión', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}
     : locale === 'fr'
