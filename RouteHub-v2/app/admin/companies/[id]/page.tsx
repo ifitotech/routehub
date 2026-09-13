@@ -73,6 +73,14 @@ export default function OrganizationPage() {
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
 
+  // Set/reset a test account's password - also how an older account (made
+  // before the CEO could see stored passwords) gets one recorded: this
+  // writes the same email's password again, which the account already
+  // accepts, and this time it gets saved to beta_account_credentials.
+  const [resetPasswordId, setResetPasswordId] = useState<string | null>(null)
+  const [resetPasswordValue, setResetPasswordValue] = useState('')
+  const [resetPasswordBusy, setResetPasswordBusy] = useState(false)
+
   // Branches stay collapsed to just their header until opened - a company
   // with several branches, each with several test accounts, turned into a
   // wall of rows otherwise.
@@ -367,14 +375,34 @@ export default function OrganizationPage() {
                 <p className={styles.eyebrow} style={{marginBottom: 8}}>Team · {branch.members.length}</p>
                 {branch.members.length > 0 ? (
                   <div className={styles.memberList}>
-                    {branch.members.map(member => (
+                    {branch.members.map(member => {
+                      const isBeta = member.email.toLowerCase().endsWith('@routehub.local')
+                      return (
                       <div className={styles.memberRow} key={member.userId} style={{flexWrap: 'wrap'}}>
                         <span className={styles.role}>{roleLabelFor(member.role)}</span>
-                        <span className={styles.who}>{member.name || member.email || 'Unknown'}</span>
+                        <span className={styles.who}>
+                          <strong>{member.name || 'Unnamed'}</strong>
+                          <br/><small style={{color: 'var(--muted)'}}>{member.email}</small>
+                        </span>
                         {member.phone && <span style={{color: 'var(--muted)', fontSize: '.78rem'}}>{member.phone}</span>}
                         {member.password && (
                           <button type="button" className={styles.secondaryButton} style={{minHeight: 28, padding: '0 9px', fontSize: '.72rem'}} onClick={() => togglePasswordVisible(member.userId)}>
                             {visiblePasswords.has(member.userId) ? <><EyeOff size={13}/> {member.password}</> : <><Eye size={13}/> Password</>}
+                          </button>
+                        )}
+                        {isBeta && (
+                          <button
+                            type="button"
+                            className={styles.secondaryButton}
+                            style={{minHeight: 28, padding: '0 9px', fontSize: '.72rem'}}
+                            onClick={() => {
+                              const opening = resetPasswordId !== member.userId
+                              setResetPasswordId(opening ? member.userId : null)
+                              setResetPasswordValue(opening ? (member.password || betaAccountPassword(company || {name: '', abbreviation: null}, branch)) : '')
+                              setMessage('')
+                            }}
+                          >
+                            {member.password ? 'Change' : 'Set password'}
                           </button>
                         )}
                         <button
@@ -386,8 +414,35 @@ export default function OrganizationPage() {
                         >
                           {removingId === member.userId ? 'Removing…' : confirmRemoveId === member.userId ? 'Confirm remove?' : 'Remove'}
                         </button>
+                        {resetPasswordId === member.userId && (
+                          <div style={{display: 'flex', gap: 8, width: '100%', marginTop: 4}}>
+                            <input type="text" value={resetPasswordValue} onChange={e => setResetPasswordValue(e.target.value)} style={{flex: 1, minHeight: 34, padding: '0 10px', borderRadius: 10, border: '1px solid var(--line)'}}/>
+                            <button
+                              type="button"
+                              className={styles.primaryButton}
+                              style={{minHeight: 34, padding: '0 14px', fontSize: '.78rem'}}
+                              disabled={resetPasswordBusy || resetPasswordValue.length < 8}
+                              onClick={() => void (async () => {
+                                setResetPasswordBusy(true)
+                                setMessage('')
+                                try {
+                                  await createBetaAccount(id, branch, member.role, member.email, resetPasswordValue)
+                                  setResetPasswordId(null)
+                                  await load()
+                                } catch (error) {
+                                  setMessage(error instanceof Error ? error.message : 'Unable to set password.')
+                                } finally {
+                                  setResetPasswordBusy(false)
+                                }
+                              })()}
+                            >
+                              {resetPasswordBusy ? 'Saving…' : 'Save'}
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <p className={styles.subtitle} style={{margin: 0}}>No members in this branch yet.</p>
