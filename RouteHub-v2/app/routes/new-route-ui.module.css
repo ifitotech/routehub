@@ -146,3 +146,16 @@
 .footerNotice{display:flex;align-items:center;gap:8px;color:#64748B;font-size:12px;font-weight:700}
 .footerActions{display:flex;gap:10px}
 .footerActions .secondaryButton,.footerActions .publishButton{min-width:120px;margin:0}
+
+/* Tablet only, layered on top of the base rules above rather than editing
+   them - desktop (mouse/trackpad, any window width) never matches this,
+   even a narrow or short desktop window. pointer:coarse is true only on a
+   touchscreen, which is the actual thing that separates "tablet" from
+   "desktop" here - screen width alone can't, since a tablet in landscape
+   (this was tuned against a Tab S11, ~1600px+) overlaps plenty of real
+   desktop window widths. Cancel/Assign stays reachable without hunting
+   for a scrollbar first, on a tall form on a shorter tablet screen. */
+@media (pointer: coarse) and (min-width: 641px) {
+  .formFooter{position:sticky;bottom:0;z-index:2;padding:16px 24px;margin:2px -24px 0;background:#fff;box-shadow:0 -6px 16px -8px rgba(15,29,53,.12)}
+  .inlinePanelBody{padding-bottom:83px}
+}
