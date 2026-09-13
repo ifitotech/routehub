@@ -677,11 +677,29 @@ function render(){
   }).join('');
 
   setupScrollSpy();
-  try{ localStorage.setItem('routehub-guide-role', state.role); localStorage.setItem('routehub-guide-lang', state.lang); }catch(e){}
+  try{ localStorage.setItem('routehub-guide-role', state.role); }catch(e){}
 }
 
 function setRole(role){ state.role = role; render(); window.scrollTo({top:0}); }
-function setLang(lang){ state.lang = lang; render(); }
+function setLang(lang){
+  // A manual pick here only changes what this guide shows - it never writes
+  // back to routehub_language, so it can't affect the app itself.
+  manualLangOverride = true;
+  state.lang = lang;
+  render();
+}
+
+// The guide is served from the same origin as the app (public/guide.html),
+// so it can read the same localStorage key the app's language switcher
+// writes to (see lib/use-preferences.ts: setLocalePreference). This is a
+// one-way sync - the app's language wins here unless the visitor
+// explicitly picks a different one with the ES/EN/FR buttons above.
+var manualLangOverride = false;
+function appLocale(){
+  var raw = null;
+  try{ raw = localStorage.getItem('routehub_language'); }catch(e){}
+  return (raw === 'es' || raw === 'en' || raw === 'fr') ? raw : null;
+}
 
 var spyObserver = null;
 function setupScrollSpy(){
@@ -701,9 +719,15 @@ function setupScrollSpy(){
 (function init(){
   try{
     state.role = localStorage.getItem('routehub-guide-role') || 'manager';
-    state.lang = localStorage.getItem('routehub-guide-lang') || 'es';
   }catch(e){}
+  state.lang = appLocale() || 'es';
   render();
+
+  window.addEventListener('storage', function(event){
+    if (event.key !== 'routehub_language' || manualLangOverride) return;
+    var next = appLocale();
+    if (next && next !== state.lang) { state.lang = next; render(); }
+  });
 })();
 </script>
 </body>
