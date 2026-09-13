@@ -32,6 +32,8 @@ export function settingsCopy(locale: Locale) {
       signOutQ: '¿Cerrar sesión?',
       signOutBody: 'Vas a salir de tu cuenta en este dispositivo.',
       signingOut: 'Cerrando sesión…',
+      userGuide: 'Guía de uso',
+      userGuideHelp: 'Cómo usar RouteHub, paso a paso, en tu idioma.',
     }
   }
   if (locale === 'fr') {
@@ -65,6 +67,8 @@ export function settingsCopy(locale: Locale) {
       signOutQ: 'Se déconnecter ?',
       signOutBody: 'Vous allez quitter votre compte sur cet appareil.',
       signingOut: 'Déconnexion…',
+      userGuide: 'Guide d’utilisation',
+      userGuideHelp: 'Comment utiliser RouteHub, étape par étape, dans votre langue.',
     }
   }
   return {
@@ -97,5 +101,7 @@ export function settingsCopy(locale: Locale) {
       signOutQ: 'Sign out?',
       signOutBody: 'You will be signed out of this device.',
       signingOut: 'Signing out…',
+      userGuide: 'User guide',
+      userGuideHelp: 'How to use RouteHub, step by step, in your language.',
   }
 }

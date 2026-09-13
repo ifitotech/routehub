@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield} from 'lucide-react'
+import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield} from 'lucide-react'
 import {useLocale} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
@@ -15,6 +15,7 @@ import {settingsCopy} from '../../../lib/drv-settings-copy'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {downloadAndroidUpdate} from '../../../lib/android-update'
 import {submitSupportRequest} from '../../../lib/support'
+import {USER_GUIDE_URL} from '../../../lib/user-guide'
 import {getSupabase} from '../../../lib/supabase'
 import styles from '../driver-preferences.module.css'
 import confirmStyles from '../../../components/driver-v3/driver-v3.module.css'
@@ -315,6 +316,11 @@ export default function DriverV3Settings() {
         </section>
 
         <section className={styles.section}>
+          <a href={USER_GUIDE_URL} target="_blank" rel="noreferrer" className={styles.row}>
+            <span className={styles.rowIcon}><BookOpen size={18} /></span>
+            <span className={styles.rowCopy}><strong>{copy.userGuide}</strong><small>{copy.userGuideHelp}</small></span>
+            <ChevronRight className={styles.rowChevron} size={19} />
+          </a>
           <Link href="/terms" className={styles.row}>
             <span className={styles.rowIcon}><FileText size={18} /></span>
             <span className={styles.rowCopy}><strong>{copy.terms}</strong></span>
