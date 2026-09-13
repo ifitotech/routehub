@@ -1,5 +1,5 @@
 // Shared "how to use RouteHub" guide, referenced from both Manager and
-// Driver Settings. It's a Claude Artifact, not RouteHub's own hosting -
-// it must stay shared (not private) from the artifact's own share menu
-// for anyone outside the owning Claude account to actually open it.
-export const USER_GUIDE_URL = 'https://claude.ai/code/artifact/911bd905-fc85-4d2a-9a0f-509cd00f7403'
+// Driver Settings. Served as a plain static file from public/guide.html -
+// it deploys with the app itself (same Vercel domain), so it's publicly
+// reachable with no separate sharing step and no login required.
+export const USER_GUIDE_URL = '/guide.html'

@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía RouteHub</title>
+<meta name="description" content="Manual paso a paso para usar RouteHub, con guías separadas para Manager y para Driver.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+html{color-scheme:light dark}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+:root{
+  --bg:#f7f9fc; --surface:#ffffff; --surface-2:#eef3f9;
+  --ink:#0f1d35; --muted:#5b6d85; --border:#dde5ee;
+  --blue:#1667f2; --blue-soft:#eaf2ff; --blue-ink:#0d4fc4;
+  --success:#147a4a; --success-soft:#eafbf1; --success-border:#bfead2;
+  --warn:#a96800; --warn-soft:#fff6e6; --warn-border:#f3ddac;
+  --danger:#b42318; --danger-soft:#fff0f0; --danger-border:#f3b5b5;
+  --line-dot:#c7d3e2; --header-bg:#0f1d35;
+  --shadow: 0 10px 30px rgba(15,29,53,.08);
+  --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101c2d; --surface:#18263b; --surface-2:#16233a;
+    --ink:#f4f7fb; --muted:#b6c4d7; --border:#31445f;
+    --blue:#6ea5ff; --blue-soft:#17345c; --blue-ink:#bcd8ff;
+    --success:#8fe7bc; --success-soft:#153a2b; --success-border:#1f5b41;
+    --warn:#ffd08a; --warn-soft:#3a2c12; --warn-border:#5c451c;
+    --danger:#ffc1c6; --danger-soft:#4a252b; --danger-border:#80424d;
+    --line-dot:#3a4c68; --header-bg:#0b1526;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101c2d; --surface:#18263b; --surface-2:#16233a;
+  --ink:#f4f7fb; --muted:#b6c4d7; --border:#31445f;
+  --blue:#6ea5ff; --blue-soft:#17345c; --blue-ink:#bcd8ff;
+  --success:#8fe7bc; --success-soft:#153a2b; --success-border:#1f5b41;
+  --warn:#ffd08a; --warn-soft:#3a2c12; --warn-border:#5c451c;
+  --danger:#ffc1c6; --danger-soft:#4a252b; --danger-border:#80424d;
+  --line-dot:#3a4c68; --header-bg:#0b1526;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",-apple-system,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Manrope,ui-sans-serif,system-ui,sans-serif;letter-spacing:-.02em;color:var(--ink)}
+p{margin:0}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+/* ---------- header ---------- */
+.top{background:var(--header-bg);color:#fff;padding-block:22px 60px}
+.top .wrap{position:relative}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(22,103,242,.25)}
+.brand em{font-style:normal;color:#9cc0ff}
+.top h1{color:#fff;font-size:clamp(28px,5vw,40px);margin:22px 0 8px;text-wrap:balance}
+.top p.lead{color:#c3d2e8;font-size:15px;max-width:56ch}
+.top .meta{margin-top:16px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#8ea3c2;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+
+/* ---------- switch bars ---------- */
+.switchBar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 0}
+.switchRow{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:-42px;flex-wrap:wrap}
+.switch{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:4px;width:max-content}
+.switch button{appearance:none;border:0;background:transparent;font:inherit;font-family:Manrope,sans-serif;font-weight:800;font-size:13px;padding:9px 20px;border-radius:999px;color:var(--muted);cursor:pointer;transition:background-color .18s ease,color .18s ease,box-shadow .18s ease;white-space:nowrap}
+.switch button[aria-pressed="true"]{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(22,103,242,.35)}
+.switch.lang button{padding:9px 14px}
+@media(max-width:560px){.switchRow{margin-top:-34px;gap:8px}.switch button{padding:8px 14px;font-size:12px}.switch.lang button{padding:8px 11px}}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:36px;padding-block:36px 60px;align-items:start}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+.toc{position:sticky;top:70px;display:grid;gap:2px}
+.toc a{display:block;padding:8px 10px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:700}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+.toc a.tocActive{background:var(--blue-soft);color:var(--blue-ink)}
+@media(max-width:760px){.toc{position:static;display:flex;overflow-x:auto;gap:8px;padding-bottom:6px;-webkit-overflow-scrolling:touch}.toc a{flex:0 0 auto;background:var(--surface);border:1px solid var(--border)}}
+
+.pane{display:grid;gap:34px}
+.pane[hidden]{display:none}
+
+/* ---------- step timeline ---------- */
+.step{position:relative;padding-left:52px;scroll-margin-top:80px}
+.step::before{content:'';position:absolute;left:19px;top:44px;bottom:-34px;width:2px;background:repeating-linear-gradient(to bottom,var(--line-dot) 0 4px,transparent 4px 9px)}
+.step:last-child::before{display:none}
+.marker{position:absolute;left:0;top:0;width:40px;height:40px;border-radius:50%;background:var(--surface);border:2px solid var(--blue);color:var(--blue);display:grid;place-items:center;font-family:Manrope,sans-serif;font-weight:800;font-size:15px;box-shadow:var(--shadow)}
+.screenTag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-ink);background:var(--blue-soft);border-radius:999px;padding:4px 10px 4px 8px;margin-bottom:8px}
+.step h2{font-size:20px;margin:0 0 6px}
+.step > p.desc{color:var(--muted);font-size:14.5px;max-width:64ch;margin-bottom:14px}
+.stepBody{display:grid;gap:16px}
+@media(min-width:700px){.stepBody.withShot{grid-template-columns:1.1fr minmax(210px,240px);align-items:start}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:18px 20px}
+.rows{display:grid;gap:12px}
+.row{display:flex;gap:12px;align-items:flex-start}
+.row svg{flex:0 0 auto;color:var(--blue);margin-top:2px}
+.row .t{font-weight:700;font-size:14.5px}
+.row .d{color:var(--muted);font-size:13.5px;margin-top:2px}
+.pillGroup{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pill{font-size:12px;font-weight:800;padding:5px 11px;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:var(--surface-2)}
+.pill.pickup{color:var(--blue-ink);background:var(--blue-soft);border-color:transparent}
+.pill.delivery{color:var(--success);background:var(--success-soft);border-color:var(--success-border)}
+.pill.return{color:var(--muted);background:var(--surface-2)}
+.tip,.warnBox{display:flex;gap:10px;border-radius:var(--radius-md);padding:12px 14px;font-size:13.5px;margin-top:12px}
+.tip{background:var(--blue-soft);color:var(--blue-ink)}
+.warnBox{background:var(--warn-soft);border:1px solid var(--warn-border);color:var(--warn)}
+.tip svg,.warnBox svg{flex:0 0 auto;margin-top:1px}
+
+/* ---------- screen mockups ---------- */
+.shot{background:linear-gradient(180deg,var(--surface-2),var(--bg));border:1px solid var(--border);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+.shot .frame{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;font-family:"Source Sans 3",sans-serif}
+.shot .bar{background:var(--header-bg);color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;padding:8px 10px;display:flex;justify-content:space-between;align-items:center}
+.shot .body{padding:10px}
+.shot .cap{margin-top:8px;font-size:11.5px;color:var(--muted);text-align:center;font-weight:600}
+.mk-chip{display:inline-flex;align-items:center;font-size:8.5px;font-weight:800;border-radius:999px;padding:2px 7px;background:var(--blue-soft);color:var(--blue-ink)}
+.mk-line{height:7px;border-radius:4px;background:var(--border)}
+.mk-card{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;margin-top:6px}
+.mk-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.mk-dot{width:16px;height:16px;border-radius:50%;background:var(--blue);flex:0 0 auto}
+.mk-btn{font-size:9px;font-weight:800;text-align:center;border-radius:7px;padding:6px;margin-top:6px}
+.mk-btn.primary{background:var(--blue);color:#fff}
+.mk-btn.ghost{background:var(--surface);border:1px solid var(--border);color:var(--ink)}
+.mk-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px}
+.mk-cal{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:2px}
+.mk-cal div{background:var(--surface-2);border-radius:6px;padding:5px 2px;text-align:center;font-size:8px;font-weight:700;color:var(--muted)}
+.mk-cal div.on{background:var(--blue);color:#fff}
+.mk-navbar{display:flex;justify-content:space-around;border-top:1px solid var(--border);padding:7px 0;background:var(--surface)}
+.mk-navbar span{width:14px;height:14px;border-radius:4px;background:var(--border)}
+.mk-navbar span.on{background:var(--blue)}
+.mk-map{height:64px;border-radius:8px;margin-top:6px;position:relative;overflow:hidden;background:
+  linear-gradient(var(--surface-2),var(--surface-2)),
+  repeating-linear-gradient(0deg,transparent 0 11px,var(--border) 11px 12px),
+  repeating-linear-gradient(90deg,transparent 0 15px,var(--border) 15px 16px)}
+.mk-map .pin{position:absolute;width:9px;height:9px;border-radius:50% 50% 50% 0;background:var(--blue);transform:rotate(-45deg)}
+
+/* ---------- FAQ ---------- */
+.faq{border-top:1px solid var(--border);padding-block:44px 60px}
+.faqHead{margin-bottom:20px}
+.faqGrid{display:grid;gap:10px}
+details.q{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden}
+details.q summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;font-size:14.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary .chev{transition:transform .18s ease;color:var(--muted);flex:0 0 auto}
+details.q[open] summary .chev{transform:rotate(180deg)}
+details.q .a{padding:0 16px 16px;color:var(--muted);font-size:13.5px;max-width:66ch}
+details.q .who{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-ink);background:var(--blue-soft);border-radius:999px;padding:3px 8px;margin-right:8px}
+
+footer{border-top:1px solid var(--border);padding-block:26px 50px;color:var(--muted);font-size:12.5px;text-align:center}
+footer strong{color:var(--ink)}
+
+@media (prefers-reduced-motion: reduce){*{transition-duration:.001ms!important;animation-duration:.001ms!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span>Route<em>Hub</em></div>
+    <h1 id="txt-title"></h1>
+    <p class="lead" id="txt-lead"></p>
+    <div class="meta">
+      <span id="txt-meta1"></span><span id="txt-meta2"></span><span>ES · EN · FR</span>
+    </div>
+  </div>
+</header>
+
+<div class="switchBar">
+  <div class="switchRow">
+    <div class="switch" role="tablist" id="roleSwitch">
+      <button type="button" role="tab" id="tab-manager" onclick="setRole('manager')"></button>
+      <button type="button" role="tab" id="tab-driver" onclick="setRole('driver')"></button>
+    </div>
+    <div class="switch lang" role="tablist" id="langSwitch">
+      <button type="button" role="tab" data-lang="es" onclick="setLang('es')">ES</button>
+      <button type="button" role="tab" data-lang="en" onclick="setLang('en')">EN</button>
+      <button type="button" role="tab" data-lang="fr" onclick="setLang('fr')">FR</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <nav class="toc" id="toc" aria-label="Contents"></nav>
+  <main class="pane" id="pane-content"></main>
+</div>
+
+<section class="faq wrap">
+  <div class="faqHead">
+    <h2 style="font-size:22px" id="faq-title"></h2>
+    <p style="color:var(--muted);font-size:14px;margin-top:4px" id="faq-sub"></p>
+  </div>
+  <div class="faqGrid" id="faq-grid"></div>
+</section>
+
+<footer id="footer-text"></footer>
+
+<script>
+/* ============================================================
+   Icons (small inline monoline set, no external library)
+============================================================ */
+var ICON = {
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/>',
+  split:'<rect x="3" y="3" width="7" height="18" rx="1.5"/><rect x="14" y="3" width="7" height="18" rx="1.5"/><path d="M6 8l0 0M17 8l1.5 1.5L21 7"/>',
+  search:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  pin:'<path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+  pin2:'<path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  truckBox:'<rect x="1" y="8" width="13" height="8" rx="1"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/>',
+  person:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  truck:'<path d="M3 22V12l4-8h10l4 8v10"/><path d="M3 12h18"/>',
+  wrench:'<path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-3-3z"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 3a2 2 0 0 1-.5 2.1L8 10.1a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 2 .5 3 .7a2 2 0 0 1 1.6 2z"/>',
+  star:'<path d="M12 2l2.9 6.3L21 9.2l-4.5 4.4L17.6 21 12 17.8 6.4 21l1.1-7.4L3 9.2l6.1-.9L12 2z"/>',
+  warn:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  check:'<path d="M20 6L9 17l-5-5"/>',
+  box:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  house:'<path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/>',
+  card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
+  route:'<path d="M6 3l14 9-14 9V3z"/>',
+  list:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+  chart:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>'
+}
+function svg(name){return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+ICON[name]+'</svg>'}
+function svgSm(name){return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+ICON[name]+'</svg>'}
+
+/* ============================================================
+   Screen mockups - small illustrations of the real screens,
+   built with the app's own colors/shapes (no photo available
+   behind login), captions come from the current language pack.
+============================================================ */
+var MOCK = {
+  dashboard: function(L){
+    return '<div class="shot"><div class="frame">'+
+      '<div class="bar"><span>ROUTEHUB</span><span class="mk-chip">'+L.mkToday+'</span></div>'+
+      '<div class="body">'+
+        '<div class="mk-cal"><div>L</div><div class="on">M</div><div>M</div><div>J</div><div>V</div></div>'+
+        '<div class="mk-card"><div class="mk-line" style="width:60%"></div><div class="mk-row"><span class="mk-dot"></span><div style="flex:1"><div class="mk-line" style="width:80%"></div><div class="mk-line" style="width:40%;margin-top:4px"></div></div></div></div>'+
+        '<div class="mk-card"><div class="mk-row"><span class="mk-dot" style="background:var(--success)"></span><div style="flex:1"><div class="mk-line" style="width:70%"></div></div></div></div>'+
+      '</div></div>'+
+      '<p class="cap">'+L.mkDashboardCap+'</p></div>'
+  },
+  newroute: function(L){
+    return '<div class="shot"><div class="frame">'+
+      '<div class="bar"><span>'+L.mkNewRoute+'</span><span class="mk-chip">3/3</span></div>'+
+      '<div class="body">'+
+        '<div class="mk-grid3"><div class="mk-btn ghost">'+L.mkBranch+'</div><div class="mk-btn primary">'+L.mkLast+'</div><div class="mk-btn ghost">'+L.mkCustom+'</div></div>'+
+        '<div class="mk-card"><div class="mk-line" style="width:50%"></div><div class="mk-line" style="width:75%;margin-top:5px"></div></div>'+
+        '<div class="mk-btn primary" style="margin-top:10px">'+L.mkAssign+'</div>'+
+      '</div></div>'+
+      '<p class="cap">'+L.mkNewRouteCap+'</p></div>'
+  },
+  todayBefore: function(L){
+    return '<div class="shot"><div class="frame">'+
+      '<div class="bar"><span>'+L.mkToday+'</span><span class="mk-chip">1/6</span></div>'+
+      '<div class="body">'+
+        '<div class="mk-card"><span class="mk-chip">'+L.mkDelivery+'</span><div class="mk-line" style="width:85%;margin-top:7px"></div><div class="mk-line" style="width:55%;margin-top:5px"></div></div>'+
+        '<div class="mk-btn primary" style="margin-top:8px">'+L.mkStart+'</div>'+
+      '</div>'+
+      '<div class="mk-navbar"><span class="on"></span><span></span><span></span><span></span></div>'+
+      '</div><p class="cap">'+L.mkTodayBeforeCap+'</p></div>'
+  },
+  todayActive: function(L){
+    return '<div class="shot"><div class="frame">'+
+      '<div class="bar"><span>'+L.mkToday+'</span><span class="mk-chip">1/6</span></div>'+
+      '<div class="body">'+
+        '<div class="mk-map"><span class="pin" style="left:30%;top:35%"></span><span class="pin" style="left:65%;top:55%;background:var(--success)"></span></div>'+
+        '<div class="mk-grid3" style="grid-template-columns:1fr 1fr"><div class="mk-btn ghost">'+L.mkMaps+'</div><div class="mk-btn ghost">'+L.mkCall+'</div></div>'+
+        '<div class="mk-btn primary" style="margin-top:6px">'+L.mkArrived+'</div>'+
+      '</div></div>'+
+      '<p class="cap">'+L.mkTodayActiveCap+'</p></div>'
+  },
+  settingsDriver: function(L){
+    return '<div class="shot"><div class="frame">'+
+      '<div class="bar"><span>'+L.mkSettings+'</span></div>'+
+      '<div class="body">'+
+        '<div class="mk-card"><div class="mk-row"><div style="flex:1"><div class="mk-line" style="width:50%"></div></div><div class="mk-btn ghost" style="width:30px;padding:4px">On</div></div></div>'+
+        '<div class="mk-card"><div class="mk-row"><div style="flex:1"><div class="mk-line" style="width:60%"></div></div></div></div>'+
+        '<div class="mk-btn ghost" style="margin-top:6px;color:var(--danger)">'+L.mkSignOut+'</div>'+
+      '</div></div>'+
+      '<p class="cap">'+L.mkSettingsCap+'</p></div>'
+  }
+}
+
+/* ============================================================
+   Content model - one object per language, same shape.
+============================================================ */
+var CONTENT = {};
+
+CONTENT.es = {
+  title:'Guía RouteHub', lead:'Todo lo necesario para operar tu sucursal como Manager o cumplir tus rutas como Driver, pantalla por pantalla.',
+  meta1:'2 roles', meta2:'15 pantallas', tabManager:'Soy Manager', tabDriver:'Soy Driver',
+  faqTitle:'Preguntas frecuentes', faqSub:'Las mismas dudas que suelen surgir en los primeros días.',
+  faqLabels:{both:'Ambos', manager:'Manager', driver:'Driver'},
+  footer:'Guía escrita a partir de la versión actual de RouteHub · <strong>RouteHub</strong> — Uso interno para onboarding de Managers y Drivers.',
+  mk:{mkToday:'HOY', mkDashboardCap:'Panel: calendario + rutas del día', mkNewRoute:'NUEVA RUTA', mkBranch:'Sucursal', mkLast:'Último punto', mkCustom:'Personalizado', mkAssign:'Asignar chofer', mkNewRouteCap:'Origen → Destino → Chofer', mkDelivery:'ENTREGA', mkStart:'Iniciar ruta', mkTodayBeforeCap:'Antes de iniciar: solo info de la parada', mkMaps:'Mapa', mkCall:'Llamar', mkArrived:'YA LLEGUÉ', mkTodayActiveCap:'En ruta: mapa, llamar y llegada', mkSettings:'CONFIGURACIÓN', mkSignOut:'Cerrar sesión', mkSettingsCap:'Notificaciones, soporte y cerrar sesión'},
+  manager:[
+    {tag:'Pantalla · Panel principal', title:'El Panel (Dashboard)', desc:'Es lo primero que ves al entrar. Muestra el calendario de la semana, las rutas del día seleccionado y el mapa de la sucursal en una sola pantalla.', mock:'dashboard',
+      rows:[
+        {icon:'calendar', t:'Calendario semanal', d:'Elige el día para ver sus rutas. Las rutas programadas para otro día no aparecen mezcladas con las de hoy.'},
+        {icon:'split', t:'Rutas pendientes y completadas', d:'Se muestran una junto a la otra para el día elegido, agrupadas por estado.'},
+        {icon:'search', t:'Buscador de destinos', d:'Escribe un cliente o dirección y aparece un desplegable con coincidencias de días anteriores, sin perder de vista el día actual.'}
+      ]},
+    {tag:'Botón · Nueva ruta', title:'Crear una ruta nueva', desc:'Desde el Panel, el botón “Nueva ruta” abre un panel compacto con tres pasos.', mock:'newroute',
+      rows:[
+        {icon:'pin', t:'Origen', d:'Tres opciones: sucursal (por defecto), último punto del día, o una dirección personalizada.'},
+        {icon:'pin2', t:'Destino y contacto', d:'Busca en Contactos o escribe una dirección nueva con autocompletado de Google. El nombre y teléfono del contacto quedan fusionados en la misma tarjeta.'},
+        {icon:'person', t:'Chofer y detalles', d:'Asigna al chofer, agrega orden de compra/número de orden y notas. El panel de detalles siempre está visible, no hay que expandir nada.'}
+      ],
+      pills:['Recogida','Entrega','Retorno a sucursal'],
+      tip:'En <strong>Retorno</strong> no se pide orden de compra: solo confirma que el chofer llegó a la sucursal.'},
+    {tag:'Pantalla · Mapa', title:'Seguimiento en vivo', desc:'Mientras un chofer tiene su jornada activa (6am–6pm), su ubicación aparece en el mapa junto a las rutas asignadas.',
+      rows:[
+        {icon:'pin', t:'Solo con consentimiento', d:'El chofer debe aceptar compartir ubicación desde su propia app antes de que veas su punto en el mapa.'},
+        {icon:'truckBox', t:'Vehículo asignado', d:'El mapa es una referencia de operación, no una navegación turn-by-turn: eso vive dentro de la app del chofer.'}
+      ]},
+    {tag:'Pantalla · Contactos', title:'Contactos', desc:'Guarda clientes y proveedores frecuentes para no volver a escribir su dirección cada vez.',
+      rows:[
+        {icon:'search', t:'Autocompletado de direcciones', d:'Escribe unas letras y Google Places sugiere la dirección normalizada, evitando errores al crear rutas.'},
+        {icon:'phone', t:'Llamar directo', d:'Cada contacto guarda un teléfono para llamar sin salir de la app.'}
+      ]},
+    {tag:'Pantalla · Camión', title:'Camión: vehículo y bitácora', desc:'Aquí ves el vehículo activo de la sucursal y la bitácora que los propios choferes van registrando desde su app.',
+      rows:[
+        {icon:'truck', t:'Combustible', d:'Odómetro, monto y foto del recibo, cargados por el chofer desde Camión &gt; Combustible.'},
+        {icon:'wrench', t:'Mantenimiento', d:'Aceite, llantas, frenos, inspección u otro — cada registro queda con fecha, odómetro y costo.'}
+      ]},
+    {tag:'Configuración · Sucursal', title:'Equipo: invitar y administrar', desc:'Desde Configuración &gt; Sucursal &gt; Equipo invitas por correo y decides qué puede hacer cada persona.',
+      pillsPlain:['Gerente de sucursal','Gerente de operaciones','Representante de ventas','Ventas de mostrador','Conductor'],
+      note:'La invitación queda <strong>pendiente</strong> hasta que la persona entra por primera vez. También defines aquí el <strong>chofer principal</strong> de la sucursal y la <strong>hora de auto-cierre</strong> del día operativo.',
+      tip:'Para dar de alta a un tester sin correo real, usá <strong>Admin &gt; Compañías &gt; Reenviar correo</strong>: te muestra el código de activación de 6 dígitos directo en pantalla.'},
+    {tag:'Pantalla · Historial y Reportes', title:'Historial y Reportes', desc:'Una sola pantalla con dos pestañas.',
+      rows:[
+        {icon:'chart', t:'Resumen', d:'Métricas de actividad de la sucursal por periodo y por chofer.'},
+        {icon:'list', t:'Bitácora de rutas', d:'Cada ruta completada, con hora, evidencia y chofer — filtrable por fecha y por persona.'}
+      ]},
+    {tag:'Pantalla · Configuración', title:'Configuración', desc:'Se accede desde “Más” en la barra inferior. Está agrupada así:',
+      rows:[
+        {icon:'person', t:'Perfil y Preferencias', d:'Tus datos, idioma y notificaciones.'},
+        {icon:'house', t:'Sucursal', d:'Nombre, dirección, teléfono, chofer principal, hora de cierre y acceso a Equipo.'},
+        {icon:'chart', t:'Operaciones', d:'Enlace directo a Historial y Reportes.'},
+        {icon:'card', t:'Plan y facturación', d:'Estado de tu plan y prueba activa.'},
+        {icon:'shield', t:'Soporte y legal', d:'Botón para escribirle directo al equipo de RouteHub.'}
+      ]}
+  ],
+  driver:[
+    {tag:'Pantalla · Hoy', title:'Iniciar sesión y la pantalla “Hoy”', desc:'Al entrar ves de inmediato tu parada asignada: nada más, para que no te distraigas manejando.', mock:'todayBefore',
+      rows:[
+        {icon:'pin2', t:'Antes de iniciar la ruta', d:'Solo ves tipo de parada, dirección, contacto y nota — sin botones de navegar/llamar todavía.'},
+        {icon:'route', t:'Progreso', d:'Un contador simple, por ejemplo “3 de 10”, y una vista previa de la próxima parada.'}
+      ]},
+    {tag:'Configuración · Jornada', title:'Activar tu jornada (Driving Day)', desc:'Antes de salir, activa tu jornada para que la sucursal vea tu ubicación en vivo durante el horario operativo (6am–6pm).',
+      rows:[
+        {icon:'pin', t:'Pide permiso de ubicación', d:'El teléfono te va a preguntar por separado; si lo rechazas, igual puedes trabajar, solo que sin punto en vivo en el mapa del manager.'},
+        {icon:'clock', t:'Apagar al terminar', d:'“Off” corta el envío de ubicación de inmediato — se te pide confirmar antes de apagarla si sigue activa.'}
+      ]},
+    {tag:'Pantalla · Hoy', title:'Ejecutar una parada', desc:'Tres pasos siempre iguales, sin importar el tipo de parada.', mock:'todayActive',
+      rows:[
+        {icon:'arrow', t:'1. Iniciar ruta', d:'Se habilitan Mapa (abre Apple/Google Maps) y Llamar.'},
+        {icon:'check', t:'2. Toca “Ya llegué”', d:'Marca la llegada y abre la pantalla de finalización según el tipo de parada.'},
+        {icon:'box', t:'3. Completa según el tipo', d:'Cada tipo pide algo distinto — ver abajo.'}
+      ],
+      typeRows:[
+        {pill:'pickup', label:'Recogida', d:'Confirmas que llevas el material. Sin nombre de destinatario.'},
+        {pill:'delivery', label:'Entrega', d:'Nombre de quien recibe, más foto o firma del cliente.'},
+        {pill:'return', label:'Retorno', d:'Solo confirmar que llegaste a la sucursal. Sin orden de compra.'}
+      ]},
+    {tag:'Pantalla · Hoy', title:'Cuando algo sale mal: Issue', desc:'Si el cliente no está, la dirección es incorrecta o hay daño en el material, usa “Issue” en vez de forzar una entrega.',
+      warn:'Nunca inventes un nombre de destinatario para poder cerrar la parada. El reporte de Issue queda guardado y visible para tu manager en el Historial.'},
+    {tag:'Pantalla · Historial', title:'Revisar el Historial del día', desc:'Pestañas de Pendientes y Completadas, con buscador por ruta, cliente, dirección u orden de compra.',
+      rows:[
+        {icon:'search', t:'Buscar', d:'Encuentra una parada anterior en segundos sin desplazarte por toda la lista.'},
+        {icon:'pin2', t:'Abrir en Maps', d:'Cada tarjeta tiene un botón directo para reabrir la dirección en tu app de mapas.'}
+      ]},
+    {tag:'Pantalla · Camión', title:'Camión: combustible y mantenimiento', desc:'Registra cada carga o servicio directo desde tu teléfono.',
+      rows:[
+        {icon:'truck', t:'Combustible', d:'Odómetro, monto y una foto del recibo con la cámara.'},
+        {icon:'wrench', t:'Mantenimiento', d:'Elige el tipo (aceite, llantas, frenos, inspección u otro) y agrega odómetro y costo.'}
+      ]},
+    {tag:'Pantalla · Configuración', title:'Configuración', desc:'Se llega tocando “Más” en la barra inferior.', mock:'settingsDriver',
+      rows:[
+        {icon:'house', t:'Espacio de trabajo', d:'Ves tu compañía y sucursal asignadas — útil si tu empresa tiene más de una sucursal.'},
+        {icon:'bell', t:'Notificaciones', d:'“Off” ahora sí cancela los avisos en este dispositivo, no solo lo esconde en pantalla.'},
+        {icon:'shield', t:'Contactar soporte', d:'Escribe directo al equipo de RouteHub sin salir de la app.'},
+        {icon:'logout', t:'Cerrar sesión', d:'Visible directo en Configuración, con confirmación antes de salir.'}
+      ]}
+  ],
+  faq:[
+    {who:'both', q:'La app no carga o se ve en blanco', a:'Cierra la app por completo y vuelve a abrirla. Si sigue igual, revisa tu conexión — RouteHub reintenta solo al recuperar señal, pero necesita al menos una conexión breve para cargar tus rutas.'},
+    {who:'both', q:'¿A quién le escribo si algo no funciona?', a:'Configuración → Soporte → “Contactar soporte”. Tu mensaje llega directo al equipo de RouteHub. Para cambios de cuenta, camión o sucursal, habla primero con tu manager.'},
+    {who:'driver', q:'Activé Driving Day pero el manager no me ve en el mapa', a:'Revisa que también hayas aceptado el permiso de ubicación del teléfono — son dos permisos distintos. Sin ese permiso del sistema, la app puede seguir funcionando pero no puede enviar tu punto en vivo.'},
+    {who:'manager', q:'Invité a alguien pero no le llegó el correo', a:'Desde Admin → Compañías → “Reenviar correo” puedes ver el código de activación de 6 dígitos directo en pantalla y dárselo de otra forma (mensaje, en persona), sin depender de que el correo llegue.'},
+    {who:'driver', q:'¿Puedo cambiar el idioma de la app?', a:'Sí — Configuración tiene selector de Español, English y Français. El cambio es inmediato y queda guardado en tu dispositivo.'},
+    {who:'both', q:'¿Los datos de mi sucursal se mezclan con otras sucursales de la misma compañía?', a:'No. Compañía y sucursal son cosas separadas: si tu empresa tiene varias sucursales, cada una ve solo sus propias rutas, contactos y equipo.'}
+  ]
+};
+
+CONTENT.en = {
+  title:'RouteHub Guide', lead:'Everything you need to run your branch as a Manager, or complete your routes as a Driver, screen by screen.',
+  meta1:'2 roles', meta2:'15 screens', tabManager:"I'm a Manager", tabDriver:"I'm a Driver",
+  faqTitle:'Frequently asked questions', faqSub:'The same questions that tend to come up in the first few days.',
+  faqLabels:{both:'Both', manager:'Manager', driver:'Driver'},
+  footer:"Guide written from RouteHub's current version · <strong>RouteHub</strong> — internal use for onboarding Managers and Drivers.",
+  mk:{mkToday:'TODAY', mkDashboardCap:'Dashboard: calendar + today\'s routes', mkNewRoute:'NEW ROUTE', mkBranch:'Branch', mkLast:'Last stop', mkCustom:'Custom', mkAssign:'Assign driver', mkNewRouteCap:'Origin → Destination → Driver', mkDelivery:'DELIVERY', mkStart:'Start route', mkTodayBeforeCap:'Before starting: stop info only', mkMaps:'Maps', mkCall:'Call', mkArrived:'ARRIVED', mkTodayActiveCap:'On route: maps, call and arrival', mkSettings:'SETTINGS', mkSignOut:'Sign out', mkSettingsCap:'Notifications, support and sign out'},
+  manager:[
+    {tag:'Screen · Dashboard', title:'The Dashboard', desc:"It's the first thing you see when you sign in. It shows the weekly calendar, the selected day's routes and the branch map in a single screen.", mock:'dashboard',
+      rows:[
+        {icon:'calendar', t:'Weekly calendar', d:"Pick a day to see its routes. Routes scheduled for another day never mix with today's."},
+        {icon:'split', t:'Pending and completed routes', d:'Shown side by side for the chosen day, grouped by status.'},
+        {icon:'search', t:'Destination search', d:'Type a customer or address and a dropdown shows matches from previous days, without losing sight of today.'}
+      ]},
+    {tag:'Button · New route', title:'Create a new route', desc:'From the Dashboard, the "New route" button opens a compact panel with three steps.', mock:'newroute',
+      rows:[
+        {icon:'pin', t:'Origin', d:"Three options: branch (default), the day's last stop, or a custom address."},
+        {icon:'pin2', t:'Destination and contact', d:"Search Contacts or type a new address with Google autocomplete. The contact's name and phone are merged into the same card."},
+        {icon:'person', t:'Driver and details', d:'Assign the driver, add a purchase order/order number and notes. The details panel is always visible, nothing to expand.'}
+      ],
+      pills:['Pickup','Delivery','Return to branch'],
+      tip:'<strong>Return</strong> stops never ask for an order number - just confirm the driver reached the branch.'},
+    {tag:'Screen · Map', title:'Live tracking', desc:"While a driver's shift is active (6am-6pm), their location shows on the map next to the assigned routes.",
+      rows:[
+        {icon:'pin', t:'Consent required', d:'The driver must accept sharing location from their own app before you can see their pin on the map.'},
+        {icon:'truckBox', t:'Assigned vehicle', d:"The map is an operational reference, not turn-by-turn navigation - that lives inside the driver's app."}
+      ]},
+    {tag:'Screen · Contacts', title:'Contacts', desc:"Save frequent customers and suppliers so you don't retype their address every time.",
+      rows:[
+        {icon:'search', t:'Address autocomplete', d:'Type a few letters and Google Places suggests the normalized address, avoiding mistakes when creating routes.'},
+        {icon:'phone', t:'Call directly', d:'Every contact keeps a phone number to call without leaving the app.'}
+      ]},
+    {tag:'Screen · Truck', title:'Truck: vehicle and log', desc:"See the branch's active vehicle and the log drivers keep updating from their own app.",
+      rows:[
+        {icon:'truck', t:'Fuel', d:'Odometer, amount and a receipt photo, logged by the driver from Truck &gt; Fuel.'},
+        {icon:'wrench', t:'Maintenance', d:'Oil, tires, brakes, inspection or other - every entry keeps date, odometer and cost.'}
+      ]},
+    {tag:'Settings · Branch', title:'Team: invite and manage', desc:'From Settings &gt; Branch &gt; Team you invite by email and decide what each person can do.',
+      pillsPlain:['Branch Manager','Operations Manager','Sales Representative','Counter Sales','Driver'],
+      note:'The invitation stays <strong>pending</strong> until the person signs in for the first time. This is also where you set the branch\'s <strong>primary driver</strong> and its <strong>auto-close time</strong>.',
+      tip:'To onboard a tester without a real email, use <strong>Admin &gt; Companies &gt; Resend email</strong>: it shows the 6-digit activation code directly on screen.'},
+    {tag:'Screen · History and Reports', title:'History and Reports', desc:'One screen, two tabs.',
+      rows:[
+        {icon:'chart', t:'Overview', d:'Branch activity metrics by period and by driver.'},
+        {icon:'list', t:'Route log', d:'Every completed route with time, proof and driver - filterable by date and by person.'}
+      ]},
+    {tag:'Screen · Settings', title:'Settings', desc:'Reached from "More" in the bottom bar. Grouped like this:',
+      rows:[
+        {icon:'person', t:'Profile and Preferences', d:'Your details, language and notifications.'},
+        {icon:'house', t:'Branch', d:'Name, address, phone, primary driver, close time and access to Team.'},
+        {icon:'chart', t:'Operations', d:'Direct link to History and Reports.'},
+        {icon:'card', t:'Plan and billing', d:'Your plan status and any active trial.'},
+        {icon:'shield', t:'Support and legal', d:'Button to message the RouteHub team directly.'}
+      ]}
+  ],
+  driver:[
+    {tag:'Screen · Today', title:'Signing in and the "Today" screen', desc:"When you sign in you see your assigned stop right away - nothing else, so you're not distracted while driving.", mock:'todayBefore',
+      rows:[
+        {icon:'pin2', t:'Before starting the route', d:"You only see stop type, address, contact and note - no navigate/call buttons yet."},
+        {icon:'route', t:'Progress', d:'A simple counter, like "3 of 10", plus a preview of the next stop.'}
+      ]},
+    {tag:'Settings · Driving Day', title:'Turn on your Driving Day', desc:'Before heading out, turn on Driving Day so the branch can see your live location during operating hours (6am-6pm).',
+      rows:[
+        {icon:'pin', t:'Asks for location permission', d:"The phone will ask separately; if you deny it, you can still work, just without a live pin on the manager's map."},
+        {icon:'clock', t:'Turn it off when done', d:'"Off" stops sharing location immediately - you\'re asked to confirm before turning it off if it\'s still active.'}
+      ]},
+    {tag:'Screen · Today', title:'Completing a stop', desc:'Three steps, always the same, no matter the stop type.', mock:'todayActive',
+      rows:[
+        {icon:'arrow', t:'1. Start route', d:'Maps (opens Apple/Google Maps) and Call become available.'},
+        {icon:'check', t:'2. Tap "Arrived"', d:'Marks your arrival and opens the completion screen for that stop type.'},
+        {icon:'box', t:'3. Complete based on type', d:'Each type asks for something different - see below.'}
+      ],
+      typeRows:[
+        {pill:'pickup', label:'Pickup', d:"Confirm you have the material. No recipient name needed."},
+        {pill:'delivery', label:'Delivery', d:"Recipient's name, plus a photo or the customer's signature."},
+        {pill:'return', label:'Return', d:'Just confirm you reached the branch. No order number.'}
+      ]},
+    {tag:'Screen · Today', title:'When something goes wrong: Issue', desc:'If the customer is gone, the address is wrong or the goods are damaged, use "Issue" instead of forcing a delivery.',
+      warn:'Never invent a recipient name just to close the stop. The Issue report is saved and visible to your manager in History.'},
+    {tag:'Screen · History', title:"Checking today's History", desc:'Pending and Completed tabs, with search by route, customer, address or order number.',
+      rows:[
+        {icon:'search', t:'Search', d:'Find a past stop in seconds without scrolling through the whole list.'},
+        {icon:'pin2', t:'Open in Maps', d:'Every card has a direct button to reopen the address in your maps app.'}
+      ]},
+    {tag:'Screen · Truck', title:'Truck: fuel and maintenance', desc:'Log every fill-up or service straight from your phone.',
+      rows:[
+        {icon:'truck', t:'Fuel', d:'Odometer, amount and a receipt photo with the camera.'},
+        {icon:'wrench', t:'Maintenance', d:'Pick a type (oil, tires, brakes, inspection or other) and add odometer and cost.'}
+      ]},
+    {tag:'Screen · Settings', title:'Settings', desc:'Reached by tapping "More" in the bottom bar.', mock:'settingsDriver',
+      rows:[
+        {icon:'house', t:'Workspace', d:'See your assigned company and branch - useful if your company has more than one branch.'},
+        {icon:'bell', t:'Notifications', d:'"Off" now actually cancels alerts on this device, not just hides them on screen.'},
+        {icon:'shield', t:'Contact support', d:'Message the RouteHub team directly without leaving the app.'},
+        {icon:'logout', t:'Sign out', d:'Visible right in Settings, with a confirmation before leaving.'}
+      ]}
+  ],
+  faq:[
+    {who:'both', q:"The app won't load or shows blank", a:'Close the app completely and reopen it. If it persists, check your connection - RouteHub only retries once it regains signal, and needs at least a brief connection to load your routes.'},
+    {who:'both', q:'Who do I message if something breaks?', a:'Settings → Support → "Contact support". Your message goes straight to the RouteHub team. For account, truck or branch changes, talk to your manager first.'},
+    {who:'driver', q:"I turned on Driving Day but my manager doesn't see me on the map", a:"Check that you also accepted the phone's location permission - it's a separate permission. Without it, the app can still work, it just can't send your live pin."},
+    {who:'manager', q:"I invited someone but the email never arrived", a:'From Admin → Companies → "Resend email" you can see the 6-digit activation code directly on screen and hand it over another way (message, in person), without depending on email delivery.'},
+    {who:'driver', q:'Can I change the app language?', a:"Yes - Settings has a Spanish / English / French switch. It applies instantly and is saved on your device."},
+    {who:'both', q:"Does my branch's data mix with other branches in the same company?", a:'No. Company and branch are separate: if your company has several branches, each one only sees its own routes, contacts and team.'}
+  ]
+};
+
+CONTENT.fr = {
+  title:'Guide RouteHub', lead:'Tout ce qu’il faut pour gérer votre succursale en tant que Manager, ou effectuer vos itinéraires en tant que Driver, écran par écran.',
+  meta1:'2 rôles', meta2:'15 écrans', tabManager:'Je suis Manager', tabDriver:'Je suis Driver',
+  faqTitle:'Questions fréquentes', faqSub:'Les mêmes questions qui reviennent souvent les premiers jours.',
+  faqLabels:{both:'Les deux', manager:'Manager', driver:'Driver'},
+  footer:"Guide rédigé à partir de la version actuelle de RouteHub · <strong>RouteHub</strong> — usage interne pour l’intégration des Managers et Drivers.",
+  mk:{mkToday:"AUJOURD'HUI", mkDashboardCap:'Tableau de bord : calendrier + itinéraires du jour', mkNewRoute:'NOUVEL ITINÉRAIRE', mkBranch:'Succursale', mkLast:'Dernier arrêt', mkCustom:'Personnalisé', mkAssign:'Assigner un chauffeur', mkNewRouteCap:'Départ → Destination → Chauffeur', mkDelivery:'LIVRAISON', mkStart:'Démarrer', mkTodayBeforeCap:"Avant de démarrer : infos de l'arrêt uniquement", mkMaps:'Plans', mkCall:'Appeler', mkArrived:'ARRIVÉ', mkTodayActiveCap:'En route : plans, appel et arrivée', mkSettings:'PARAMÈTRES', mkSignOut:'Se déconnecter', mkSettingsCap:'Notifications, assistance et déconnexion'},
+  manager:[
+    {tag:'Écran · Tableau de bord', title:'Le tableau de bord', desc:"C'est la première chose que vous voyez à la connexion. Il affiche le calendrier de la semaine, les itinéraires du jour choisi et la carte de la succursale sur un seul écran.", mock:'dashboard',
+      rows:[
+        {icon:'calendar', t:'Calendrier hebdomadaire', d:"Choisissez un jour pour voir ses itinéraires. Les itinéraires d'un autre jour ne se mélangent jamais avec ceux du jour."},
+        {icon:'split', t:'Itinéraires en attente et terminés', d:'Affichés côte à côte pour le jour choisi, regroupés par statut.'},
+        {icon:'search', t:'Recherche de destination', d:"Tapez un client ou une adresse : une liste déroulante montre les correspondances des jours précédents, sans perdre de vue aujourd'hui."}
+      ]},
+    {tag:'Bouton · Nouvel itinéraire', title:'Créer un nouvel itinéraire', desc:'Depuis le tableau de bord, le bouton "Nouvel itinéraire" ouvre un panneau compact en trois étapes.', mock:'newroute',
+      rows:[
+        {icon:'pin', t:'Départ', d:'Trois options : succursale (par défaut), dernier arrêt du jour, ou une adresse personnalisée.'},
+        {icon:'pin2', t:'Destination et contact', d:"Cherchez dans Contacts ou saisissez une nouvelle adresse avec l'autocomplétion Google. Le nom et le téléphone du contact sont fusionnés dans la même carte."},
+        {icon:'person', t:'Chauffeur et détails', d:'Assignez le chauffeur, ajoutez un numéro de commande et des notes. Le panneau de détails est toujours visible, rien à déplier.'}
+      ],
+      pills:['Collecte','Livraison','Retour à la succursale'],
+      tip:'Pour un <strong>Retour</strong>, aucun numéro de commande n\'est demandé - il suffit de confirmer que le chauffeur est arrivé à la succursale.'},
+    {tag:'Écran · Carte', title:'Suivi en direct', desc:'Pendant que le service d\'un chauffeur est actif (6h-18h), sa position s\'affiche sur la carte à côté des itinéraires assignés.',
+      rows:[
+        {icon:'pin', t:'Uniquement avec consentement', d:'Le chauffeur doit accepter de partager sa position depuis sa propre app avant que vous puissiez voir son point sur la carte.'},
+        {icon:'truckBox', t:'Véhicule assigné', d:"La carte est une référence opérationnelle, pas une navigation guidée - celle-ci se trouve dans l'app du chauffeur."}
+      ]},
+    {tag:'Écran · Contacts', title:'Contacts', desc:"Enregistrez les clients et fournisseurs fréquents pour ne plus retaper leur adresse.",
+      rows:[
+        {icon:'search', t:"Autocomplétion d'adresse", d:'Tapez quelques lettres et Google Places suggère l\'adresse normalisée, évitant les erreurs à la création des itinéraires.'},
+        {icon:'phone', t:'Appeler directement', d:'Chaque contact garde un numéro pour appeler sans quitter l\'app.'}
+      ]},
+    {tag:'Écran · Camion', title:'Camion : véhicule et historique', desc:"Vous voyez ici le véhicule actif de la succursale et l'historique que les chauffeurs alimentent eux-mêmes depuis leur app.",
+      rows:[
+        {icon:'truck', t:'Carburant', d:'Kilométrage, montant et photo du reçu, saisis par le chauffeur depuis Camion &gt; Carburant.'},
+        {icon:'wrench', t:'Entretien', d:'Huile, pneus, freins, inspection ou autre - chaque entrée garde la date, le kilométrage et le coût.'}
+      ]},
+    {tag:'Paramètres · Succursale', title:"Équipe : inviter et gérer", desc:'Depuis Paramètres &gt; Succursale &gt; Équipe, vous invitez par e-mail et décidez ce que chaque personne peut faire.',
+      pillsPlain:['Responsable de succursale','Responsable des opérations','Représentant commercial','Ventes au comptoir','Conducteur'],
+      note:"L'invitation reste <strong>en attente</strong> jusqu'à la première connexion de la personne. C'est aussi ici que vous définissez le <strong>chauffeur principal</strong> de la succursale et son <strong>heure de clôture automatique</strong>.",
+      tip:'Pour intégrer un testeur sans e-mail réel, utilisez <strong>Admin &gt; Entreprises &gt; Renvoyer l\'e-mail</strong> : le code d\'activation à 6 chiffres s\'affiche directement à l\'écran.'},
+    {tag:'Écran · Historique et rapports', title:'Historique et rapports', desc:'Un seul écran, deux onglets.',
+      rows:[
+        {icon:'chart', t:'Aperçu', d:"Indicateurs d'activité de la succursale par période et par chauffeur."},
+        {icon:'list', t:"Historique des itinéraires", d:'Chaque itinéraire terminé, avec heure, preuve et chauffeur - filtrable par date et par personne.'}
+      ]},
+    {tag:'Écran · Paramètres', title:'Paramètres', desc:'Accessible depuis "Plus" dans la barre du bas. Regroupé ainsi :',
+      rows:[
+        {icon:'person', t:'Profil et préférences', d:'Vos informations, la langue et les notifications.'},
+        {icon:'house', t:'Succursale', d:'Nom, adresse, téléphone, chauffeur principal, heure de clôture et accès à Équipe.'},
+        {icon:'chart', t:'Opérations', d:'Lien direct vers Historique et rapports.'},
+        {icon:'card', t:'Forfait et facturation', d:"L'état de votre forfait et de tout essai actif."},
+        {icon:'shield', t:'Assistance et mentions légales', d:"Bouton pour écrire directement à l'équipe RouteHub."}
+      ]}
+  ],
+  driver:[
+    {tag:"Écran · Aujourd'hui", title:'Connexion et l\'écran "Aujourd\'hui"', desc:'À la connexion, vous voyez immédiatement votre arrêt assigné - rien de plus, pour ne pas vous distraire en conduisant.', mock:'todayBefore',
+      rows:[
+        {icon:'pin2', t:"Avant de démarrer l'itinéraire", d:'Vous ne voyez que le type d\'arrêt, l\'adresse, le contact et la note - pas encore de boutons naviguer/appeler.'},
+        {icon:'route', t:'Progression', d:'Un simple compteur, par exemple "3 sur 10", et un aperçu du prochain arrêt.'}
+      ]},
+    {tag:'Paramètres · Journée', title:'Activer votre journée (Driving Day)', desc:'Avant de partir, activez votre journée pour que la succursale voie votre position en direct pendant les heures de service (6h-18h).',
+      rows:[
+        {icon:'pin', t:'Demande la permission de localisation', d:"Le téléphone vous le demandera séparément ; si vous refusez, vous pouvez quand même travailler, simplement sans point en direct sur la carte du manager."},
+        {icon:'clock', t:'Désactiver en fin de service', d:'"Off" coupe immédiatement le partage de position - une confirmation vous est demandée si elle est encore active.'}
+      ]},
+    {tag:"Écran · Aujourd'hui", title:'Effectuer un arrêt', desc:'Trois étapes toujours identiques, quel que soit le type d\'arrêt.', mock:'todayActive',
+      rows:[
+        {icon:'arrow', t:'1. Démarrer', d:'Plans (ouvre Apple/Google Maps) et Appeler deviennent disponibles.'},
+        {icon:'check', t:'2. Appuyez sur "Arrivé"', d:"Marque votre arrivée et ouvre l'écran de finalisation propre à ce type d'arrêt."},
+        {icon:'box', t:'3. Terminez selon le type', d:'Chaque type demande quelque chose de différent - voir ci-dessous.'}
+      ],
+      typeRows:[
+        {pill:'pickup', label:'Collecte', d:'Confirmez que vous avez le matériel. Aucun nom de destinataire requis.'},
+        {pill:'delivery', label:'Livraison', d:'Nom du destinataire, plus une photo ou la signature du client.'},
+        {pill:'return', label:'Retour', d:'Confirmez simplement votre arrivée à la succursale. Aucun numéro de commande.'}
+      ]},
+    {tag:"Écran · Aujourd'hui", title:'Quand quelque chose ne va pas : Incident', desc:"Si le client est absent, l'adresse est erronée ou la marchandise est endommagée, utilisez \"Incident\" plutôt que de forcer une livraison.",
+      warn:'N\'inventez jamais un nom de destinataire juste pour clôturer l\'arrêt. Le rapport d\'incident est enregistré et visible par votre manager dans l\'historique.'},
+    {tag:'Écran · Historique', title:"Consulter l'historique du jour", desc:'Onglets En attente et Terminés, avec recherche par itinéraire, client, adresse ou numéro de commande.',
+      rows:[
+        {icon:'search', t:'Rechercher', d:"Retrouvez un arrêt passé en quelques secondes sans faire défiler toute la liste."},
+        {icon:'pin2', t:'Ouvrir dans Plans', d:"Chaque carte a un bouton direct pour rouvrir l'adresse dans votre app de plans."}
+      ]},
+    {tag:'Écran · Camion', title:'Camion : carburant et entretien', desc:'Enregistrez chaque plein ou entretien directement depuis votre téléphone.',
+      rows:[
+        {icon:'truck', t:'Carburant', d:'Kilométrage, montant et une photo du reçu avec la caméra.'},
+        {icon:'wrench', t:'Entretien', d:'Choisissez un type (huile, pneus, freins, inspection ou autre) et ajoutez le kilométrage et le coût.'}
+      ]},
+    {tag:'Écran · Paramètres', title:'Paramètres', desc:'Accessible en appuyant sur "Plus" dans la barre du bas.', mock:'settingsDriver',
+      rows:[
+        {icon:'house', t:'Espace de travail', d:'Voyez votre entreprise et votre succursale assignées - utile si votre entreprise a plusieurs succursales.'},
+        {icon:'bell', t:'Notifications', d:'"Off" annule désormais réellement les alertes sur cet appareil, pas seulement à l\'écran.'},
+        {icon:'shield', t:"Contacter l'assistance", d:"Écrivez directement à l'équipe RouteHub sans quitter l'app."},
+        {icon:'logout', t:'Se déconnecter', d:'Visible directement dans Paramètres, avec une confirmation avant de quitter.'}
+      ]}
+  ],
+  faq:[
+    {who:'both', q:"L'app ne charge pas ou reste blanche", a:"Fermez complètement l'app et rouvrez-la. Si le problème persiste, vérifiez votre connexion - RouteHub ne réessaie qu'une fois le signal retrouvé, et a besoin d'une brève connexion pour charger vos itinéraires."},
+    {who:'both', q:"À qui écrire si quelque chose ne fonctionne pas ?", a:'Paramètres → Assistance → "Contacter l\'assistance". Votre message part directement à l\'équipe RouteHub. Pour un changement de compte, de camion ou de succursale, contactez d\'abord votre manager.'},
+    {who:'driver', q:"J'ai activé Driving Day mais mon manager ne me voit pas sur la carte", a:"Vérifiez que vous avez aussi accepté la permission de localisation du téléphone - ce sont deux permissions distinctes. Sans elle, l'app fonctionne mais ne peut pas envoyer votre point en direct."},
+    {who:'manager', q:"J'ai invité quelqu'un mais l'e-mail n'est jamais arrivé", a:'Depuis Admin → Entreprises → "Renvoyer l\'e-mail", vous pouvez voir le code d\'activation à 6 chiffres directement à l\'écran et le transmettre autrement (message, en personne), sans dépendre de la livraison de l\'e-mail.'},
+    {who:'driver', q:"Puis-je changer la langue de l'app ?", a:'Oui - Paramètres propose Español, English et Français. Le changement est immédiat et enregistré sur votre appareil.'},
+    {who:'both', q:'Les données de ma succursale se mélangent-elles avec les autres succursales de la même entreprise ?', a:'Non. Entreprise et succursale sont distinctes : si votre entreprise a plusieurs succursales, chacune ne voit que ses propres itinéraires, contacts et équipe.'}
+  ]
+};
+
+/* ============================================================
+   Rendering
+============================================================ */
+var state = {role:'manager', lang:'es'};
+
+function rowHtml(row){
+  return '<div class="row">'+svg(row.icon)+'<div><div class="t">'+row.t+'</div><div class="d">'+row.d+'</div></div></div>';
+}
+
+function stepHtml(step, i, L){
+  var body = '<div class="rows">' + (step.rows||[]).map(rowHtml).join('') + '</div>';
+  if (step.typeRows){
+    body += '<div class="card" style="margin-top:12px"><div class="rows">' + step.typeRows.map(function(r){
+      return '<div class="row"><span class="pill '+r.pill+'">'+r.label+'</span><div class="d" style="margin-top:0">'+r.d+'</div></div>';
+    }).join('') + '</div></div>';
+  }
+  var card = '<div class="card">' + body + '</div>';
+  var stepBody = step.mock
+    ? '<div class="stepBody withShot">' + card + MOCK[step.mock](L.mk) + '</div>'
+    : '<div class="stepBody">' + card + '</div>';
+  var extras = '';
+  if (step.pills) extras += '<p class="pillGroup"><span class="pill pickup">'+step.pills[0]+'</span><span class="pill delivery">'+step.pills[1]+'</span><span class="pill return">'+step.pills[2]+'</span></p>';
+  if (step.pillsPlain) extras += '<div class="card" style="margin-top:12px"><p class="pillGroup" style="margin-top:0">' + step.pillsPlain.map(function(p){return '<span class="pill">'+p+'</span>'}).join('') + '</p>' + (step.note?'<p class="d" style="margin-top:10px">'+step.note+'</p>':'') + '</div>';
+  if (step.tip) extras += '<div class="tip">'+svgSm('star')+'<span>'+step.tip+'</span></div>';
+  if (step.warn) extras += '<div class="warnBox">'+svgSm('warn')+'<span>'+step.warn+'</span></div>';
+  return '<section class="step" id="step-'+i+'">'+
+    '<div class="marker">'+(i+1)+'</div>'+
+    '<span class="screenTag">'+step.tag+'</span>'+
+    '<h2>'+step.title+'</h2>'+
+    '<p class="desc">'+step.desc+'</p>'+
+    stepBody + extras +
+    '</section>';
+}
+
+function render(){
+  var L = CONTENT[state.lang];
+  document.documentElement.lang = state.lang;
+  document.getElementById('txt-title').textContent = L.title;
+  document.getElementById('txt-lead').textContent = L.lead;
+  document.getElementById('txt-meta1').textContent = L.meta1;
+  document.getElementById('txt-meta2').textContent = L.meta2;
+  document.getElementById('tab-manager').textContent = L.tabManager;
+  document.getElementById('tab-driver').textContent = L.tabDriver;
+  document.getElementById('tab-manager').setAttribute('aria-pressed', state.role === 'manager');
+  document.getElementById('tab-driver').setAttribute('aria-pressed', state.role === 'driver');
+  document.querySelectorAll('#langSwitch button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.lang === state.lang); });
+  document.getElementById('faq-title').textContent = L.faqTitle;
+  document.getElementById('faq-sub').textContent = L.faqSub;
+  document.getElementById('footer-text').innerHTML = L.footer;
+
+  var steps = L[state.role];
+  var pane = document.getElementById('pane-content');
+  pane.innerHTML = steps.map(function(s,i){ return stepHtml(s, i, L); }).join('');
+
+  var toc = document.getElementById('toc');
+  toc.innerHTML = steps.map(function(s,i){ return '<a href="#step-'+i+'">'+s.title+'</a>'; }).join('') +
+    '<a href="#" id="toc-faq">'+L.faqTitle+'</a>';
+  document.getElementById('toc-faq').onclick = function(e){ e.preventDefault(); document.querySelector('.faq').scrollIntoView({behavior:'smooth'}); };
+
+  var chevron = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
+  var faqGrid = document.getElementById('faq-grid');
+  faqGrid.innerHTML = L.faq.map(function(item){
+    return '<details class="q"><summary><span><span class="who">'+L.faqLabels[item.who]+'</span>'+item.q+'</span>'+chevron+'</summary><p class="a">'+item.a+'</p></details>';
+  }).join('');
+
+  setupScrollSpy();
+  try{ localStorage.setItem('routehub-guide-role', state.role); localStorage.setItem('routehub-guide-lang', state.lang); }catch(e){}
+}
+
+function setRole(role){ state.role = role; render(); window.scrollTo({top:0}); }
+function setLang(lang){ state.lang = lang; render(); }
+
+var spyObserver = null;
+function setupScrollSpy(){
+  if (spyObserver) spyObserver.disconnect();
+  var links = document.getElementById('toc').querySelectorAll('a');
+  spyObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      links.forEach(function(l){ l.classList.remove('tocActive'); });
+      var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
+      if (link) link.classList.add('tocActive');
+    });
+  }, {rootMargin: '-20% 0px -70% 0px'});
+  document.querySelectorAll('#pane-content .step').forEach(function(step){ spyObserver.observe(step); });
+}
+
+(function init(){
+  try{
+    state.role = localStorage.getItem('routehub-guide-role') || 'manager';
+    state.lang = localStorage.getItem('routehub-guide-lang') || 'es';
+  }catch(e){}
+  render();
+})();
+</script>
+</body>
+</html>
