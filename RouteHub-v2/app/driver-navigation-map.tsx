@@ -8,6 +8,7 @@ import {calculateRoute,distanceMeters} from '../lib/maps/routing'
 import {clusterCoordinates,sanitizeCoordinate} from '../lib/maps/coordinates'
 import type {RouteEstimate} from '../lib/maps/types'
 import {distanceFromNavigationPath,usableNavigationFix,projectNavigationPosition,navigationManeuver,navigationRemainingSeconds,type NavigationProgress} from '../lib/maps/navigation-progress'
+import {reportAppError} from '../lib/error-reporting'
 import styles from './driver-navigation.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -51,7 +52,18 @@ export default function DriverNavigationMap({
   const [deviceLocation,setDeviceLocation]=useState<GpsFix|null>(null)
   const [loading,setLoading]=useState(true)
   const [arriving,setArriving]=useState(false)
-  const [voiceEnabled,setVoiceEnabled]=useState(false)
+  // Persisted per device instead of resetting to off every time navigation
+  // opens - a driver who turns voice guidance on once should not have to
+  // find and tap it again on every single stop.
+  const [voiceEnabled,setVoiceEnabled]=useState(()=>{
+    if(typeof window==='undefined')return false
+    try{return window.localStorage.getItem('routehub:nav-voice')==='on'}catch{return false}
+  })
+  const toggleVoice=()=>setVoiceEnabled(current=>{
+    const next=!current
+    try{window.localStorage.setItem('routehub:nav-voice',next?'on':'off')}catch{}
+    return next
+  })
   const [followToken,setFollowToken]=useState(0)
   const watchRef=useRef<number|null>(null)
   const wakeLock=useRef<{release?:()=>Promise<void>}|null>(null)
@@ -129,7 +141,13 @@ export default function DriverNavigationMap({
         // Preserve road geometry including repeated vertices at loops/U-turns.
         setLine(estimate.source==='google'?estimate.coordinates:[])
       }
-    }).catch(()=>{if(!cancelled){setPoints([]);setLine([]);setEstimate(null);setLoading(false);setRouting(false)}})
+    }).catch(routingError=>{
+      if(cancelled)return
+      setPoints([]);setLine([]);setEstimate(null);setLoading(false);setRouting(false)
+      // Used to fail completely silently - a driver stuck with no route line
+      // had no way to tell anyone beyond describing it after the fact.
+      void reportAppError({action:'navigation_routing_failed',error:routingError,routeId:validStops[0]?.id})
+    })
     return()=>{cancelled=true}
   },[routeKey,sharedLocationKey,locale,rerouteToken])
 
@@ -331,7 +349,7 @@ export default function DriverNavigationMap({
       <aside className={styles.guidance} aria-live="polite">
         <div className={styles.maneuver}><ManeuverIcon size={30}/><b>{canGuide&&nextManeuver?(nextManeuver.distanceToManeuverMeters<15?labels.now:formatDistance(nextManeuver.distanceToManeuverMeters)):'GPS'}</b></div>
         <div className={styles.instruction}><strong>{instruction}</strong><span>{!gpsReady?(gpsMessage==='permission'?labels.permission:labels.gpsHint):validStops[0]?.label||validStops[0]?.address}</span></div>
-        <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={()=>setVoiceEnabled(current=>!current)}>{voiceEnabled?<Volume2 size={22}/>:<VolumeX size={22}/>}</button>
+        <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={22}/>:<VolumeX size={22}/>}</button>
       </aside>
       <div className={styles.mapArea}>
         <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={canGuide&&nextManeuver&&nextManeuver.distanceToManeuverMeters<150?18:17.5}/>

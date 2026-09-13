@@ -6,18 +6,23 @@ import {useRouter} from 'next/navigation'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../lib/use-preferences'
 import {markArrived} from '../../../lib/driver-v3/actions'
+import {reportAppError} from '../../../lib/error-reporting'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 
 const DriverRouteNavigation = dynamic(() => import('../../driver-route-navigation'), {ssr: false})
 
-class NavigationBoundary extends Component<{children: ReactNode; fallback: ReactNode}, {failed: boolean}> {
+class NavigationBoundary extends Component<{children: ReactNode; fallback: ReactNode; routeId?: string}, {failed: boolean}> {
   state = {failed: false}
   static getDerivedStateFromError() { return {failed: true} }
+  // A render crash here used to just fall back to the plain-link view with
+  // nothing recorded anywhere - Admin > Errors is now the way this actually
+  // reaches anyone instead of a driver having to describe it secondhand.
+  componentDidCatch(renderError: Error) { void reportAppError({action: 'navigation_render_crashed', error: renderError, routeId: this.props.routeId}) }
   render() { return this.state.failed ? this.props.fallback : this.props.children }
 }
 
 export default function DriverV3Map() {
-  const {loading, error, snapshot, driverId, refresh, drivingSession, liveFix} = useDriverData()
+  const {loading, error, snapshot, driverId, companyId, refresh, drivingSession, liveFix} = useDriverData()
   const {t, locale} = useLocale()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -51,6 +56,7 @@ export default function DriverV3Map() {
       router.push(`/driver?complete=${completionKind}&route=${encodeURIComponent(String(route.id))}`)
     } catch (e) {
       setMessage(e instanceof Error ? e.message : t.drvOpFailed)
+      void reportAppError({action: 'navigation_arrival_failed', error: e, companyId: route.company_id || companyId, routeId: route.id})
     } finally {
       setBusy(false)
     }
@@ -64,7 +70,7 @@ export default function DriverV3Map() {
       ) : error ? (
         <div className="driver-navigation-state" role="alert">{error}</div>
       ) : route ? (
-        <NavigationBoundary fallback={<NavigationFallback route={route} onBack={() => router.push('/driver')} onRetry={() => window.location.reload()} t={t} />}>
+        <NavigationBoundary routeId={route.id} fallback={<NavigationFallback route={route} onBack={() => router.push('/driver')} onRetry={() => window.location.reload()} t={t} />}>
           <DriverRouteNavigation
           stops={[route]}
           activeStopId={route.id}
