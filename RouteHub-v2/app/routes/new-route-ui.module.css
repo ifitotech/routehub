@@ -166,7 +166,19 @@
    flush against it. Buttons go full-width and share the row evenly -
    thumb-width targets instead of the desktop/tablet min-width. */
 @media (max-width: 640px) {
-  .inlinePanelBody{padding-bottom:calc(75px + env(safe-area-inset-bottom))}
+  /* On a phone there's no spare room to embed this form inside the
+     dashboard's own scrolling page (calendar, list/map toggle, the
+     app's own bottom nav all still on screen) the way desktop and
+     tablet can - that left only a sliver of the viewport actually
+     usable, with the last field and the Assign button both stuck half
+     off-screen. Full-screen takeover instead: covers the whole
+     viewport, sits above the app's bottom nav (z-index 20), and lays
+     out header / scrollable body / footer as three stacked flex
+     regions that together exactly fill the screen height - nothing
+     left half-visible. */
+  .inlinePanel{position:fixed;inset:0;z-index:30;height:100dvh;margin:0;background:#fff}
+  .inlinePanelHeader{padding-top:calc(14px + env(safe-area-inset-top))}
+  .inlinePanelBody{flex:1;min-height:0;padding:14px 16px calc(75px + env(safe-area-inset-bottom))}
   .formFooter{position:sticky;bottom:0;z-index:2;padding:12px 16px calc(12px + env(safe-area-inset-bottom));margin:2px -16px 0;background:#fff;box-shadow:0 -6px 16px -8px rgba(15,29,53,.12)}
   .footerActions{gap:8px}
   .footerActions .secondaryButton,.footerActions .publishButton{flex:1;min-width:0}
