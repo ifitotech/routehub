@@ -96,7 +96,14 @@ export default function Settings() {
   const saveProfile = async () => {
     if (profileSaving) return
     setProfileSaving(true)
-    const {error} = await getSupabase().auth.updateUser({data: {full_name: fullName.trim(), phone: phone.trim(), avatar_url: avatarUrl || null}})
+    const client = getSupabase()
+    const {data: authData, error} = await client.auth.updateUser({data: {full_name: fullName.trim(), phone: phone.trim(), avatar_url: avatarUrl || null}})
+    if (!error && authData.user) {
+      // auth.updateUser only touches auth.users' own metadata - public.users
+      // is the row every join elsewhere (Admin, route driver names, teammate
+      // lookups) actually reads, and it never got the same update.
+      await client.from('users').update({name: fullName.trim(), email: authData.user.email || email, phone: phone.trim()}).eq('id', authData.user.id)
+    }
     setMessage(error ? error.message : copy.profileSaved)
     if (!error) setEditingProfile(false)
     setProfileSaving(false)

@@ -1,5 +1,5 @@
 'use client'
-import {Building2, ChevronLeft, Pencil, Plus, RefreshCw, Users} from 'lucide-react'
+import {Building2, ChevronDown, ChevronLeft, ChevronUp, Eye, EyeOff, Pencil, Plus, RefreshCw, Users} from 'lucide-react'
 import Link from 'next/link'
 import {useParams} from 'next/navigation'
 import {useEffect, useState} from 'react'
@@ -13,7 +13,7 @@ import type {Role} from '../../../../lib/types'
 const roleChoices = roleLabelOptions('en')
 const roleLabelFor = (role: Role) => roleChoices.find(choice => choice.role === role)?.label || role
 
-type Member = {userId: string; role: Role; email: string; name: string | null}
+type Member = {userId: string; role: Role; email: string; name: string | null; phone: string | null; password: string | null}
 type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; is_test: boolean; invite?: {email: string; status: string} | null; members: Member[]}
 type Credential = {role: Role; email: string; password: string}
 
@@ -66,6 +66,17 @@ export default function OrganizationPage() {
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
 
+  // Branches stay collapsed to just their header until opened - a company
+  // with several branches, each with several test accounts, turned into a
+  // wall of rows otherwise.
+  const [expandedBranchId, setExpandedBranchId] = useState<string | null>(null)
+  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
+  const togglePasswordVisible = (userId: string) => setVisiblePasswords(current => {
+    const next = new Set(current)
+    if (next.has(userId)) next.delete(userId); else next.add(userId)
+    return next
+  })
+
   const load = async () => {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
@@ -73,15 +84,23 @@ export default function OrganizationPage() {
       client.from('branches').select('id,name,branch_number,address,is_test').eq('company_id', id).order('name'),
       client.from('invitations').select('branch_id,email,status,created_at').eq('company_id', id).order('created_at', {ascending: false}),
       client.from('routes').select('id', {count: 'exact', head: true}).eq('company_id', id),
-      client.from('company_users').select('user_id,branch_id,role,users(email,name)').eq('company_id', id),
+      client.from('company_users').select('user_id,branch_id,role,users(email,name,phone)').eq('company_id', id),
     ])
     const latest = new Map<string, {email: string; status: string}>()
     ;(invites || []).forEach((invite: {branch_id: string | null; email: string; status: string}) => { if (invite.branch_id && !latest.has(invite.branch_id)) latest.set(invite.branch_id, {email: invite.email, status: invite.status}) })
+    // A second query, not a join: RLS on beta_account_credentials is
+    // platform-admin-only, and it only ever has rows for accounts this
+    // Admin tooling itself created - most members won't have one.
+    const memberIds = (members || []).map((row: any) => row.user_id)
+    const {data: creds} = memberIds.length
+      ? await client.from('beta_account_credentials').select('user_id,password').in('user_id', memberIds)
+      : {data: [] as {user_id: string; password: string}[]}
+    const passwordByUser = new Map((creds || []).map((row: {user_id: string; password: string}) => [row.user_id, row.password]))
     const membersByBranch = new Map<string, Member[]>()
     ;(members || []).forEach((row: any) => {
       if (!row.branch_id) return
       const list = membersByBranch.get(row.branch_id) || []
-      list.push({userId: row.user_id, role: row.role, email: row.users?.email || '', name: row.users?.name || null})
+      list.push({userId: row.user_id, role: row.role, email: row.users?.email || '', name: row.users?.name || null, phone: row.users?.phone || null, password: passwordByUser.get(row.user_id) || null})
       membersByBranch.set(row.branch_id, list)
     })
     setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null; is_test: boolean}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
@@ -280,6 +299,7 @@ export default function OrganizationPage() {
 
       {branches.map(branch => {
         const pending = branch.invite && branch.invite.status === 'pending'
+        const expanded = expandedBranchId === branch.id
         return (
           <article className={styles.branchCard} key={branch.id}>
             <div className={styles.branchHead}>
@@ -287,77 +307,90 @@ export default function OrganizationPage() {
               <div className={styles.identity}>
                 <h2 style={{whiteSpace: 'normal'}}>{branch.name}</h2>
                 <p>Branch {branch.branch_number || '—'} · {branch.address || 'No address'}</p>
-                <p>{branch.invite ? `${pending ? 'Invitation pending' : `Invitation ${branch.invite.status}`} · ${branch.invite.email}` : 'No manager invitation yet'}</p>
+                <p>{branch.invite ? `${pending ? 'Invitation pending' : `Invitation ${branch.invite.status}`} · ${branch.invite.email}` : 'No manager invitation yet'} · Team {branch.members.length}</p>
               </div>
               <div className={styles.rowAside}>
                 <span className={styles.badge} data-status={branch.is_test ? 'Trial' : 'Active'}>{branch.is_test ? 'Test' : 'Real'}</span>
                 <span className={styles.badge} data-status={pending ? 'Pending' : 'Active'}>{pending ? 'Pending' : 'Active'}</span>
                 <button className={styles.secondaryButton} onClick={() => startEditBranch(branch)}><Pencil size={15}/> Edit</button>
                 {pending && <button className={styles.secondaryButton} disabled={resending === branch.id} onClick={() => void resendInvite(branch)}><RefreshCw size={15}/>{resending === branch.id ? 'Sending…' : 'Resend email'}</button>}
+                <button className={styles.secondaryButton} onClick={() => setExpandedBranchId(expanded ? null : branch.id)} aria-label={expanded ? 'Collapse' : 'Expand'}>
+                  {expanded ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                </button>
               </div>
             </div>
 
-            <hr className={styles.branchDivider}/>
+            {expanded && (
+              <>
+                <hr className={styles.branchDivider}/>
 
-            <p className={styles.eyebrow} style={{marginBottom: 8}}>Team · {branch.members.length}</p>
-            {branch.members.length > 0 ? (
-              <div className={styles.memberList}>
-                {branch.members.map(member => (
-                  <div className={styles.memberRow} key={member.userId}>
-                    <span className={styles.role}>{roleLabelFor(member.role)}</span>
-                    <span className={styles.who}>{member.name || member.email || 'Unknown'}</span>
-                    <button
-                      type="button"
-                      className={styles.dangerButton}
-                      style={{marginLeft: 'auto', minHeight: 30, padding: '0 10px', fontSize: '.72rem'}}
-                      disabled={removingId === member.userId}
-                      onClick={() => void removeMember(member)}
-                    >
-                      {removingId === member.userId ? 'Removing…' : confirmRemoveId === member.userId ? 'Confirm remove?' : 'Remove'}
-                    </button>
+                <p className={styles.eyebrow} style={{marginBottom: 8}}>Team · {branch.members.length}</p>
+                {branch.members.length > 0 ? (
+                  <div className={styles.memberList}>
+                    {branch.members.map(member => (
+                      <div className={styles.memberRow} key={member.userId} style={{flexWrap: 'wrap'}}>
+                        <span className={styles.role}>{roleLabelFor(member.role)}</span>
+                        <span className={styles.who}>{member.name || member.email || 'Unknown'}</span>
+                        {member.phone && <span style={{color: 'var(--muted)', fontSize: '.78rem'}}>{member.phone}</span>}
+                        {member.password && (
+                          <button type="button" className={styles.secondaryButton} style={{minHeight: 28, padding: '0 9px', fontSize: '.72rem'}} onClick={() => togglePasswordVisible(member.userId)}>
+                            {visiblePasswords.has(member.userId) ? <><EyeOff size={13}/> {member.password}</> : <><Eye size={13}/> Password</>}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className={styles.dangerButton}
+                          style={{marginLeft: 'auto', minHeight: 30, padding: '0 10px', fontSize: '.72rem'}}
+                          disabled={removingId === member.userId}
+                          onClick={() => void removeMember(member)}
+                        >
+                          {removingId === member.userId ? 'Removing…' : confirmRemoveId === member.userId ? 'Confirm remove?' : 'Remove'}
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.subtitle} style={{margin: 0}}>No members in this branch yet.</p>
-            )}
+                ) : (
+                  <p className={styles.subtitle} style={{margin: 0}}>No members in this branch yet.</p>
+                )}
 
-            <div className={styles.branchActions}>
-              <button className={styles.secondaryButton} onClick={() => openAddLogin(branch)}><Users size={15}/> {addLoginBranchId === branch.id ? 'Close' : 'Add login'}</button>
-              <button className={styles.secondaryButton} disabled={bulkBusyBranchId === branch.id} onClick={() => void createFullTeam(branch)}>{bulkBusyBranchId === branch.id ? 'Creating team…' : 'Create full test team'}</button>
-            </div>
-
-            {addLoginBranchId === branch.id && (
-              <div className={styles.inlineForm}>
-                <label className={styles.field}>Role
-                  <select value={addLoginRole} onChange={e => setAddLoginRole(e.target.value as Role)}>
-                    {roleChoices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}
-                  </select>
-                </label>
-                <label className={styles.field}>Email
-                  <input type="email" value={addLoginEmail} onChange={e => {setAddLoginEmail(e.target.value); setAddLoginEmailTouched(true)}} placeholder="name@routehub.local"/>
-                </label>
-                <label className={styles.field}>Password
-                  <input type="text" value={addLoginPassword} onChange={e => setAddLoginPassword(e.target.value)}/>
-                </label>
-                <div style={{display: 'flex', alignItems: 'flex-end'}}>
-                  <button className={styles.primaryButton} style={{width: '100%'}} disabled={addLoginBusy || !addLoginEmail.trim() || !addLoginPassword} onClick={() => void submitAddLogin()}>{addLoginBusy ? 'Creating…' : 'Create login'}</button>
+                <div className={styles.branchActions}>
+                  <button className={styles.secondaryButton} onClick={() => openAddLogin(branch)}><Users size={15}/> {addLoginBranchId === branch.id ? 'Close' : 'Add login'}</button>
+                  <button className={styles.secondaryButton} disabled={bulkBusyBranchId === branch.id} onClick={() => void createFullTeam(branch)}>{bulkBusyBranchId === branch.id ? 'Creating team…' : 'Create full test team'}</button>
                 </div>
-              </div>
-            )}
 
-            {addLoginResult && addLoginResult.branchId === branch.id && (
-              <div className={styles.credTable}>
-                <div className={styles.credRow}><span className={styles.role}>Ready</span><span className={styles.cred}>{addLoginResult.email} · {addLoginResult.password}</span></div>
-              </div>
-            )}
+                {addLoginBranchId === branch.id && (
+                  <div className={styles.inlineForm}>
+                    <label className={styles.field}>Role
+                      <select value={addLoginRole} onChange={e => setAddLoginRole(e.target.value as Role)}>
+                        {roleChoices.map(choice => <option key={choice.role} value={choice.role}>{choice.label}</option>)}
+                      </select>
+                    </label>
+                    <label className={styles.field}>Email
+                      <input type="email" value={addLoginEmail} onChange={e => {setAddLoginEmail(e.target.value); setAddLoginEmailTouched(true)}} placeholder="name@routehub.local"/>
+                    </label>
+                    <label className={styles.field}>Password
+                      <input type="text" value={addLoginPassword} onChange={e => setAddLoginPassword(e.target.value)}/>
+                    </label>
+                    <div style={{display: 'flex', alignItems: 'flex-end'}}>
+                      <button className={styles.primaryButton} style={{width: '100%'}} disabled={addLoginBusy || !addLoginEmail.trim() || !addLoginPassword} onClick={() => void submitAddLogin()}>{addLoginBusy ? 'Creating…' : 'Create login'}</button>
+                    </div>
+                  </div>
+                )}
 
-            {bulkResult && bulkResult.branchId === branch.id && (
-              <div className={styles.credTable}>
-                {bulkResult.credentials.map(cred => (
-                  <div className={styles.credRow} key={cred.role}><span className={styles.role}>{roleLabelFor(cred.role)}</span><span className={styles.cred}>{cred.email} · {cred.password}</span></div>
-                ))}
-              </div>
+                {addLoginResult && addLoginResult.branchId === branch.id && (
+                  <div className={styles.credTable}>
+                    <div className={styles.credRow}><span className={styles.role}>Ready</span><span className={styles.cred}>{addLoginResult.email} · {addLoginResult.password}</span></div>
+                  </div>
+                )}
+
+                {bulkResult && bulkResult.branchId === branch.id && (
+                  <div className={styles.credTable}>
+                    {bulkResult.credentials.map(cred => (
+                      <div className={styles.credRow} key={cred.role}><span className={styles.role}>{roleLabelFor(cred.role)}</span><span className={styles.cred}>{cred.email} · {cred.password}</span></div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </article>
         )

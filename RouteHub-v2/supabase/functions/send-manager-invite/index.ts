@@ -91,6 +91,10 @@ Deno.serve(async (request) => {
       if (profileError) throw profileError
       const {error: membershipError} = await service.from('company_users').upsert({company_id: companyId, branch_id: branchId, user_id: account.id, role}, {onConflict: 'company_id,user_id'})
       if (membershipError) throw membershipError
+      // Kept only so the CEO can look this password back up later - never
+      // for a password the tester sets themselves from their own Settings,
+      // since that never comes through this action at all.
+      await service.from('beta_account_credentials').upsert({user_id: account.id, password, updated_at: new Date().toISOString()}, {onConflict: 'user_id'})
       await service.from('platform_audit_events').insert({actor_id: callerData.user.id, action: 'beta_account_created', entity_type: 'company_users', entity_id: account.id, metadata: {email, company_id: companyId, branch_id: branchId, role}})
       return json({ok: true, email, user_id: account.id})
     }
@@ -111,6 +115,8 @@ Deno.serve(async (request) => {
       const {data: account} = await service.auth.admin.getUserById(userId)
       if (account?.user?.email?.toLowerCase() !== email) return json({error: 'Email does not match this account - refusing to delete.'}, 400)
       await service.from('company_users').delete().eq('user_id', userId)
+      await service.from('beta_account_credentials').delete().eq('user_id', userId)
+      await service.from('users').delete().eq('id', userId)
       const {error} = await service.auth.admin.deleteUser(userId)
       if (error) throw error
       await service.from('platform_audit_events').insert({actor_id: callerData.user.id, action: 'beta_account_deleted', entity_type: 'company_users', entity_id: userId, metadata: {email}})

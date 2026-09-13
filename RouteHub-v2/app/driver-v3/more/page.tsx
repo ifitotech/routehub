@@ -35,7 +35,7 @@ export default function DriverProfile() {
     const client = getSupabase()
     const {data: authData, error} = await client.auth.updateUser({data: {full_name: fullName.trim(), phone: phone.trim()}})
     if (!error && authData.user) {
-      await client.from('users').update({name: fullName.trim(), email: authData.user.email || email}).eq('id', authData.user.id)
+      await client.from('users').update({name: fullName.trim(), email: authData.user.email || email, phone: phone.trim()}).eq('id', authData.user.id)
     }
     setProfileMsg(error?.message || t.drvSaveProfile)
     if (!error) setEditing(false)
