@@ -18,6 +18,7 @@ export default function Team() {
   const [invitations, setInvitations] = useState<Invite[]>([])
   const [message, setMessage] = useState('')
   const [company, setCompany] = useState('')
+  const [branch, setBranch] = useState<string | null>(null)
   const [pendingRemoval, setPendingRemoval] = useState<Member | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -37,9 +38,12 @@ export default function Team() {
       const {data: membership} = await supabase.from('company_users').select('company_id,branch_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
       if (!membership) throw new Error(t.noMembership)
       setCompany(membership.company_id)
+      setBranch(membership.branch_id)
+      // Scoped to this manager's own branch, not the whole company - each
+      // branch runs its own team and logins, even when they share a company.
       const [{data, error}, {data: inviteRows, error: inviteError}] = await Promise.all([
-        supabase.from('company_users').select('user_id,role,branch_id,users(email,name)').eq('company_id', membership.company_id),
-        supabase.from('invitations').select('id,email,role,status,created_at').eq('company_id', membership.company_id).order('created_at', {ascending: false}),
+        supabase.from('company_users').select('user_id,role,branch_id,users(email,name)').eq('company_id', membership.company_id).eq('branch_id', membership.branch_id),
+        supabase.from('invitations').select('id,email,role,status,created_at').eq('company_id', membership.company_id).eq('branch_id', membership.branch_id).order('created_at', {ascending: false}),
       ])
       if (error) throw error
       if (inviteError) throw inviteError
@@ -50,12 +54,12 @@ export default function Team() {
   }, [t.loadingTeam, t.signInTeam, t.noMembership, t.unableLoadTeam])
   useEffect(() => { void load() }, [load])
   const updateRole = async (userId: string, role: string) => {
-    const {error} = await getSupabase().from('company_users').update({role}).eq('company_id', company).eq('user_id', userId)
+    const {error} = await getSupabase().from('company_users').update({role}).eq('company_id', company).eq('branch_id', branch || '').eq('user_id', userId)
     setMessage(error ? error.message : t.roleUpdated); if (!error) await load()
   }
   const remove = async () => {
     if (!pendingRemoval) return
-    const {error} = await getSupabase().from('company_users').delete().eq('company_id', company).eq('user_id', pendingRemoval.user_id)
+    const {error} = await getSupabase().from('company_users').delete().eq('company_id', company).eq('branch_id', branch || '').eq('user_id', pendingRemoval.user_id)
     setMessage(error ? error.message : t.memberRemoved)
     if (!error) { setPendingRemoval(null); await load() }
   }
@@ -108,8 +112,8 @@ export default function Team() {
       // unrestricted so it can test multiple drivers before paid plans ship.
       if (inviteRole === 'driver' && userData.user.email?.toLowerCase() !== 'manager.test@routehub.local') {
         const [{data: driverMembersRows}, {data: pendingInvites}, {data: companyRow}] = await Promise.all([
-          supabase.from('company_users').select('user_id').eq('company_id', company).eq('role', 'driver'),
-          supabase.from('invitations').select('id').eq('company_id', company).eq('role', 'driver').eq('status', 'pending'),
+          supabase.from('company_users').select('user_id').eq('company_id', company).eq('branch_id', branch || '').eq('role', 'driver'),
+          supabase.from('invitations').select('id').eq('company_id', company).eq('branch_id', branch || '').eq('role', 'driver').eq('status', 'pending'),
           supabase.from('companies').select('max_drivers').eq('id', company).maybeSingle(),
         ])
         const maxDrivers = Math.max(1, Number(companyRow?.max_drivers) || 1)
