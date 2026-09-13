@@ -1,15 +1,27 @@
 'use client'
 
-import {Building2, Plus} from 'lucide-react'
+import {Building2, FlaskConical, Plus} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
 import Link from 'next/link'
 import AdminShell from '../admin-shell'
 import styles from '../admin.module.css'
 
-type Company = {id: string; name: string; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number}
+type Company = {id: string; name: string; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number; isBeta: boolean}
 
 const seed: Company[] = []
+
+function slugify(value: string) {
+  return value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'company'
+}
+
+function randomPassword() {
+  // Readable-enough to copy by hand, random enough not to matter that it's a
+  // beta account - the tester can change it from Settings right after.
+  const bytes = new Uint8Array(9)
+  crypto.getRandomValues(bytes)
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, '').slice(0, 12)
+}
 
 // One real query instead of a fixed "Active"/"0 members" on every row -
 // subscription_status already exists on companies, and a per-company
@@ -18,10 +30,14 @@ async function loadCompanies(): Promise<Company[]> {
   const client = getSupabase()
   const [{data: rows}, {data: memberships}] = await Promise.all([
     client.from('companies').select('id,name,default_branch_name,branch_manager_name,subscription_status').order('name'),
-    client.from('company_users').select('company_id'),
+    client.from('company_users').select('company_id,users(email)'),
   ])
   const memberCounts = new Map<string, number>()
-  ;(memberships || []).forEach((row: {company_id: string}) => memberCounts.set(row.company_id, (memberCounts.get(row.company_id) || 0) + 1))
+  const betaCompanies = new Set<string>()
+  ;(memberships || []).forEach((row: any) => {
+    memberCounts.set(row.company_id, (memberCounts.get(row.company_id) || 0) + 1)
+    if (String(row.users?.email || '').toLowerCase().endsWith('@routehub.local')) betaCompanies.add(row.company_id)
+  })
   return (rows || []).map((company: any) => ({
     id: company.id,
     name: company.name,
@@ -29,6 +45,7 @@ async function loadCompanies(): Promise<Company[]> {
     manager: company.branch_manager_name || 'Not assigned',
     status: company.subscription_status === 'active' ? 'Active' : company.subscription_status === 'paused' || company.subscription_status === 'cancelled' ? 'Paused' : 'Trial',
     users: memberCounts.get(company.id) || 0,
+    isBeta: betaCompanies.has(company.id),
   }))
 }
 
@@ -40,14 +57,54 @@ export default function Companies() {
   const [branchForm, setBranchForm] = useState({name: '', number: '', address: '', email: ''})
   const [branchMessage, setBranchMessage] = useState('')
   const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
+  const [betaMode, setBetaMode] = useState(false)
+  const [betaBusy, setBetaBusy] = useState(false)
+  const [betaResult, setBetaResult] = useState<{email: string; password: string} | null>(null)
+  const [betaError, setBetaError] = useState('')
 
   useEffect(() => { void loadCompanies().then(setCompanies) }, [])
 
   const save = async () => {
     if (!form.name.trim()) return
-    const {error} = editing
-      ? await getSupabase().rpc('platform_update_company', {company_id: editing.id, company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null})
-      : await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, manager_email: form.email.trim() || null})
+    if (editing) {
+      const {error} = await getSupabase().rpc('platform_update_company', {company_id: editing.id, company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null})
+      if (error) return
+      setForm({name: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
+      setCompanies(await loadCompanies())
+      return
+    }
+    if (betaMode) {
+      setBetaBusy(true); setBetaError(''); setBetaResult(null)
+      try {
+        const client = getSupabase()
+        // platform_create_company makes the company and its first branch in
+        // one call - a beta company never gets a real manager_email here, so
+        // no stale "invitation pending" row is left behind once the account
+        // below is created directly.
+        const {data: companyId, error: createError} = await client.rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: null, manager_email: null})
+        if (createError) throw createError
+        const {data: branchRow, error: branchError} = await client.from('branches').select('id').eq('company_id', companyId).order('created_at', {ascending: false}).limit(1).maybeSingle()
+        if (branchError) throw branchError
+        if (!branchRow) throw new Error('Branch was not created.')
+        const email = `${slugify(form.name)}-${slugify(form.branch || 'main')}@routehub.local`
+        const password = randomPassword()
+        const result = await client.functions.invoke('send-manager-invite', {
+          body: {action: 'create_beta_account', companyId, branchId: branchRow.id, email, password, role: 'branch_manager'},
+        })
+        let detail = result.error?.message || ''
+        if (result.error && 'context' in result.error) { try { detail = ((await (result.error as {context: Response}).context.json()) as {error?: string}).error || detail } catch {} }
+        if (result.error) throw new Error(detail)
+        setBetaResult({email, password})
+        setForm({name: '', branch: '', manager: '', email: ''})
+        setCompanies(await loadCompanies())
+      } catch (error) {
+        setBetaError(error instanceof Error ? error.message : 'Unable to create the beta tester.')
+      } finally {
+        setBetaBusy(false)
+      }
+      return
+    }
+    const {error} = await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, manager_email: form.email.trim() || null})
     if (error) return
     setForm({name: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
     setCompanies(await loadCompanies())
@@ -68,20 +125,42 @@ export default function Companies() {
 
       {viewing && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>{viewing.name}</h2><p>Organization overview</p></div><button className={styles.secondaryButton} onClick={() => setViewing(null)}>Close</button></header><p className={styles.subtitle}>Default branch: {viewing.branch} · Manager: {viewing.manager}</p><h3>Add branch</h3><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={branchForm.name} onChange={event => setBranchForm({...branchForm, name: event.target.value})}/></label><label className={styles.field}>Branch number<input placeholder="Branch number" value={branchForm.number} onChange={event => setBranchForm({...branchForm, number: event.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street, Miami Gardens" value={branchForm.address} onChange={event => setBranchForm({...branchForm, address: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={branchForm.email} onChange={event => setBranchForm({...branchForm, email: event.target.value})}/></label><button className={styles.primaryButton} disabled={!branchForm.name.trim()} onClick={() => void addBranch()}>Add branch and invite manager</button></div>{branchMessage && <p className={styles.statusMessage}>{branchMessage}</p>}<p className={styles.subtitle}>Team members: {viewing.users}</p></section>}
       {open && <section className={styles.panel}>
-        <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}><Building2 size={21}/></span></header>
+        <header className={styles.panelHeader}><div><h2>{editing ? 'Edit company' : 'New company'}</h2><p>{editing ? 'Update the organization details.' : betaMode ? 'Creates the organization, its first branch, and a ready-to-use @routehub.local manager login - no email, no activation code.' : 'Create the organization and its first branch.'}</p></div><span className={styles.panelIcon}>{betaMode ? <FlaskConical size={21}/> : <Building2 size={21}/>}</span></header>
+        {!editing && (
+          <label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+            <input type="checkbox" checked={betaMode} onChange={event => {setBetaMode(event.target.checked); setBetaResult(null); setBetaError('')}} style={{width: 18, height: 18}}/>
+            Beta tester (auto-generate an @routehub.local login instead of inviting a real manager)
+          </label>
+        )}
         <div className={styles.formGrid}>
-          <label className={styles.field}>Company name<input aria-label="Company name" placeholder="Company name" value={form.name} onChange={event => setForm({...form, name: event.target.value})}/></label>
-          <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Main branch" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label><label className={styles.field}>Branch manager<input aria-label="Branch manager" placeholder="Manager name" value={form.manager} onChange={event => setForm({...form, manager: event.target.value})}/></label><label className={styles.field}>Manager email<input type="email" aria-label="Manager email" placeholder="manager@company.com" value={form.email} onChange={event => setForm({...form, email: event.target.value})}/></label>
-          <button className={styles.primaryButton} disabled={!form.name.trim()} onClick={() => void save()}>{editing ? 'Save changes' : 'Create company'}</button>
+          <label className={styles.field}>Company name<input aria-label="Company name" placeholder="Grey Bar" value={form.name} onChange={event => setForm({...form, name: event.target.value})}/></label>
+          <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Hialeah" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label>
+          {!betaMode && <label className={styles.field}>Branch manager<input aria-label="Branch manager" placeholder="Manager name" value={form.manager} onChange={event => setForm({...form, manager: event.target.value})}/></label>}
+          {!betaMode && <label className={styles.field}>Manager email<input type="email" aria-label="Manager email" placeholder="manager@company.com" value={form.email} onChange={event => setForm({...form, email: event.target.value})}/></label>}
+          <button className={styles.primaryButton} disabled={!form.name.trim() || betaBusy} onClick={() => void save()}>{editing ? 'Save changes' : betaBusy ? 'Creating…' : betaMode ? 'Create beta tester' : 'Create company'}</button>
         </div>
+        {betaError && <p className={styles.statusMessage}>{betaError}</p>}
+        {betaResult && (
+          <div className={styles.panel} style={{marginTop: 14, background: 'var(--bg)'}}>
+            <p className={styles.subtitle}>Beta tester ready - hand these to the tester directly:</p>
+            <p><strong>Email:</strong> {betaResult.email}</p>
+            <p><strong>Password:</strong> {betaResult.password}</p>
+            <p className={styles.subtitle}>They can sign in right away at routehub-wisu.vercel.app/login and change the password from Settings.</p>
+          </div>
+        )}
       </section>}
 
       <h2 className={styles.sectionLabel}>Organizations</h2>
       <section className={styles.list} aria-label="Companies">
         {companies.map(company => <article className={styles.rowCard} key={company.id}>
-          <span className={styles.rowIcon}><Building2 size={20}/></span>
+          <span className={styles.rowIcon}>{company.isBeta ? <FlaskConical size={20}/> : <Building2 size={20}/>}</span>
           <div className={styles.identity}><h2>{company.name}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p><p>Branch manager: {company.manager}</p></div>
-          <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`}>Open organization</Link><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button></div>
+          <div className={styles.rowAside}>
+            {company.isBeta && <span className={styles.badge} data-status="Trial">BETA</span>}
+            <span className={styles.badge} data-status={company.status}>{company.status}</span>
+            <Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`}>Open organization</Link>
+            <button className={styles.secondaryButton} onClick={() => {setEditing(company); setBetaMode(false); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button>
+          </div>
         </article>)}
       </section>
   </AdminShell>

@@ -15,6 +15,10 @@ export default function DriverProfile() {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
 
   useEffect(() => {
     void getSupabase().auth.getUser().then(({data}) => {
@@ -36,6 +40,17 @@ export default function DriverProfile() {
     setProfileMsg(error?.message || t.drvSaveProfile)
     if (!error) setEditing(false)
     setSaving(false)
+  }
+
+  const changePassword = async () => {
+    if (passwordSaving) return
+    if (newPassword.length < 8) { setProfileMsg(t.drvPasswordTooShort); return }
+    if (newPassword !== confirmNewPassword) { setProfileMsg(t.drvPasswordMismatch); return }
+    setPasswordSaving(true)
+    const {error} = await getSupabase().auth.updateUser({password: newPassword})
+    setProfileMsg(error?.message || t.drvPasswordChanged)
+    if (!error) { setChangingPassword(false); setNewPassword(''); setConfirmNewPassword('') }
+    setPasswordSaving(false)
   }
 
   const signOut = async () => {
@@ -85,6 +100,23 @@ export default function DriverProfile() {
         <div className={styles.infoRow}><Phone size={18}/><span><small>{t.drvPhone}</small><strong>{phone || '—'}</strong></span></div>
       </section>}
       {editing && <button type="button" className="secondary" onClick={() => setEditing(false)}>{t.drvCancel}</button>}
+
+      <section className={styles.profileSection}>
+        <div className={styles.profileSectionHeader}>
+          <h2>{t.drvChangePassword}</h2>
+          <button type="button" className={styles.editButton} onClick={() => setChangingPassword(value => !value)}><Edit3 size={16}/>{t.drvEditProfile}</button>
+        </div>
+        {changingPassword && (
+          <div className={styles.editForm}>
+            <label>{t.drvNewPassword}<input type="password" autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} /></label>
+            <label>{t.drvConfirmNewPassword}<input type="password" autoComplete="new-password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void changePassword() }} /></label>
+            <button type="button" className="primary" disabled={passwordSaving || !newPassword || !confirmNewPassword} onClick={() => void changePassword()}>
+              {passwordSaving ? t.drvSaving : t.drvSavePassword}
+            </button>
+          </div>
+        )}
+      </section>
+
       <section className={styles.profileSection}>
         <div className={styles.profileAccount}><UserRound size={18}/><span>{locale === 'es' ? 'Cuenta del conductor' : locale === 'fr' ? 'Compte conducteur' : 'Driver account'}</span></div>
         <button

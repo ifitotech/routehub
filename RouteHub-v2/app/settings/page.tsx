@@ -29,6 +29,10 @@ export default function Settings() {
   const [branch, setBranch] = useState<BranchSettings>()
   const [driverOptions, setDriverOptions] = useState<DriverOption[]>([])
   const [editingProfile, setEditingProfile] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
   const [editingBranch, setEditingBranch] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
   const [branchSaving, setBranchSaving] = useState(false)
@@ -40,10 +44,10 @@ export default function Settings() {
   const [supportMessage, setSupportMessage] = useState('')
   const [supportSending, setSupportSending] = useState(false)
   const copy = locale === 'es'
-    ? {name:'Nombre completo', phone:'Teléfono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal', branchName:'Nombre de la sucursal', branchAddress:'Dirección de la sucursal', branchPhone:'Teléfono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', primaryDriver:'Conductor principal', primaryDriverHelp:'Se selecciona automáticamente al crear una ruta.', choosePrimaryDriver:'Sin conductor principal', primaryDriverSaved:'Conductor principal actualizado.', autoClose:'Cierre automático de jornada', autoCloseHelp:'Solo cierra si no quedan rutas pendientes.', autoCloseSaved:'Hora de cierre actualizada.', team:'Equipo e invitaciones', teamHelp:'Miembros, roles e invitaciones.', preferences:'Preferencias', language:'Idioma', notifications:'Notificaciones', app:'App', operations:'Operaciones', reportsHistory:'Reportes e historial', reportsHistoryHelp:'Conteos, actividad, días anteriores y evidencia.', legal:'Legal', privacy:'Privacidad', terms:'Términos', userGuide:'Guía de uso', userGuideHelp:'Cómo usar RouteHub, paso a paso, en tu idioma.'}
+    ? {name:'Nombre completo', phone:'Teléfono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal', branchName:'Nombre de la sucursal', branchAddress:'Dirección de la sucursal', branchPhone:'Teléfono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', primaryDriver:'Conductor principal', primaryDriverHelp:'Se selecciona automáticamente al crear una ruta.', choosePrimaryDriver:'Sin conductor principal', primaryDriverSaved:'Conductor principal actualizado.', autoClose:'Cierre automático de jornada', autoCloseHelp:'Solo cierra si no quedan rutas pendientes.', autoCloseSaved:'Hora de cierre actualizada.', team:'Equipo e invitaciones', teamHelp:'Miembros, roles e invitaciones.', preferences:'Preferencias', language:'Idioma', notifications:'Notificaciones', app:'App', operations:'Operaciones', reportsHistory:'Reportes e historial', reportsHistoryHelp:'Conteos, actividad, días anteriores y evidencia.', legal:'Legal', privacy:'Privacidad', terms:'Términos', userGuide:'Guía de uso', userGuideHelp:'Cómo usar RouteHub, paso a paso, en tu idioma.', changePassword:'Cambiar contraseña', changePasswordHelp:'Actualiza tu contraseña sin salir de la app.', newPassword:'Contraseña nueva', confirmNewPassword:'Confirmar contraseña', savePassword:'Guardar contraseña', passwordChanged:'Contraseña actualizada.', passwordTooShort:'Usa al menos 8 caracteres.', passwordMismatch:'Las contraseñas no coinciden.'}
     : locale === 'fr'
-      ? {name:'Nom complet', phone:'Téléphone', photo:'Changer la photo', edit:'Modifier', save:'Enregistrer le profil', profileSaved:'Profil mis à jour.', branch:'Succursale', branchName:'Nom de la succursale', branchAddress:'Adresse de la succursale', branchPhone:'Téléphone de la succursale', saveBranch:'Enregistrer la succursale', branchSaved:'Succursale mise à jour.', noBranch:'Aucune succursale associée.', primaryDriver:'Conducteur principal', primaryDriverHelp:'Sélectionné automatiquement lors de la création d’un itinéraire.', choosePrimaryDriver:'Aucun conducteur principal', primaryDriverSaved:'Conducteur principal mis à jour.', autoClose:'Fermeture automatique de la journée', autoCloseHelp:'Ferme uniquement si aucun itinéraire ne reste.', autoCloseSaved:'Heure de fermeture mise à jour.', team:'Équipe et invitations', teamHelp:'Membres, rôles et invitations.', preferences:'Préférences', language:'Langue', notifications:'Notifications', app:'Application', operations:'Opérations', reportsHistory:'Rapports et historique', reportsHistoryHelp:'Totaux, activité, jours passés et preuves.', legal:'Mentions', privacy:'Confidentialité', terms:'Conditions', userGuide:'Guide d’utilisation', userGuideHelp:'Comment utiliser RouteHub, étape par étape, dans votre langue.'}
-      : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.', primaryDriver:'Primary driver', primaryDriverHelp:'Automatically selected when a new route is created.', choosePrimaryDriver:'No primary driver', primaryDriverSaved:'Primary driver updated.', autoClose:'Automatic driving-day close', autoCloseHelp:'Closes only when no routes remain pending.', autoCloseSaved:'Automatic close time updated.', team:'Team & invitations', teamHelp:'Members, roles and invitations.', preferences:'Preferences', language:'Language', notifications:'Notifications', app:'App', operations:'Operations', reportsHistory:'Reports & History', reportsHistoryHelp:'Counts, activity, past days and proof.', legal:'Legal', privacy:'Privacy', terms:'Terms', userGuide:'User guide', userGuideHelp:'How to use RouteHub, step by step, in your language.'}
+      ? {name:'Nom complet', phone:'Téléphone', photo:'Changer la photo', edit:'Modifier', save:'Enregistrer le profil', profileSaved:'Profil mis à jour.', branch:'Succursale', branchName:'Nom de la succursale', branchAddress:'Adresse de la succursale', branchPhone:'Téléphone de la succursale', saveBranch:'Enregistrer la succursale', branchSaved:'Succursale mise à jour.', noBranch:'Aucune succursale associée.', primaryDriver:'Conducteur principal', primaryDriverHelp:'Sélectionné automatiquement lors de la création d’un itinéraire.', choosePrimaryDriver:'Aucun conducteur principal', primaryDriverSaved:'Conducteur principal mis à jour.', autoClose:'Fermeture automatique de la journée', autoCloseHelp:'Ferme uniquement si aucun itinéraire ne reste.', autoCloseSaved:'Heure de fermeture mise à jour.', team:'Équipe et invitations', teamHelp:'Membres, rôles et invitations.', preferences:'Préférences', language:'Langue', notifications:'Notifications', app:'Application', operations:'Opérations', reportsHistory:'Rapports et historique', reportsHistoryHelp:'Totaux, activité, jours passés et preuves.', legal:'Mentions', privacy:'Confidentialité', terms:'Conditions', userGuide:'Guide d’utilisation', userGuideHelp:'Comment utiliser RouteHub, étape par étape, dans votre langue.', changePassword:'Changer le mot de passe', changePasswordHelp:'Mettez à jour votre mot de passe sans quitter l’app.', newPassword:'Nouveau mot de passe', confirmNewPassword:'Confirmer le mot de passe', savePassword:'Enregistrer le mot de passe', passwordChanged:'Mot de passe mis à jour.', passwordTooShort:'Utilisez au moins 8 caractères.', passwordMismatch:'Les mots de passe ne correspondent pas.'}
+      : {name:'Full name', phone:'Phone number', photo:'Change photo', edit:'Edit', save:'Save profile', profileSaved:'Profile updated.', branch:'Branch', branchName:'Branch name', branchAddress:'Branch address', branchPhone:'Branch phone number', saveBranch:'Save branch', branchSaved:'Branch updated.', noBranch:'No branch assigned.', primaryDriver:'Primary driver', primaryDriverHelp:'Automatically selected when a new route is created.', choosePrimaryDriver:'No primary driver', primaryDriverSaved:'Primary driver updated.', autoClose:'Automatic driving-day close', autoCloseHelp:'Closes only when no routes remain pending.', autoCloseSaved:'Automatic close time updated.', team:'Team & invitations', teamHelp:'Members, roles and invitations.', preferences:'Preferences', language:'Language', notifications:'Notifications', app:'App', operations:'Operations', reportsHistory:'Reports & History', reportsHistoryHelp:'Counts, activity, past days and proof.', legal:'Legal', privacy:'Privacy', terms:'Terms', userGuide:'User guide', userGuideHelp:'How to use RouteHub, step by step, in your language.', changePassword:'Change password', changePasswordHelp:'Update your password without leaving the app.', newPassword:'New password', confirmNewPassword:'Confirm password', savePassword:'Save password', passwordChanged:'Password updated.', passwordTooShort:'Use at least 8 characters.', passwordMismatch:'Passwords do not match.'}
 
   useEffect(() => {
     let active = true
@@ -96,6 +100,16 @@ export default function Settings() {
     setMessage(error ? error.message : copy.profileSaved)
     if (!error) setEditingProfile(false)
     setProfileSaving(false)
+  }
+  const changePassword = async () => {
+    if (passwordSaving) return
+    if (newPassword.length < 8) { setMessage(copy.passwordTooShort); return }
+    if (newPassword !== confirmNewPassword) { setMessage(copy.passwordMismatch); return }
+    setPasswordSaving(true)
+    const {error} = await getSupabase().auth.updateUser({password: newPassword})
+    setMessage(error ? error.message : copy.passwordChanged)
+    if (!error) { setChangingPassword(false); setNewPassword(''); setConfirmNewPassword('') }
+    setPasswordSaving(false)
   }
   const choosePhoto = (file?: File) => {
     if (!file) return
@@ -179,6 +193,17 @@ export default function Settings() {
               <label>{t.signedInEmail}<input value={email} readOnly /></label>
               <label>{copy.phone}<input type="tel" value={phone} onChange={event => setPhone(event.target.value)} placeholder="(000) 000-0000" /></label>
               <button className={styles.primary} disabled={profileSaving} onClick={saveProfile}><Save size={16}/>{profileSaving ? t.saving : copy.save}</button>
+            </div>
+          )}
+          <button className={styles.row} type="button" onClick={() => setChangingPassword(value => !value)}>
+            <span className={styles.copy}><strong>{copy.changePassword}</strong><small>{copy.changePasswordHelp}</small></span>
+            <span className={styles.meta}>{copy.edit}</span>
+          </button>
+          {changingPassword && (
+            <div className={styles.editor}>
+              <label>{copy.newPassword}<input type="password" autoComplete="new-password" value={newPassword} onChange={event => setNewPassword(event.target.value)} placeholder="8+"/></label>
+              <label>{copy.confirmNewPassword}<input type="password" autoComplete="new-password" value={confirmNewPassword} onChange={event => setConfirmNewPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void changePassword() }}/></label>
+              <button className={styles.primary} disabled={passwordSaving || !newPassword || !confirmNewPassword} onClick={changePassword}>{passwordSaving ? t.saving : copy.savePassword}</button>
             </div>
           )}
         </section>
