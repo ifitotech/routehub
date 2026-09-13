@@ -26,13 +26,14 @@ export function betaAccountEmail(branch: {name: string; branch_number?: string |
   return `${slugify(branch.branch_number || branch.name)}.${roleSlug[role]}@routehub.local`
 }
 
-// CEO-set suffix shared by every generated test password - a simple,
-// memorable ending instead of a random string, since the whole point of
-// a beta login is that the CEO can read it straight off the branch card
-// and hand it to a tester without looking anything up. Change this if a
-// different number is wanted; it only affects accounts created after the
-// change, not ones that already exist.
-export const BETA_PASSWORD_SUFFIX = '0169'
+// Suffix shared by every generated test password - the current year, so
+// it's simple, memorable, and updates on its own every January instead of
+// being a number the CEO has to remember to change. Only affects accounts
+// created from here on; existing ones keep whatever password they were
+// given.
+export function betaPasswordSuffix() {
+  return String(new Date().getFullYear())
+}
 
 // Falls back to the first letter of each word in the company name (e.g.
 // "City Electric Supply" -> "ces") when the CEO hasn't set an explicit
@@ -49,5 +50,5 @@ export function companyAbbreviation(company: {name: string; abbreviation?: strin
 // Still just a starting value: the field that uses this stays editable.
 export function betaAccountPassword(company: {name: string; abbreviation?: string | null}, branch: {name: string; branch_number?: string | null}) {
   const branchPart = slugify(branch.branch_number || branch.name).replace(/-/g, '').slice(0, 6)
-  return `${companyAbbreviation(company)}${branchPart}${BETA_PASSWORD_SUFFIX}`
+  return `${companyAbbreviation(company)}${branchPart}${betaPasswordSuffix()}`
 }
