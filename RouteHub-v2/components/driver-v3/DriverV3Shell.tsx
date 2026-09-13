@@ -76,7 +76,11 @@ export default function DriverV3Shell({
           <Home />
           <span>{t.drvToday}</span>
         </Link>
-        <Link className={active === 'history' || active === 'route' ? styles.active : ''} href="/driver/history">
+        {/* "route" screens (completion summary, POD/notes) are only ever
+            reached from Today finishing an active route - History's own
+            completed cards just open external maps, they never link here -
+            so only Today should light up, not both tabs at once. */}
+        <Link className={active === 'history' ? styles.active : ''} href="/driver/history">
           <History />
           <span>{t.routes || 'Routes'}</span>
         </Link>
