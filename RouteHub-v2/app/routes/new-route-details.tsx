@@ -79,15 +79,18 @@ export default function NewRouteDetails(p: any) {
                   </div>
                 )}
                 {destinationSource === 'contact' && destinationSuggestions.length > 0 ? (
-                  <div className={styles.inputWrap}>
-                    <MapPin size={18}/>
-                    <select value={selectedContact ? form.contact_id : ''} onChange={event => {
-                      const suggestion = destinationSuggestions.find((item: {id: string}) => item.id === event.target.value)
-                      if (suggestion) selectDestinationContact(suggestion)
-                    }}>
-                      <option value="">{oc.chooseContact}</option>
-                      {destinationSuggestions.map((suggestion: {id: string; primary: string}) => <option key={suggestion.id} value={suggestion.id}>{suggestion.primary}</option>)}
-                    </select>
+                  <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>
+                    <Search size={18}/>
+                    {/* A dropdown list is fine for five contacts, not for
+                        three hundred - typing to filter is the only version
+                        of this that scales, so it reuses the same
+                        local-suggestions search the merged field used to
+                        have, just without Google mixed in here. */}
+                    <GoogleAddressInput value={form.destination} placeholder={oc.chooseContact} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} searchLabel={locale==='es'?'Buscar':'Search'}/>
+                    {selectedContact && <div className={ui.savedContactBadge}>
+                      <span>{selectedContact.company_name}</span>
+                      <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: '', destination_phone: '', stop_contact_name: ''}))}><X size={11}/></button>
+                    </div>}
                   </div>
                 ) : (
                   <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>

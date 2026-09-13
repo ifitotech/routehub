@@ -60,7 +60,7 @@
 .compactTitle{display:flex;align-items:baseline;gap:9px;min-width:0}
 .compactTitle h2{margin:0;font-size:19px;letter-spacing:-.02em;white-space:nowrap}
 .compactTitle span{overflow:hidden;color:#64748B;font-size:13px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.inlinePanelBody{display:grid;gap:22px;padding:18px 24px 22px;overflow-y:auto;width:100%}
+.inlinePanelBody{display:grid;gap:16px;padding:16px 24px 18px;overflow-y:auto;width:100%}
 
 .sectionHeading{margin:0 0 14px;color:#0f1d35;font-size:16px;font-weight:800}
 
@@ -96,7 +96,7 @@
    Contact name/phone sitting as two loose fields after the address with
    no visual link back to it. */
 .destCard{border:1px solid #e2e8f0;border-radius:14px;padding:14px;background:#fbfcfe;display:grid;gap:12px}
-.contactBlock{padding-top:12px;border-top:1px dashed #dbe3ed;display:grid;gap:8px}
+.contactBlock{padding-top:8px;border-top:1px dashed #dbe3ed;display:grid;gap:6px}
 .contactBlockLabel{display:flex;align-items:center;gap:6px;margin:0;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#64748b}
 
 .assignmentPanel{padding:18px;border-radius:16px;background:#f6f8fb;border:1px solid #e7edf4;display:grid;gap:20px;align-content:start;min-width:0}

@@ -1,6 +1,6 @@
 'use client'
 
-import {Bell, Check, CheckCircle2, Package, Plus, Store, Truck, X} from 'lucide-react'
+import {Check, CheckCircle2, Package, Plus, Store, Truck, X} from 'lucide-react'
 import styles from './routes.module.css'
 import ui from './new-route-ui.module.css'
 import {routeTypes, typeLabel} from './routes-model'
@@ -29,7 +29,6 @@ type NewRoutePanelProps = Pick<Workspace,
 
 export default function NewRoutePanel(p: NewRoutePanelProps) {
   const {saving, setOpen, justCreated, locale, c, openBuilder, form, setForm, defaultBranch, setSelectedDestinationLocation, save} = p
-  const notice = locale==='es' ? 'El conductor será notificado' : locale==='fr' ? 'Le conducteur sera notifié' : 'Driver will be notified'
   const assignLabel = form.type==='pickup'
     ? (locale==='es'?'Asignar recogida':locale==='fr'?'Attribuer la collecte':'Assign pickup')
     : form.type==='return'
@@ -78,8 +77,12 @@ export default function NewRoutePanel(p: NewRoutePanelProps) {
                 details, whatever height it grows to once "More details" is
                 open there too - instead of in the shorter Assignment
                 column, where it used to sit above a large empty gap. */}
+            {/* The "driver will be notified" line was its own row here,
+                costing a full line of height that pushed the form into a
+                scrollbar. It's implicit in "Assign" anyway - dropped to
+                reclaim that space instead of shrinking something a manager
+                actually needs to read. */}
             <div className={ui.formFooter}>
-              <span className={ui.footerNotice}><Bell size={14}/>{notice}</span>
               <div className={ui.footerActions}>
                 <button className={styles.secondaryButton} type="button" disabled={saving} onClick={() => setOpen(false)}>{locale==='es' ? 'Cancelar' : locale==='fr' ? 'Annuler' : 'Cancel'}</button>
                 <button className={styles.publishButton} type="button" disabled={saving || !form.driver_id || !form.destination.trim()} onClick={save}>{saving ? c.publishing : <><Truck size={19}/>{assignLabel}</>}</button>
