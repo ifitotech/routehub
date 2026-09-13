@@ -60,7 +60,11 @@
 .compactTitle{display:flex;align-items:baseline;gap:9px;min-width:0}
 .compactTitle h2{margin:0;font-size:19px;letter-spacing:-.02em;white-space:nowrap}
 .compactTitle span{overflow:hidden;color:#64748B;font-size:13px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.inlinePanelBody{display:grid;gap:22px;padding:18px 24px 22px;overflow-y:auto;width:100%}
+/* Bottom padding clears the sticky footer's own height - without it, the
+   footer (sticky since it needed to stay reachable on tablets where the
+   form runs taller than the screen) sits on top of the last field
+   instead of after it, on any screen just barely shorter than the form. */
+.inlinePanelBody{display:grid;gap:22px;padding:18px 24px 96px;overflow-y:auto;width:100%}
 
 .sectionHeading{margin:0 0 14px;color:#0f1d35;font-size:16px;font-weight:800}
 
