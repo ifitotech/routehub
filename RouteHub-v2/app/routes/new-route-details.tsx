@@ -1,5 +1,6 @@
 'use client'
 
+import {useState} from 'react'
 import {MapPin, Search, UserPlus, X} from 'lucide-react'
 import nextDynamic from 'next/dynamic'
 import GoogleAddressInput from '../google-address-input'
@@ -19,6 +20,17 @@ export default function NewRouteDetails(p: any) {
   const originLabel = locale==='es' ? 'Origen' : locale==='fr' ? 'Origine' : 'Origin'
   const destLabel = locale==='es' ? 'Destino' : locale==='fr' ? 'Destination' : 'Destination'
   const whoReceivesLabel = locale==='es' ? '¿Quién recibe?' : locale==='fr' ? 'Qui reçoit ?' : 'Who receives it?'
+
+  // Picking a saved contact vs. searching a brand-new address are two
+  // different jobs, so they get two different fields instead of one field
+  // trying to be both: a saved contact never needs to touch Google at all
+  // (it's already geocoded), and a new address gets Google's real live
+  // search instead of being displaced by it. Defaults to "contact" only
+  // when this branch actually has one saved - otherwise there is nothing
+  // to pick from, so search is the only useful starting point.
+  const [destinationSource, setDestinationSource] = useState<'contact' | 'address'>(destinationSuggestions.length ? 'contact' : 'address')
+  const contactLabel = locale==='es' ? 'Contacto guardado' : locale==='fr' ? 'Contact enregistré' : 'Saved contact'
+  const addressLabel = locale==='es' ? 'Dirección nueva' : locale==='fr' ? 'Nouvelle adresse' : 'New address'
 
   return (
     <div>
@@ -60,20 +72,44 @@ export default function NewRouteDetails(p: any) {
             {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={ui.compactValue}><MapPin size={14}/><span>{defaultBranch?.address || (defaultBranch ? `${defaultBranch.name} — ${oc.noBranchAddress}` : oc.chooseBranch)}</span></div></label> : <div className={ui.destCard}>
               <label className={styles.field}>
                 <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
-                <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>
-                  <Search size={18}/>
-                  <GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} localSuggestions={destinationSuggestions} onSelectLocalSuggestion={selectDestinationContact} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/>
-                  {/* Floats on the field's own top border like a tag, instead
-                      of sitting beside the input and eating into its width -
-                      the field keeps its full width to read long addresses.
-                      The X clears both the contact and the address in one
-                      step, so picking the wrong saved place doesn't require
-                      manually erasing the text field first. */}
-                  {selectedContact && <div className={ui.savedContactBadge}>
-                    <span>{selectedContact.company_name}</span>
-                    <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: '', destination_phone: '', stop_contact_name: ''}))}><X size={11}/></button>
-                  </div>}
-                </div>
+                {destinationSuggestions.length > 0 && (
+                  <div className={styles.segmented}>
+                    <button type="button" className={destinationSource === 'contact' ? styles.segmentActive : ''} aria-pressed={destinationSource === 'contact'} onClick={() => { setDestinationSource('contact'); if (!selectedContact) setForm((current: any) => ({...current, destination: ''})) }}>{contactLabel}</button>
+                    <button type="button" className={destinationSource === 'address' ? styles.segmentActive : ''} aria-pressed={destinationSource === 'address'} onClick={() => setDestinationSource('address')}>{addressLabel}</button>
+                  </div>
+                )}
+                {destinationSource === 'contact' && destinationSuggestions.length > 0 ? (
+                  <div className={styles.inputWrap}>
+                    <MapPin size={18}/>
+                    <select value={selectedContact ? form.contact_id : ''} onChange={event => {
+                      const suggestion = destinationSuggestions.find((item: {id: string}) => item.id === event.target.value)
+                      if (suggestion) selectDestinationContact(suggestion)
+                    }}>
+                      <option value="">{oc.chooseContact}</option>
+                      {destinationSuggestions.map((suggestion: {id: string; primary: string}) => <option key={suggestion.id} value={suggestion.id}>{suggestion.primary}</option>)}
+                    </select>
+                  </div>
+                ) : (
+                  <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>
+                    <Search size={18}/>
+                    {/* No localSuggestions here on purpose - once a saved
+                        contact is one tap away above, this field's only job
+                        is a genuinely new address, so Google's own live,
+                        as-you-type search stays on instead of being
+                        displaced by the local-suggestions fallback. */}
+                    <GoogleAddressInput value={form.destination} placeholder={c.searchPlaceholder} onValueChange={updateDestination} onSelectSearchSuggestion={selectExternalDestination} searchContext={searchContext} searchLabel={locale==='es'?'Buscar':'Search'}/>
+                    {/* Floats on the field's own top border like a tag, instead
+                        of sitting beside the input and eating into its width -
+                        the field keeps its full width to read long addresses.
+                        The X clears both the contact and the address in one
+                        step, so picking the wrong saved place doesn't require
+                        manually erasing the text field first. */}
+                    {selectedContact && <div className={ui.savedContactBadge}>
+                      <span>{selectedContact.company_name}</span>
+                      <button type="button" className={ui.savedContactClose} aria-label={locale==='es'?'Quitar contacto':locale==='fr'?'Retirer le contact':'Clear contact'} onClick={() => setForm((current: any) => ({...current, destination: '', destination_label: '', contact_id: '', destination_phone: '', stop_contact_name: ''}))}><X size={11}/></button>
+                    </div>}
+                  </div>
+                )}
               </label>
               {pendingLocation && <section className={styles.locationConfirmation}>
                 <div><strong>{pendingLocation.name || pendingLocation.formattedAddress}</strong><span>{pendingLocation.formattedAddress}</span></div>
