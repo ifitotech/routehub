@@ -5,7 +5,29 @@ import Link from 'next/link'
 import ManagerShell from '../../manager-shell'
 import {getSupabase} from '../../../../lib/supabase'
 import {uploadTruckReceipt} from '../../../../lib/truck-receipts'
+import {useLocale} from '../../../../lib/use-preferences'
 import styles from '../truck.module.css'
+
+function recordsCopy(locale: string) {
+  if (locale === 'es') return {
+    operations: 'OPERACIONES', title: 'Registros del camión', subtitle: 'Registra combustible o mantenimiento del camión de la sucursal.', backToTruck: 'Volver a Camión',
+    fuel: 'Combustible', maintenance: 'Mantenimiento', odometer: 'Odómetro', serviceType: 'Tipo de servicio', serviceTypePlaceholder: 'Cambio de aceite',
+    amount: 'Monto', costOptional: 'Costo (opcional)', receiptOptional: 'Foto del recibo (opcional)', saving: 'Guardando…', saveRecord: 'Guardar registro',
+    saved: 'Registro guardado correctamente.', unableSave: 'No se pudo guardar el registro.', unableCreate: 'No se pudo crear el registro.', selectedFile: 'Archivo seleccionado', activeTruck: 'Camión activo',
+  }
+  if (locale === 'fr') return {
+    operations: 'OPÉRATIONS', title: 'Registres du camion', subtitle: 'Enregistrez le carburant ou l’entretien du camion de la succursale.', backToTruck: 'Retour au camion',
+    fuel: 'Carburant', maintenance: 'Entretien', odometer: 'Kilométrage', serviceType: 'Type de service', serviceTypePlaceholder: 'Vidange',
+    amount: 'Montant', costOptional: 'Coût (optionnel)', receiptOptional: 'Photo du reçu (optionnel)', saving: 'Enregistrement…', saveRecord: 'Enregistrer',
+    saved: 'Enregistrement réussi.', unableSave: 'Impossible d’enregistrer.', unableCreate: 'Impossible de créer l’enregistrement.', selectedFile: 'Fichier sélectionné', activeTruck: 'Camion actif',
+  }
+  return {
+    operations: 'OPERATIONS', title: 'Truck records', subtitle: 'Log fuel or maintenance for the active branch truck.', backToTruck: 'Back to truck',
+    fuel: 'Fuel', maintenance: 'Maintenance', odometer: 'Odometer', serviceType: 'Service type', serviceTypePlaceholder: 'Oil change',
+    amount: 'Amount', costOptional: 'Cost (optional)', receiptOptional: 'Receipt photo (optional)', saving: 'Saving…', saveRecord: 'Save record',
+    saved: 'Record saved successfully.', unableSave: 'Unable to save record.', unableCreate: 'Could not create record.', selectedFile: 'Selected file', activeTruck: 'Active truck',
+  }
+}
 
 type TruckRow = {
   id: string
@@ -17,6 +39,8 @@ type TruckRow = {
 type RecordKind = 'fuel' | 'maintenance'
 
 export default function TruckRecordsPage() {
+  const {locale} = useLocale()
+  const c = recordsCopy(locale)
   const [truck, setTruck] = useState<TruckRow | null>(null)
   const [kind, setKind] = useState<RecordKind>('fuel')
   const [odometer, setOdometer] = useState('')
@@ -96,7 +120,7 @@ export default function TruckRecordsPage() {
       if (insertResult.error) throw insertResult.error
 
       const recordId = insertResult.data?.id
-      if (!recordId) throw new Error('Could not create record.')
+      if (!recordId) throw new Error(c.unableCreate)
 
       if (receipt) {
         try {
@@ -116,14 +140,14 @@ export default function TruckRecordsPage() {
         }
       }
 
-      setMessage('Record saved successfully.')
+      setMessage(c.saved)
       setOdometer('')
       setAmount('')
       setServiceType('')
       setReceipt(null)
       setReloadKey((value) => value + 1)
     } catch (saveError) {
-      setMessage(saveError instanceof Error ? saveError.message : 'Unable to save record.')
+      setMessage(saveError instanceof Error ? saveError.message : c.unableSave)
     } finally {
       setBusy(false)
     }
@@ -134,52 +158,52 @@ export default function TruckRecordsPage() {
       <div className={styles.page}>
         <div className={styles.header}>
           <div>
-            <p className={styles.eyebrow}>OPERATIONS</p>
-            <h1>Truck records</h1>
-            <span>Log fuel or maintenance for the active branch truck.</span>
+            <p className={styles.eyebrow}>{c.operations}</p>
+            <h1>{c.title}</h1>
+            <span>{c.subtitle}</span>
           </div>
           <Link href="/manager/truck" className={styles.primaryButton}>
-            Back to truck
+            {c.backToTruck}
           </Link>
         </div>
 
         <div className={styles.recordForm}>
           <div className={styles.recordTabs}>
             <button type="button" onClick={() => setKind('fuel')} className={kind === 'fuel' ? styles.active : ''}>
-              Fuel
+              {c.fuel}
             </button>
             <button
               type="button"
               onClick={() => setKind('maintenance')}
               className={kind === 'maintenance' ? styles.active : ''}
             >
-              Maintenance
+              {c.maintenance}
             </button>
           </div>
 
           <label>
-            Odometer
+            {c.odometer}
             <input type="number" min="0" value={odometer} onChange={(e) => setOdometer(e.target.value)} />
           </label>
 
           {kind === 'maintenance' ? (
             <label>
-              Service type
+              {c.serviceType}
               <input
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
-                placeholder="Oil change"
+                placeholder={c.serviceTypePlaceholder}
               />
             </label>
           ) : null}
 
           <label>
-            {kind === 'fuel' ? 'Amount' : 'Cost (optional)'}
+            {kind === 'fuel' ? c.amount : c.costOptional}
             <input type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </label>
 
           <label>
-            Receipt photo (optional)
+            {c.receiptOptional}
             <input type="file" accept="image/*" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} />
           </label>
 
@@ -189,12 +213,12 @@ export default function TruckRecordsPage() {
             disabled={busy || !odometer || (kind === 'fuel' && !amount) || (kind === 'maintenance' && !serviceType)}
             onClick={saveRecord}
           >
-            {busy ? 'Saving…' : 'Save record'}
+            {busy ? c.saving : c.saveRecord}
           </button>
 
           {message ? <p className={styles.recordMessage}>{message}</p> : null}
-          {receipt ? <p className={styles.muted}>Selected file: {receipt.name}</p> : null}
-          {truck ? <p className={styles.muted}>Active truck: {truck.name}</p> : null}
+          {receipt ? <p className={styles.muted}>{c.selectedFile}: {receipt.name}</p> : null}
+          {truck ? <p className={styles.muted}>{c.activeTruck}: {truck.name}</p> : null}
         </div>
       </div>
     </ManagerShell>
