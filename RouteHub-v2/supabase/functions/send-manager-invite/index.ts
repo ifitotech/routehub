@@ -95,6 +95,28 @@ Deno.serve(async (request) => {
       return json({ok: true, email, user_id: account.id})
     }
 
+    // Undo for the above - only ever for @routehub.local accounts, so this
+    // can't be used to delete a real person's login by mistake. Deletes the
+    // whole auth account (not just the membership) since these only exist
+    // to be thrown away.
+    if (payload.action === 'delete_beta_account') {
+      const anonForDelete = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {global: {headers: {Authorization: authHeader}}})
+      const {data: callerData} = await anonForDelete.auth.getUser()
+      if (!callerData.user) return json({error: 'Unauthorized'}, 401)
+      const {data: callerAdmin} = await anonForDelete.from('platform_admins').select('user_id').eq('user_id', callerData.user.id).maybeSingle()
+      if (!callerAdmin) return json({error: 'CEO access required'}, 403)
+      const userId = String(payload.userId || '')
+      const email = String(payload.email || '').trim().toLowerCase()
+      if (!userId || !email.endsWith('@routehub.local')) return json({error: 'Can only delete @routehub.local test accounts.'}, 400)
+      const {data: account} = await service.auth.admin.getUserById(userId)
+      if (account?.user?.email?.toLowerCase() !== email) return json({error: 'Email does not match this account - refusing to delete.'}, 400)
+      await service.from('company_users').delete().eq('user_id', userId)
+      const {error} = await service.auth.admin.deleteUser(userId)
+      if (error) throw error
+      await service.from('platform_audit_events').insert({actor_id: callerData.user.id, action: 'beta_account_deleted', entity_type: 'company_users', entity_id: userId, metadata: {email}})
+      return json({ok: true})
+    }
+
     const {email, companyName, branchName, branchId} = payload
     if (!email || !companyName || !branchName || !branchId) return json({error: 'Missing invite details'}, 400)
     const anon = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {global: {headers: {Authorization: authHeader}}})

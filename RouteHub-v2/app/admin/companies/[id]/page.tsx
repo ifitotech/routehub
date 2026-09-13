@@ -60,6 +60,12 @@ export default function OrganizationPage() {
   const [bulkBusyBranchId, setBulkBusyBranchId] = useState<string | null>(null)
   const [bulkResult, setBulkResult] = useState<{branchId: string; credentials: Credential[]} | null>(null)
 
+  // Remove a member - a tap "arms" it, a second tap on the now-red button
+  // confirms, instead of a separate modal for what's meant to be a quick
+  // undo (e.g. an accidental "Create full test team").
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+
   const load = async () => {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
@@ -153,6 +159,36 @@ export default function OrganizationPage() {
     if (credentials.length) setBulkResult({branchId: branch.id, credentials})
     await load()
     setBulkBusyBranchId(null)
+  }
+
+  const removeMember = async (member: Member) => {
+    if (confirmRemoveId !== member.userId) { setConfirmRemoveId(member.userId); return }
+    setRemovingId(member.userId)
+    setConfirmRemoveId(null)
+    setMessage('')
+    try {
+      if (member.email.toLowerCase().endsWith('@routehub.local')) {
+        // A real test account, thrown away entirely - not just this
+        // membership, since it only ever existed for this test.
+        const result = await getSupabase().functions.invoke('send-manager-invite', {body: {action: 'delete_beta_account', userId: member.userId, email: member.email}})
+        if (result.error) {
+          let detail = result.error.message || ''
+          if ('context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
+          throw new Error(detail)
+        }
+      } else {
+        // A real person invited normally - only remove them from this
+        // company, never delete their account.
+        const {error} = await getSupabase().from('company_users').delete().eq('company_id', id).eq('user_id', member.userId)
+        if (error) throw error
+      }
+      setMessage(`Removed ${member.name || member.email}.`)
+      await load()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to remove member.')
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   const resendInvite = async (branch: Branch) => {
@@ -270,6 +306,15 @@ export default function OrganizationPage() {
                   <div className={styles.memberRow} key={member.userId}>
                     <span className={styles.role}>{roleLabelFor(member.role)}</span>
                     <span className={styles.who}>{member.name || member.email || 'Unknown'}</span>
+                    <button
+                      type="button"
+                      className={styles.dangerButton}
+                      style={{marginLeft: 'auto', minHeight: 30, padding: '0 10px', fontSize: '.72rem'}}
+                      disabled={removingId === member.userId}
+                      onClick={() => void removeMember(member)}
+                    >
+                      {removingId === member.userId ? 'Removing…' : confirmRemoveId === member.userId ? 'Confirm remove?' : 'Remove'}
+                    </button>
                   </div>
                 ))}
               </div>
