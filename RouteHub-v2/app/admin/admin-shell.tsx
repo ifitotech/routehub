@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import styles from './admin.module.css'
 
-export type AdminSection = 'home' | 'companies' | 'billing' | 'errors' | 'support' | 'admins' | 'audit'
+export type AdminSection = 'home' | 'companies' | 'billing' | 'errors' | 'support' | 'admins' | 'audit' | 'settings'
 
 const nav: {id: AdminSection; href: string; label: string}[] = [
   {id: 'home', href: '/admin', label: 'Home'},
@@ -13,6 +13,7 @@ const nav: {id: AdminSection; href: string; label: string}[] = [
   {id: 'support', href: '/admin/support', label: 'Support'},
   {id: 'admins', href: '/admin/admins', label: 'Admins'},
   {id: 'audit', href: '/admin/audit', label: 'Audit'},
+  {id: 'settings', href: '/admin/settings', label: 'Settings'},
 ]
 
 // Every Admin page used to render its own <nav> at the bottom independently

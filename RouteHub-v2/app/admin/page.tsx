@@ -1,5 +1,5 @@
 'use client'
-import {AlertTriangle, Building2, ChevronRight, CreditCard, LifeBuoy, ScrollText, ShieldCheck, UserCheck} from 'lucide-react'
+import {AlertTriangle, Building2, ChevronRight, CreditCard, LifeBuoy, ScrollText, ShieldCheck, User, UserCheck} from 'lucide-react'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
