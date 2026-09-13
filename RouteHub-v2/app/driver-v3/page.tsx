@@ -149,7 +149,6 @@ export default function DriverV3Page() {
     setMessage('')
     try{
       await completePickupWithEvidence(ctx())
-      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       setSheet(null)
       await refresh()
     }catch(error){
@@ -171,7 +170,6 @@ export default function DriverV3Page() {
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
       await completeReturn(ctx(),{location})
-      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       await refresh()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -241,7 +239,6 @@ export default function DriverV3Page() {
       }else{
         await completeDelivery(ctx())
       }
-      try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
       setSheet(null)
       setRecipient('')
       setPhoto(null)

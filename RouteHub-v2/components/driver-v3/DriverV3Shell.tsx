@@ -11,7 +11,7 @@ import {applyThemePreference,useLocale} from '../../lib/use-preferences'
 
 const styles = {...shellA, ...shellB}
 
-type Tab = 'today' | 'route' | 'map' | 'history' | 'truck' | 'more'
+type Tab = 'today' | 'map' | 'history' | 'truck' | 'more'
 
 type Props = {
   children: React.ReactNode
@@ -72,14 +72,10 @@ export default function DriverV3Shell({
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
 
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
-        <Link className={active === 'today' || active === 'route' ? styles.active : ''} href="/driver">
+        <Link className={active === 'today' ? styles.active : ''} href="/driver">
           <Home />
           <span>{t.drvToday}</span>
         </Link>
-        {/* "route" screens (completion summary, POD/notes) are only ever
-            reached from Today finishing an active route - History's own
-            completed cards just open external maps, they never link here -
-            so only Today should light up, not both tabs at once. */}
         <Link className={active === 'history' ? styles.active : ''} href="/driver/history">
           <History />
           <span>{t.routes || 'Routes'}</span>
