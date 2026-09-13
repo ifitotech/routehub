@@ -158,7 +158,7 @@ export default function Companies() {
           <div className={styles.rowAside}>
             {company.isBeta && <span className={styles.badge} data-status="Trial">BETA</span>}
             <span className={styles.badge} data-status={company.status}>{company.status}</span>
-            <Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`}>Open organization</Link>
+            <Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`} prefetch={false}>Open</Link>
             <button className={styles.secondaryButton} onClick={() => {setEditing(company); setBetaMode(false); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button>
           </div>
         </article>)}
