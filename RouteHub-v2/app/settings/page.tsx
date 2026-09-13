@@ -144,6 +144,7 @@ export default function Settings() {
       longitude: coordinate?.lng ?? null,
     }).eq('id', branch.id)
     setMessage(error ? error.message : copy.branchSaved)
+    if (!error) setEditingBranch(false)
     setBranchSaving(false)
   }
   const setPrimaryDriver = async (userId: string) => {
