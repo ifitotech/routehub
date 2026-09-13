@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Building2, Camera, ChevronRight, History, LogOut, Save, Users} from 'lucide-react'
+import {Building2, Camera, ChevronRight, History, LogOut, Save, Send, Users} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
+import {submitSupportRequest} from '../../lib/support'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
 import GoogleAddressInput from '../google-address-input'
@@ -35,6 +36,9 @@ export default function Settings() {
   const [plan, setPlan] = useState('free')
   const [trialEnd, setTrialEnd] = useState<string | null>(null)
   const [isCeo, setIsCeo] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportMessage, setSupportMessage] = useState('')
+  const [supportSending, setSupportSending] = useState(false)
   const copy = locale === 'es'
     ? {name:'Nombre completo', phone:'Teléfono', photo:'Cambiar foto', edit:'Editar', save:'Guardar perfil', profileSaved:'Perfil actualizado.', branch:'Sucursal', branchName:'Nombre de la sucursal', branchAddress:'Dirección de la sucursal', branchPhone:'Teléfono de la sucursal', saveBranch:'Guardar sucursal', branchSaved:'Sucursal actualizada.', noBranch:'No hay una sucursal asignada.', primaryDriver:'Conductor principal', primaryDriverHelp:'Se selecciona automáticamente al crear una ruta.', choosePrimaryDriver:'Sin conductor principal', primaryDriverSaved:'Conductor principal actualizado.', autoClose:'Cierre automático de jornada', autoCloseHelp:'Solo cierra si no quedan rutas pendientes.', autoCloseSaved:'Hora de cierre actualizada.', team:'Equipo e invitaciones', teamHelp:'Miembros, roles e invitaciones.', tour:'Recorrido de la app', tourHelp:'Vuelve a ver la guía rápida de RouteHub.', tourAction:'Ver recorrido', preferences:'Preferencias', language:'Idioma', notifications:'Notificaciones', app:'App', operations:'Operaciones', reportsHistory:'Reportes e historial', reportsHistoryHelp:'Conteos, actividad, días anteriores y evidencia.', legal:'Legal', privacy:'Privacidad', terms:'Términos'}
     : locale === 'fr'
@@ -133,6 +137,20 @@ export default function Settings() {
     const {error} = await getSupabase().from('branches').update({primary_driver_id: userId || null}).eq('id', branch.id)
     setMessage(error ? error.message : copy.primaryDriverSaved)
     if (!error) setBranch({...branch, primary_driver_id: userId || null})
+  }
+  const sendSupport = async () => {
+    if (supportSending || !supportMessage.trim()) return
+    setSupportSending(true)
+    try {
+      await submitSupportRequest(supportMessage)
+      setMessage(t.supportReady)
+      setSupportMessage('')
+      setSupportOpen(false)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : t.supportHelp)
+    } finally {
+      setSupportSending(false)
+    }
   }
   const setAutoCloseTime = async (value: string) => {
     if (!branch) return
@@ -270,10 +288,16 @@ export default function Settings() {
 
         <p className={styles.group}>{t.support}</p>
         <section className={styles.card}>
-          <button className={styles.row} type="button" onClick={() => setMessage(t.supportReady)}>
+          <button className={styles.row} type="button" onClick={() => setSupportOpen(value => !value)}>
             <span className={styles.copy}><strong>{t.contactSupport}</strong><small>{t.supportHelp}</small></span>
             <ChevronRight size={18} />
           </button>
+          {supportOpen && (
+            <div className={styles.editor}>
+              <label>{t.contactSupport}<textarea rows={4} value={supportMessage} onChange={event => setSupportMessage(event.target.value)} placeholder={t.supportHelp} style={{minHeight: 96, padding: 10, border: '1px solid var(--rh-line)', borderRadius: 'var(--rh-r-md)', background: 'var(--rh-card)', color: 'var(--rh-ink)', font: 'inherit', resize: 'vertical'}}/></label>
+              <button className={styles.primary} disabled={supportSending || !supportMessage.trim()} onClick={sendSupport}><Send size={16}/>{supportSending ? t.saving : t.contactSupport}</button>
+            </div>
+          )}
           <Link className={styles.row} href="/privacy"><span className={styles.copy}><strong>{copy.privacy}</strong></span><ChevronRight size={18} /></Link>
           <Link className={styles.row} href="/terms"><span className={styles.copy}><strong>{copy.terms}</strong></span><ChevronRight size={18} /></Link>
         </section>

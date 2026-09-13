@@ -9,6 +9,7 @@ import AuthBoundary from './auth-boundary'
 import AppBottomNav from './app-bottom-nav'
 import OnboardingGate from './onboarding-gate'
 import TermsGate from './terms-gate'
+import AppErrorListener from './app-error-listener'
 
 export const metadata = {
   title: {default: 'RouteHub — Simple Route Management for Your Team', template: '%s · RouteHub'},
@@ -27,5 +28,5 @@ export const viewport = {
 }
 
 export default function Layout({children}: {children: React.ReactNode}) {
-  return <html lang="en"><body><PwaRegister/><ThemeBoot/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
+  return <html lang="en"><body><PwaRegister/><ThemeBoot/><AppErrorListener/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
 }

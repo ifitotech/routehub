@@ -4,11 +4,33 @@ import {Building2, Plus} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
 import Link from 'next/link'
+import AdminShell from '../admin-shell'
 import styles from '../admin.module.css'
 
 type Company = {id: string; name: string; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number}
 
 const seed: Company[] = []
+
+// One real query instead of a fixed "Active"/"0 members" on every row -
+// subscription_status already exists on companies, and a per-company
+// member count is one grouped query away instead of a made-up number.
+async function loadCompanies(): Promise<Company[]> {
+  const client = getSupabase()
+  const [{data: rows}, {data: memberships}] = await Promise.all([
+    client.from('companies').select('id,name,default_branch_name,branch_manager_name,subscription_status').order('name'),
+    client.from('company_users').select('company_id'),
+  ])
+  const memberCounts = new Map<string, number>()
+  ;(memberships || []).forEach((row: {company_id: string}) => memberCounts.set(row.company_id, (memberCounts.get(row.company_id) || 0) + 1))
+  return (rows || []).map((company: any) => ({
+    id: company.id,
+    name: company.name,
+    branch: company.default_branch_name || 'Main branch',
+    manager: company.branch_manager_name || 'Not assigned',
+    status: company.subscription_status === 'active' ? 'Active' : company.subscription_status === 'paused' || company.subscription_status === 'cancelled' ? 'Paused' : 'Trial',
+    users: memberCounts.get(company.id) || 0,
+  }))
+}
 
 export default function Companies() {
   const [companies, setCompanies] = useState(seed)
@@ -19,13 +41,7 @@ export default function Companies() {
   const [branchMessage, setBranchMessage] = useState('')
   const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
 
-  useEffect(() => {
-    const load = async () => {
-      const {data} = await getSupabase().from('companies').select('id,name,default_branch_name').order('name')
-      if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: (company as any).default_branch_name || 'Main branch', manager: (company as any).branch_manager_name || 'Not assigned', status: 'Active' as const, users: 0})))
-    }
-    void load()
-  }, [])
+  useEffect(() => { void loadCompanies().then(setCompanies) }, [])
 
   const save = async () => {
     if (!form.name.trim()) return
@@ -34,8 +50,7 @@ export default function Companies() {
       : await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, manager_email: form.email.trim() || null})
     if (error) return
     setForm({name: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
-    const {data} = await getSupabase().from('companies').select('id,name,default_branch_name,branch_manager_name').order('name')
-    if (data) setCompanies(data.map(company => ({id: company.id, name: company.name, branch: (company as any).default_branch_name || 'Main branch', manager: (company as any).branch_manager_name || 'Not assigned', status: 'Active' as const, users: 0})))
+    setCompanies(await loadCompanies())
   }
 
   const addBranch = async () => {
@@ -45,8 +60,7 @@ export default function Companies() {
     if (!error) setBranchForm({name: '', number: '', address: '', email: ''})
   }
 
-  return <main className="app">
-    <div className={styles.page}>
+  return <AdminShell active="companies">
       <header className={styles.header}>
         <div><p className={styles.eyebrow}>CEO / Admin · Organizations</p><h1 className={styles.title}>Companies</h1><p className={styles.subtitle}>Manage organizations and workspace status without exposing their private route data.</p></div>
         <button className={styles.primaryButton} onClick={() => {setEditing(null); setOpen(value => !value)}}><Plus size={18}/>{open ? 'Close form' : 'Add company'}</button>
@@ -70,6 +84,5 @@ export default function Companies() {
           <div className={styles.rowAside}><span className={styles.badge} data-status={company.status}>{company.status}</span><Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`}>Open organization</Link><button className={styles.secondaryButton} onClick={() => {setEditing(company); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button></div>
         </article>)}
       </section>
-    </div>
-  </main>
+  </AdminShell>
 }
