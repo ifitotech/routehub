@@ -104,9 +104,11 @@ export default function DriverProfile() {
       <section className={styles.profileSection}>
         <div className={styles.profileSectionHeader}>
           <h2>{t.drvChangePassword}</h2>
-          <button type="button" className={styles.editButton} onClick={() => setChangingPassword(value => !value)}><Edit3 size={16}/>{t.drvEditProfile}</button>
+          {!email.toLowerCase().endsWith('@routehub.local') && <button type="button" className={styles.editButton} onClick={() => setChangingPassword(value => !value)}><Edit3 size={16}/>{t.drvEditProfile}</button>}
         </div>
-        {changingPassword && (
+        {email.toLowerCase().endsWith('@routehub.local') ? (
+          <p className="muted" style={{margin: 0}}>{t.drvPasswordManagedByAdmin}</p>
+        ) : changingPassword && (
           <div className={styles.editForm}>
             <label>{t.drvNewPassword}<input type="password" autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} /></label>
             <label>{t.drvConfirmNewPassword}<input type="password" autoComplete="new-password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void changePassword() }} /></label>
