@@ -22,6 +22,10 @@
   --primary: #2563eb;
   width: min(100%, 1120px);
   margin: 0 auto;
+  /* Branch cards can grow tall (member list + an open inline form) - the
+     fixed bottom nav must never end up covering the last bit of content,
+     regardless of viewport height or how much a card has expanded. */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 
 .header { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
