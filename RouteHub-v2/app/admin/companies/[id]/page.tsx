@@ -6,7 +6,7 @@ import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../../lib/supabase'
 import AdminShell from '../../admin-shell'
 import styles from '../../admin.module.css'
-import {slugify, randomPassword} from '../../../../lib/beta-account'
+import {randomPassword, betaAccountEmail} from '../../../../lib/beta-account'
 import {roleLabelOptions, roleOptions} from '../../../../lib/role-labels'
 import type {Role} from '../../../../lib/types'
 
@@ -95,7 +95,7 @@ export default function OrganizationPage() {
     if (addLoginEmailTouched || !addLoginBranchId || !company) return
     const branch = branches.find(b => b.id === addLoginBranchId)
     if (!branch) return
-    setAddLoginEmail(`${slugify(company.name)}-${slugify(branch.name)}-${slugify(roleLabelFor(addLoginRole))}@routehub.local`)
+    setAddLoginEmail(betaAccountEmail(branch, addLoginRole))
   }, [addLoginBranchId, addLoginRole, branches, company, addLoginEmailTouched])
 
   const openAddLogin = (branch: Branch) => {
@@ -146,7 +146,7 @@ export default function OrganizationPage() {
     setMessage('')
     const credentials: Credential[] = []
     for (const role of roleOptions) {
-      const email = `${slugify(company?.name || 'company')}-${slugify(branch.name)}-${slugify(roleLabelFor(role))}@routehub.local`
+      const email = betaAccountEmail(branch, role)
       const password = randomPassword()
       try {
         await createBetaAccount(id, branch, role, email, password)

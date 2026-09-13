@@ -6,7 +6,7 @@ import {getSupabase} from '../../../lib/supabase'
 import Link from 'next/link'
 import AdminShell from '../admin-shell'
 import styles from '../admin.module.css'
-import {slugify, randomPassword} from '../../../lib/beta-account'
+import {randomPassword, betaAccountEmail} from '../../../lib/beta-account'
 import {roleLabelOptions} from '../../../lib/role-labels'
 import type {Role} from '../../../lib/types'
 
@@ -81,7 +81,7 @@ export default function Companies() {
         const {data: branchRow, error: branchError} = await client.from('branches').select('id').eq('company_id', companyId).order('created_at', {ascending: false}).limit(1).maybeSingle()
         if (branchError) throw branchError
         if (!branchRow) throw new Error('Branch was not created.')
-        const email = `${slugify(form.name)}-${slugify(form.branch || 'main')}@routehub.local`
+        const email = betaAccountEmail({name: form.branch || 'main', branch_number: null}, betaRole)
         const password = randomPassword()
         const result = await client.functions.invoke('send-manager-invite', {
           body: {action: 'create_beta_account', companyId, branchId: branchRow.id, email, password, role: betaRole},
