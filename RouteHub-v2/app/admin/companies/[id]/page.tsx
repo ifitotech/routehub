@@ -6,7 +6,7 @@ import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../../lib/supabase'
 import AdminShell from '../../admin-shell'
 import styles from '../../admin.module.css'
-import {randomPassword, betaAccountEmail} from '../../../../lib/beta-account'
+import {betaAccountEmail, betaAccountPassword} from '../../../../lib/beta-account'
 import {roleLabelOptions, roleOptions} from '../../../../lib/role-labels'
 import type {Role} from '../../../../lib/types'
 
@@ -34,7 +34,7 @@ async function createBetaAccount(companyId: string, branch: Branch, role: Role, 
 
 export default function OrganizationPage() {
   const {id} = useParams<{id: string}>()
-  const [company, setCompany] = useState<{name: string} | null>(null)
+  const [company, setCompany] = useState<{name: string; abbreviation: string | null} | null>(null)
   const [branches, setBranches] = useState<Branch[]>([])
   const [usage, setUsage] = useState({routes: 0, drivers: 0, members: 0})
   const [open, setOpen] = useState(false)
@@ -44,6 +44,13 @@ export default function OrganizationPage() {
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({name: '', number: '', address: '', isTest: false})
   const [savingBranch, setSavingBranch] = useState(false)
+
+  // Editing the organization itself - just name + a short abbreviation
+  // ("CES" for "City Electric Supply") so branch codes and generated
+  // passwords stay short instead of spelling out the full company name.
+  const [editingCompany, setEditingCompany] = useState(false)
+  const [companyForm, setCompanyForm] = useState({name: '', abbreviation: ''})
+  const [savingCompany, setSavingCompany] = useState(false)
 
   // "Add login" - one account, for whichever single branch has its inline
   // form open right now.
@@ -80,7 +87,7 @@ export default function OrganizationPage() {
   const load = async () => {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
-      client.from('companies').select('name').eq('id', id).maybeSingle(),
+      client.from('companies').select('name,abbreviation').eq('id', id).maybeSingle(),
       client.from('branches').select('id,name,branch_number,address,is_test').eq('company_id', id).order('name'),
       client.from('invitations').select('branch_id,email,status,created_at').eq('company_id', id).order('created_at', {ascending: false}),
       client.from('routes').select('id', {count: 'exact', head: true}).eq('company_id', id),
@@ -122,7 +129,7 @@ export default function OrganizationPage() {
     setAddLoginBranchId(opening ? branch.id : null)
     setAddLoginRole('driver')
     setAddLoginEmailTouched(false)
-    setAddLoginPassword(randomPassword())
+    setAddLoginPassword(company ? betaAccountPassword(company, branch) : '')
     setAddLoginResult(null)
     setMessage('')
   }
@@ -149,7 +156,7 @@ export default function OrganizationPage() {
       // stuck in the field - re-enables the auto-suggested email/password
       // for whatever role gets picked next.
       setAddLoginEmailTouched(false)
-      setAddLoginPassword(randomPassword())
+      setAddLoginPassword(company ? betaAccountPassword(company, branch) : '')
       await load()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to create test user.')
@@ -159,14 +166,14 @@ export default function OrganizationPage() {
   }
 
   const createFullTeam = async (branch: Branch) => {
-    if (bulkBusyBranchId) return
+    if (bulkBusyBranchId || !company) return
     setBulkBusyBranchId(branch.id)
     setBulkResult(null)
     setMessage('')
     const credentials: Credential[] = []
     for (const role of roleOptions) {
       const email = betaAccountEmail(branch, role)
-      const password = randomPassword()
+      const password = betaAccountPassword(company, branch)
       try {
         await createBetaAccount(id, branch, role, email, password)
         credentials.push({role, email, password})
@@ -238,6 +245,20 @@ export default function OrganizationPage() {
     setSavingBranch(false)
     if (!error) { setEditingBranchId(null); await load() }
   }
+  const startEditCompany = () => {
+    if (!company) return
+    setCompanyForm({name: company.name, abbreviation: company.abbreviation || ''})
+    setEditingCompany(true)
+    setMessage('')
+  }
+  const saveCompany = async () => {
+    if (savingCompany || !companyForm.name.trim()) return
+    setSavingCompany(true)
+    const {error} = await getSupabase().rpc('platform_update_company', {company_id: id, company_name: companyForm.name.trim(), company_abbreviation: companyForm.abbreviation.trim() || null})
+    setMessage(error ? error.message : 'Organization updated.')
+    setSavingCompany(false)
+    if (!error) { setEditingCompany(false); await load() }
+  }
   const addBranch = async () => {
     if (!form.name.trim()) return
     let activationCode: string | undefined
@@ -262,8 +283,27 @@ export default function OrganizationPage() {
           <h1 className={styles.title}>{company?.name || 'Organization'}</h1>
           <p className={styles.subtitle}>Branches, their team and testing logins - all in one place, grouped by branch.</p>
         </div>
-        <button className={styles.primaryButton} onClick={() => setOpen(!open)}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button>
+        <button className={styles.primaryButton} onClick={() => { const opening = !open; setOpen(opening); if (opening) setForm(current => ({...current, number: company?.abbreviation || current.number})) }}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button>
       </header>
+
+      {!editingCompany ? (
+        <p className={styles.subtitle} style={{marginTop: -8, display: 'flex', alignItems: 'center', gap: 8}}>
+          {company?.abbreviation ? `Abbreviation: ${company.abbreviation}` : 'No abbreviation set - branch codes and test passwords fall back to initials.'}
+          <button className={styles.secondaryButton} style={{minHeight: 26, padding: '0 9px', fontSize: '.72rem'}} onClick={startEditCompany}><Pencil size={12}/> Edit</button>
+        </p>
+      ) : (
+        <section className={styles.panel} style={{marginBottom: 12}}>
+          <header className={styles.panelHeader}><div><h2>Edit organization</h2><p>A short abbreviation (e.g. CES) prefills branch codes and keeps generated test passwords short.</p></div><Building2 size={22}/></header>
+          <div className={styles.formGrid}>
+            <label className={styles.field}>Company name<input value={companyForm.name} onChange={e => setCompanyForm({...companyForm, name: e.target.value})}/></label>
+            <label className={styles.field}>Abbreviation (optional)<input placeholder="CES" maxLength={8} value={companyForm.abbreviation} onChange={e => setCompanyForm({...companyForm, abbreviation: e.target.value.toUpperCase()})}/></label>
+            <div style={{display: 'flex', gap: 10}}>
+              <button className={styles.primaryButton} disabled={savingCompany || !companyForm.name.trim()} onClick={() => void saveCompany()}>{savingCompany ? 'Saving…' : 'Save changes'}</button>
+              <button className={styles.secondaryButton} onClick={() => setEditingCompany(false)}>Cancel</button>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className={styles.adminStats} aria-label="Company usage">
         <article><span>Routes created</span><strong>{usage.routes}</strong><small>All-time</small></article>

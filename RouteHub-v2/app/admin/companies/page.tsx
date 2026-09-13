@@ -6,11 +6,11 @@ import {getSupabase} from '../../../lib/supabase'
 import Link from 'next/link'
 import AdminShell from '../admin-shell'
 import styles from '../admin.module.css'
-import {randomPassword, betaAccountEmail} from '../../../lib/beta-account'
+import {betaAccountEmail, betaAccountPassword} from '../../../lib/beta-account'
 import {roleLabelOptions} from '../../../lib/role-labels'
 import type {Role} from '../../../lib/types'
 
-type Company = {id: string; name: string; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number; isBeta: boolean}
+type Company = {id: string; name: string; abbreviation: string | null; branch: string; manager: string; status: 'Active' | 'Trial' | 'Paused'; users: number; isBeta: boolean}
 
 const seed: Company[] = []
 const roleChoices = roleLabelOptions('en')
@@ -21,7 +21,7 @@ const roleChoices = roleLabelOptions('en')
 async function loadCompanies(): Promise<Company[]> {
   const client = getSupabase()
   const [{data: rows}, {data: memberships}, {data: testBranches}] = await Promise.all([
-    client.from('companies').select('id,name,default_branch_name,branch_manager_name,subscription_status').order('name'),
+    client.from('companies').select('id,name,abbreviation,default_branch_name,branch_manager_name,subscription_status').order('name'),
     client.from('company_users').select('company_id,users(email)'),
     client.from('branches').select('company_id').eq('is_test', true),
   ])
@@ -35,6 +35,7 @@ async function loadCompanies(): Promise<Company[]> {
   return (rows || []).map((company: any) => ({
     id: company.id,
     name: company.name,
+    abbreviation: company.abbreviation || null,
     branch: company.default_branch_name || 'Main branch',
     manager: company.branch_manager_name || 'Not assigned',
     status: company.subscription_status === 'active' ? 'Active' : company.subscription_status === 'paused' || company.subscription_status === 'cancelled' ? 'Paused' : 'Trial',
@@ -50,7 +51,7 @@ export default function Companies() {
   const [viewing, setViewing] = useState<Company | null>(null)
   const [branchForm, setBranchForm] = useState({name: '', number: '', address: '', email: ''})
   const [branchMessage, setBranchMessage] = useState('')
-  const [form, setForm] = useState({name: '', branch: '', manager: '', email: ''})
+  const [form, setForm] = useState({name: '', abbreviation: '', branch: '', manager: '', email: ''})
   const [betaMode, setBetaMode] = useState(false)
   const [betaRole, setBetaRole] = useState<Role>('branch_manager')
   const [betaBusy, setBetaBusy] = useState(false)
@@ -62,9 +63,9 @@ export default function Companies() {
   const save = async () => {
     if (!form.name.trim()) return
     if (editing) {
-      const {error} = await getSupabase().rpc('platform_update_company', {company_id: editing.id, company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null})
+      const {error} = await getSupabase().rpc('platform_update_company', {company_id: editing.id, company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, company_abbreviation: form.abbreviation.trim() || null})
       if (error) return
-      setForm({name: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
+      setForm({name: '', abbreviation: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
       setCompanies(await loadCompanies())
       return
     }
@@ -76,13 +77,14 @@ export default function Companies() {
         // one call - a beta company never gets a real manager_email here, so
         // no stale "invitation pending" row is left behind once the account
         // below is created directly.
-        const {data: companyId, error: createError} = await client.rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: null, manager_email: null})
+        const {data: companyId, error: createError} = await client.rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: null, manager_email: null, company_abbreviation: form.abbreviation.trim() || null})
         if (createError) throw createError
         const {data: branchRow, error: branchError} = await client.from('branches').select('id').eq('company_id', companyId).order('created_at', {ascending: false}).limit(1).maybeSingle()
         if (branchError) throw branchError
         if (!branchRow) throw new Error('Branch was not created.')
-        const email = betaAccountEmail({name: form.branch || 'main', branch_number: null}, betaRole)
-        const password = randomPassword()
+        const branch = {name: form.branch || 'main', branch_number: null}
+        const email = betaAccountEmail(branch, betaRole)
+        const password = betaAccountPassword({name: form.name, abbreviation: form.abbreviation}, branch)
         const result = await client.functions.invoke('send-manager-invite', {
           body: {action: 'create_beta_account', companyId, branchId: branchRow.id, email, password, role: betaRole},
         })
@@ -90,7 +92,7 @@ export default function Companies() {
         if (result.error && 'context' in result.error) { try { detail = ((await (result.error as {context: Response}).context.json()) as {error?: string}).error || detail } catch {} }
         if (result.error) throw new Error(detail)
         setBetaResult({email, password})
-        setForm({name: '', branch: '', manager: '', email: ''})
+        setForm({name: '', abbreviation: '', branch: '', manager: '', email: ''})
         setCompanies(await loadCompanies())
       } catch (error) {
         setBetaError(error instanceof Error ? error.message : 'Unable to create the beta tester.')
@@ -99,9 +101,9 @@ export default function Companies() {
       }
       return
     }
-    const {error} = await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, manager_email: form.email.trim() || null})
+    const {error} = await getSupabase().rpc('platform_create_company', {company_name: form.name.trim(), branch_name: form.branch.trim() || null, manager_name: form.manager.trim() || null, manager_email: form.email.trim() || null, company_abbreviation: form.abbreviation.trim() || null})
     if (error) return
-    setForm({name: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
+    setForm({name: '', abbreviation: '', branch: '', manager: '', email: ''}); setOpen(false); setEditing(null)
     setCompanies(await loadCompanies())
   }
 
@@ -129,6 +131,7 @@ export default function Companies() {
         )}
         <div className={styles.formGrid}>
           <label className={styles.field}>Company name<input aria-label="Company name" placeholder="Grey Bar" value={form.name} onChange={event => setForm({...form, name: event.target.value})}/></label>
+          <label className={styles.field}>Abbreviation (optional)<input aria-label="Abbreviation" placeholder="CES" maxLength={8} value={form.abbreviation} onChange={event => setForm({...form, abbreviation: event.target.value.toUpperCase()})}/></label>
           <label className={styles.field}>First branch<input aria-label="First branch" placeholder="Hialeah" value={form.branch} onChange={event => setForm({...form, branch: event.target.value})}/></label>
           {!betaMode && <label className={styles.field}>Branch manager<input aria-label="Branch manager" placeholder="Manager name" value={form.manager} onChange={event => setForm({...form, manager: event.target.value})}/></label>}
           {!betaMode && <label className={styles.field}>Manager email<input type="email" aria-label="Manager email" placeholder="manager@company.com" value={form.email} onChange={event => setForm({...form, email: event.target.value})}/></label>}
@@ -156,12 +159,12 @@ export default function Companies() {
       <section className={styles.list} aria-label="Companies">
         {companies.map(company => <article className={styles.rowCard} key={company.id}>
           <span className={styles.rowIcon}>{company.isBeta ? <FlaskConical size={20}/> : <Building2 size={20}/>}</span>
-          <div className={styles.identity}><h2>{company.name}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p><p>Branch manager: {company.manager}</p></div>
+          <div className={styles.identity}><h2>{company.name}{company.abbreviation ? ` (${company.abbreviation})` : ''}</h2><p>{company.branch} · {company.users} team {company.users === 1 ? 'member' : 'members'}</p><p>Branch manager: {company.manager}</p></div>
           <div className={styles.rowAside}>
             {company.isBeta && <span className={styles.badge} data-status="Trial">BETA</span>}
             <span className={styles.badge} data-status={company.status}>{company.status}</span>
             <Link className={styles.secondaryButton} href={`/admin/companies/${company.id}`} prefetch={false}>Open</Link>
-            <button className={styles.secondaryButton} onClick={() => {setEditing(company); setBetaMode(false); setForm({name: company.name, branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button>
+            <button className={styles.secondaryButton} onClick={() => {setEditing(company); setBetaMode(false); setForm({name: company.name, abbreviation: company.abbreviation || '', branch: company.branch, manager: company.manager, email: ''}); setOpen(true)}}>Edit</button>
           </div>
         </article>)}
       </section>

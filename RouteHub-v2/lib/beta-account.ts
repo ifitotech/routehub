@@ -26,10 +26,28 @@ export function betaAccountEmail(branch: {name: string; branch_number?: string |
   return `${slugify(branch.branch_number || branch.name)}.${roleSlug[role]}@routehub.local`
 }
 
-export function randomPassword() {
-  // Readable-enough to copy by hand, random enough not to matter that it's a
-  // test account - the tester can change it from Settings right after.
-  const bytes = new Uint8Array(9)
-  crypto.getRandomValues(bytes)
-  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, '').slice(0, 12)
+// CEO-set suffix shared by every generated test password - a simple,
+// memorable ending instead of a random string, since the whole point of
+// a beta login is that the CEO can read it straight off the branch card
+// and hand it to a tester without looking anything up. Change this if a
+// different number is wanted; it only affects accounts created after the
+// change, not ones that already exist.
+export const BETA_PASSWORD_SUFFIX = '0169'
+
+// Falls back to the first letter of each word in the company name (e.g.
+// "City Electric Supply" -> "ces") when the CEO hasn't set an explicit
+// abbreviation on the organization yet.
+export function companyAbbreviation(company: {name: string; abbreviation?: string | null}) {
+  if (company.abbreviation?.trim()) return slugify(company.abbreviation)
+  const initials = company.name.trim().split(/\s+/).map(word => word[0] || '').join('').toLowerCase()
+  return initials.slice(0, 4) || 'co'
+}
+
+// Deterministic instead of random - "cesopa0169" for City Electric
+// Supply's Opa-locka branch - so the CEO can read a tester's password
+// straight off the branch instead of having to store or look one up.
+// Still just a starting value: the field that uses this stays editable.
+export function betaAccountPassword(company: {name: string; abbreviation?: string | null}, branch: {name: string; branch_number?: string | null}) {
+  const branchPart = slugify(branch.branch_number || branch.name).replace(/-/g, '').slice(0, 6)
+  return `${companyAbbreviation(company)}${branchPart}${BETA_PASSWORD_SUFFIX}`
 }
