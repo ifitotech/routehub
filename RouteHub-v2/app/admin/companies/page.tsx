@@ -20,9 +20,10 @@ const roleChoices = roleLabelOptions('en')
 // member count is one grouped query away instead of a made-up number.
 async function loadCompanies(): Promise<Company[]> {
   const client = getSupabase()
-  const [{data: rows}, {data: memberships}] = await Promise.all([
+  const [{data: rows}, {data: memberships}, {data: testBranches}] = await Promise.all([
     client.from('companies').select('id,name,default_branch_name,branch_manager_name,subscription_status').order('name'),
     client.from('company_users').select('company_id,users(email)'),
+    client.from('branches').select('company_id').eq('is_test', true),
   ])
   const memberCounts = new Map<string, number>()
   const betaCompanies = new Set<string>()
@@ -30,6 +31,7 @@ async function loadCompanies(): Promise<Company[]> {
     memberCounts.set(row.company_id, (memberCounts.get(row.company_id) || 0) + 1)
     if (String(row.users?.email || '').toLowerCase().endsWith('@routehub.local')) betaCompanies.add(row.company_id)
   })
+  ;(testBranches || []).forEach((row: {company_id: string}) => betaCompanies.add(row.company_id))
   return (rows || []).map((company: any) => ({
     id: company.id,
     name: company.name,

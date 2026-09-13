@@ -13,18 +13,18 @@ import type {Role} from '../../../../lib/types'
 const roleChoices = roleLabelOptions('en')
 
 type Member = {userId: string; role: Role; email: string; name: string | null}
-type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; invite?: {email: string; status: string} | null; members: Member[]}
+type Branch = {id: string; name: string; branch_number?: string | null; address?: string | null; is_test: boolean; invite?: {email: string; status: string} | null; members: Member[]}
 export default function OrganizationPage() {
   const {id} = useParams<{id: string}>()
   const [company, setCompany] = useState<{name: string} | null>(null)
   const [branches, setBranches] = useState<Branch[]>([])
   const [usage, setUsage] = useState({routes: 0, drivers: 0, members: 0})
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({name: '', number: '', address: '', email: ''})
+  const [form, setForm] = useState({name: '', number: '', address: '', email: '', isTest: false})
   const [message, setMessage] = useState('')
   const [resending, setResending] = useState<string | null>(null)
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({name: '', number: '', address: ''})
+  const [editForm, setEditForm] = useState({name: '', number: '', address: '', isTest: false})
   const [savingBranch, setSavingBranch] = useState(false)
   const [testUserOpen, setTestUserOpen] = useState(false)
   const [testUserBranchId, setTestUserBranchId] = useState('')
@@ -37,7 +37,7 @@ export default function OrganizationPage() {
     const client = getSupabase()
     const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
       client.from('companies').select('name').eq('id', id).maybeSingle(),
-      client.from('branches').select('id,name,branch_number,address').eq('company_id', id).order('name'),
+      client.from('branches').select('id,name,branch_number,address,is_test').eq('company_id', id).order('name'),
       client.from('invitations').select('branch_id,email,status,created_at').eq('company_id', id).order('created_at', {ascending: false}),
       client.from('routes').select('id', {count: 'exact', head: true}).eq('company_id', id),
       client.from('company_users').select('user_id,branch_id,role,users(email,name)').eq('company_id', id),
@@ -51,7 +51,7 @@ export default function OrganizationPage() {
       list.push({userId: row.user_id, role: row.role, email: row.users?.email || '', name: row.users?.name || null})
       membersByBranch.set(row.branch_id, list)
     })
-    setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
+    setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null; is_test: boolean}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
     setUsage({routes: routes || 0, drivers: (members || []).filter((row: any) => row.role === 'driver').length, members: (members || []).length})
   }
   useEffect(() => { void load() }, [id])
@@ -77,7 +77,7 @@ export default function OrganizationPage() {
   }
   const startEditBranch = (branch: Branch) => {
     setEditingBranchId(branch.id)
-    setEditForm({name: branch.name, number: branch.branch_number || '', address: branch.address || ''})
+    setEditForm({name: branch.name, number: branch.branch_number || '', address: branch.address || '', isTest: branch.is_test})
     setMessage('')
   }
   const saveBranch = async () => {
@@ -87,6 +87,7 @@ export default function OrganizationPage() {
       name: editForm.name.trim(),
       branch_number: editForm.number.trim() || null,
       address: editForm.address.trim() || null,
+      is_test: editForm.isTest,
     }).eq('id', editingBranchId)
     setMessage(error ? error.message : 'Branch updated.')
     setSavingBranch(false)
@@ -108,6 +109,7 @@ export default function OrganizationPage() {
       let detail = result.error?.message || ''
       if (result.error && 'context' in result.error) { try { const body = await (result.error as {context: Response}).context.json(); detail = body.error || detail } catch {} }
       if (result.error) throw new Error(detail)
+      if (!branch.is_test) await getSupabase().from('branches').update({is_test: true}).eq('id', branch.id)
       setTestUserResult({email, password})
       setTestUserEmailTouched(false)
       await load()
@@ -122,13 +124,14 @@ export default function OrganizationPage() {
     let activationCode: string | undefined
     const {data: createdBranchId, error} = await getSupabase().rpc('platform_create_branch', {company_id: id, branch_name: form.name.trim(), branch_number: form.number.trim() || null, branch_address: form.address.trim() || null, manager_email: form.email.trim() || null})
     if (error) { setMessage(error.message); return }
+    if (form.isTest) await getSupabase().from('branches').update({is_test: true}).eq('id', createdBranchId)
     if (form.email.trim()) {
       const invite = await getSupabase().functions.invoke('send-manager-invite', {body: {email: form.email.trim(), companyName: company?.name || 'RouteHub company', branchName: form.name.trim(), branchId: createdBranchId}})
       if (invite.error) { setMessage(`Branch created, but invitation failed: ${invite.error.message}`); await load(); return }
       activationCode = (invite.data as {activationCode?: string} | null)?.activationCode
     }
     setMessage(form.email.trim() ? `Branch created. Activation code: ${activationCode || 'not generated'}. Share it securely; it expires in 24 hours.` : 'Branch created.')
-    setForm({name: '', number: '', address: '', email: ''}); setOpen(false); await load()
+    setForm({name: '', number: '', address: '', email: '', isTest: false}); setOpen(false); await load()
   }
   return (
     <AdminShell active="companies">
@@ -167,7 +170,7 @@ export default function OrganizationPage() {
         <article><span>Drivers</span><strong>{usage.drivers}</strong><small>Of {usage.members} total members</small></article>
         <article><span>Branches</span><strong>{branches.length}</strong><small>Registered locations</small></article>
       </section>
-      {open && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>New branch</h2><p>Add the branch and invite its manager.</p></div><Building2 size={22}/></header><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={form.name} onChange={e => setForm({...form, name: e.target.value})}/></label><label className={styles.field}>Branch code<input placeholder="OPA" value={form.number} onChange={e => setForm({...form, number: e.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street" value={form.address} onChange={e => setForm({...form, address: e.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})}/></label><button className={styles.primaryButton} disabled={!form.name.trim()} onClick={() => void addBranch()}>Create branch</button></div></section>}
+      {open && <section className={styles.panel}><header className={styles.panelHeader}><div><h2>New branch</h2><p>Add the branch and invite its manager.</p></div><Building2 size={22}/></header><div className={styles.formGrid}><label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={form.name} onChange={e => setForm({...form, name: e.target.value})}/></label><label className={styles.field}>Branch code<input placeholder="OPA" value={form.number} onChange={e => setForm({...form, number: e.target.value})}/></label><label className={styles.field}>Branch address<input placeholder="123 Main Street" value={form.address} onChange={e => setForm({...form, address: e.target.value})}/></label><label className={styles.field}>Manager email<input type="email" placeholder="manager@company.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})}/></label><label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={form.isTest} onChange={e => setForm({...form, isTest: e.target.checked})} style={{width: 18, height: 18}}/>Test branch</label><button className={styles.primaryButton} disabled={!form.name.trim()} onClick={() => void addBranch()}>Create branch</button></div></section>}
       {message && <p className={styles.statusMessage}>{message}</p>}
       <h2 className={styles.sectionLabel}>Branches · {branches.length}</h2>
       <section className={styles.list}>
@@ -181,6 +184,7 @@ export default function OrganizationPage() {
                   <label className={styles.field}>Branch name<input placeholder="Miami Gardens" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}/></label>
                   <label className={styles.field}>Branch code<input placeholder="OPA" value={editForm.number} onChange={e => setEditForm({...editForm, number: e.target.value})}/></label>
                   <label className={styles.field}>Branch address<input placeholder="123 Main Street" value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})}/></label>
+                  <label className={styles.field} style={{flexDirection: 'row', alignItems: 'center', gap: 8}}><input type="checkbox" checked={editForm.isTest} onChange={e => setEditForm({...editForm, isTest: e.target.checked})} style={{width: 18, height: 18}}/>Test branch</label>
                   <div style={{display: 'flex', gap: 10}}>
                     <button className={styles.primaryButton} disabled={savingBranch || !editForm.name.trim()} onClick={() => void saveBranch()}>{savingBranch ? 'Saving…' : 'Save changes'}</button>
                     <button className={styles.secondaryButton} onClick={() => setEditingBranchId(null)}>Cancel</button>
@@ -203,6 +207,7 @@ export default function OrganizationPage() {
                 )}
               </div>
               <div className={styles.rowAside}>
+                <span className={styles.badge} data-status={branch.is_test ? 'Trial' : 'Active'}>{branch.is_test ? 'Test' : 'Real'}</span>
                 <span className={styles.badge} data-status={pending ? 'Pending' : 'Active'}>{pending ? 'Pending' : 'Active'}</span>
                 <button className={styles.secondaryButton} onClick={() => startEditBranch(branch)}><Pencil size={15}/> Edit</button>
                 {pending && <button className={styles.secondaryButton} disabled={resending === branch.id} onClick={() => void resendInvite(branch)}><RefreshCw size={15}/>{resending === branch.id ? 'Sending…' : 'Resend email'}</button>}
