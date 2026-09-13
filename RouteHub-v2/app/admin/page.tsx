@@ -11,25 +11,34 @@ const quickLinks = [
   {href: '/admin/billing', title: 'Billing', description: 'Plans, subscription status and trials.', icon: CreditCard},
   {href: '/admin/errors', title: 'Errors', description: 'Crashes reported from every company.', icon: AlertTriangle},
   {href: '/admin/support', title: 'Support', description: 'Requests sent from Settings.', icon: LifeBuoy},
+  {href: '/admin/admins', title: 'Platform admins', description: 'Who has CEO-level access.', icon: ShieldCheck},
   {href: '/admin/audit', title: 'Audit log', description: 'See recent security actions.', icon: ScrollText},
 ]
 
 export default function Admin() {
   const [counts, setCounts] = useState({pending: 0, companies: 0, errors: 0, support: 0})
+  const [activity, setActivity] = useState({routes: 0, drivers: 0, managers: 0})
   useEffect(() => {
     const load = async () => {
       const supabase = getSupabase()
-      const [{data: requests}, {count: companies}, {count: errors}, {count: support}] = await Promise.all([
+      const [{data: requests}, {count: companies}, {count: errors}, {count: support}, {count: routes}, {data: roles}] = await Promise.all([
         supabase.from('platform_manager_approvals').select('status'),
         supabase.from('companies').select('id', {count: 'exact', head: true}),
         supabase.from('app_error_reports').select('id', {count: 'exact', head: true}).is('resolved_at', null),
         supabase.from('support_requests').select('id', {count: 'exact', head: true}).is('resolved_at', null),
+        supabase.from('routes').select('id', {count: 'exact', head: true}),
+        supabase.from('company_users').select('role'),
       ])
       setCounts({
         pending: (requests || []).filter(row => row.status === 'pending').length,
         companies: companies || 0,
         errors: errors || 0,
         support: support || 0,
+      })
+      setActivity({
+        routes: routes || 0,
+        drivers: (roles || []).filter(row => row.role === 'driver').length,
+        managers: (roles || []).filter(row => ['branch_manager', 'operations_manager'].includes(row.role)).length,
       })
     }
     void load()
@@ -41,6 +50,12 @@ export default function Admin() {
         <article><span>Pending trials</span><strong>{counts.pending}</strong><small>Needs review</small></article>
         <article><span>Companies</span><strong>{counts.companies}</strong><small>Registered workspaces</small></article>
         <article className={counts.errors > 0 ? styles.alertStat : undefined}><span>Open errors</span><strong>{counts.errors}</strong><small>Needs attention</small></article>
+      </section>
+      <h2 className={styles.sectionLabel}>Platform activity</h2>
+      <section className={styles.adminStats} aria-label="Platform activity">
+        <article><span>Routes created</span><strong>{activity.routes}</strong><small>All-time, every company</small></article>
+        <article><span>Drivers</span><strong>{activity.drivers}</strong><small>Across every company</small></article>
+        <article><span>Managers</span><strong>{activity.managers}</strong><small>Branch &amp; operations managers</small></article>
       </section>
       {counts.errors > 0 && (
         <section className={styles.panel}>

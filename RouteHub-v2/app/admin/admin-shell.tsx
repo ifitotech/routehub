@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import styles from './admin.module.css'
 
-export type AdminSection = 'home' | 'companies' | 'billing' | 'errors' | 'support' | 'audit'
+export type AdminSection = 'home' | 'companies' | 'billing' | 'errors' | 'support' | 'admins' | 'audit'
 
 const nav: {id: AdminSection; href: string; label: string}[] = [
   {id: 'home', href: '/admin', label: 'Home'},
@@ -11,6 +11,7 @@ const nav: {id: AdminSection; href: string; label: string}[] = [
   {id: 'billing', href: '/admin/billing', label: 'Billing'},
   {id: 'errors', href: '/admin/errors', label: 'Errors'},
   {id: 'support', href: '/admin/support', label: 'Support'},
+  {id: 'admins', href: '/admin/admins', label: 'Admins'},
   {id: 'audit', href: '/admin/audit', label: 'Audit'},
 ]
 

@@ -98,6 +98,10 @@
   .rowCard { grid-template-columns: 44px minmax(0, 1fr); }
   .rowIcon { width: 44px; height: 44px; border-radius: 14px; }
   .rowAside { grid-column: 1 / -1; justify-content: space-between; padding-left: 58px; }
+  /* Seven sections no longer fit one row without either scrolling out of
+     view or clipping the last item - wrapping to two centred rows keeps
+     every section visible at a glance instead. */
+  .nav { flex-wrap: wrap; justify-content: center; width: calc(100% - 24px); max-width: 420px; }
 }
 @media (max-width: 430px) {
   .grid { grid-template-columns: 1fr; }
@@ -105,7 +109,7 @@
   .panel { padding: 17px; border-radius: 19px; }
   .rowAside { padding-left: 0; }
   .header { align-items: center; }
-  .nav { max-width: calc(100% - 16px); overflow-x: auto; }
+  .nav { max-width: calc(100% - 16px); }
   .nav a { padding: 0 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .actionCard { transition: none; } .loader { animation: none; } }
