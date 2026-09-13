@@ -1,9 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import {useMemo, useRef, useState} from 'react'
 import {useRouter} from 'next/navigation'
-import {ChevronRight, Map} from 'lucide-react'
+import {Map} from 'lucide-react'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {operationalDate} from '../../../lib/driver-queue'
