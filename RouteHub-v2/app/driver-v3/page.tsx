@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import {ChevronRight, Map, MapPin, Package, Phone, TriangleAlert, Truck} from 'lucide-react'
+import {ChevronRight, Map, MapPin, Package, PackageCheck, PackagePlus, Phone, TriangleAlert, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -16,6 +16,7 @@ import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
 import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
+import confirmStyles from '../../components/driver-v3/driver-v3.module.css'
 import DriverRouteEstimate from '../../components/driver-v3/DriverRouteEstimate'
 import {InfoSheet, PickupSheet, ReturnSheet, NextStopSheet, DeliverySheet} from './today-sheets'
 
@@ -33,6 +34,7 @@ export default function DriverV3Page() {
   const [issueOpen,setIssueOpen]=useState(false)
   const [issueNote,setIssueNote]=useState('')
   const [podPanel,setPodPanel]=useState<null | 'photo' | 'signature' | 'notes' | 'issue'>(null)
+  const [confirmPickupOpen,setConfirmPickupOpen]=useState(false)
   const [askName,setAskName]=useState(false)
   const nameRef=useRef<HTMLInputElement>(null)
   const photoRef=useRef<HTMLInputElement>(null)
@@ -47,6 +49,9 @@ export default function DriverV3Page() {
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
+  // A shared Package icon for every stop type made the badge/avatar read the
+  // same at a glance regardless of what the driver actually has to do next.
+  const StopIcon=kind==='pickup'?PackagePlus:kind==='delivery'?PackageCheck:Warehouse
   const serviceContext=kind==='pickup'
     ? (route?.order_number ? `PO ${route.order_number}` : (locale==='es'?'Parada de recogida':'Pickup stop'))
     : kind==='delivery'
@@ -55,6 +60,7 @@ export default function DriverV3Page() {
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
+  const NextStopIcon=nextKind==='pickup'?PackagePlus:nextKind==='delivery'?PackageCheck:Warehouse
   const currentStopPosition=Math.max(1,Number(route?.position)||1)
   const visibleStopCount=currentStopPosition+(snapshot?.queue.upcoming?.length||0)
   const stopSummary=locale==='es'
@@ -283,10 +289,12 @@ export default function DriverV3Page() {
       const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
       return {label:startLabel, run:startCurrent}
     }
-    // Pickup completion is a single explicit action in Today. The real
-    // mutation records arrival and completion together, so the Driver is not
-    // left on a paused stop after tapping Complete Pickup.
-    if(kind==='pickup') return {label:t.drvCompletePickup, run:confirmPickup}
+    // Pickup completion records arrival and completion together in one
+    // irreversible call - unlike Delivery/Return it has no evidence sheet in
+    // between, so a mis-tap on the hero button would close the whole stop
+    // with nothing to undo. A confirm step (same pattern as ending Driving
+    // Day) covers that without adding a full second screen.
+    if(kind==='pickup') return {label:t.drvCompletePickup, run:async()=>setConfirmPickupOpen(true)}
     if(kind==='return') return {label:t.drvCompleteReturn, run:openReturn}
     return {label:t.drvCompleteDelivery, run:openDelivery}
   }
@@ -323,7 +331,7 @@ export default function DriverV3Page() {
   }
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
-  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean(sheet&&operation)}>
+  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean((sheet&&operation)||confirmPickupOpen)}>
     <div className={styles.page} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
@@ -339,7 +347,7 @@ export default function DriverV3Page() {
       </section>:operation&&route?<>
         <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn}`}>
           <div className={styles.heroTop}>
-            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><Package/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
+            <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><StopIcon/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
             <span className="muted" style={{fontSize:12,fontWeight:700}}>ROUTE {routeNumber(route)}</span>
           </div>
           <p className={styles.stopSummary}>{stopSummary}</p>
@@ -356,7 +364,7 @@ export default function DriverV3Page() {
                 <Phone/>
               </a>
             ):(
-              <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><Package/></span>
+              <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><StopIcon/></span>
             )}
           </div>
           <button type="button" onClick={()=>setSheet('info')} className={styles.stopDetails}>
@@ -392,6 +400,16 @@ export default function DriverV3Page() {
           </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
+        {nextRoute&&(
+          <button type="button" className={styles.nextChip} onClick={()=>setSheet('next')}>
+            <NextStopIcon/>
+            <span className={styles.nextChipLabel}>
+              <small>{locale==='es'?'Siguiente parada':'Next stop'} · {nextLabel}</small>
+              <strong>{nextRoute.destination_name||nextRoute.destination_address||t.drvCurrentStopName}</strong>
+            </span>
+            <ChevronRight size={18}/>
+          </button>
+        )}
         <button className={styles.routeSwipeZone} type="button" aria-label={nextRoute ? (locale==='es'?'Abrir siguiente ruta':'Open next route') : (locale==='es'?'Ver historial':'View history')} onClick={routeSwipeAction} onTouchStart={routeSwipeStart} onTouchEnd={routeSwipeEnd}>
           <span className={styles.routeSwipeHandle} aria-hidden="true">↑</span>
           <span>{nextRoute ? (locale==='es'?'Desliza hacia arriba para ver la siguiente ruta':'Swipe up for the next route') : (locale==='es'?'No hay más rutas pendientes':'No more pending routes')}</span>
@@ -431,6 +449,21 @@ export default function DriverV3Page() {
           canvas={canvas} onSign={sign} onClearSignature={()=>{const c=canvas.current;if(c)c.getContext('2d')?.clearRect(0,0,c.width,c.height);setSigned(false)}}
           busy={busy} message={message} onConfirm={()=>void confirmDelivery()} onClose={()=>{setSheet(null);setPodPanel(null)}}
         />
+      )}
+
+      {confirmPickupOpen&&(
+        <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
+          <div className={confirmStyles.confirmSheet}>
+            <h2>{locale==='es'?'¿Completar recogida?':'Complete this pickup?'}</h2>
+            <p>{locale==='es'?'Vas a marcar esta parada como completada. No se puede deshacer desde la app.':'This stop will be marked complete. It cannot be undone from the app.'}</p>
+            <div className={confirmStyles.confirmActions}>
+              <button type="button" className="secondary" disabled={busy} onClick={()=>setConfirmPickupOpen(false)}>{t.drvCancel}</button>
+              <button type="button" className="primary" disabled={busy} onClick={()=>{setConfirmPickupOpen(false);void confirmPickup()}}>
+                {busy?t.drvBusy:(locale==='es'?'Sí, completar':'Yes, complete')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   </DriverV3Shell>

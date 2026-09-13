@@ -115,6 +115,15 @@
 .routeSwipeZone:active{transform:scale(.98);color:#1677ff}
 .routeSwipeZone:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px;border-radius:8px}
 .routeSwipeHandle{display:block;width:42px;height:4px;border-radius:999px;background:#b8c6d8;font-size:0;line-height:0}
+.nextChip{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border:1px solid #dde5ee;border-radius:12px;background:#fff;color:#0f1d35;font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.nextChip:active{transform:scale(.99);background:#f7f9fc}
+.nextChipLabel{flex:1;min-width:0}
+.nextChipLabel small{display:block;color:#64748b;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.nextChipLabel strong{display:block;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.nextChip>svg{flex:0 0 auto;color:#1667f2}
+:global(html[data-theme='dark']) .nextChip{background:#18263b;border-color:#31445f;color:#f4f7fb}
+:global(html[data-theme='dark']) .nextChip:active{background:#152136}
+:global(html[data-theme='dark']) .nextChipLabel small{color:#9aabc0}
 .nextStopSwipeHint{margin:0 0 8px;color:#64748b;font-size:11px;line-height:14px;font-weight:700;text-align:center}
 .nextStopButton{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit}
 .nextStopContent{display:grid;grid-template-columns:minmax(0,1fr) 28px;align-items:center;gap:10px}

@@ -7,7 +7,7 @@
 // the values/callbacks it already computes. Splitting this out only moves
 // code; it does not change what any of it does.
 
-import {Camera, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
+import {Camera, PackageCheck, PackagePlus, PenLine, Phone, TriangleAlert, Warehouse, X} from 'lucide-react'
 import type {RefObject} from 'react'
 import styles from './today.module.css'
 
@@ -120,11 +120,12 @@ export function ReturnSheet({route, t, busy, message, onComplete, onClose}: {rou
 export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpenMaps, onViewHistory}: {
   nextRoute: any; nextKind: string; nextLabel: string; t: any; onClose: () => void; onOpenMaps: () => void; onViewHistory: () => void
 }) {
+  const NextIcon = nextKind === 'pickup' ? PackagePlus : nextKind === 'delivery' ? PackageCheck : Warehouse
   return (
     <div style={overlay} onTouchMove={e => e.preventDefault()}>
       <section className="card" style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvNextStop} onClose={onClose} t={t} />
-        <span className={`${styles.typeBadge} ${styles[nextKind || 'return']}`} style={{marginBottom: 12}}><Package />{nextLabel}</span>
+        <span className={`${styles.typeBadge} ${styles[nextKind || 'return']}`} style={{marginBottom: 12}}><NextIcon />{nextLabel}</span>
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{nextRoute.destination_name || nextRoute.destination_address || t.drvCurrentStopName}</h2>
         {nextRoute.destination_address && <p className="muted" style={{margin: '0 0 10px'}}>{nextRoute.destination_address}</p>}
         {nextKind !== 'return' && nextRoute.order_number ? <p style={{margin: '0 0 12px', fontSize: 22, fontWeight: 800}}>PO {nextRoute.order_number}</p> : null}
