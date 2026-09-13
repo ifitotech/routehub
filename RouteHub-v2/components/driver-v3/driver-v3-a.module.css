@@ -103,24 +103,14 @@
 .eyebrow{font-size:11px;line-height:16px;letter-spacing:.12em;color:var(--muted);font-weight:800}
 .title{font-size:30px;line-height:36px;margin:8px 0 6px;letter-spacing:-.03em}
 .muted{color:var(--muted);font-weight:500}
-.primary,.secondary,.danger{
-  display:grid;
-  place-items:center;
-  width:100%;
-  min-height:52px;
-  border-radius:12px;
-  font:inherit;
-  font-size:15px;
-  font-weight:800;
-  border:1px solid transparent;
-  touch-action:manipulation;
-  flex-shrink:0;
-  appearance:none;
-  -webkit-appearance:none;
-}
-.primary{min-height:60px;background:var(--blue);color:#fff;border:0;box-shadow:0 3px 8px rgba(22,103,242,.18)}
-.secondary{background:#fff;color:var(--navy);border-color:var(--border)}
-.danger{background:#fff0f0;color:#b42318;border-color:#f3b5b5}
+/* .primary/.secondary/.danger used to be defined here, but every call site
+   in app/driver-v3 uses the plain string className="primary" etc. (matching
+   the app-wide classes in app/globals.css), never styles.primary - so this
+   CSS Modules block was hashed to a class name nothing in the DOM ever
+   carried and never actually applied. The real Driver-specific look (taller
+   primary, blue shadow, disabled/active states) now lives scoped under
+   .driver-v3-root in app/driver-v3/v3-app.css, which is a plain global
+   stylesheet and so can actually target the literal "primary" class. */
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;border-top:1px solid var(--border);padding:8px 0}
 .row:first-child{border-top:0}
 .row a{color:inherit;text-decoration:none;font-weight:700}
@@ -147,12 +137,11 @@
 :global(html[data-theme='dark']) .shell{--navy:#f4f7fb;--blue:#6ea5ff;--muted:#b6c4d7;--border:#31445f;background:#101c2d}
 :global(html[data-theme='dark']) .content{background:#101c2d}
 :global(html[data-theme='dark']) .nav{background:#14243a;border-color:#31445f;box-shadow:0 -8px 26px rgba(0,0,0,.2)}
-:global(html[data-theme='dark']) .card,:global(html[data-theme='dark']) .secondary{background:#18263b;color:#f4f7fb;border-color:#31445f}
+:global(html[data-theme='dark']) .card{background:#18263b;color:#f4f7fb;border-color:#31445f}
 :global(html[data-theme='dark']) .content input,:global(html[data-theme='dark']) .content textarea,:global(html[data-theme='dark']) .content select{background:#102036;color:#f4f7fb;border-color:#31445f}
 :global(html[data-theme='dark']) .content [role=alert]{background:#4a252b;color:#ffc1c6;border-color:#80424d}
 :global(html[data-theme='dark']) .content [role=status]{background:#153a2b;color:#8fe7bc}
 :global(html[data-theme='dark']) .content input::placeholder,:global(html[data-theme='dark']) .content textarea::placeholder{color:#8fa2ba;opacity:1}
-:global(html[data-theme='dark']) .danger{background:#3a2027;color:#ffb6bd;border-color:#73343d}
 .content > div:first-child{min-height:100%;}
 .content> a.muted:first-child{
   display:inline-flex;align-items:center;min-height:44px;color:#1667f2;
@@ -201,10 +190,6 @@
   display:grid;
   gap:10px;
 }
-.stickyAction .primary,
-.stickyAction .secondary,
-.stickyAction .danger{width:100%}
-
 /* Legacy today helpers kept for compatibility */
 .todayPage{display:grid;gap:10px}
 .todayPage .title{margin:0}
@@ -212,5 +197,3 @@
 .todayPage .card{padding:14px 16px}
 
 .nav a:active{opacity:.7}
-.primary:active,.secondary:active,.danger:active{opacity:.92;transform:scale(.985)}
-.primary:disabled,.secondary:disabled,.danger:disabled{opacity:.45}

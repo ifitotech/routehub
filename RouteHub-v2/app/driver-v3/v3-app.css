@@ -101,6 +101,42 @@ body[data-driver-app='v3'] {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Driver V3's own primary/secondary/danger buttons. className="primary" etc.
+   also match the generic app-wide rule in app/globals.css (shared with
+   Manager/Admin) - that rule stays as the fallback for the rest of the app.
+   These are scoped under .driver-v3-root so they only affect Driver V3, and
+   two classes beats globals.css's one-class selector on specificity, so no
+   !important is needed here. */
+.driver-v3-root .primary,
+.driver-v3-root .secondary,
+.driver-v3-root .danger {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 52px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  touch-action: manipulation;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform .16s ease, opacity .16s ease;
+}
+.driver-v3-root .primary { min-height: 60px; background: #1667f2; color: #fff; border: 0; box-shadow: 0 3px 8px rgba(22, 103, 242, 0.18); }
+.driver-v3-root .secondary { background: #fff; color: #0f1d35; border-color: #dde5ee; }
+.driver-v3-root .danger { background: #fff0f0; color: #b42318; border-color: #f3b5b5; }
+.driver-v3-root .primary:active,
+.driver-v3-root .secondary:active,
+.driver-v3-root .danger:active { opacity: 0.92; transform: scale(0.985); }
+.driver-v3-root .primary:disabled,
+.driver-v3-root .secondary:disabled,
+.driver-v3-root .danger:disabled { opacity: 0.45; }
+html[data-theme='dark'] .driver-v3-root .secondary { background: #18263b; color: #f4f7fb; border-color: #31445f; }
+html[data-theme='dark'] .driver-v3-root .danger { background: #3a2027; color: #ffb6bd; border-color: #73343d; }
 .driver-v3-splash .spin {
   width: 22px;
   height: 22px;
