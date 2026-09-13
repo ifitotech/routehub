@@ -1,5 +1,5 @@
 import type {Metadata, Viewport} from 'next'
-import DriverSessionGate from '../driver/driver-session-gate'
+import DriverSessionGate from '../../components/driver-v3/driver-session-gate'
 import DriverV3AppMode from './app-mode'
 import DriverLiveLocation from './driver-live-location'
 import {DriverV3Provider} from '../../lib/driver-v3/use-driver-data'
