@@ -107,11 +107,24 @@ export default function OrganizationPage() {
     const email = addLoginEmail.trim().toLowerCase()
     if (!branch || addLoginBusy || !email || !addLoginPassword) return
     if (!email.endsWith('@routehub.local')) { setMessage('Test user emails must end in @routehub.local.'); return }
+    // That email already belongs to someone in this branch with a
+    // different role - create_beta_account would silently change their
+    // existing membership to this new role instead of making a separate
+    // account, since it upserts on (company_id, user_id). A stale,
+    // untouched email left over after creating a previous role is exactly
+    // how this happens - block it instead of quietly reassigning someone.
+    const collision = branch.members.find(member => member.email.toLowerCase() === email && member.role !== addLoginRole)
+    if (collision) { setMessage(`${email} already exists here as ${roleLabelFor(collision.role)}. Creating it as ${roleLabelFor(addLoginRole)} would change their role instead of making a new account - use a different email.`); return }
     setAddLoginBusy(true)
     setMessage('')
     try {
       await createBetaAccount(id, branch, addLoginRole, email, addLoginPassword)
       setAddLoginResult({branchId: branch.id, email, password: addLoginPassword})
+      // Reset for the next role instead of leaving this email/password
+      // stuck in the field - re-enables the auto-suggested email/password
+      // for whatever role gets picked next.
+      setAddLoginEmailTouched(false)
+      setAddLoginPassword(randomPassword())
       await load()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to create test user.')
