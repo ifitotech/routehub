@@ -5,7 +5,7 @@ import nextDynamic from 'next/dynamic'
 import GoogleAddressInput from '../google-address-input'
 import styles from './routes.module.css'
 import ui from './new-route-ui.module.css'
-import {branchLocation, type OriginMode} from './routes-model'
+import type {OriginMode} from './routes-model'
 
 const LocationConfirmMap = nextDynamic(() => import('../location-confirm-map'), {ssr: false})
 
@@ -14,8 +14,7 @@ const LocationConfirmMap = nextDynamic(() => import('../location-confirm-map'), 
 // of two unrelated blocks, plus the optional/contact fields and PO/priority/
 // notes collapsed under "More details".
 export default function NewRouteDetails(p: any) {
-  const {locale,c,form,setForm,originMode,setOriginSource,oc,branches,contacts,pendingLocation,setPendingLocation,useConfirmedDestination,updateDestination,destinationSuggestions,selectDestinationContact,selectExternalDestination,searchContext,setSelectedDestinationLocation,saveContactOpen,setSaveContactOpen,contactSaveMessage,newContactName,setNewContactName,savingContact,saveDestinationAsContact,selectedContact} = p
-  const branchForValue = (value: string) => branches?.find((branch: {address?: string | null; name: string}) => (branch.address || branch.name) === value)
+  const {locale,c,form,setForm,originMode,setOriginSource,oc,defaultBranch,contacts,pendingLocation,setPendingLocation,useConfirmedDestination,updateDestination,destinationSuggestions,selectDestinationContact,selectExternalDestination,searchContext,saveContactOpen,setSaveContactOpen,contactSaveMessage,newContactName,setNewContactName,savingContact,saveDestinationAsContact,selectedContact} = p
 
   const originLabel = locale==='es' ? 'Origen' : locale==='fr' ? 'Origine' : 'Origin'
   const destLabel = locale==='es' ? 'Destino' : locale==='fr' ? 'Destination' : 'Destination'
@@ -34,13 +33,19 @@ export default function NewRouteDetails(p: any) {
           <fieldset className={`${styles.fieldset} ${ui.originPrimary}`}>
             <legend className={ui.timelineTag}>{originLabel}</legend>
             <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
-            {/* RouteHub is single-branch by design - a full 49px select
-                control with nothing else to pick was space spent on a
-                choice that was never real. Always the compact read-only
-                line instead, regardless of how many rows the branches
-                table happens to have for this company. */}
+            {/* A full 49px select control here would offer to pick among
+                every branch the company has, but "default branch" always
+                means this session's own branch - each branch runs
+                separately, so this is always a read-only line, never a
+                dropdown onto some other branch. */}
             {originMode === 'branch' && (
-              <div className={ui.compactValue}><MapPin size={14}/><span>{(branches||[])[0]?.name || form.origin || oc.chooseBranch}</span></div>
+              defaultBranch?.address ? (
+                <div className={ui.compactValue}><MapPin size={14}/><span>{defaultBranch.address}</span></div>
+              ) : defaultBranch ? (
+                <div className={ui.compactValue} style={{color: 'var(--danger, #c0392b)'}}><MapPin size={14}/><span>{defaultBranch.name} — {oc.noBranchAddress}</span></div>
+              ) : (
+                <div className={ui.compactValue}><MapPin size={14}/><span>{oc.chooseBranch}</span></div>
+              )
             )}
             {originMode === 'previous' && <div className={styles.inputWrap}><MapPin size={18}/><input value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))} placeholder={oc.noPrevious}/></div>}
             {originMode === 'contact' && <div className={styles.inputWrap}><MapPin size={18}/><select value={form.origin} onChange={event => setForm((current: any) => ({...current, origin:event.target.value}))}><option value="">{oc.chooseContact}</option>{(contacts||[]).map((contact: any) => <option key={contact.id} value={contact.address}>{contact.company_name}</option>)}</select></div>}
@@ -49,7 +54,10 @@ export default function NewRouteDetails(p: any) {
 
           <div>
             <span className={`${ui.timelineTag} ${ui.timelineTagDest}`}>{destLabel}</span>
-            {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={styles.inputWrap}><MapPin size={18}/><select value={form.destination} onChange={event=>{const branch=branchForValue(event.target.value);setSelectedDestinationLocation(branchLocation(branch));setForm((current: any)=>({...current,destination:event.target.value,destination_label:branch?.name||'',destination_phone:'',contact_id:''}))}}>{(branches||[]).map((branch: any)=><option key={branch.id} value={branch.address||branch.name}>{branch.name}</option>)}</select></div></label> : <div className={ui.destCard}>
+            {/* A return always goes back to this session's own branch - not
+                a picker onto some other branch in the same company, which
+                is exactly the cross-branch mixing that shouldn't happen. */}
+            {form.type==='return' ? <label className={styles.field}><span>{locale==='es'?'Sucursal de regreso':'Return branch'}</span><div className={ui.compactValue}><MapPin size={14}/><span>{defaultBranch?.address || (defaultBranch ? `${defaultBranch.name} — ${oc.noBranchAddress}` : oc.chooseBranch)}</span></div></label> : <div className={ui.destCard}>
               <label className={styles.field}>
                 <span>{form.type==='pickup'?c.pickupFrom:c.deliveryTo}</span>
                 <div className={`${styles.inputWrap} ${ui.destinationWrap}`}>

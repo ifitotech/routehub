@@ -1,7 +1,7 @@
 export const originCopy = {
-  en:{branch:'Default branch',previous:'Last route',contact:'Saved place',custom:'Custom',chooseBranch:'Choose branch',chooseContact:'Choose a saved contact or store',noPrevious:'No previous route is available for this driver.'},
-  es:{branch:'Sucursal predeterminada',previous:'Última ruta',contact:'Lugar guardado',custom:'Personalizado',chooseBranch:'Elige una sucursal',chooseContact:'Elige un contacto o tienda guardada',noPrevious:'Este conductor no tiene una ruta anterior disponible.'},
-  fr:{branch:'Succursale par défaut',previous:'Dernier itinéraire',contact:'Lieu enregistré',custom:'Personnalisé',chooseBranch:'Choisir une succursale',chooseContact:'Choisir un contact ou magasin enregistré',noPrevious:'Aucun itinéraire précédent n’est disponible pour ce conducteur.'},
+  en:{branch:'Default branch',previous:'Last route',contact:'Saved place',custom:'Custom',chooseBranch:'Choose branch',chooseContact:'Choose a saved contact or store',noPrevious:'No previous route is available for this driver.',noBranchAddress:'No address on file for this branch - add one in Admin before starting routes from it.'},
+  es:{branch:'Sucursal predeterminada',previous:'Última ruta',contact:'Lugar guardado',custom:'Personalizado',chooseBranch:'Elige una sucursal',chooseContact:'Elige un contacto o tienda guardada',noPrevious:'Este conductor no tiene una ruta anterior disponible.',noBranchAddress:'Esta sucursal no tiene dirección registrada - agrégala en Admin antes de iniciar rutas desde ahí.'},
+  fr:{branch:'Succursale par défaut',previous:'Dernier itinéraire',contact:'Lieu enregistré',custom:'Personnalisé',chooseBranch:'Choisir une succursale',chooseContact:'Choisir un contact ou magasin enregistré',noPrevious:'Aucun itinéraire précédent n’est disponible pour ce conducteur.',noBranchAddress:'Aucune adresse enregistrée pour cette succursale - ajoutez-en une dans Admin avant d’y démarrer des itinéraires.'},
 }
 
 export const routeStatuses = ['draft', 'pending', 'published', 'active', 'paused']
