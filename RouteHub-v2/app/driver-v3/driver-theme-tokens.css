@@ -1,0 +1,83 @@
+/* RouteHub Driver — exact token system for the "midnight navigation"
+   premium redesign. Dark is the primary/default theme; light is an
+   equivalent variant that only swaps tokens, never structure. Scoped to
+   .driver-v3-root so nothing outside Driver is affected. */
+
+.driver-v3-root {
+  --rh-ink: #06152c;
+  --rh-navy: #081b35;
+  --rh-navy-2: #0b2345;
+  --rh-surface: rgba(10, 31, 61, 0.72);
+  --rh-surface-strong: rgba(8, 26, 52, 0.92);
+  --rh-surface-soft: rgba(255, 255, 255, 0.045);
+  --rh-border: rgba(101, 162, 255, 0.16);
+  --rh-border-strong: rgba(64, 142, 255, 0.3);
+
+  --rh-primary: #1677ff;
+  --rh-primary-bright: #2493ff;
+  --rh-primary-deep: #0a5fe8;
+  --rh-cyan: #17d9d2;
+  --rh-cyan-soft: #84f3ef;
+
+  --rh-text: #f7faff;
+  --rh-text-muted: #9fb2d0;
+  --rh-text-subtle: #6f86aa;
+  --rh-divider: rgba(151, 185, 234, 0.16);
+
+  --rh-success: #25d885;
+  --rh-warning: #ffb547;
+  --rh-danger: #ff6b7a;
+
+  --rh-pickup-bg: rgba(22, 119, 255, 0.16);
+  --rh-pickup-border: rgba(36, 147, 255, 0.25);
+  --rh-pickup-fg: #8ec7ff;
+  --rh-delivery-bg: rgba(139, 92, 246, 0.16);
+  --rh-delivery-border: rgba(167, 139, 250, 0.26);
+  --rh-delivery-fg: #c4b5fd;
+  --rh-return-bg: rgba(148, 163, 184, 0.14);
+  --rh-return-border: rgba(203, 213, 225, 0.18);
+  --rh-return-fg: #cbd5e1;
+
+  --rh-page-bg:
+    radial-gradient(circle at 75% 22%, rgba(22, 119, 255, .17), transparent 30%),
+    radial-gradient(circle at 15% 85%, rgba(23, 217, 210, .09), transparent 28%),
+    linear-gradient(155deg, #0b2345 0%, #06152c 46%, #030c1c 100%);
+
+  --rh-card-bg: linear-gradient(145deg, rgba(19, 53, 96, .70), rgba(5, 20, 42, .52));
+}
+
+html[data-theme='light'] .driver-v3-root {
+  --rh-ink: #f5f9ff;
+  --rh-navy: #ffffff;
+  --rh-navy-2: #eef6ff;
+  --rh-surface: rgba(255, 255, 255, .80);
+  --rh-surface-strong: rgba(255, 255, 255, .94);
+  --rh-surface-soft: rgba(15, 62, 120, .035);
+  --rh-border: rgba(31, 96, 170, .13);
+  --rh-border-strong: rgba(31, 96, 170, .22);
+
+  --rh-cyan: #0b9eb2;
+  --rh-cyan-soft: #bdeeee;
+
+  --rh-text: #0b1f3a;
+  --rh-text-muted: #58708f;
+  --rh-text-subtle: #7b91ac;
+  --rh-divider: rgba(11, 31, 58, .1);
+
+  --rh-pickup-bg: rgba(22, 119, 255, .09);
+  --rh-pickup-border: rgba(22, 119, 255, .2);
+  --rh-pickup-fg: #0a5fe8;
+  --rh-delivery-bg: rgba(139, 92, 246, .1);
+  --rh-delivery-border: rgba(139, 92, 246, .22);
+  --rh-delivery-fg: #6d28d9;
+  --rh-return-bg: rgba(88, 112, 143, .1);
+  --rh-return-border: rgba(88, 112, 143, .2);
+  --rh-return-fg: #45607e;
+
+  --rh-page-bg:
+    radial-gradient(circle at 78% 25%, rgba(22, 119, 255, .10), transparent 28%),
+    radial-gradient(circle at 14% 78%, rgba(23, 217, 210, .09), transparent 30%),
+    linear-gradient(155deg, #f8fbff 0%, #eef6ff 55%, #f7fcff 100%);
+
+  --rh-card-bg: linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(238, 246, 255, .82));
+}

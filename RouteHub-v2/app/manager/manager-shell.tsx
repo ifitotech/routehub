@@ -33,27 +33,6 @@ function useBranchSetupGate(pathname: string) {
   }, [pathname, router])
 }
 
-// Manager is intentionally light-only, but the stored theme preference
-// (shared with Driver) still defaults to 'dark' and several older Manager
-// screen modules carry their own [data-theme='dark'] rules. Rather than
-// hunting those down file by file, force the document to light while any
-// Manager screen is mounted and restore whatever preference was active the
-// moment it unmounts — Driver and every other page are unaffected.
-function useManagerLightTheme() {
-  useEffect(() => {
-    const root = document.documentElement
-    const previousTheme = root.dataset.theme
-    const previousColorScheme = root.style.colorScheme
-    root.dataset.theme = 'light'
-    root.style.colorScheme = 'light'
-    return () => {
-      if (previousTheme) root.dataset.theme = previousTheme
-      else delete root.dataset.theme
-      root.style.colorScheme = previousColorScheme
-    }
-  }, [])
-}
-
 type ManagerSection = 'today' | 'routes' | 'map' | 'truck' | 'contacts' | 'history' | 'reports' | 'settings'
 
 type ManagerShellProps = {
@@ -68,7 +47,6 @@ export default function ManagerShell({children, active = 'today', branchName, di
   const {locale, t} = useLocale()
   const pathname = usePathname()
   useThemePreference()
-  useManagerLightTheme()
   useBranchSetupGate(pathname)
   const copy = locale === 'es'
     ? {today: 'Hoy', dashboard: 'Panel', map: 'Mapa', contacts: 'Contactos', truck: 'Camión', reports: 'Reportes', settings: 'Configuración', newRoute: 'Nueva ruta', workspace: 'Espacio de trabajo', role: 'Manager de sucursal'}

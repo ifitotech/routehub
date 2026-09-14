@@ -1,4 +1,4 @@
-.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:12px 0 2px;box-sizing:border-box;color:#0f172a;overflow:hidden;touch-action:pan-y}
+.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:12px 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:var(--rh-page-bg,none);overflow:hidden;touch-action:pan-y}
 .pullScene{position:absolute;top:24px;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:center;width:min(220px,78vw);height:28px;margin:0 auto;pointer-events:none;transition:opacity .12s linear}
 .pullRoad{position:absolute;left:0;right:0;bottom:2px;height:2.5px;border-radius:999px;background:#dde5ee;overflow:hidden}
 .pullRoadLine{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(22,96,240,.55) 0 8px,transparent 8px 16px);background-size:16px 100%;opacity:.55}
@@ -9,57 +9,63 @@
 @keyframes pullBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
 @keyframes pullDrive{0%{left:2%;transform:translate(-50%,-50%)}48%{left:82%;transform:translate(-50%,-50%)}50%{left:82%;transform:translate(-50%,-50%) scaleX(-1)}98%{left:2%;transform:translate(-50%,-50%) scaleX(-1)}100%{left:2%;transform:translate(-50%,-50%)}}
 .startDay{display:grid;place-items:center;width:100%;height:44px;border-radius:12px;background:#eaf2ff;color:#1667f2;font-size:13px;font-weight:800;text-decoration:none}
-.hero{--service-surface:#fff;--service-border:#e5e7eb;--service-detail:#f4f7fb;display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:16px;border:1px solid var(--service-border);border-radius:20px;background:var(--service-surface);box-shadow:0 6px 20px rgba(15,23,42,.06);box-sizing:border-box;min-height:0}
-/* Keep the operational layout identical for every stop type. Only the soft
-   surface color changes, so the Driver can identify the service at a glance
-   without action buttons moving between Pickup, Delivery, and Return. */
-.servicePickup{--service-surface:#f4fcfd;--service-border:#cdecef;--service-detail:#fff}
-.serviceDelivery{--service-surface:#faf7ff;--service-border:#e4d7f9;--service-detail:#fff}
-.serviceReturn{--service-surface:#f3f8fd;--service-border:#cbd9e7;--service-detail:#fff}
+.hero{display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:18px;border:1px solid rgba(125,180,255,.14);border-radius:22px;background:var(--rh-card-bg,linear-gradient(145deg,rgba(19,53,96,.70),rgba(5,20,42,.52)));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 18px 48px rgba(0,0,0,.22);box-sizing:border-box;min-height:0;color:var(--rh-text,#F7FAFF)}
+/* The soft surface/border colors used to change per stop type; the new
+   glass card reads the same for every type, so Pickup/Delivery/Return are
+   told apart by the pill and icon accents alone (see .pickup/.delivery/
+   .return below), not by the whole card recoloring. */
 .heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
-.typeBadge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;line-height:28px;font-weight:800;letter-spacing:.01em}
+.typeBadge{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;font-size:12px;line-height:30px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border:1px solid transparent}
 .typeBadge svg{width:15px;height:15px}
-.delivery{background:#f2ecff;color:#7c3aed}
-.pickup{background:#e6fafb;color:#0b9eb2}
-.return{background:#e6f0fa;color:#355f87}
-.stopSummary{min-height:16px;margin:8px 0 0;color:#64748b;font-size:11px;line-height:16px;font-weight:800;letter-spacing:.06em}
-.stopCount{color:#667280;font-size:12px;line-height:20px;font-weight:700;white-space:nowrap}
-.stopCount strong{color:#1667f2;font-size:20px;vertical-align:-1px}
-.stopNumber{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#fff;font-size:13px;font-weight:800;flex-shrink:0}
-.stopNumber.delivery{background:#7c3aed;color:#fff}
-.stopNumber.pickup{background:#0b9eb2;color:#fff}
-.stopNumber.return{background:#355f87;color:#fff}
-.destination{display:grid;grid-template-columns:minmax(0,1fr) 56px;align-items:center;gap:12px;margin-top:4px}
-.destination h1{display:-webkit-box;min-height:58px;margin:0;color:#0f172a;font-size:clamp(24px,6.8vw,28px);line-height:1.08;font-weight:800;letter-spacing:-.03em;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-.destination p{display:-webkit-box;min-height:40px;margin:6px 0 0;color:#64748b;font-size:14px;line-height:19px;font-weight:600;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-.orderSlot{min-height:30px;margin-top:6px;display:flex;align-items:flex-start}
-.order{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border-radius:7px;background:#f5f8fc;background:color-mix(in srgb,var(--service-border) 45%,#fff);color:#315477;font-size:12px;line-height:25px;font-weight:750;overflow-wrap:anywhere}
-.operationIcon{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;justify-self:end}
-.operationIcon svg{width:28px;height:28px;stroke-width:2.2}
-.operationIcon.delivery{background:#f2ecff;color:#7c3aed}
-.operationIcon.pickup{background:#e6fafb;color:#0b9eb2}
-.operationIcon.return{background:#e6f0fa;color:#355f87}
-.divider{height:1px;margin:12px 0;background:#e8edf3}
-.servicePickup .divider,.serviceDelivery .divider,.serviceReturn .divider{background:var(--service-border)}
-.stopDetails{display:flex;align-items:center;gap:10px;width:100%;min-height:54px;margin:8px 0 0;padding:10px 12px;border:0;border-radius:14px;background:var(--service-detail);color:#0f172a;text-align:left;font:inherit;box-shadow:0 1px 0 rgba(15,23,42,.03);box-sizing:border-box}
-.stopDetails:active{transform:scale(.99)}
-.stopDetails:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px}
+.delivery{background:var(--rh-delivery-bg,rgba(139,92,246,.16));border-color:var(--rh-delivery-border,rgba(167,139,250,.26));color:var(--rh-delivery-fg,#c4b5fd)}
+.pickup{background:var(--rh-pickup-bg,rgba(22,119,255,.16));border-color:var(--rh-pickup-border,rgba(36,147,255,.25));color:var(--rh-pickup-fg,#8ec7ff)}
+.return{background:var(--rh-return-bg,rgba(148,163,184,.14));border-color:var(--rh-return-border,rgba(203,213,225,.18));color:var(--rh-return-fg,#cbd5e1)}
+.stopMetaRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 0}
+.stopLabel{color:var(--rh-text-muted,#9FB2D0);font-size:15px;font-weight:650}
+.stopDots{display:inline-flex;align-items:center;gap:6px}
+.stopDots i{display:block;width:7px;height:7px;border-radius:99px;background:var(--rh-divider,rgba(151,185,234,.3))}
+.stopDots i.current{width:16px;background:var(--rh-primary,#1677ff)}
+.stopDots i.done{background:var(--rh-primary,#1677ff)}
+.identityBlock{display:block;width:100%;margin:10px 0 0;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;touch-action:manipulation;appearance:none;-webkit-appearance:none}
+.identityBlock h1{display:-webkit-box;min-height:58px;margin:0;color:var(--rh-text,#F7FAFF);font-size:clamp(28px,7.5vw,34px);line-height:1.08;font-weight:800;letter-spacing:-.04em;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.addressLine{display:-webkit-box;min-height:24px;margin:6px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:16px;line-height:1.4;font-weight:500;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.poLine{margin:8px 0 0;color:#DCEBFF;font-size:16px;font-weight:750}
+.routeGlyphHost{width:100%;height:150px;margin:16px 0 4px}
+.divider{height:1px;margin:12px 0;background:var(--rh-divider,rgba(151,185,234,.16))}
 .mapPreview{display:block;width:100%;height:184px;min-height:184px;max-height:184px;flex:0 0 184px;border:0;padding:0;margin:0 0 12px;border-radius:14px;overflow:hidden;background:#e8eef4;contain:layout paint}
 .mapPreview :global(.leaflet-container){width:100%!important;height:100%!important}
 .mapPreview :global(.openstreet-route-preview){display:block;width:100%;height:100%;border:0;filter:saturate(.82) contrast(.96)}
 .mapPreview :global(.openstreet-route-empty){display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;color:#64748b;font-size:13px;font-weight:700;background:#eef3f7}
 .mapEmpty{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#64748b;font-size:13px;font-weight:700;background:#eef3f7}
-.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;height:60px;padding:0 16px;border:0;border-radius:15px;background:linear-gradient(135deg,#1f7aff,#1267ed);color:#fff;box-shadow:0 8px 18px rgba(22,103,237,.22);font:inherit;font-size:16px;line-height:22px;font-weight:800;letter-spacing:.02em;text-decoration:none;box-sizing:border-box;touch-action:manipulation;flex:0 0 auto}
-.primary svg{width:24px;height:24px}
-.primary:active{background:#0e55d8}
-.primary:disabled{opacity:.58}
-.secondaryActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;flex:0 0 auto}
-.secondaryActions a,.secondaryActions button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;height:48px;border:0;border-radius:12px;font:inherit;font-size:14px;font-weight:800;text-decoration:none;box-sizing:border-box}
-.secondaryActions svg{width:22px;height:22px}
-.mapAction{background:#eef6ff;color:#1667f2}
-.issueAction{background:#fff7e6;color:#d97706}
-.feedback{margin:10px 0 0;padding:9px 10px;border-radius:9px;background:#eaf9f1;color:#147a4a;font-size:13px;line-height:17px;font-weight:650}
-.feedbackError{background:#fff1f0;color:#b42318}
+/* Crystallized primary CTA - dark values by default (Driver's tokens
+   default to dark), light override right below softens it without
+   changing what it communicates: this is the one operational action. */
+.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;height:64px;margin-top:14px;padding:0 16px;border:1px solid rgba(181,225,255,.40);border-radius:20px;background:linear-gradient(135deg,rgba(55,157,255,.98) 0%,rgba(22,119,255,.98) 52%,rgba(10,95,232,.98) 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,48,130,.20),0 12px 28px rgba(22,119,255,.28),0 2px 6px rgba(0,0,0,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:inherit;font-size:19px;line-height:22px;font-weight:750;letter-spacing:-.01em;text-decoration:none;box-sizing:border-box;touch-action:manipulation;flex:0 0 auto;transition:transform 150ms ease,filter 150ms ease}
+.primary svg{width:22px;height:22px}
+.primary:active{transform:scale(.985);filter:brightness(.97)}
+.primary:focus-visible{outline:3px solid rgba(132,207,255,.42);outline-offset:3px}
+.primary:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
+:global(html[data-theme='light']) .primary{background:linear-gradient(135deg,#2493FF,#1677FF,#0A5FE8);border-color:rgba(255,255,255,.54);box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 10px 22px rgba(22,119,255,.22)}
+/* Tools trigger - the "secondary/glass" recipe, circular. Scoped to
+   override the header's generic transparent-button reset
+   (app/driver-v3/v3-app.css), which otherwise wins on source order for
+   every button inside the header. */
+:global(.driver-v3-root) :global(header) .toolsButton{
+  /* 44px, not the spec's 48px - matches the header's own existing grid
+     column (grid-template-columns:44px ... 44px in driver-v3-b.module.css)
+     so it doesn't overflow the reserved slot next to the centered logo. */
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(145deg,rgba(26,62,108,.72),rgba(9,29,59,.78))!important;
+  border:1px solid rgba(131,185,255,.22)!important;
+  color:#DCEBFF!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 22px rgba(0,0,0,.18)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 10px 28px rgba(0,0,0,.20)!important;
+  display:grid;place-items:center;touch-action:manipulation;
+}
+:global(.driver-v3-root) :global(header) .toolsButton:active{transform:scale(.94)}
+.feedback{margin:10px 0 0;padding:9px 10px;border-radius:9px;background:rgba(37,216,133,.14);color:var(--rh-success,#25D885);font-size:13px;line-height:17px;font-weight:650}
+.feedbackError{background:rgba(255,107,122,.14);color:var(--rh-danger,#FF6B7A)}
 .progressCard{display:grid;grid-template-columns:58px minmax(0,1fr) 58px;align-items:center;gap:10px;width:100%;min-height:64px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.05);box-sizing:border-box}
 .progressCard>div:first-child,.progressCard>div:last-child{display:flex;flex-direction:column;align-items:center}
 .progressCard strong{color:#0f1d35;font-size:18px;line-height:20px;font-weight:800}
@@ -82,11 +88,11 @@
 .nextCard p{margin:3px 0 0;color:#667280;font-size:13px;line-height:17px;font-weight:500;overflow-wrap:anywhere}
 .nextCard i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#eef6ff;color:#1667f2}
 .nextCard i svg{width:20px;height:20px}
-.stateCard{display:grid;justify-items:center;gap:10px;width:100%;padding:36px 20px;border:1px solid #e5e7eb;border-radius:18px;background:#fff;text-align:center;box-sizing:border-box}
-.stateCard>svg{width:36px;height:36px;color:#8a97a8}
-.stateCard h1{margin:0;font-size:22px;line-height:27px}
-.stateCard p{margin:0;color:#667280;font-size:15px;line-height:20px}
-.stateCard button{width:100%;height:52px;margin-top:6px;border:0;border-radius:12px;background:#1667f2;color:#fff;font:inherit;font-size:15px;font-weight:800}
+.stateCard{display:grid;justify-items:center;gap:10px;width:100%;padding:36px 20px;border:1px solid rgba(125,180,255,.14);border-radius:18px;background:var(--rh-card-bg,linear-gradient(145deg,rgba(19,53,96,.70),rgba(5,20,42,.52)));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);text-align:center;box-sizing:border-box}
+.stateCard>svg{width:36px;height:36px;color:var(--rh-text-subtle,#6F86AA)}
+.stateCard h1{margin:0;color:var(--rh-text,#F7FAFF);font-size:22px;line-height:27px}
+.stateCard p{margin:0;color:var(--rh-text-muted,#9FB2D0);font-size:15px;line-height:20px}
+.stateCard button{width:100%;height:52px;margin-top:6px;border:0;border-radius:12px;background:var(--rh-primary,#1677f2);color:#fff;font:inherit;font-size:15px;font-weight:800}
 .loading{display:flex;flex-direction:column;gap:12px}
 .loadingHero,.loadingProgress,.loadingNext{border:1px solid #e5e7eb;border-radius:18px;background:linear-gradient(90deg,#fff 20%,#f2f5f9 50%,#fff 80%);background-size:220% 100%;animation:shimmer 1.4s infinite}
 .loadingHero{height:286px}
@@ -106,24 +112,16 @@
 .routeMoreButton small{overflow:hidden;color:#64748b;font-size:11px;line-height:15px;text-overflow:ellipsis;white-space:nowrap}
 .routeMoreButton>svg{color:#1677ff}
 .routeMoreIcon{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eaf3ff;color:#1677ff;font-size:19px;font-weight:900;line-height:1}
-.returnToAppHint{display:grid;gap:3px;min-height:44px;margin-top:10px;padding:8px 10px;border-radius:12px;background:#eef6ff;color:#315477;font-size:11px;line-height:15px}
-.returnToAppHint strong{font-size:12px;color:#1677ff;font-weight:800}
-.returnToAppHint span{font-weight:600}
-.returnToAppHintActive{background:#ecfdf3;color:#24714e}
-.returnToAppHintActive strong{color:#12b76a}
-.routeSwipeZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:100%;min-height:58px;margin-top:8px;padding:8px;border:0;background:transparent;color:#64748b;font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:pan-y}
-.routeSwipeZone:active{transform:scale(.98);color:#1677ff}
-.routeSwipeZone:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px;border-radius:8px}
-.routeSwipeHandle{display:block;width:42px;height:4px;border-radius:999px;background:#b8c6d8;font-size:0;line-height:0}
-.nextChip{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border:1px solid #dde5ee;border-radius:12px;background:#fff;color:#0f1d35;font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
-.nextChip:active{transform:scale(.99);background:#f7f9fc}
+.routeSwipeZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:100%;min-height:58px;margin-top:8px;padding:8px;border:0;background:transparent;color:var(--rh-text-subtle,#6F86AA);font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:pan-y}
+.routeSwipeZone:active{transform:scale(.98);color:var(--rh-primary,#1677ff)}
+.routeSwipeZone:focus-visible{outline:3px solid rgba(132,207,255,.42);outline-offset:2px;border-radius:8px}
+.routeSwipeHandle{display:block;width:42px;height:4px;border-radius:999px;background:var(--rh-divider,#b8c6d8);font-size:0;line-height:0}
+.nextChip{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border:1px solid var(--rh-border,rgba(101,162,255,.16));border-radius:12px;background:var(--rh-surface,rgba(10,31,61,.72));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--rh-text,#F7FAFF);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.nextChip:active{transform:scale(.99)}
 .nextChipLabel{flex:1;min-width:0}
-.nextChipLabel small{display:block;color:#64748b;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.nextChipLabel small{display:block;color:var(--rh-text-subtle,#6F86AA);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .nextChipLabel strong{display:block;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
-.nextChip>svg{flex:0 0 auto;color:#1667f2}
-:global(html[data-theme='dark']) .nextChip{background:#18263b;border-color:#31445f;color:#f4f7fb}
-:global(html[data-theme='dark']) .nextChip:active{background:#152136}
-:global(html[data-theme='dark']) .nextChipLabel small{color:#9aabc0}
+.nextChip>svg{flex:0 0 auto;color:var(--rh-primary,#1677ff)}
 .nextStopSwipeHint{margin:0 0 8px;color:#64748b;font-size:11px;line-height:14px;font-weight:700;text-align:center}
 .nextStopButton{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit}
 .nextStopContent{display:grid;grid-template-columns:minmax(0,1fr) 28px;align-items:center;gap:10px}
@@ -133,85 +131,63 @@
 .nextStopContent p{margin:3px 0 0;color:#667280;font-size:13px;line-height:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nextStopContent>svg{width:25px;height:25px;color:#1667f2;stroke-width:2.5}
 .nextStopEmpty{display:flex;align-items:center;min-height:58px;color:#667280;font-size:15px;font-weight:700}
+/* Responsive sweep per spec: 360/375/390/393/402/414/430/440px wide, plus
+   short-height Android handsets - the whole hero (pill through CTA) must
+   keep fitting one screen, no scroll, nothing lost under the bottom nav
+   or a device's own status/gesture bars. */
 @media(max-width:374px){
   .page{gap:10px}
   .hero{padding:14px}
-  .destination{grid-template-columns:minmax(0,1fr) 54px}
-  .operationIcon{width:52px;height:52px}
-  .secondaryActions{gap:8px}
-  .progressCard{grid-template-columns:52px minmax(0,1fr) 52px;padding-inline:8px}
-  .mapPreview{height:168px;min-height:168px;max-height:168px;flex-basis:168px}
+  .identityBlock h1{font-size:26px}
+  .routeGlyphHost{height:118px}
 }
 
-/* Android phones commonly reserve more space for system bars than the CSS
-   viewport reports. Keep the complete Today card visible above the bottom
-   navigation on compact handsets without changing the normal tablet layout. */
 @media (max-width:400px) and (max-height:850px){
   .page{gap:7px;padding-bottom:0}
-  .hero{padding:10px;border-radius:17px}
+  .hero{padding:12px;border-radius:18px}
   .heroTop{min-height:24px}
-  .typeBadge{height:24px;padding-inline:8px;font-size:11px;line-height:24px}
+  .typeBadge{height:26px;padding-inline:9px;font-size:11px;line-height:26px}
   .typeBadge svg{width:13px;height:13px}
-  .destination{grid-template-columns:minmax(0,1fr) 46px;gap:8px;margin-top:6px}
-  .destination h1{font-size:21px;line-height:1.05}
-  .destination p{margin-top:4px;font-size:12px;line-height:16px}
-  .orderSlot{min-height:25px;margin-top:3px}
-  .order{min-height:22px;margin-top:0;padding-inline:7px;font-size:11px;line-height:22px}
-  .operationIcon{width:46px;height:46px}
-  .operationIcon svg{width:23px;height:23px}
+  .stopMetaRow{margin-top:10px}
+  .identityBlock{margin-top:8px}
+  .identityBlock h1{font-size:23px;line-height:1.08}
+  .addressLine{font-size:13px;margin-top:4px}
+  .poLine{font-size:14px;margin-top:5px}
+  .routeGlyphHost{height:104px;margin:10px 0 0}
   .hero>.divider{margin:7px 0}
-  .stopDetails{min-height:42px;margin-top:4px;padding:7px 9px;border-radius:11px}
-  .stopDetails strong{font-size:13px!important}
-  .stopDetails .stopNumber{width:24px;height:24px;font-size:12px}
-  .mapPreview{height:128px;min-height:128px;max-height:128px;flex-basis:128px;margin-bottom:8px;border-radius:11px}
-  .primary{min-height:54px;height:54px;border-radius:13px;font-size:15px;line-height:18px}
-  .primary svg{width:21px;height:21px}
-  .secondaryActions{gap:7px;margin-top:8px}
-  .secondaryActions a,.secondaryActions button{min-height:45px;height:45px;border-radius:12px;font-size:13px}
-  .secondaryActions svg{width:19px;height:19px}
-  .returnToAppHint{margin-top:7px;padding:7px 9px;font-size:11px;line-height:14px}
-  .routeSwipeZone{min-height:62px;font-size:10px}
+  .primary{min-height:54px;height:54px;border-radius:15px;font-size:16px;margin-top:10px}
+  .routeSwipeZone{min-height:50px;font-size:10px;margin-top:4px}
   .routeSwipeHandle{width:42px;height:4px;font-size:0}
+  .nextChip{margin-top:7px;padding:8px 10px}
 }
 @media (max-height:760px){
   .page{gap:6px}
-  .hero{padding:10px;border-radius:16px}
-  .destination{margin-top:5px;gap:7px}
-  .destination h1{font-size:20px;line-height:1.04}
-  .destination p{margin-top:3px;font-size:12px;line-height:15px}
-  .orderSlot{min-height:28px;margin-top:3px}
-  .order{min-height:22px;margin-top:0;font-size:11px;line-height:22px}
-  .operationIcon{width:43px;height:43px}
-  .operationIcon svg{width:21px;height:21px}
+  .hero{padding:11px;border-radius:16px}
+  .stopMetaRow{margin-top:8px}
+  .identityBlock{margin-top:6px}
+  .identityBlock h1{font-size:22px;line-height:1.06}
+  .addressLine{margin-top:3px;font-size:13px}
+  .poLine{margin-top:4px;font-size:13px}
+  .routeGlyphHost{height:86px;margin:8px 0 0}
   .hero>.divider{margin:5px 0}
-  .primary{min-height:50px;height:50px;font-size:14px}
-  .secondaryActions{margin-top:6px;gap:6px}
-  .secondaryActions a,.secondaryActions button{min-height:42px;height:42px;font-size:12px}
-  .returnToAppHint{margin-top:5px;padding:5px 8px;font-size:10px;line-height:13px}
-  .routeSwipeZone{min-height:56px}
+  .primary{min-height:50px;height:50px;font-size:15px;margin-top:8px}
+  .routeSwipeZone{min-height:44px}
 }
 @media(min-width:420px){
   .mapPreview{height:196px;min-height:196px;max-height:196px;flex-basis:196px}
 }
 
-/* Explicit dark foreground/background pairs keep every operational card legible. */
+/* .hero, .pickup/.delivery/.return, .divider, .feedback/.feedbackError and
+   .stateCard now read their colors from the token system in
+   driver-theme-tokens.css (dark by default, swapped under
+   html[data-theme='light']) instead of a separate dark-mode override
+   block - a leftover override here for any of those would win on source
+   order and silently undo the new premium palette in dark mode. Only
+   genuinely separate, still-real dark pairs stay below. */
 :global(html[data-theme='dark']) .page{color:#f4f7fb}
-:global(html[data-theme='dark']) .hero,:global(html[data-theme='dark']) .progressCard,:global(html[data-theme='dark']) .nextCard,:global(html[data-theme='dark']) .stateCard,:global(html[data-theme='dark']) .summary{background:#18263b;border-color:#31445f;color:#f4f7fb;box-shadow:0 2px 10px rgba(0,0,0,.2)}
-:global(html[data-theme='dark']) .destination h1,:global(html[data-theme='dark']) .progressCard strong,:global(html[data-theme='dark']) .nextCard,:global(html[data-theme='dark']) .nextStopContent strong{color:#f4f7fb}
-:global(html[data-theme='dark']) .destination p,:global(html[data-theme='dark']) .stopCount,:global(html[data-theme='dark']) .progressCard span,:global(html[data-theme='dark']) .nextCard span,:global(html[data-theme='dark']) .nextCard p,:global(html[data-theme='dark']) .stateCard p,:global(html[data-theme='dark']) .summaryGrid span,:global(html[data-theme='dark']) .nextStopContent p,:global(html[data-theme='dark']) .nextStopEmpty{color:#b9c9dd}
+:global(html[data-theme='dark']) .nextStopContent strong{color:#f4f7fb}
+:global(html[data-theme='dark']) .nextStopContent p,:global(html[data-theme='dark']) .nextStopEmpty{color:#b9c9dd}
 :global(html[data-theme='dark']) .startDay{background:#17345c;color:#9cc4ff}
-:global(html[data-theme='dark']) .delivery{background:#31234f;color:#c8a8ff}
-:global(html[data-theme='dark']) .pickup{background:#123d46;color:#77d9e5}
-:global(html[data-theme='dark']) .return{background:#28364a;color:#c2ccda}
-:global(html[data-theme='dark']) .stopNumber.delivery{background:#8f62ef;color:#fff}
-:global(html[data-theme='dark']) .stopNumber.pickup{background:#1599a8;color:#fff}
-:global(html[data-theme='dark']) .stopNumber.return{background:#64748b;color:#fff}
-:global(html[data-theme='dark']) .order{background:#21334b;color:#c9daf2}
-:global(html[data-theme='dark']) .divider{background:#31445f}
-:global(html[data-theme='dark']) .mapAction{background:#17345c;color:#9cc4ff}
-:global(html[data-theme='dark']) .issueAction{background:#472f12;color:#ffd28a}
-:global(html[data-theme='dark']) .feedback{background:#153a2b;color:#8fe7bc}
-:global(html[data-theme='dark']) .feedbackError{background:#4a252b;color:#ffc1c6}
 :global(html[data-theme='dark']) .progressTrack:before,:global(html[data-theme='dark']) .progressDots:before{background:#405570}
 :global(html[data-theme='dark']) .progressDots i,:global(html[data-theme='dark']) .progressDots .upcoming{background:#18263b;border-color:#60738c}
 :global(html[data-theme='dark']) .mapPreview :global(.openstreet-route-empty),:global(html[data-theme='dark']) .mapEmpty{background:#102036;color:#b9c9dd}

@@ -40,20 +40,39 @@
   padding:10px 12px;
   border:1px solid #bfdbfe;
   border-radius:12px;
-  background:#eff6ff;
-  color:#0e48c4;
+  background:var(--rh-soft-blue);
+  color:var(--rh-blue-700);
   font-size:13px;
   font-weight:700;
 }
 .mobileToggle{display:flex;gap:8px}
 .mobileToggle button{
-  flex:1;height:40px;border-radius:10px;border:1px solid #dde5ee;background:#fff;font-weight:700
+  flex:1;height:40px;border-radius:10px;border:1px solid var(--rh-line);background:var(--rh-card);font-weight:700
 }
-.mobileToggle button[data-on='true']{background:#eaf2ff;border-color:#1660f0;color:#1660f0}
+.mobileToggle button[data-on='true']{background:var(--rh-soft-blue);border-color:var(--rh-blue);color:var(--rh-blue)}
 /* Matches DispatchLayout's own breakpoint (dispatch-layout.module.css) where
    sidebar/center/map stop stacking and show side by side - below that width
    this toggle is how the user switches which one they're looking at, so it
    must stay visible exactly as long as the layout is still stacked. */
 @media(min-width:1201px){
   .mobileToggle{display:none}
+}
+
+:global(html[data-theme='dark']) .manageHint{
+  border-color:rgba(147,193,255,.2);
+  background:rgba(36,147,255,.12);
+  color:#cfe2ff;
+}
+
+:global(html[data-theme='dark']) .mobileToggle button{
+  border-color:rgba(147,193,255,.14);
+  background:rgba(255,255,255,.045);
+  color:#bbd3f7;
+}
+
+:global(html[data-theme='dark']) .mobileToggle button[data-on='true']{
+  border:1px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,#2493FF,#1677FF,#0A5FE8);
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 16px rgba(22,119,255,.22)
 }

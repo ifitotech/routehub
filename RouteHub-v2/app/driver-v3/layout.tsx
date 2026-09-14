@@ -5,6 +5,7 @@ import DriverLiveLocation from './driver-live-location'
 import {DriverV3Provider} from '../../lib/driver-v3/use-driver-data'
 import './v3-app.css'
 import './dark-theme.css'
+import './driver-theme-tokens.css'
 
 export const metadata: Metadata = {
   title: 'RouteHub Driver',

@@ -2,12 +2,11 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {useEffect} from 'react'
 import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
-import {applyThemePreference,useLocale} from '../../lib/use-preferences'
+import {useLocale} from '../../lib/use-preferences'
 
 const styles = {...shellA, ...shellB}
 
@@ -25,6 +24,11 @@ type Props = {
   flush?: boolean
   hideNav?: boolean
   swipeDownTo?: string
+  // Today (and any screen that needs it) can swap the default profile
+  // shortcut for its own header action - the Tools menu (Maps/Call/
+  // Report an issue), for example - without every other Driver screen
+  // (History, Truck, Settings) losing its usual way into Profile.
+  rightSlot?: React.ReactNode
 }
 
 export default function DriverV3Shell({
@@ -39,9 +43,9 @@ export default function DriverV3Shell({
   flush = false,
   hideNav = false,
   swipeDownTo,
+  rightSlot,
 }: Props) {
   const {t} = useLocale()
-  useEffect(()=>{applyThemePreference('light')},[])
   const pathname = usePathname()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
@@ -64,9 +68,11 @@ export default function DriverV3Shell({
           <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
           <span>RouteHub</span>
         </Link>
-        <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
-          <UserRound color="#fff" strokeWidth={2.2} />
-        </Link>
+        {rightSlot || (
+          <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
+            <UserRound color="#fff" strokeWidth={2.2} />
+          </Link>
+        )}
       </header>
 
       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>

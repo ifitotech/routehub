@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import {ChevronRight, Map, MapPin, Package, PackageCheck, PackagePlus, Phone, TriangleAlert, Truck, Warehouse} from 'lucide-react'
+import {ChevronRight, MoreVertical, Package, PackageCheck, PackagePlus, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -14,11 +14,12 @@ import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
-import {routeNumber} from '../../lib/route-number'
 import styles from './today.module.css'
 import confirmStyles from '../../components/driver-v3/driver-v3.module.css'
 import DriverRouteEstimate from '../../components/driver-v3/DriverRouteEstimate'
 import {InfoSheet, PickupSheet, ReturnSheet, NextStopSheet, DeliverySheet} from './today-sheets'
+import RouteGlyph from './route-glyph'
+import ToolsSheet from './today-tools-sheet'
 
 export default function DriverV3Page() {
   const router=useRouter()
@@ -27,7 +28,7 @@ export default function DriverV3Page() {
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
-  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
+  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next' | 'tools'>(null)
   const [recipient,setRecipient]=useState('')
   const [photo,setPhoto]=useState<File | null>(null)
   const [signed,setSigned]=useState(false)
@@ -52,20 +53,17 @@ export default function DriverV3Page() {
   // A shared Package icon for every stop type made the badge/avatar read the
   // same at a glance regardless of what the driver actually has to do next.
   const StopIcon=kind==='pickup'?PackagePlus:kind==='delivery'?PackageCheck:Warehouse
-  const serviceContext=kind==='pickup'
-    ? (route?.order_number ? `PO ${route.order_number}` : (locale==='es'?'Parada de recogida':'Pickup stop'))
-    : kind==='delivery'
-      ? (locale==='es'?'Parada de entrega':'Delivery stop')
-      : (locale==='es'?'Regreso a sucursal':'Return to branch')
   const nextRoute=snapshot?.queue.upcoming?.[0] as any
   const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
   const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
   const NextStopIcon=nextKind==='pickup'?PackagePlus:nextKind==='delivery'?PackageCheck:Warehouse
   const currentStopPosition=Math.max(1,Number(route?.position)||1)
   const visibleStopCount=currentStopPosition+(snapshot?.queue.upcoming?.length||0)
-  const stopSummary=locale==='es'
-    ? `PARADA ACTUAL · ${currentStopPosition} DE ${visibleStopCount}`
-    : `CURRENT STOP · ${currentStopPosition} OF ${visibleStopCount}`
+  const stopLabel=locale==='es' ? `Parada ${currentStopPosition} de ${visibleStopCount}` : `Stop ${currentStopPosition} of ${visibleStopCount}`
+  // Compact, capped at a handful of dots regardless of how many stops are
+  // actually left today - real position/count still drive it, this just
+  // keeps the row from overflowing a route with a dozen stops.
+  const stopDots=Array.from({length: Math.min(visibleStopCount, 5)}, (_, index) => index < currentStopPosition ? (index === currentStopPosition - 1 ? 'current' : 'done') : 'upcoming')
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -284,6 +282,17 @@ export default function DriverV3Page() {
     photoRef.current?.click()
   }
 
+  // Same branching the old inline "Issue" button used - moved here only
+  // because it's now reached through Tools instead of sitting next to the
+  // Start/Complete button, not because the flow itself changed.
+  const openIssueFromTools=()=>{
+    if(kind==='delivery'){setSheet('delivery');setPodPanel('issue')}
+    else {setSheet('pickup');setIssueOpen(true)}
+  }
+  const callFromTools=()=>{
+    if(route?.destination_phone) window.location.href=`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`
+  }
+
   const primary=()=>{
     if(!started) {
       const startLabel=kind==='pickup'?(t.drvStartPickup||t.drvStartRoute):kind==='delivery'?(t.drvStartDelivery||t.drvStartRoute):kind==='return'?(t.drvStartReturn||t.drvStartRoute):t.drvStartRoute
@@ -331,7 +340,16 @@ export default function DriverV3Page() {
   }
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
-  return <DriverV3Shell active="today" headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive} hideNav={Boolean((sheet&&operation)||confirmPickupOpen)}>
+  return <DriverV3Shell
+    active="today"
+    headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}
+    hideNav={Boolean((sheet&&operation)||confirmPickupOpen)}
+    rightSlot={operation&&route ? (
+      <button type="button" className={styles.toolsButton} aria-label={locale==='es'?'Herramientas':'Tools'} onClick={()=>setSheet('tools')}>
+        <MoreVertical size={20} strokeWidth={2.2}/>
+      </button>
+    ) : undefined}
+  >
     <div className={styles.page} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
@@ -348,56 +366,27 @@ export default function DriverV3Page() {
         <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn}`}>
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><StopIcon/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
-            <span className="muted" style={{fontSize:12,fontWeight:700}}>ROUTE {routeNumber(route)}</span>
           </div>
-          <p className={styles.stopSummary}>{stopSummary}</p>
-          <div className={styles.destination} onClick={()=>setSheet('info')} role="button">
-            <div>
-              <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
-              {route.destination_address&&<p>{route.destination_address}</p>}
-              <div className={styles.orderSlot}>
-                <span className={styles.order}>{serviceContext}</span>
-              </div>
-            </div>
-            {route.destination_phone?(
-              <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`} className={styles.operationIcon} style={{background:'#EAF2FF',color:'#1667F2',textDecoration:'none'}} aria-label={t.drvCall||'Call'}>
-                <Phone/>
-              </a>
-            ):(
-              <span className={`${styles.operationIcon} ${styles[kind||'return']}`} aria-hidden="true"><StopIcon/></span>
-            )}
+          <div className={styles.stopMetaRow}>
+            <span className={styles.stopLabel}>{stopLabel}</span>
+            <span className={styles.stopDots} aria-hidden="true">{stopDots.map((state,index)=><i key={index} className={styles[state]}/>)}</span>
           </div>
-          <button type="button" onClick={()=>setSheet('info')} className={styles.stopDetails}>
-            <span className={`${styles.stopNumber} ${styles[kind||'return']}`}>1</span>
-            <span style={{flex:1,minWidth:0}}>
-              <strong style={{display:'block',fontSize:15}}>
-                {route.destination_contact_name||route.destination_name||t.drvCurrentStopName}
-                {route.destination_phone?` · ${route.destination_phone}`:''}
-              </strong>
-              <span className="muted" style={{fontSize:12,display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                {route.notes||route.driver_note||(kind==='delivery'?t.drvDeliveryHelp:kind==='pickup'?t.drvPickupHelp:t.drvReturnHelp)}
-              </span>
-            </span>
-            <ChevronRight size={18} color="#94A3B8"/>
+          <button type="button" className={styles.identityBlock} onClick={()=>setSheet('info')}>
+            <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
+            {route.destination_address&&<p className={styles.addressLine}>{route.destination_address}</p>}
+            {kind==='pickup'&&route.order_number?<p className={styles.poLine}>PO {route.order_number}</p>:null}
           </button>
           <DriverRouteEstimate route={route} locale={locale}/>
+          <div className={styles.routeGlyphHost} aria-hidden="true">
+            <RouteGlyph
+              active={started}
+              originLabel={`${(kind||'return').toUpperCase()} START`}
+              destLabel={route.destination_name||route.destination_address||t.drvCurrentStopName}
+            />
+          </div>
           <button className={styles.primary} disabled={busy} onClick={()=>void action.run()}>
-            <MapPin/>{busy?t.drvBusy:action.label}
+            {busy?t.drvBusy:action.label}
           </button>
-          <div className={styles.secondaryActions}>
-            <button type="button" className={styles.mapAction} onClick={openMaps}><Map/>{t.drvOpenMaps}</button>
-            <button type="button" className={styles.issueAction} onClick={()=>{
-              if(kind==='delivery'){setSheet('delivery');setPodPanel('issue')}
-              else {setSheet('pickup');setIssueOpen(true)}
-            }}><TriangleAlert/>{t.drvIssue}</button>
-          </div>
-          <div className={`${styles.returnToAppHint} ${started?styles.returnToAppHintActive:''}`} role="note">
-            <strong>{started?(locale==='es'?'Al llegar':'When you arrive'):(locale==='es'?'Siguiente paso':'Next step')}</strong>
-            <span>{started
-              ? (locale==='es'?`Regresa a RouteHub y presiona “${action.label}” para completar esta parada.`:`Return to RouteHub and press “${action.label}” to complete this stop.`)
-              : (locale==='es'?'Comienza la ruta y usa Mapas del teléfono para navegar.':'Start the route, then use your phone\'s Maps app to navigate.')}
-            </span>
-          </div>
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
         {nextRoute&&(
@@ -436,6 +425,23 @@ export default function DriverV3Page() {
         <NextStopSheet
           nextRoute={nextRoute} nextKind={nextKind||'return'} nextLabel={nextLabel} t={t} onClose={()=>setSheet(null)}
           onOpenMaps={()=>openMapsForRoute(nextRoute)} onViewHistory={()=>router.push('/driver/history')}
+        />
+      )}
+
+      {sheet==='tools'&&route&&(
+        <ToolsSheet
+          phone={route.destination_phone}
+          onOpenMaps={()=>{setSheet(null);openMaps()}}
+          onCall={callFromTools}
+          onReportIssue={openIssueFromTools}
+          onClose={()=>setSheet(null)}
+          labels={{
+            title: locale==='es'?'Herramientas':'Tools',
+            maps: t.drvOpenMaps,
+            call: locale==='es'?'Llamar':'Call',
+            issue: t.drvIssue,
+            close: t.drvCancel,
+          }}
         />
       )}
 

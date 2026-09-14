@@ -1,7 +1,8 @@
-/* RouteHub Manager — single source of visual truth (light only).
+/* RouteHub Manager — single source of visual truth.
    Scoped to the Manager shell via [data-manager-section] so Driver, admin
-   and marketing pages are unaffected. Do NOT add a dark variant here:
-   Manager is intentionally light-only. Driver keeps its own theming. */
+   and marketing pages are unaffected. Dark premium is now the default;
+   light is the equivalent variant (same names, different values only) -
+   see html[data-theme='light'] below. */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&display=swap');
 
@@ -47,6 +48,7 @@ main[data-manager-section] {
      Retired as each screen migrates onto the tokens above. */
   --rh-text: var(--rh-ink);
   --rh-text-secondary: var(--rh-ink-soft);
+  --rh-text-muted: var(--rh-ink-soft);
   --rh-border: var(--rh-line);
   --rh-surface: var(--rh-card);
   --rh-bg: var(--rh-page-bg);
@@ -76,4 +78,66 @@ main[data-manager-section] h3 {
 main[data-manager-section] :focus-visible {
   outline: 2px solid var(--rh-blue);
   outline-offset: 2px;
+}
+
+/* Dark premium - the approved app-wide palette, mapped onto the same
+   token names Manager's screens already read. This is what makes the
+   switch safe: any component that reads var(--rh-ink)/var(--rh-card)/etc
+   instead of a hardcoded hex adapts automatically. Components that still
+   hardcode a literal hex for text on a light assumption are the real risk
+   (exactly what made dark mode unreadable before, per the user) - those
+   are being converted file by file, not fixed by this block alone. */
+html[data-theme='dark'] main[data-manager-section] {
+  --rh-navy-900: #f7faff;
+  --rh-navy-800: #eaf1ff;
+  --rh-ink: #f7faff;
+  --rh-ink-soft: #9fb2d0;
+  --rh-muted: #6f86aa;
+  --rh-line: rgba(101, 162, 255, 0.16);
+  --rh-divider: rgba(151, 185, 234, 0.16);
+  --rh-page-bg: #06152c;
+  --rh-card: rgba(19, 53, 96, 0.55);
+  --rh-surface-2: rgba(255, 255, 255, 0.045);
+
+  --rh-blue: #1677ff;
+  --rh-blue-700: #0a5fe8;
+  --rh-blue-pressed: #0a5fe8;
+  --rh-soft-blue: rgba(22, 119, 255, 0.16);
+
+  --rh-success: #25d885;
+  --rh-success-soft: rgba(37, 216, 133, 0.14);
+  --rh-warning: #ffb547;
+  --rh-warning-soft: rgba(255, 181, 71, 0.14);
+  --rh-error: #ff6b7a;
+  --rh-error-soft: rgba(255, 107, 122, 0.14);
+
+  --rh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.22);
+  --rh-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.26);
+  --rh-shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.32);
+
+  --rh-text: var(--rh-ink);
+  --rh-text-secondary: var(--rh-ink-soft);
+  --rh-text-muted: var(--rh-ink-soft);
+  --rh-border: var(--rh-line);
+  --rh-surface: var(--rh-card);
+  --rh-bg: var(--rh-page-bg);
+  --rh-primary: var(--rh-blue);
+  --rh-primary-hover: var(--rh-blue-700);
+  --rh-primary-soft: var(--rh-soft-blue);
+  --rh-danger: var(--rh-error);
+  --rh-danger-soft: var(--rh-error-soft);
+  --rh-shadow-card: var(--rh-shadow-sm);
+
+  background: radial-gradient(circle at 75% 22%, rgba(22, 119, 255, .17), transparent 30%),
+    radial-gradient(circle at 15% 85%, rgba(23, 217, 210, .09), transparent 28%),
+    linear-gradient(155deg, #0b2345 0%, #06152c 46%, #030c1c 100%);
+  color: var(--rh-ink);
+}
+
+html[data-theme='dark'] main[data-manager-section] .card,
+html[data-theme='dark'] main[data-manager-section] [class*='card'] {
+  background: linear-gradient(145deg, rgba(19, 53, 96, .70), rgba(5, 20, 42, .52));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-color: rgba(125, 180, 255, .14);
 }

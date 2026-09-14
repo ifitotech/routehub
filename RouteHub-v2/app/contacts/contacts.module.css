@@ -52,7 +52,7 @@
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
-.addButton:hover { background: #0e48c4; box-shadow: 0 16px 30px rgb(37 99 235 / 28%); transform: translateY(-1px); }
+.addButton:hover { background:var(--rh-blue-700); box-shadow: 0 16px 30px rgb(37 99 235 / 28%); transform: translateY(-1px); }
 .addButton:active { transform: scale(.98); }
 
 .searchPanel {
@@ -120,7 +120,7 @@
   width: 46px;
   height: 46px;
   border-radius: 15px;
-  background: #eaf2ff;
+  background:var(--rh-soft-blue);
   color: var(--primary);
   font-weight: 900;
   text-transform: uppercase;
@@ -151,13 +151,13 @@
 .address { margin-top: 2px; }
 .cardActions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
 .cardActions a,.cardActions button { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--primary); font: inherit; font-size: .73rem; font-weight: 750; text-decoration: none; cursor: pointer; }
-.cardActions a:hover,.cardActions button:hover { background: #edf4ff; }
+.cardActions a:hover,.cardActions button:hover { background:var(--rh-soft-blue); }
 
 /* Secondary actions (map, call, edit, delete) collapse behind a kebab menu
    so Pickup/Delivery stay the obvious primary actions on the card. */
 .moreWrap { position: relative; margin-left: auto; }
 .moreButton { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; }
-.moreButton:hover { background: #edf4ff; color: var(--primary); }
+.moreButton:hover { background:var(--rh-soft-blue); color: var(--primary); }
 .moreButton[aria-expanded='true'] { border-color: var(--primary); color: var(--primary); }
 .menuBackdrop { position: fixed; inset: 0; z-index: 39; }
 .menu {
@@ -177,10 +177,10 @@
   animation: riseIn 140ms ease-out;
 }
 .menu a,.menu button { display: flex; align-items: center; gap: 9px; min-height: 38px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--ink); font: inherit; font-size: .82rem; font-weight: 650; text-align: left; text-decoration: none; cursor: pointer; }
-.menu a:hover,.menu button:hover { background: #f1f5fb; }
+.menu a:hover,.menu button:hover { background:var(--rh-surface-2); }
 .menu svg { flex: 0 0 auto; color: var(--muted); }
-.dangerItem { color: #dc2626 !important; }
-.dangerItem svg { color: #dc2626 !important; }
+.dangerItem { color:var(--rh-danger) !important; }
+.dangerItem svg { color:var(--rh-danger) !important; }
 .dangerItem:hover { background: #fef2f2 !important; }
 
 .empty {
@@ -191,7 +191,7 @@
   background: rgb(255 255 255 / 62%);
   text-align: center;
 }
-.emptyIcon { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 18px; background: #eaf2ff; color: var(--primary); }
+.emptyIcon { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 18px; background:var(--rh-soft-blue); color: var(--primary); }
 .empty h2 { margin: 0 0 8px; color: var(--ink); font-size: 1.2rem; }
 .empty p { margin: 0; color: var(--muted); }
 
@@ -199,8 +199,8 @@
   margin: 16px 0 0;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #edf4ff;
-  color: #0e48c4;
+  background:var(--rh-soft-blue);
+  color:var(--rh-blue-700);
   font-size: .9rem;
   font-weight: 650;
 }
@@ -229,10 +229,10 @@
   animation: riseIn 220ms cubic-bezier(.2,.8,.2,1);
 }
 .confirmDialog { width: min(100%, 440px); padding: 28px; border-radius: 24px; background: var(--surface); color: var(--ink); text-align: center; box-shadow: 0 28px 80px rgb(5 18 39 / 28%); animation: riseIn 220ms cubic-bezier(.2,.8,.2,1); }
-.confirmDialog > svg { color: #dc2626; }
+.confirmDialog > svg { color:var(--rh-danger); }
 .confirmDialog h2 { margin: 12px 0 6px; }
 .confirmDialog p { margin: 6px 0; color: var(--muted); }
-.deleteButton { min-height: 50px; border: 0; border-radius: 14px; background: #dc2626; color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.deleteButton { min-height: 50px; border: 0; border-radius: 14px; background:var(--rh-danger); color: white; font: inherit; font-weight: 800; cursor: pointer; }
 
 .dialogHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .dialogHeader h2 { margin: 0; color: var(--ink); font-size: 1.55rem; }
@@ -240,12 +240,12 @@
 .closeButton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 14px; background: white; color: var(--ink); cursor: pointer; }
 .form { display: grid; gap: 15px; }
 .field { display: grid; gap: 7px; color: var(--ink); font-size: .85rem; font-weight: 750; }
-.field input { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: #fbfdff; color: var(--ink); font: inherit; }
+.field input { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background:var(--rh-surface-2); color: var(--ink); font: inherit; }
 .field input:focus { border-color: var(--primary); outline: 3px solid rgb(37 99 235 / 13%); }
 .dialogActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
 .saveButton,.cancelButton { min-height: 50px; border-radius: 14px; font: inherit; font-weight: 800; cursor: pointer; }
 .saveButton { border: 0; background: var(--primary); color: #fff; }
-.cancelButton { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.cancelButton { border: 1px solid var(--line); background:var(--rh-card); color: var(--ink); }
 
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes riseIn { from { opacity: 0; transform: translateY(14px) scale(.98) } to { opacity: 1; transform: none } }

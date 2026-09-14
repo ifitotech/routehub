@@ -65,19 +65,22 @@
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:4px;
-  background:#fff;
-  border-top:1px solid var(--border);
-  box-shadow:0 -8px 26px #0f1d350e;
+  background:var(--rh-nav-bg,rgba(4,16,35,.82));
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--rh-nav-border,rgba(124,173,255,.13));
+  box-shadow:none;
   box-sizing:border-box;
 }
 .nav a{
+  position:relative;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   gap:4px;
   border-radius:0;
-  color:var(--muted);
+  color:var(--rh-nav-inactive,#8AA0C0);
   text-decoration:none;
   font-size:11px;
   font-weight:700;
@@ -88,8 +91,25 @@
 .nav svg{width:21px;height:21px;transition:transform .18s ease}
 .nav a{transition:color .15s ease,opacity .15s ease,transform .12s ease}
 .nav a:active{transform:scale(.96)}
-.nav .active{color:var(--blue)}
+.nav .active{color:var(--rh-nav-active,#2493FF)}
 .nav .active svg{transform:scale(1.1)}
+.nav .active::before{
+  content:'';
+  position:absolute;
+  top:-4px;
+  left:50%;
+  transform:translateX(-50%);
+  width:22px;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#17D9D2,#1677FF);
+}
+html[data-theme='light'] .driver-v3-root .nav{
+  --rh-nav-bg:rgba(255,255,255,.86);
+  --rh-nav-border:rgba(11,31,58,.08);
+  --rh-nav-inactive:#7B91AC;
+  --rh-nav-active:#0A5FE8;
+}
 .navHidden{display:none!important}
 
 /* Every screen swap re-mounts .content (each tab is its own route) - this

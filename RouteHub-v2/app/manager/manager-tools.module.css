@@ -24,22 +24,23 @@
 .panelHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .panelHeader h2 { margin: 0; color: var(--ink); font-size: 1.22rem; }
 .panelHeader p { margin: 6px 0 0; color: var(--muted); font-size: .9rem; line-height: 1.45; }
-.panelIcon { display: grid; flex: 0 0 auto; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #eaf2ff; color: var(--primary); }
+.panelIcon { display: grid; flex: 0 0 auto; place-items: center; width: 44px; height: 44px; border-radius: 14px; background:var(--rh-soft-blue); color: var(--primary); }
 
 .formGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 12px; }
 .field { display: grid; gap: 7px; color: var(--ink); font-size: .82rem; font-weight: 750; }
-.field input,.field select { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: #fbfdff; color: var(--ink); font: inherit; }
+.field input,.field select { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background:var(--rh-surface-2); color: var(--ink); font: inherit; }
 .field input:focus,.field select:focus { border-color: var(--primary); outline: 3px solid rgb(37 99 235 / 13%); }
-.saveButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--primary); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.saveButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 18px; border: 1px solid rgba(255,255,255,.54); border-radius: 14px; background: linear-gradient(135deg,#2493FF,#1677FF,#0A5FE8); color: white; box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 10px 22px rgba(22,119,255,.22); font: inherit; font-weight: 750; cursor: pointer; transition: transform 150ms ease, filter 150ms ease; }
+.saveButton:active { transform: scale(.985); filter: brightness(.97); }
 .saveButton:disabled { opacity: .5; cursor: not-allowed; }
 .formActions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.cancelButton, .iconButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 750; cursor: pointer; }
-.cancelButton:hover, .iconButton:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+.cancelButton, .iconButton { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 1px solid rgba(47,112,194,.16); border-radius: 12px; background: rgba(255,255,255,.74); box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 8px 20px rgba(35,78,130,.09); color: #0B5FCE; font: inherit; font-weight: 750; cursor: pointer; }
+.cancelButton:hover, .iconButton:hover { border-color: var(--primary); color: var(--primary); background:var(--rh-soft-blue); }
 .iconButton { min-width: 42px; padding: 0 10px; margin-left: 4px; }
 
 .textLink { align-self: center; color: var(--primary); font-size: .84rem; font-weight: 750; text-decoration: none; white-space: nowrap; }
 .textLink:hover { text-decoration: underline; }
-.status { max-width: 100%; margin: 16px 0 0; padding: 12px 14px; overflow-wrap: anywhere; word-break: break-word; border-radius: 12px; background: #edf4ff; color: #0e48c4; font-size: .88rem; font-weight: 650; }
+.status { max-width: 100%; margin: 16px 0 0; padding: 12px 14px; overflow-wrap: anywhere; word-break: break-word; border-radius: 12px; background:var(--rh-soft-blue); color:var(--rh-blue-700); font-size: .88rem; font-weight: 650; }
 .sectionLabel { margin: 28px 0 12px; color: var(--ink); font-size: 1.1rem; }
 .list { display: grid; gap: 10px; }
 
@@ -57,21 +58,21 @@
 .memberCard { grid-template-columns: 48px minmax(0, 1fr) minmax(190px, 240px) auto; }
 .rowCard { grid-template-columns: 48px minmax(0, 1fr) auto; }
 .memberCard:hover,.rowCard:hover { transform: translateY(-1px); border-color: #bdd0ef; box-shadow: 0 14px 28px rgb(15 32 58 / 8%); }
-.avatar { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background: #eaf2ff; color: var(--primary); font-weight: 900; text-transform: uppercase; }
+.avatar { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background:var(--rh-soft-blue); color: var(--primary); font-weight: 900; text-transform: uppercase; }
 .identity { min-width: 0; }
 .identity h2 { overflow: hidden; margin: 0 0 4px; color: var(--ink); font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
 .identity p { overflow: hidden; margin: 0; color: var(--muted); font-size: .84rem; text-overflow: ellipsis; white-space: nowrap; }
-.roleSelect { min-height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 13px; background: #fbfdff; color: var(--ink); font: inherit; font-size: .86rem; font-weight: 700; }
-.dangerButton { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid #fecaca; border-radius: 14px; background: #fff7f7; color: #dc2626; cursor: pointer; }
-.dangerButton:hover { background: #fee2e2; }
+.roleSelect { min-height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 13px; background:var(--rh-surface-2); color: var(--ink); font: inherit; font-size: .86rem; font-weight: 700; }
+.dangerButton { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid #fecaca; border-radius: 14px; background:var(--rh-danger-soft); color:var(--rh-danger); cursor: pointer; }
+.dangerButton:hover { background:var(--rh-danger-soft); }
 .editButton { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); cursor: pointer; }
-.editButton:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+.editButton:hover { border-color: var(--primary); color: var(--primary); background:var(--rh-soft-blue); }
 
 /* Member card's edit mode: two stacked inputs replacing the name/role text -
    was inline style={} on each input before, which meant the mobile
    .memberCard grid override below couldn't reach them. */
 .editFields { display: grid; gap: 8px; min-width: 0; }
-.editFields input { width: 100%; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; background: #fbfdff; color: var(--ink); font: inherit; font-size: .88rem; }
+.editFields input { width: 100%; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; background:var(--rh-surface-2); color: var(--ink); font: inherit; font-size: .88rem; }
 .editFields input:focus { border-color: var(--primary); outline: 3px solid rgb(37 99 235 / 13%); }
 .editActions { display: flex; gap: 8px; }
 /* Edit + remove counted as one grid cell instead of two - .memberCard's
@@ -80,15 +81,15 @@
    implicit fifth track (wrapping to a second row under the avatar). */
 .memberActions { display: flex; align-items: center; gap: 8px; }
 
-.locationIcon,.mailIcon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background: #eaf2ff; color: var(--primary); }
-.statusBadge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #ecfdf3; color: #067647; font-size: .74rem; font-weight: 850; text-transform: capitalize; }
-.statusBadge[data-status='revoked'] { background: #f2f4f7; color: #667085; }
+.locationIcon,.mailIcon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background:var(--rh-soft-blue); color: var(--primary); }
+.statusBadge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background:var(--rh-success-soft); color: #067647; font-size: .74rem; font-weight: 850; text-transform: capitalize; }
+.statusBadge[data-status='revoked'] { background:var(--rh-surface-2); color: #667085; }
 .date { color: var(--muted); font-size: .78rem; }
 .rowActions { display: flex; align-items: center; gap: 10px; }
-.revokeButton { min-height: 42px; padding: 0 14px; border: 1px solid #fecaca; border-radius: 12px; background: #fff; color: #c02626; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+.revokeButton { min-height: 42px; padding: 0 14px; border: 1px solid #fecaca; border-radius: 12px; background:var(--rh-card); color: #c02626; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
 
 .empty { padding: 48px 22px; border: 1px dashed #bfd0e6; border-radius: 20px; text-align: center; }
-.empty span { display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 13px; border-radius: 17px; background: #eaf2ff; color: var(--primary); }
+.empty span { display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 13px; border-radius: 17px; background:var(--rh-soft-blue); color: var(--primary); }
 .empty h2 { margin: 0 0 7px; color: var(--ink); font-size: 1.15rem; }
 .empty p { margin: 0; color: var(--muted); }
 
@@ -98,8 +99,8 @@
 .confirmDialog p { margin: 0; color: var(--muted); line-height: 1.55; }
 .confirmActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
 .confirmCancel,.confirmRemove { min-height: 48px; border-radius: 14px; font: inherit; font-weight: 800; cursor: pointer; }
-.confirmCancel { border: 1px solid var(--line); background: #fff; color: var(--ink); }
-.confirmRemove { border: 0; background: #ef4444; color: #fff; }
+.confirmCancel { border: 1px solid var(--line); background:var(--rh-card); color: var(--ink); }
+.confirmRemove { border: 0; background:var(--rh-danger); color: #fff; }
 
 @media (max-width: 760px) {
   .header { align-items: center; }
@@ -132,3 +133,6 @@
 :global([data-theme='dark']) .roleSelect { background: #0e1c2f; color: var(--ink); }
 :global([data-theme='dark']) .confirmCancel,
 :global([data-theme='dark']) .revokeButton { background: #0e1c2f; color: var(--ink); }
+
+html[data-theme='dark'] .saveButton { background: linear-gradient(135deg,rgba(55,157,255,.98) 0%,rgba(22,119,255,.98) 52%,rgba(10,95,232,.98) 100%); border-color: rgba(181,225,255,.40); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,48,130,.20), 0 12px 28px rgba(22,119,255,.28), 0 2px 6px rgba(0,0,0,.22); }
+html[data-theme='dark'] .cancelButton, html[data-theme='dark'] .iconButton { background: linear-gradient(145deg,rgba(26,62,108,.72),rgba(9,29,59,.78)); border-color: rgba(131,185,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 8px 22px rgba(0,0,0,.18); color: #DCEBFF; }
