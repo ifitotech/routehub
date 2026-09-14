@@ -223,7 +223,7 @@
 :global(html[data-theme='light']) .driver-v3-root .appHeader button.headerIcon,
 :global(html[data-theme='light']) .driver-v3-root .appHeader a.headerIcon{color:var(--rh-text,#0B1F3A) !important}
 :global(html[data-theme='light']) .driver-v3-root .appHeader button.headerIcon svg,
-:global(html[data-theme='light']) .driver-v3-root .headerIcon svg{color:var(--rh-text,#0B1F3A);stroke:var(--rh-text,#0B1F3A)}
+:global(html[data-theme='light']) .driver-v3-root .headerIcon svg{color:var(--rh-text,#0B1F3A) !important;stroke:var(--rh-text,#0B1F3A) !important}
 
 
 /* .content itself lives in driver-v3-a.module.css - it is the class that

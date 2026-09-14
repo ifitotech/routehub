@@ -70,7 +70,7 @@ export default function DriverV3Shell({
         </Link>
         {rightSlot || (
           <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
-            <UserRound color="#fff" strokeWidth={2.2} />
+            <UserRound strokeWidth={2.2} />
           </Link>
         )}
       </header>
