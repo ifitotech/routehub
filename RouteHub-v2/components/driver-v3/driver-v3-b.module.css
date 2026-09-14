@@ -137,8 +137,14 @@
 .confirmSheet{
   width:100%;max-width:680px;background:#fff;border-radius:20px 20px 0 0;
   padding:18px 18px calc(18px + env(safe-area-inset-bottom));
-  box-shadow:0 -12px 40px rgba(15,29,53,.22);animation:sheetUp .22s ease;
+  box-shadow:0 -12px 40px rgba(15,29,53,.22);
+  /* A bigger, springier rise than the plain sheetUp used elsewhere - this
+     one is meant to read as coming from the bottom bar itself, paired with
+     the page shrinking into the header behind it (.pageShrink), not just a
+     small nudge into place. */
+  animation:confirmSheetUp .38s cubic-bezier(.32,.72,0,1);
 }
+@keyframes confirmSheetUp{from{transform:translateY(70px);opacity:.5}to{transform:none;opacity:1}}
 .confirmSheet h2{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.02em}
 .confirmSheet p{margin:0 0 16px;color:#667892;font-size:14px;line-height:1.45}
 .confirmActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -170,6 +176,12 @@
    themes - !important to beat the light-theme override below it, which
    would otherwise win on source order alone. */
 .appHeader[data-active='today']{background:var(--rh-page-bg,#0F1D35) !important}
+/* Same reasoning, extended to the scrollable content region itself: when
+   Today's hero shrinks into the header for a confirm sheet (.pageShrink in
+   today.module.css), the gap that opens up above it needs to read as the
+   same surface continuing under the header, not .content's own flat
+   resting color (driver-v3-a.module.css) showing through underneath. */
+.content[data-active='today']{background:var(--rh-page-bg,#101c2d) !important}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;

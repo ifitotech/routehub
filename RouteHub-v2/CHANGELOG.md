@@ -757,6 +757,41 @@ differently-colored bar right above it - the fused surface stopped one edge too 
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 31 — the confirm dialog now opens out of the bottom bar, hero tucks into the header
+Asked for the "Complete this pickup?" confirm dialog to rise out of the bottom bar with a
+nicer effect, and for the map/hero behind it to visually recede up into the header while it
+opens - not just a dialog stacked flat on top of the page.
+
+- **`app/driver-v3/today.module.css`** — new `.pageShrink` modifier on `.page`: while the
+  confirm dialog is open, the whole hero (map through the CTA) scales to .94 and shifts down
+  22px with top corners rounded to 26px, transitioning on an iOS-style spring
+  (`cubic-bezier(.32,.72,0,1)`, .34s). Transform-origin stays at the top so the visible
+  change is concentrated at the top edge - the sliver of gap that opens up there is what
+  reads as "the map tucking into the header," while the bottom stays put since the confirm
+  sheet already covers it and the nav is already hidden (`hideNav`) whenever this dialog is
+  open.
+- **`components/driver-v3/driver-v3-b.module.css`** — `.content[data-active='today']` now
+  also gets the `--rh-page-bg` gradient (same token as the header, Stage 30, and the page
+  itself). Without this, the gap `.pageShrink` opens up would have exposed `.content`'s own
+  flat resting color instead of the same gradient the header already uses - reintroducing
+  exactly the kind of "flat box behind the real surface" seam Stage 27-29 spent three rounds
+  fixing, just in a new spot.
+- Confirm dialog's own entrance (`.confirmSheet`) got a bigger, springier rise
+  (`confirmSheetUp`, .38s, same easing) instead of the small 22px nudge every simple confirm
+  dialog used before - it now reads as coming up out of the bottom bar, paired with the page
+  shrinking behind it. This is shared by every Driver confirm dialog (Manager's own confirm
+  dialogs live in a separate CSS module and are unaffected).
+- **`components/driver-v3/DriverV3Shell.tsx`** — added `data-active={active}` to the
+  `.content` section too (the header already got this in Stage 30), so the new background
+  rule above can be scoped to Today only.
+- **`app/driver-v3/page.tsx`** — moved the confirm dialog out from being a child of `.page`
+  to a sibling of it. `.pageShrink` puts a `transform` on `.page`, and CSS spec makes any
+  transformed element the containing block for its own `position:fixed` descendants - left
+  nested, the dialog's backdrop would have been confined to `.page`'s own (now shrunk) box
+  instead of covering the full viewport, once the dialog it belongs to actually opened.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

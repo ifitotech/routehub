@@ -363,7 +363,13 @@ export default function DriverV3Page() {
     hideNav={Boolean((sheet&&operation)||confirmPickupOpen)}
     flush
   >
-    <div className={styles.page} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+    {/* .page and the confirm dialog are siblings, not parent/child, on
+        purpose - .pageShrink puts a `transform` on .page while the dialog
+        is open, and `transform` on an ancestor turns its `position:fixed`
+        descendants into descendants confined to *that* box instead of the
+        viewport, which would trap the backdrop inside the very element
+        it's meant to shrink behind. */}
+    <div className={`${styles.page} ${confirmPickupOpen ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
           <span className={styles.pullRoadLine}/>
@@ -465,21 +471,21 @@ export default function DriverV3Page() {
         />
       )}
 
-      {confirmPickupOpen&&(
-        <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
-          <div className={confirmStyles.confirmSheet}>
-            <h2>{locale==='es'?'¿Completar recogida?':'Complete this pickup?'}</h2>
-            <p>{locale==='es'?'Vas a marcar esta parada como completada. No se puede deshacer desde la app.':'This stop will be marked complete. It cannot be undone from the app.'}</p>
-            <div className={confirmStyles.confirmActions}>
-              <button type="button" className="secondary" disabled={busy} onClick={()=>setConfirmPickupOpen(false)}>{t.drvCancel}</button>
-              <button type="button" className="primary" disabled={busy} onClick={()=>{setConfirmPickupOpen(false);void confirmPickup()}}>
-                {busy?t.drvBusy:(locale==='es'?'Sí, completar':'Yes, complete')}
-              </button>
-            </div>
+    </div>
+    {confirmPickupOpen&&(
+      <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
+        <div className={confirmStyles.confirmSheet}>
+          <h2>{locale==='es'?'¿Completar recogida?':'Complete this pickup?'}</h2>
+          <p>{locale==='es'?'Vas a marcar esta parada como completada. No se puede deshacer desde la app.':'This stop will be marked complete. It cannot be undone from the app.'}</p>
+          <div className={confirmStyles.confirmActions}>
+            <button type="button" className="secondary" disabled={busy} onClick={()=>setConfirmPickupOpen(false)}>{t.drvCancel}</button>
+            <button type="button" className="primary" disabled={busy} onClick={()=>{setConfirmPickupOpen(false);void confirmPickup()}}>
+              {busy?t.drvBusy:(locale==='es'?'Sí, completar':'Yes, complete')}
+            </button>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    )}
   </DriverV3Shell>
 }
 
