@@ -7,6 +7,7 @@ import Link from 'next/link'
 import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
+import TemporaryRouteAssignments from '../temporary-route-assignments'
 import NewRoutePanel from './new-route-panel'
 import RouteDetailView from './route-detail-view'
 import RoutesBoard from './routes-board'
@@ -259,6 +260,13 @@ export default function Routes() {
               : <button className={styles.primaryButton} type="button" onClick={() => openBuilder(selectedDate)}><Plus size={18}/>{c.add}</button>}
           </div>
         </header>
+
+        {/* Self-contained: queries the signed-in user's own temporary
+            assignments and renders nothing when there are none, so it's
+            safe to show unconditionally here - a branch/operations manager
+            who is also covering a route sees it the same way Sales/Counter
+            already do, without leaving their normal dashboard. */}
+        <TemporaryRouteAssignments/>
 
         {message && <div className={message.includes('successfully') || message.includes('publicad') ? styles.successMessage : styles.message} role="status">{message}</div>}
 

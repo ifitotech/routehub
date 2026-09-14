@@ -5,7 +5,11 @@ import {canFinalizeRoute,nextRequiredStop,routeProgress,stopAction,stopKind} fro
 
 const stop=(id,type,status,position,extra={})=>({id,mission_type:type,status,position,...extra})
 const driverPage=()=>readFileSync(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
-const completedPage=()=>readFileSync(new URL('../app/driver-v3/completed/page.tsx',import.meta.url),'utf8')
+// app/driver-v3/completed/page.tsx (a dedicated "Finish route" confirmation
+// screen) was removed with nothing calling finalizeRoute() in its place -
+// finalization now happens automatically from lib/data.ts's completeMission
+// right after a stop completes, with no separate confirmation step.
+const dataSource=()=>readFileSync(new URL('../lib/data.ts',import.meta.url),'utf8')
 const driverData=()=>readFileSync(new URL('../lib/driver-v3/use-driver-data.ts',import.meta.url),'utf8')
 const driverActions=()=>readFileSync(new URL('../lib/driver/driver-actions.ts',import.meta.url),'utf8')
 // new-route-dialog.tsx and new-route-fields.tsx were split into
@@ -79,19 +83,23 @@ test('the final branch enables route finish only after it is completed',()=>{
   assert.deepEqual(routeProgress(after),{total:3,completed:3,next:undefined,readyToFinalize:true})
 })
 
-test('V3 route finalization is a separate guarded backend write',()=>{
-  const source=completedPage()
-  assert.match(source,/const finish = async \(\) =>/)
-  assert.match(source,/if \(!last \|\| busy \|\| !ready\) return/)
-  assert.match(source,/finalizeRoute\(\{routeId: last\.id, driverId, companyId: last\.company_id\}, 'normal'\)/)
+test('a completed stop triggers finalization automatically, guarded by the same queue check',()=>{
+  const source=dataSource()
+  assert.match(source,/async function autoFinalizeRouteQueue/)
+  assert.match(source,/canFinalizeRoute\(siblings\.data as any\)/)
+  assert.match(source,/finalized_at:new Date\(\)\.toISOString\(\),route_completed_at:new Date\(\)\.toISOString\(\)/)
+  assert.match(source,/\.is\('finalized_at',null\)/)
 })
 
 test('normal route finalization only becomes available after every required stop',()=>{
   const queue=[stop('a','pickup','completed',1,{arrived_at:'2026-08-22T10:00:00Z'}),stop('b','delivery','completed',2)]
   assert.equal(routeProgress(queue).readyToFinalize,true)
-  const source=completedPage()
-  assert.match(source,/canFinalizeRoute\(dayRoutes as any\)/)
-  assert.match(source,/disabled=\{busy \|\| !ready \|\| !last\}/)
+  const source=dataSource()
+  // completeMission calls autoFinalizeRouteQueue on every success path -
+  // this is what makes finalization automatic instead of a separate
+  // confirmation step a driver has to visit.
+  assert.match(source,/await autoFinalizeRouteQueue\(currentState\.data\)/)
+  assert.match(source,/await autoFinalizeRouteQueue\(result\.data\)/)
 })
 
 test('Complete with Photo stores separate final evidence without replacing delivery POD',()=>{

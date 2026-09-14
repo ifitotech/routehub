@@ -35,6 +35,29 @@ export async function createMission(input:MissionInput){
 }
 export async function updateMission(id:string,patch:Partial<{driver_id:string;status:MissionStatus;priority:Priority;notes:string;position:number}>){const user=await currentUser();const membership=await currentMembership();const result=await getSupabase().from('routes').update(patch).eq('id',id).eq('company_id',membership.company_id).select().single();if(!result.error)await recordActivity({companyId:membership.company_id,userId:user.id,action:'mission_updated',recordId:id,after:patch});return result}
 export async function setMissionStatus(id:string,status:MissionStatus){const user=await currentUser();const result=await getSupabase().from('routes').update({status,updated_version:Date.now()}).eq('id',id).eq('driver_id',user.id).select().single();if(result.error)throw result.error;return result.data}
+// Completing a stop used to leave the whole day's queue unfinalized until a
+// driver visited a dedicated "Finish route" screen and confirmed it - that
+// screen was removed with no replacement, and nothing else called
+// finalizeRoute(), so a route's finalized_at/route_completed_at could go
+// unset forever even once every required stop was done. This runs after
+// every stop completion instead: if the driver's full queue for that day is
+// now finalizable, the just-completed stop is marked finalized immediately,
+// with no separate confirmation step - failures here never block the actual
+// stop completion, which has already succeeded by the time this runs.
+async function autoFinalizeRouteQueue(completedStop:{id:string; driver_id:string; company_id:string; route_date:string}|null|undefined){
+  if(!completedStop)return
+  try{
+    const {canFinalizeRoute}=await import('./stop-workflow')
+    const client=getSupabase()
+    const siblings=await client.from('routes').select('id,position,status,mission_type,completed_at,finalized_at').eq('driver_id',completedStop.driver_id).eq('company_id',completedStop.company_id).eq('route_date',completedStop.route_date)
+    if(siblings.error||!siblings.data)return
+    if(!canFinalizeRoute(siblings.data as any))return
+    await client.from('routes').update({finalized_at:new Date().toISOString(),route_completed_at:new Date().toISOString(),finalization_method:'normal',updated_version:Date.now()}).eq('id',completedStop.id).eq('driver_id',completedStop.driver_id).eq('company_id',completedStop.company_id).is('finalized_at',null)
+  }catch{
+    // Best-effort - a driver's stop is already completed by the time this
+    // runs, so a failure here should never surface as an error to them.
+  }
+}
 export async function completeMission(id:string,providedLocation?:{lat:number;lng:number;accuracy:number},options?:{driverNote?:string}){
   const user=await currentUser()
   const membership=await currentMembership()
@@ -95,6 +118,7 @@ export async function completeMission(id:string,providedLocation?:{lat:number;ln
     const currentState=await readCurrentState()
     if(!currentState.error&&currentState.data?.status==='completed'){
       if(firstError)void reportTechnicalReconciliation(firstError)
+      await autoFinalizeRouteQueue(currentState.data)
       return currentState.data
     }
     if(result.error)throw result.error
@@ -103,6 +127,7 @@ export async function completeMission(id:string,providedLocation?:{lat:number;ln
   }
 
   try{await recordActivity({companyId:membership.company_id,userId:user.id,action:'delivery_completed',recordId:id,after:{method:completionBase.completion_method,location:location||null,recipient_name:options?.driverNote?.replace(/^Received by:\\s*/i,'')||null}})}catch{}
+  await autoFinalizeRouteQueue(result.data)
   return result.data
 }
 export type TeamRole=Role

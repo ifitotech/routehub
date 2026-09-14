@@ -406,6 +406,35 @@ of just removing a border.
 - `npm run typecheck`, `npm run build` clean; `npm test` now shows 2 failures (both the
   real finalization gap above), down from the original 10.
 
+### Stage 16 — fixed both real regressions the test cleanup surfaced; 149/149 tests pass
+The user confirmed both fixes: routes should auto-finalize (no confirmation screen), and
+Manager/Operations should get their temporary-route-assignments widget back.
+
+- **Routes now finalize automatically.** Added `autoFinalizeRouteQueue()` to
+  `lib/data.ts`, called from every success path of `completeMission()` (the single
+  completion choke point used by pickup/delivery/return alike). After a stop completes, it
+  checks whether the driver's whole day queue is now finalizable
+  (`canFinalizeRoute()`, the same guard the old confirmation screen used) and, if so,
+  immediately sets `finalized_at`/`route_completed_at`/`finalization_method:'normal'` on
+  the just-completed stop - no separate screen, no driver action required. Wrapped in
+  try/catch and never blocks or fails the stop completion itself, which has already
+  succeeded by the time this runs.
+- **`TemporaryRouteAssignments` restored for Manager/Operations.** Added it to
+  `routes-screen.tsx` (the shared dashboard both roles land on now that Today/Routes
+  merged) right below the header - same self-contained, renders-nothing-when-empty
+  component Sales and Counter already use, so a branch/operations manager covering a
+  route sees it without leaving their normal workspace.
+- **Restored the "Replay tour" control** discovered missing from both Settings screens
+  while fixing this - `requestOnboardingReplay()` existed in `lib/onboarding.ts` with a
+  live listener in `onboarding-gate.tsx`, but no button anywhere called it. Added one next
+  to "User guide" in both `app/settings/page.tsx` (Manager) and
+  `app/driver-v3/settings/page.tsx` (Driver), in en/es/fr.
+- Updated the affected tests to check the new call sites/behavior instead of the removed
+  screen, plus two unrelated copy-wording drifts caught along the way (onboarding slide
+  text had been reworded since the test was written).
+- **`npm test`: 149/149 passing** - 0 failures, down from the original 10.
+- `npm run typecheck`, `npm run build` clean.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on

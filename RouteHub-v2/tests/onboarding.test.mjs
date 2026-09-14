@@ -14,8 +14,11 @@ test('driver and manager get different three-step tours', () => {
   const gate = read('../app/onboarding-gate.tsx')
   assert.match(gate, /access\.role === 'driver'/)
   assert.match(gate, /'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'/)
-  assert.match(gate, /Confirm the PO at pickup/)
-  assert.match(gate, /Live route map and progress/)
+  // Tour copy has been reworded since these were written; check for the
+  // same ideas (pickup confirmation, the manager dashboard's map) in their
+  // current wording instead of the exact old sentences.
+  assert.match(gate, /Confirm the material at pickup/)
+  assert.match(gate, /the branch map together/)
   assert.match(gate, /slides\.length - 1/)
 })
 

@@ -31,6 +31,8 @@ export function settingsCopy(locale: Locale) {
       signingOut: 'Cerrando sesión…',
       userGuide: 'Guía de uso',
       userGuideHelp: 'Cómo usar RouteHub, paso a paso, en tu idioma.',
+      replayTour: 'Ver el recorrido de nuevo',
+      replayTourHelp: 'Vuelve a mostrar la breve introducción de bienvenida.',
     }
   }
   if (locale === 'fr') {
@@ -63,6 +65,8 @@ export function settingsCopy(locale: Locale) {
       signingOut: 'Déconnexion…',
       userGuide: 'Guide d’utilisation',
       userGuideHelp: 'Comment utiliser RouteHub, étape par étape, dans votre langue.',
+      replayTour: 'Revoir la visite guidée',
+      replayTourHelp: 'Réafficher la brève introduction de bienvenue.',
     }
   }
   return {
@@ -94,5 +98,7 @@ export function settingsCopy(locale: Locale) {
       signingOut: 'Signing out…',
       userGuide: 'User guide',
       userGuideHelp: 'How to use RouteHub, step by step, in your language.',
+      replayTour: 'Replay the tour',
+      replayTourHelp: 'Show the short welcome walkthrough again.',
   }
 }

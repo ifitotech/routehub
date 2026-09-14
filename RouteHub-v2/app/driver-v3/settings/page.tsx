@@ -15,6 +15,7 @@ import {settingsCopy} from '../../../lib/drv-settings-copy'
 import {downloadAndroidUpdate} from '../../../lib/android-update'
 import {submitSupportRequest} from '../../../lib/support'
 import {USER_GUIDE_URL} from '../../../lib/user-guide'
+import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {getSupabase} from '../../../lib/supabase'
 import styles from '../driver-preferences.module.css'
 // confirmBackdrop/confirmSheet/confirmActions live in driver-v3-b.module.css -
@@ -335,6 +336,11 @@ export default function DriverV3Settings() {
             <span className={styles.rowCopy}><strong>{copy.userGuide}</strong><small>{copy.userGuideHelp}</small></span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </a>
+          <button type="button" onClick={requestOnboardingReplay} className={styles.row}>
+            <span className={styles.rowIcon}><BookOpen size={18} /></span>
+            <span className={styles.rowCopy}><strong>{copy.replayTour}</strong><small>{copy.replayTourHelp}</small></span>
+            <ChevronRight className={styles.rowChevron} size={19} />
+          </button>
           <Link href="/terms" className={styles.row}>
             <span className={styles.rowIcon}><FileText size={18} /></span>
             <span className={styles.rowCopy}><strong>{copy.terms}</strong></span>

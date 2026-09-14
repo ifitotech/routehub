@@ -71,7 +71,11 @@ test('temporary location is mission-scoped and stores no GPS history', () => {
 })
 
 test('team workspaces expose assigned routes while keeping their normal workspace', () => {
-  for (const page of ['../app/operations/page.tsx','../app/sales/page.tsx','../app/counter/page.tsx','../app/manager/page.tsx']) {
+  // app/operations/page.tsx and app/manager/page.tsx are now redirect
+  // stubs to /routes (routes-screen.tsx) - Today and Routes were merged
+  // into one Manager/Operations dashboard there, so that's what needs to
+  // render it now instead of each role's old standalone page.
+  for (const page of ['../app/routes/routes-screen.tsx','../app/sales/page.tsx','../app/counter/page.tsx']) {
     assert.match(read(page), /TemporaryRouteAssignments/)
   }
   const access = read('../app/auth-access.ts')
