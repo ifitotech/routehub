@@ -1376,3 +1376,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 88 — 2026-09-14
 - Simplify Delivery proof to recipient name plus photo, removing the legacy signature flow; reduce the sheet height, keep the two evidence actions comfortably sized, and scope drag handling to the handle so tapping Photo reliably opens the device camera picker.
+
+## Stage 89 — 2026-09-14
+- Make the Delivery primary CTA explicitly consume its tap and open the integrated completion sheet, preventing an accidental map-navigation interaction when the driver presses Arrived at Stop.
