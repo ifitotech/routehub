@@ -25,7 +25,12 @@
    the top, with rounded corners standing in for that tucked-in edge.
    Bottom stays put since the sheet itself covers it and the nav is
    already hidden (hideNav) while this is open. */
-.pageShrink{transform:scale(.94) translateY(22px);border-radius:26px 26px 0 0;pointer-events:none}
+.pageShrink{transform:scale(.94) translateY(22px);border-radius:26px 26px 0 0;pointer-events:none;transition:transform .42s cubic-bezier(.32,.72,0,1),border-radius .42s cubic-bezier(.32,.72,0,1)}
+.completionOverlay{animation:completionBackdropIn .32s ease both}
+.completionDialog{animation:completionPanelIn .46s cubic-bezier(.32,.72,0,1) both;transform-origin:center bottom}
+@keyframes completionBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes completionPanelIn{from{transform:translateY(72px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.completionOverlay,.completionDialog{animation:none}}
 /* top offset by --map-bleed too - .page's own top edge moved up by that
    same amount (see .page above), so without this the pull-to-refresh
    truck would now sit up under the header instead of where it always

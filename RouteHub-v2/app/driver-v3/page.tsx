@@ -370,7 +370,7 @@ export default function DriverV3Page() {
         descendants into descendants confined to *that* box instead of the
         viewport, which would trap the backdrop inside the very element
         it's meant to shrink behind. */}
-    <div className={`${styles.page} ${started ? styles.pageStarted : ''} ${confirmPickupOpen ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+    <div className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'delivery' || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
           <span className={styles.pullRoadLine}/>

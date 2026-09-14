@@ -1298,3 +1298,9 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 61 — 2026-09-14
 - Lower the attribution to the upper-right edge of the contact card so it no longer competes with the stop dots or map route.
+
+## Stage 62 — 2026-09-14
+- Coordinate the new Today completion flow: opening Pickup, Delivery, or Return completion retracts the map page beneath the fixed header while the existing completion sheet rises with a spring easing curve; closing it reverses the page transition.
+
+## Stage 63 — 2026-09-14
+- Apply the completion transition to the new Today sheets themselves: the backdrop fades in and the delivery, pickup, return, and detail panels rise with a spring motion while the map retracts beneath the fixed header.

@@ -62,8 +62,8 @@ function SheetHeader({label, onClose, t}: {label: string; onClose: () => void; t
 
 export function InfoSheet({route, kind, t, onClose, onOpenMaps}: {route: any; kind: string; t: any; onClose: () => void; onOpenMaps: () => void}) {
   return (
-    <div style={overlay} onTouchMove={e => e.preventDefault()}>
-      <section className="card" style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={kind === 'pickup' ? t.drvPickup : kind === 'delivery' ? t.drvDelivery : t.drvReturn} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22}}>{route.destination_name || t.drvCurrentStopName}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 10px'}}>{route.destination_address}</p>}
@@ -89,8 +89,8 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
   onIssueNoteChange: (value: string) => void; onSavePickupNote: () => void; onConfirmPickup: () => void; onOpenIssue: () => void; onClose: () => void
 }) {
   return (
-    <div style={overlay} onTouchMove={e => e.preventDefault()}>
-      <section className="card" style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvPickup} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || route.destination_address}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
@@ -117,8 +117,8 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
 
 export function ReturnSheet({route, t, busy, message, onComplete, onClose}: {route: any; t: any; busy: boolean; message: string; onComplete: () => void; onClose: () => void}) {
   return (
-    <div style={overlay} onTouchMove={e => e.preventDefault()}>
-      <section className="card" style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvReturn} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 5px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || route.destination_address || t.drvReturn}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 12px', fontSize: 14}}>{route.destination_address}</p>}
@@ -135,8 +135,8 @@ export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpe
 }) {
   const NextIcon = nextKind === 'pickup' ? PackagePlus : nextKind === 'delivery' ? PackageCheck : Warehouse
   return (
-    <div style={overlay} onTouchMove={e => e.preventDefault()}>
-      <section className="card" style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvNextStop} onClose={onClose} t={t} />
         <span className={`${styles.typeBadge} ${styles[nextKind || 'return']}`} style={{marginBottom: 12}}><NextIcon />{nextLabel}</span>
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{nextRoute.destination_name || nextRoute.destination_address || t.drvCurrentStopName}</h2>
@@ -174,8 +174,8 @@ export function DeliverySheet({
   busy: boolean; message: string; onConfirm: () => void; onClose: () => void
 }) {
   return (
-    <div style={overlay} onTouchMove={e => e.preventDefault()}>
-      <section className="card" style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || t.drvCompleteDelivery}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
