@@ -735,6 +735,28 @@ confirming the diagnosis from Stage 27 was right, even though its specific fix g
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 30 — the top bar now shares the hero's own gradient, scoped to Today only
+With `flush` removing the outer frame (Stage 29), the header still met the map with a flat,
+differently-colored bar right above it - the fused surface stopped one edge too early.
+
+- **`components/driver-v3/DriverV3Shell.tsx`** — added `data-active={active}` to the
+  `<header>` element, so a single CSS rule can target "the header, only when Today is the
+  active screen" without touching History/Truck/Settings/More, whose own content doesn't
+  reach up to meet the header the same way.
+- **`components/driver-v3/driver-v3-b.module.css`** — added
+  `.appHeader[data-active='today']{background:var(--rh-page-bg,#0F1D35) !important}` right
+  after the base `.appHeader` rule, reusing the same `--rh-page-bg` token `.page` and the
+  map's own `.host` already use (Stage 28), so the header's background is the exact same
+  gradient the hero flows into, not a separately guessed color. Added a matching light-mode
+  override with the `[data-active='today']` attribute on the selector too (not just added
+  after it in source order), since two tied `!important` rules resolve by specificity, and a
+  plain `.appHeader` selector by itself doesn't win over the existing
+  `html[data-theme='light'] .driver-v3-root .appHeader` override on its own. That light
+  override also drops the header's `box-shadow` (the thin bottom border it normally carries)
+  so no seam line is left under the header once the background already matches.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

@@ -159,6 +159,17 @@
   text-shadow:none !important;
   -webkit-font-smoothing:antialiased;
 }
+/* Today only, not every Driver screen - its own hero (page.tsx/
+   today.module.css) already flows the same --rh-page-bg gradient up
+   flush against the header (flush prop + zero top padding on the map),
+   so the header needs the exact same background to actually continue
+   into it instead of meeting a flat, differently-colored bar. History/
+   Truck/Settings/More keep the plain flat header, since their own content
+   doesn't reach up to meet it the same way. --rh-page-bg is already
+   theme-aware (see driver-theme-tokens.css), so one rule covers both
+   themes - !important to beat the light-theme override below it, which
+   would otherwise win on source order alone. */
+.appHeader[data-active='today']{background:var(--rh-page-bg,#0F1D35) !important}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
@@ -217,6 +228,13 @@
   background:var(--rh-navy,#fff) !important;
   color:var(--rh-text,#0B1F3A) !important;
   box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
+}
+/* Same Today-only gradient as the dark-mode rule above, with matching
+   specificity (adds the [data-active='today'] attribute) so it actually
+   beats the rule right above instead of losing to it on source order. */
+:global(html[data-theme='light']) .driver-v3-root .appHeader[data-active='today']{
+  background:var(--rh-page-bg,#fff) !important;
+  box-shadow:none !important;
 }
 :global(html[data-theme='light']) .driver-v3-root .headerBrand{color:var(--rh-text,#0B1F3A) !important}
 :global(html[data-theme='light']) .driver-v3-root .headerIcon,
