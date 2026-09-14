@@ -1,0 +1,77 @@
+.host {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #0b1526;
+}
+
+.host :global(.maplibregl-map) { width: 100%; height: 100%; }
+.host :global(.maplibregl-ctrl-attrib) {
+  font-size: 8px;
+  line-height: 11px;
+  background: rgba(6, 14, 28, .5) !important;
+  color: #7f93b3 !important;
+  padding: 1px 5px !important;
+}
+.host :global(.maplibregl-ctrl-attrib a) { color: #9fb2d0 !important; }
+.host :global(.maplibregl-ctrl-attrib-button) { display: none !important; }
+
+/* Real OSM tiles are only ever the light/paper style - invert + hue-rotate
+   fakes a dark, RouteHub-navy map from those same tiles, applied straight
+   to MapLibre's own canvas (one <canvas> per map instance). */
+.canvas {
+  filter: invert(1) hue-rotate(190deg) brightness(.86) contrast(.92) saturate(1.35);
+}
+
+/* No visible frame - the map fades to fully transparent at every edge via
+   a radial mask, so it dissolves into the hero card's glass background
+   instead of ending in a hard-edged box, matching the approved reference
+   where the route line and map feel painted directly onto the card. */
+.host {
+  -webkit-mask-image: radial-gradient(120% 130% at 50% 45%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(120% 130% at 50% 45%, #000 58%, transparent 100%);
+}
+
+.driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
+
+.driverDot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid rgba(4, 16, 31, .9);
+  background: #2493ff;
+  box-shadow: 0 0 0 6px rgba(36, 147, 255, .24), 0 0 20px rgba(36, 147, 255, .65);
+  animation: rh-pulse 2.2s ease-in-out infinite;
+}
+
+.destinationPin {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 3px solid rgba(4, 16, 31, .9);
+  background: linear-gradient(135deg, #ffd166, #37e0c9);
+  box-shadow: 0 0 0 5px rgba(255, 209, 102, .16), 0 0 18px rgba(55, 224, 201, .5);
+}
+
+@keyframes rh-pulse {
+  0%, 100% { box-shadow: 0 0 0 6px rgba(36, 147, 255, .24), 0 0 20px rgba(36, 147, 255, .65); }
+  50% { box-shadow: 0 0 0 9px rgba(36, 147, 255, .14), 0 0 26px rgba(36, 147, 255, .8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driverDot { animation: none; }
+}
+
+/* Light theme: same non-Google map, a lighter vignette/no invert, and the
+   destination pin gets a border that reads on a pale background too. */
+:global(html[data-theme='light']) .host { background: #eaf0f6; }
+:global(html[data-theme='light']) .canvas { filter: none; }
+:global(html[data-theme='light']) .host { mask-image: radial-gradient(120% 130% at 50% 45%, #000 55%, transparent 100%); -webkit-mask-image: radial-gradient(120% 130% at 50% 45%, #000 55%, transparent 100%); }
+:global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
+:global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }

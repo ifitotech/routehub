@@ -435,6 +435,51 @@ Manager/Operations should get their temporary-route-assignments widget back.
 - **`npm test`: 149/149 passing** - 0 failures, down from the original 10.
 - `npm run typecheck`, `npm run build` clean.
 
+### Stage 17 — Today rebuilt to the new MapLibre reference: real map, two-state layout
+Full rebuild of Driver Today's hero per the user's detailed spec, replacing the
+Leaflet-based `DriverRoutePreview` with a MapLibre-based map and reordering/restructuring
+the whole hero around a two-state (before start / started) layout.
+
+- **New map stack: MapLibre GL JS + real OpenStreetMap tiles, no key.** Added
+  `components/driver-v3/DriverRouteMap.tsx` - a single MapLibre `Map` instance created
+  once on mount and never recreated. Driver location (blue, pulsing) and destination
+  (gold/teal pin) are `maplibregl.Marker`s whose `setLngLat()` is called on every GPS fix;
+  the connecting line is a GeoJSON source whose `setData()` is called the same way - no
+  part of the map re-initializes on a location update, only marker positions and the
+  line's coordinates change. `interactive: false` disables all pan/zoom/click (context
+  only, never navigation). Dark look is a CSS `invert()+hue-rotate()` filter on MapLibre's
+  own canvas (OSM only ships a light style; same trick already used for the Leaflet
+  version), with a light-mode override that removes the filter. A radial CSS mask fades
+  the map to transparent at every edge so it dissolves into the hero card instead of
+  showing a rectangle, matching the "mapa integrado... sin borde rectangular duro"
+  requirement.
+- **Driver's live position feeds the map for free.** `liveFix` was already tracked
+  end-to-end (`useDriverLiveLocation` → `useDriverData()`) for the fleet map elsewhere -
+  reused it directly instead of starting a second, redundant geolocation watch.
+- **Hero reordered**: the map now comes first (large, 42vh before the stop starts,
+  clamped so short/narrow devices from the existing responsive breakpoints still fit with
+  no scroll), followed by the type pill, stop progress, destination name/address/PO,
+  distance/time, then the CTA.
+- **Two-state layout, driven by the same persisted `phase` the app already used** (not a
+  new local flag, so returning from external Maps lands back on the same state instead of
+  resetting to "start"): before the stop starts, the map is large and Maps/Call/Issue are
+  hidden entirely; once started, `.routeGlyphHostCompact` shrinks the map to 23vh with a
+  CSS transition, and a `.secondaryRow` of Maps/Call/Issue buttons fades/slides in under
+  the CTA. Phone number and driver note (when present) now show once started too.
+- **CTA now has three real states**, reusing `driver-state.ts`'s existing
+  pending/started/arrived phases that the hero previously collapsed into just two: "Start
+  X" before starting, "Arrived at stop" once started but not yet arrived, "Complete X"
+  once arrived - each still calls exactly the same handler as before (label-only change,
+  the actual `run()` functions for every kind are untouched).
+- **Removed the header's 3-dot Tools sheet** (`today-tools-sheet.tsx`, now unused but left
+  in place) now that Maps/Call/Issue live inline in the hero instead - one place for these
+  actions instead of two.
+- `app/driver-v3/route-glyph.tsx` and `components/driver-v3/DriverRoutePreview.tsx`/
+  `.module.css` (the Leaflet version) are now unused, left in place rather than deleted.
+- `npm install maplibre-gl`; `npm run typecheck`, `npm run build` clean; `npm test`:
+  149/149 still passing (no operational handler was touched, only labels/layout/the map
+  component itself).
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
