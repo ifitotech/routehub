@@ -1288,3 +1288,7 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 ## Stage 58 — 2026-09-14
 - Remove the light-mode header/map blank seam with a short canvas feather and a transparent top map fade; keep the header controls high-contrast.
 - Draw only the fastest real road geometry returned by the routing service, never a straight fallback segment, and use a neutral charcoal treatment for dark map tiles.
+
+## Stage 59 — 2026-09-14
+- Rework Today map composition around one full-bleed coordinate space: the MapLibre canvas now reaches behind the header, the lower dissolve begins at the stop details, and the route is fitted to the real available area.
+- Verify the compiled production CSS in a mobile Chromium render with a 1,174-vertex OSRM route across light and dark themes; keep the header controls and route colors visible while the map adopts the correct theme treatment.

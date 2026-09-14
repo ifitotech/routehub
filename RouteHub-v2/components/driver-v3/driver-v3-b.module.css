@@ -205,8 +205,20 @@
    this only wins by source-order position, which a future edit could
    silently reorder and break. */
 .contentToday{background:transparent !important;overflow:visible !important}
+.todaySurface{
+  --today-header:#0f1d35;
+  --today-surface:#101c2d;
+  --today-surface-rgb:16,28,45;
+  background:var(--today-surface)!important;
+}
+:global(html[data-theme='light']) .todaySurface{
+  --today-header:#fff;
+  --today-surface:#f7f9fc;
+  --today-surface-rgb:247,249,252;
+  background:linear-gradient(to bottom,#fff 0%,#f7f9fc 65%)!important;
+}
 .appHeader.headerToday{
-  background:linear-gradient(to bottom,#0F1D35 0%,#0F1D35 48%,rgba(15,29,53,.82) 68%,rgba(15,29,53,.3) 86%,transparent 100%)!important;
+  background:var(--today-header,#0f1d35)!important;
   box-shadow:none!important;
 }
 .appHeader *{
@@ -268,8 +280,8 @@
   color:var(--rh-text,#0B1F3A) !important;
   box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
 }
-:global(html[data-theme='light']) .driver-v3-root .appHeader.headerToday{
-  background:linear-gradient(to bottom,#fff 0%,#fff 48%,rgba(255,255,255,.84) 68%,rgba(255,255,255,.34) 86%,transparent 100%)!important;
+:global(html[data-theme='light']) :global(.driver-v3-root) .appHeader.headerToday{
+  background:var(--today-header,#fff)!important;
   box-shadow:none!important;
 }
 :global(html[data-theme='light'] .driver-v3-root > main > header) .headerIcon,

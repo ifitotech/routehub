@@ -387,7 +387,7 @@ export default function DriverV3Page() {
           <div className={`${styles.routeGlyphHost} ${started?styles.routeGlyphHostCompact:''}`}>
             <DriverRouteMap route={route} driverFix={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null} locale={locale}/>
           </div>
-          <div className={styles.heroTop}>
+          <div className={styles.heroTop} data-map-details>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><StopIcon/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
           </div>
           <div className={styles.stopMetaRow}>

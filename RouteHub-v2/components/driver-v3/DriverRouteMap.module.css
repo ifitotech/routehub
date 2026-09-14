@@ -1,208 +1,56 @@
 .wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
+  position:relative;width:100%;height:100%;min-height:0;
+  --map-header-edge:130px;
+  --map-details-start:320px;
 }
-
-/* Pinned to the bottom of .wrap, at its own original (unbled) height -
-   .wrap itself grows by --map-bleed (today.module.css's .routeGlyphHost/
-   Compact), but .host stays the exact size it always was and just moves
-   down within that taller box. This is what makes .host's own top edge
-   land exactly at the header's bottom edge (verified by rendering the
-   geometry with test markers before shipping this) - real occlusion by
-   the opaque header above it, not another color-matching approximation.
-   Keeping .host itself at its original size also means MapLibre's own
-   container size, resize() behavior, and fitBounds framing are all
-   completely unaffected by this - only where the box sits changed. */
-.host {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  isolation: isolate;
-  width: 100%;
-  height: calc(100% - var(--map-bleed, 130px));
-  min-height: 0;
-  overflow: hidden;
-  /* No background of its own, on purpose - .content (driver-v3-b.module.css,
-     [data-active='today']) is the single element that actually paints
-     --rh-page-bg now, behind the page and this map together. Giving this
-     its own separate copy of the same gradient (an earlier attempt) still
-     produced a visible seam: each element paints a CSS background relative
-     to its own box, so the map's short "compact" height put the gradient's
-     radial highlight in a different spot than .content's own copy did -
-     two independent copies of "the same" gradient, not one continuous
-     image. Staying transparent lets the one shared paint underneath show
-     through instead. */
-  background: transparent;
+/* Tiles, road and dissolve share one coordinate space behind the header. */
+.host,.routeOverlay,.fadeOverlay {position:absolute;inset:0;width:100%;height:100%}
+.host {overflow:hidden;background:var(--today-header,#0f1d35)}
+.host :global(.maplibregl-marker) {z-index:2}
+.host :global(.maplibregl-canvas) {
+  filter:grayscale(1) invert(1) brightness(.85) contrast(.85) sepia(.35) hue-rotate(175deg) saturate(1.4);
 }
-
-.atDestination {
-  position: absolute;
-  z-index: 500;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(9, 20, 38, .78);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(55, 224, 201, .3);
-  color: #6ff0dc;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  pointer-events: none;
+:global(html[data-theme='light']) .host :global(.maplibregl-canvas) {
+  filter:grayscale(1) contrast(.72) brightness(1.17);
 }
-:global(html[data-theme='light']) .atDestination {
-  background: rgba(255, 255, 255, .92);
-  border-color: rgba(14, 122, 108, .3);
-  color: #0e7a6c;
-}
-
-.host :global(.maplibregl-map) { width: 100%; height: 100%; }
-.host :global(.maplibregl-ctrl-attrib) {
-  font-size: 8px;
-  line-height: 11px;
-  background: rgba(6, 14, 28, .5) !important;
-  color: #7f93b3 !important;
-  padding: 1px 5px !important;
-}
-.host :global(.maplibregl-ctrl-attrib a) { color: #9fb2d0 !important; }
-.host :global(.maplibregl-ctrl-attrib-button) { display: none !important; }
-
-/* No visible frame - the map runs full-bleed to the card's own left/right/
-   top edges (no side fade at all, matching the reference: the map reads as
-   real imagery right up to the screen edges) and only dissolves downward
-   into the card's dark background near the bottom, where the stop details
-   begin - a top-to-bottom fade, not a radial vignette on every side. */
-/* The map's top edge is intentionally feathered into the navy header. The
-   header remains unchanged; the first part of the real MapLibre canvas fades
-   in from transparent so there is no second rectangular bar at the seam. */
-.host {
-  /* The header provides the long dissolve.  Only feather the first few
-     pixels of the canvas here; a 24% mask made a pale blank strip appear
-     between the light header and the actual map. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%);
-}
-
-/* The map wrapper is intentionally taller than the visible canvas so the
-   imagery can continue behind the stop details. Keep this fade outside the
-   masked canvas: it must cover the entire expanded area, including the
-   lower bleed, instead of revealing a hard rectangular background band. */
+.routeOverlay {z-index:1;overflow:hidden;pointer-events:none}
+.routeGlow,.routeCore {fill:none;stroke-linecap:round;stroke-linejoin:round}
+.routeGlow {stroke-width:8px;opacity:.24;filter:blur(2px)}
+.routeCore {stroke-width:3px;opacity:1}
+/* Measure the header and badge instead of guessing percentages of a canvas
+   whose height changes as the operational content expands. */
 .fadeOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
+  z-index:3;pointer-events:none;
   background:
     linear-gradient(to bottom,
-      rgba(17, 24, 39, .72) 0%,
-      rgba(17, 24, 39, .42) 10%,
-      rgba(17, 24, 39, 0) 24%),
+      var(--today-header,#0f1d35) 0px,
+      var(--today-header,#0f1d35) var(--map-header-edge),
+      transparent calc(var(--map-header-edge) + 54px)),
     linear-gradient(to bottom,
-      rgba(16, 28, 45, 0) 0%,
-      rgba(16, 28, 45, 0) 52%,
-      rgba(17, 24, 39, .16) 62%,
-      rgba(17, 24, 39, .52) 76%,
-      rgba(17, 24, 39, .86) 89%,
-      #111827 100%);
+      transparent 0px,
+      transparent calc(var(--map-details-start) - 32px),
+      rgba(var(--today-surface-rgb,16,28,45),.66) calc(var(--map-details-start) + 64px),
+      var(--today-surface,#101c2d) 100%);
 }
-
-.routeOverlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  width: 100%;
-  height: calc(100% - var(--map-bleed, 130px));
-  overflow: visible;
-  pointer-events: none;
-}
-
-.routeGlow,
-.routeCore {
-  fill: none;
-  stroke: url(#driver-road-gradient);
-  stroke-linecap: round;
-}
-.routeGlow {
-  stroke-width: 15px;
-  opacity: .5;
-  filter: blur(4px) drop-shadow(0 0 8px rgba(36, 147, 255, .72));
-}
-.routeCore {
-  stroke-width: 5px;
-  opacity: 1;
-  filter: drop-shadow(0 0 5px rgba(55, 224, 201, .72));
-}
-
-.driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
-
+.driverMarker,.destinationMarker {display:grid;place-items:center;pointer-events:none}
 .driverDot {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 3px solid rgba(4, 16, 31, .9);
-  background: #2493ff;
-  box-shadow: 0 0 0 6px rgba(36, 147, 255, .24), 0 0 20px rgba(36, 147, 255, .65);
-  animation: rh-pulse 2.2s ease-in-out infinite;
+  display:block;width:12px;height:12px;border-radius:50%;
+  border:2px solid #e1f3ff;background:#2493ff;
+  box-shadow:0 0 0 5px rgba(36,147,255,.2),0 0 12px rgba(36,147,255,.5);
 }
-
-/* No live GPS fix yet - this is the route's own starting point standing in
-   for it, not a moving signal, so it shouldn't pulse like one. Same color,
-   softer glow, no animation. */
-.driverDotStatic {
-  animation: none;
-  box-shadow: 0 0 0 5px rgba(36, 147, 255, .16), 0 0 12px rgba(36, 147, 255, .4);
-  opacity: .85;
-}
-
+.driverDotStatic {box-shadow:0 0 0 4px rgba(36,147,255,.16)}
 .destinationPin {
-  display: block;
-  width: 18px;
-  height: 18px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  border: 3px solid rgba(4, 16, 31, .9);
-  background: linear-gradient(135deg, #ffd166, #37e0c9);
-  box-shadow: 0 0 0 5px rgba(255, 209, 102, .16), 0 0 18px rgba(55, 224, 201, .5);
+  display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);border:2px solid #fff0c7;background:#ffbd4a;
+  box-shadow:0 0 0 4px rgba(255,189,74,.17),0 0 14px rgba(255,189,74,.3);
 }
-
-@keyframes rh-pulse {
-  0%, 100% { box-shadow: 0 0 0 6px rgba(36, 147, 255, .24), 0 0 20px rgba(36, 147, 255, .65); }
-  50% { box-shadow: 0 0 0 9px rgba(36, 147, 255, .14), 0 0 26px rgba(36, 147, 255, .8); }
+.atDestination {
+  position:absolute;z-index:3;left:50%;bottom:12px;transform:translateX(-50%);
+  padding:4px 10px;border-radius:999px;background:var(--today-surface,#101c2d);
+  color:var(--rh-text,#f7faff);font-size:11px;font-weight:800;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .driverDot { animation: none; }
+.attribution {
+  position:absolute;right:6px;bottom:4px;z-index:3;
+  font-size:8px;line-height:12px;color:var(--rh-text-subtle,#7b91ac);
 }
-
-/* Light theme: same non-Google map, a lighter vignette/no invert, and the
-   destination pin gets a border that reads on a pale background too. */
-:global(html[data-theme='light']) .host { background: transparent; }
-:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%); }
-:global(html[data-theme='light']) .fadeOverlay {
-  background:
-    linear-gradient(to bottom,
-      rgba(255, 255, 255, .58) 0%,
-      rgba(255, 255, 255, .26) 10%,
-      rgba(255, 255, 255, 0) 24%),
-    linear-gradient(to bottom,
-      rgba(247, 250, 255, 0) 0%,
-      rgba(247, 250, 255, 0) 52%,
-      rgba(247, 250, 255, .18) 62%,
-      rgba(247, 250, 255, .58) 76%,
-      rgba(247, 250, 255, .9) 89%,
-      #f7faff 100%);
-}
-:global(html[data-theme='light']) .routeGlow { opacity: .6; }
-:global(html[data-theme='light']) .routeCore { stroke-width: 5.5px; }
-:global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
-:global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }
+.attribution a {color:inherit}
