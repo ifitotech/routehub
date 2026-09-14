@@ -165,23 +165,22 @@
   text-shadow:none !important;
   -webkit-font-smoothing:antialiased;
 }
-/* Today only, not every Driver screen - its own hero (page.tsx/
-   today.module.css) already flows the same --rh-page-bg gradient up
-   flush against the header (flush prop + zero top padding on the map),
-   so the header needs the exact same background to actually continue
-   into it instead of meeting a flat, differently-colored bar. History/
-   Truck/Settings/More keep the plain flat header, since their own content
-   doesn't reach up to meet it the same way. --rh-page-bg is already
-   theme-aware (see driver-theme-tokens.css), so one rule covers both
-   themes - !important to beat the light-theme override below it, which
-   would otherwise win on source order alone. */
-.appHeader[data-active='today']{background:var(--rh-page-bg,#0F1D35) !important}
-/* Same reasoning, extended to the scrollable content region itself: when
-   Today's hero shrinks into the header for a confirm sheet (.pageShrink in
-   today.module.css), the gap that opens up above it needs to read as the
-   same surface continuing under the header, not .content's own flat
-   resting color (driver-v3-a.module.css) showing through underneath. */
-.content[data-active='today']{background:var(--rh-page-bg,#101c2d) !important}
+/* Today only, not every Driver screen. First attempt (kept here as the
+   record of why the simpler version doesn't work): giving the header, the
+   scrollable content, the page and the map's own host each their own copy
+   of the same --rh-page-bg gradient. That still produced a visible seam,
+   because a CSS background is painted relative to *that element's own box*
+   - four separately-sized boxes each painting "the same" gradient means
+   four independent radial highlights landing in four different places, not
+   one continuous image. Fixed properly below: .shell (the single ancestor
+   that actually spans header+content+nav) paints the gradient exactly
+   once, and everything nested inside it for Today - header, content, the
+   page, the map's own host - stays transparent so that one paint shows
+   through all of them at once, pixel-aligned, instead of each layer
+   redrawing its own copy. */
+.shell[data-active='today']{background:var(--rh-page-bg,#0b1526) !important}
+.appHeader[data-active='today']{background:transparent !important}
+.content[data-active='today']{background:transparent !important}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
@@ -241,11 +240,11 @@
   color:var(--rh-text,#0B1F3A) !important;
   box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
 }
-/* Same Today-only gradient as the dark-mode rule above, with matching
+/* Same Today-only transparency as the dark-mode rule above, with matching
    specificity (adds the [data-active='today'] attribute) so it actually
    beats the rule right above instead of losing to it on source order. */
 :global(html[data-theme='light']) .driver-v3-root .appHeader[data-active='today']{
-  background:var(--rh-page-bg,#fff) !important;
+  background:transparent !important;
   box-shadow:none !important;
 }
 :global(html[data-theme='light']) .driver-v3-root .headerBrand{color:var(--rh-text,#0B1F3A) !important}

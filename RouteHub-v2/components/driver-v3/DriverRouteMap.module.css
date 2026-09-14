@@ -12,11 +12,17 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  /* Same gradient token as .page (today.module.css), not a flat guessed
-     hex - a flat resting color never quite matched the richer gradient
-     it fades into at the bottom, leaving a faint but real seam right where
-     the two were supposed to read as one surface. */
-  background: var(--rh-page-bg, #0b1526);
+  /* No background of its own, on purpose - .shell (driver-v3-b.module.css,
+     [data-active='today']) is the single element that actually paints
+     --rh-page-bg now, behind header+content+page+map together. Giving
+     this its own separate copy of the same gradient (the previous fix)
+     still produced a visible seam: each element paints a CSS background
+     relative to its own box, so the map's short "compact" height and the
+     header's own height each put the gradient's radial highlight in a
+     different spot - two independent copies of "the same" gradient, not
+     one continuous image. Staying transparent lets the one shared paint
+     underneath show through instead.  */
+  background: transparent;
 }
 
 .atDestination {
@@ -121,7 +127,7 @@
 
 /* Light theme: same non-Google map, a lighter vignette/no invert, and the
    destination pin gets a border that reads on a pale background too. */
-:global(html[data-theme='light']) .host { background: var(--rh-page-bg, #eaf0f6); }
+:global(html[data-theme='light']) .host { background: transparent; }
 :global(html[data-theme='light']) .canvas { filter: none; }
 :global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%); }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }

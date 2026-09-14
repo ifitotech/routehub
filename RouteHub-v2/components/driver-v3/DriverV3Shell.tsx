@@ -53,7 +53,7 @@ export default function DriverV3Shell({
   const mapOpen = pathname === '/driver/map'
 
   return (
-    <main className={styles.shell}>
+    <main className={styles.shell} data-active={active}>
       <header className={`${styles.header} ${styles.appHeader}`} data-active={active}>
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>

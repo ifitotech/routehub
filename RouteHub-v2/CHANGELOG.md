@@ -792,6 +792,52 @@ opens - not just a dialog stacked flat on top of the page.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 32 — the detail sheets were still stuck on the old light-only look
+A screenshot of the Delivery sheet showed a plain white card (hardcoded `#f7f9fc`/`#fff`
+backgrounds, `#e5eaf0` borders) sitting inside an otherwise fully dark screen - the one
+surface in Today that hadn't been touched since before the dark-premium redesign.
+
+- **`app/driver-v3/today-sheets.tsx`** (Info/Pickup/Return/Next-stop/Delivery sheets) — the
+  shared `dialog` style object, the header's close button, the PO callout box, and every
+  text input/textarea now read `--rh-card-bg`/`--rh-border`/`--rh-text`/`--rh-text-muted`/
+  `--rh-surface-soft` (driver-theme-tokens.css) instead of hardcoded hex. These are inline
+  React styles, not a stylesheet rule, so the old hardcoded colors weren't just wrong for
+  dark mode - they were literally overriding the global dark `input`/`textarea` rule that
+  already existed in `driver-v3-a.module.css` (inline styles beat external stylesheet rules
+  without `!important`), which is why "Recipient name" rendered on a solid white field even
+  in dark mode. The "asking for a name" highlight (`#fff7ed`/`#fdba74`, a flat pastel that
+  only read right on white) became a translucent warning tint that works on either card
+  background. The signature pad's canvas stays a fixed light surface in both themes on
+  purpose - ink needs a paper-like background to read, same as a physical delivery slip.
+
+### Stage 33 — the header/content/map gradient still didn't line up on the "started" (compact map) state
+Comparing the pre-start screen (large map) against the started screen (compact map, "Stop 2
+of 2"), the header→map fusion from Stage 30 still showed a visible seam on the started state.
+
+- **Root cause**: Stage 30/31 gave the header, `.content`, `.page`, and the map's own `.host`
+  each their *own* copy of the same `--rh-page-bg` CSS gradient. A CSS `background` paints
+  relative to the element's own box - four separately-sized boxes independently painting "the
+  same" gradient puts each one's radial highlight in a different spot. On the tall pre-start
+  map this was easy to miss (the highlight landed somewhere plausible); on the short compact
+  map after Start, the mismatch became an obvious flat, differently-toned strip right under
+  the header.
+- **Real fix**: paint the gradient exactly once, on `.shell` - the single ancestor that
+  actually spans header + content + nav - and make everything nested inside it for Today
+  (header, `.content`, `.page`, the map's `.host`) transparent instead. One shared paint
+  layer shows through every layer above it, pixel-aligned, instead of each layer redrawing
+  its own copy that can drift out of alignment with the others.
+- **`components/driver-v3/DriverV3Shell.tsx`** — added `data-active={active}` to `<main
+  className={styles.shell}>` too (header and `.content` already had it from Stage 30/31).
+- **`components/driver-v3/driver-v3-b.module.css`** — `.shell[data-active='today']` now
+  carries the gradient; `.appHeader[data-active='today']` and `.content[data-active='today']`
+  changed from painting their own copy to `background:transparent !important`.
+- **`app/driver-v3/today.module.css`** — `.page`'s own `--rh-page-bg` background removed
+  (now `transparent`).
+- **`components/driver-v3/DriverRouteMap.module.css`** — `.host`'s own `--rh-page-bg`
+  background removed in both themes (now `transparent`).
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

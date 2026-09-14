@@ -1,4 +1,9 @@
-.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:0 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:var(--rh-page-bg,none);overflow:hidden;touch-action:pan-y;transition:transform .34s cubic-bezier(.32,.72,0,1),border-radius .34s cubic-bezier(.32,.72,0,1);transform-origin:center top}
+/* No background of its own - .shell (driver-v3-b.module.css,
+   [data-active='today']) paints --rh-page-bg exactly once behind
+   header+content+page+map together, so this stays transparent and lets
+   that single shared paint show through instead of layering a second,
+   misaligned copy of the same gradient on top of it. */
+.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:0 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:transparent;overflow:hidden;touch-action:pan-y;transition:transform .34s cubic-bezier(.32,.72,0,1),border-radius .34s cubic-bezier(.32,.72,0,1);transform-origin:center top}
 /* The confirm sheet (.confirmSheet, driver-v3-b.module.css) is meant to
    read as opening "out of" the bottom bar while the map/hero recede up
    into the header behind it, not just a plain dialog stacked on top -

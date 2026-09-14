@@ -24,24 +24,36 @@ export const overlay: React.CSSProperties = {
   touchAction: 'none',
   overscrollBehavior: 'none',
 }
+// These were hardcoded to the old light-only card look (#f7f9fc/#e5eaf0) -
+// every other Today surface already reads --rh-card-bg/--rh-border/--rh-text
+// (driver-theme-tokens.css) so it follows the driver's dark-by-default theme;
+// this dialog card was the one surface still stuck on paper-white regardless
+// of theme, which is exactly what read as "not adapted to the new UI."
 export const dialog: React.CSSProperties = {
   position: 'relative',
   width: 'min(340px,calc(100% - 32px))',
   padding: '18px 16px 16px',
   borderRadius: 20,
-  background: '#f7f9fc',
-  border: '1px solid #e5eaf0',
+  background: 'var(--rh-card-bg, #f7f9fc)',
+  border: '1px solid var(--rh-border, #e5eaf0)',
   boxShadow: '0 16px 36px rgba(15,29,53,.22)',
+  color: 'var(--rh-text, #0f1d35)',
 }
 const tileBtn: React.CSSProperties = {
   minHeight: 72, display: 'grid', placeItems: 'center', gap: 4, padding: 8, fontSize: 12, lineHeight: '14px', textAlign: 'center', whiteSpace: 'normal',
 }
+// The PO callout box (pickup/delivery) and the "Received by" input field
+// shared this same light-only pairing - one token pair for both instead of
+// repeating the same fix three times.
+const softBox: React.CSSProperties = {background: 'var(--rh-surface-soft, #fff)', border: '1px solid var(--rh-border, #e5eaf0)'}
+const fieldStyle: React.CSSProperties = {display: 'block', width: '100%', minHeight: 48, marginTop: 6, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', boxSizing: 'border-box', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}
+const textareaStyle: React.CSSProperties = {width: '100%', border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: 10, font: 'inherit', marginBottom: 10, boxSizing: 'border-box', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}
 
 function SheetHeader({label, onClose, t}: {label: string; onClose: () => void; t: any}) {
   return (
     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12}}>
       <p className="eyebrow" style={{margin: 0}}>{label}</p>
-      <button type="button" aria-label={t.drvCancel || t.cancel} onClick={onClose} style={{width: 32, height: 32, border: 0, borderRadius: 16, background: '#e8eef4', color: '#0f1d35', display: 'grid', placeItems: 'center', padding: 0}}>
+      <button type="button" aria-label={t.drvCancel || t.cancel} onClick={onClose} style={{width: 32, height: 32, border: 0, borderRadius: 16, background: 'var(--rh-surface-soft, #e8eef4)', color: 'var(--rh-text, #0f1d35)', display: 'grid', placeItems: 'center', padding: 0}}>
         <X size={16} />
       </button>
     </div>
@@ -56,7 +68,7 @@ export function InfoSheet({route, kind, t, onClose, onOpenMaps}: {route: any; ki
         <h2 style={{margin: '0 0 4px', fontSize: 22}}>{route.destination_name || t.drvCurrentStopName}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 10px'}}>{route.destination_address}</p>}
         {kind !== 'return' && route.order_number ? <p style={{margin: '0 0 12px', fontSize: 22, fontWeight: 800}}>PO {route.order_number}</p> : null}
-        <p style={{margin: '0 0 14px', fontSize: 14, lineHeight: 1.45, color: '#334155'}}>
+        <p style={{margin: '0 0 14px', fontSize: 14, lineHeight: 1.45, color: 'var(--rh-text-muted, #334155)'}}>
           {kind === 'pickup' ? t.drvPickupHelp : kind === 'delivery' ? t.drvDeliveryHelp : (t.drvReturnHelp || t.drvReturn)}
         </p>
         {route.notes ? <p className="muted" style={{margin: '0 0 14px'}}>{route.notes}</p> : null}
@@ -83,14 +95,14 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
         <p className="muted" style={{margin: '0 0 12px', fontSize: 13, lineHeight: '18px'}}>{t.drvPickupHelp}</p>
         {route.order_number ? (
-          <div style={{margin: '0 0 16px', padding: '12px 14px', borderRadius: 14, background: '#fff', border: '1px solid #e5eaf0'}}>
-            <p style={{margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: '.14em', color: '#667280'}}>PO</p>
+          <div style={{margin: '0 0 16px', padding: '12px 14px', borderRadius: 14, ...softBox}}>
+            <p style={{margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: '.14em', color: 'var(--rh-text-muted, #667280)'}}>PO</p>
             <p style={{margin: '4px 0 0', fontSize: 28, lineHeight: '32px', fontWeight: 800, letterSpacing: '-0.03em'}}>{route.order_number}</p>
           </div>
         ) : null}
         {issueOpen ? (
           <>
-            <textarea value={issueNote} onChange={e => onIssueNoteChange(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={{width: '100%', border: '1px solid #dde5ee', borderRadius: 12, padding: 10, font: 'inherit', marginBottom: 10}} />
+            <textarea value={issueNote} onChange={e => onIssueNoteChange(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={textareaStyle} />
             <button className="secondary" disabled={busy} onClick={onSavePickupNote}>{busy ? t.drvBusy : t.drvSubmitIssue}</button>
           </>
         ) : null}
@@ -129,7 +141,7 @@ export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpe
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{nextRoute.destination_name || nextRoute.destination_address || t.drvCurrentStopName}</h2>
         {nextRoute.destination_address && <p className="muted" style={{margin: '0 0 10px'}}>{nextRoute.destination_address}</p>}
         {nextKind !== 'return' && nextRoute.order_number ? <p style={{margin: '0 0 12px', fontSize: 22, fontWeight: 800}}>PO {nextRoute.order_number}</p> : null}
-        <p style={{margin: '0 0 14px', fontSize: 14, lineHeight: 1.45, color: '#334155'}}>
+        <p style={{margin: '0 0 14px', fontSize: 14, lineHeight: 1.45, color: 'var(--rh-text-muted, #334155)'}}>
           {nextKind === 'pickup' ? t.drvPickupHelp : nextKind === 'delivery' ? t.drvDeliveryHelp : (t.drvReturnHelp || t.drvReturn)}
         </p>
         {nextRoute.notes || nextRoute.driver_note ? <p className="muted" style={{margin: '0 0 14px'}}>{nextRoute.notes || nextRoute.driver_note}</p> : null}
@@ -168,14 +180,17 @@ export function DeliverySheet({
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
         <p className="muted" style={{margin: '0 0 12px', fontSize: 13, lineHeight: '18px'}}>{t.drvDeliveryHelp}</p>
         {route.order_number ? (
-          <div style={{margin: '0 0 12px', padding: '12px 14px', borderRadius: 14, background: '#fff', border: '1px solid #e5eaf0'}}>
-            <p style={{margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: '.14em', color: '#667280'}}>PO</p>
+          <div style={{margin: '0 0 12px', padding: '12px 14px', borderRadius: 14, ...softBox}}>
+            <p style={{margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: '.14em', color: 'var(--rh-text-muted, #667280)'}}>PO</p>
             <p style={{margin: '4px 0 0', fontSize: 28, lineHeight: '32px', fontWeight: 800}}>{route.order_number}</p>
           </div>
         ) : null}
-        <label className="muted" style={{display: 'block', marginBottom: 12, padding: askName ? '12px' : '0', borderRadius: 14, background: askName ? '#fff7ed' : 'transparent', border: askName ? '1px solid #fdba74' : '0'}}>
+        {/* "Asking for name" highlight used a flat pastel (#fff7ed) that only
+            read right on a white card - a translucent warning tint works on
+            both the dark and light card background instead. */}
+        <label className="muted" style={{display: 'block', marginBottom: 12, padding: askName ? '12px' : '0', borderRadius: 14, background: askName ? 'rgba(255,181,71,.14)' : 'transparent', border: askName ? '1px solid rgba(255,181,71,.4)' : '0'}}>
           {t.drvReceivedBy}
-          <input ref={nameRef} value={recipient} onFocus={onNameFocus} onBlur={onNameBlur} onChange={e => onRecipientChange(e.target.value)} placeholder={t.drvRecipientName} style={{display: 'block', width: '100%', minHeight: 48, marginTop: 6, border: '1px solid #dde5ee', borderRadius: 12, padding: '0 12px', font: 'inherit', boxSizing: 'border-box', background: '#fff'}} />
+          <input ref={nameRef} value={recipient} onFocus={onNameFocus} onBlur={onNameBlur} onChange={e => onRecipientChange(e.target.value)} placeholder={t.drvRecipientName} style={fieldStyle} />
         </label>
         <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={e => onPickPhoto(e.target.files?.[0] || null)} />
         {!nameFocus && (
@@ -193,12 +208,15 @@ export function DeliverySheet({
         )}
         {!nameFocus && podPanel === 'signature' && (
           <div style={{marginBottom: 10}}>
+            {/* Signature pad stays a fixed light surface on purpose, both
+                themes - ink needs a paper-like background to read, the same
+                way it would on a physical delivery slip. */}
             <canvas ref={canvas} width={340} height={180} onPointerDown={onSign} onPointerMove={e => e.buttons === 1 && onSign(e)} style={{width: '100%', height: 180, border: '1px dashed #cbd5e1', borderRadius: 12, background: '#fff', touchAction: 'none'}} />
             <button type="button" className="secondary" onClick={onClearSignature} style={{marginTop: 8, width: '100%'}}>{t.drvClear}</button>
           </div>
         )}
         {!nameFocus && podPanel === 'issue' && (
-          <textarea value={issueNote} onChange={e => onIssueNoteChange(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={{width: '100%', border: '1px solid #dde5ee', borderRadius: 12, padding: 10, font: 'inherit', marginBottom: 10, boxSizing: 'border-box'}} />
+          <textarea value={issueNote} onChange={e => onIssueNoteChange(e.target.value)} placeholder={t.drvOptionalNote} rows={3} style={textareaStyle} />
         )}
         {message && <p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
         <button className="primary" disabled={busy} onClick={onConfirm} style={{background: podPanel === 'issue' ? '#E11D48' : '#16B96B', width: '100%'}}>{busy ? t.drvBusy : (podPanel === 'issue' ? (t.drvCompleteWithIssue || 'COMPLETE WITH ISSUE') : t.drvCompleteDelivery)}</button>
