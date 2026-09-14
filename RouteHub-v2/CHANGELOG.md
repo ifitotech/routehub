@@ -134,6 +134,25 @@ Scope: CEO/Admin explicitly excluded from this redesign per the user.
   other back-compat aliases already defined there.
 - `npm run typecheck` and `npm run build` clean after this change.
 
+### Stage 6 — found why Routes was still rendering light, added a real theme switch
+- Root cause of "Routes still looks completely light" after all the dark
+  work: nothing in the current code forces light anymore, but the OLD
+  Driver shell used to call `applyThemePreference('light')` on every
+  mount, which writes `routehub_theme` to `localStorage` - not just a
+  runtime override. Any browser that ever opened Driver before this
+  redesign has that value permanently stuck at `'light'`, and there was
+  no UI anywhere to change it back - `app/settings/page.tsx` explicitly
+  had no theme control, with a comment saying Manager was intentionally
+  light-only (stale, from before dark became the primary theme).
+- Added a real Theme control to Settings → Preferences, next to Language,
+  using the same segmented-button pattern: Dark / Light / System,
+  wired to the existing `useThemePreference()`/`applyThemePreference()`
+  plumbing (already built for Driver, just never exposed for Manager).
+  This is the fix that actually lets a browser stuck on the old forced
+  light value switch to dark - the CSS/token work in Stages 1-5 was
+  correct, it just had no way to be seen on an already-poisoned browser.
+- `npm run typecheck` and `npm run build` both clean.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
