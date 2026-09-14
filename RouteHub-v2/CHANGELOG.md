@@ -197,6 +197,31 @@ issues no amount of reading CSS in isolation would catch:
 - `npm run typecheck`, `npm run build` clean; `npm test` shows only the
   same pre-existing `ENOENT` failures as the baseline.
 
+### Stage 8 — full Driver + Manager coverage sweep
+Ranked every CSS/module file under Driver and Manager by how little dark-mode handling it
+had (grep count of the word "dark"), to find files that had slipped through earlier passes
+entirely rather than re-checking files already known to be fine.
+
+- Found and fixed the one real remaining gap: `app/routes/route-detail-view.module.css`
+  (the route detail/evidence panel) had zero dark handling - `.evidenceButton:hover`,
+  `.evidenceImage` border, and `.issueSection` (the issue callout) were all hardcoded
+  light-only. Added the matching dark block.
+- Everything else on the "zero dark mentions" list turned out to already be safe on
+  inspection, for one of two legitimate reasons: (1) layout-only files with no color/
+  background declarations at all (`compact-map.module.css`, `add-route-cards.css`,
+  `daily-progress.module.css`, `dispatch-layout.module.css`, `live/live.module.css`,
+  `manage-mobile-fixes.module.css`, `routes-dispatch.css`), or (2) files that read
+  exclusively from the `--rh-*`/`--primary`/`--surface`/`--ink` token names that
+  `manager-theme.css` and `globals.css` already redefine for dark (`driver-dropdown`,
+  `route-search`, `routes-rows` in `app/routes`) - confirmed by reading each file rather
+  than trusting the ranking alone.
+- Checked every Driver sub-route directory (`help`, `history`, `issue`, `map`, `more`,
+  `privacy`, `route`, `settings`, `stop`, `truck`, `truck/fuel`, `truck/maintenance`) for
+  its own CSS files - none exist; they all share the already-audited `today.module.css`/
+  `v3-app.css`/`driver-v3-a`/`driver-v3-b` classes.
+- `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
+  baseline failures only).
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on

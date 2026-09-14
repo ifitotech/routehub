@@ -27,3 +27,9 @@
 .issueSection{padding:14px;border:1px solid #fecaca;border-radius:14px;background:#fef2f2}
 .issueSection h3{color:var(--rh-danger)}
 .issueSection p{margin:0;color:#7f1d1d;font-size:13px}
+
+:global(html[data-theme='dark']) .evidenceButton{border-color:rgba(147,193,255,.14);background:rgba(255,255,255,.045);color:#bbd3f7}
+:global(html[data-theme='dark']) .evidenceButton:hover{background:rgba(147,193,255,.09)}
+:global(html[data-theme='dark']) .evidenceImage{border-color:#30445f}
+:global(html[data-theme='dark']) .issueSection{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.12)}
+:global(html[data-theme='dark']) .issueSection p{color:#fca5a5}
