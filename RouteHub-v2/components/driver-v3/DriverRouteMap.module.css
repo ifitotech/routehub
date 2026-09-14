@@ -74,18 +74,6 @@
 .host :global(.maplibregl-ctrl-attrib a) { color: #9fb2d0 !important; }
 .host :global(.maplibregl-ctrl-attrib-button) { display: none !important; }
 
-/* Real OSM tiles are only ever the light/paper style, with many different
-   hues (green parks, tan buildings, blue water) - inverting that directly
-   produced blotchy, wrong-colored patches instead of a clean navy map,
-   since hue-rotate shifts every one of those hues differently. Grayscale
-   first removes all of that hue variance, invert then flips the now-flat
-   image dark, and sepia+hue-rotate re-tints the resulting uniform gray
-   into one consistent RouteHub navy/blue instead of many mismatched
-   colors - applied straight to MapLibre's own canvas. */
-.canvas {
-  filter: grayscale(1) invert(1) brightness(.92) contrast(1.05) sepia(.6) hue-rotate(190deg) saturate(2.6);
-}
-
 /* No visible frame - the map runs full-bleed to the card's own left/right/
    top edges (no side fade at all, matching the reference: the map reads as
    real imagery right up to the screen edges) and only dissolves downward
@@ -108,13 +96,19 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(to bottom,
-    rgba(16, 28, 45, 0) 0%,
-    rgba(16, 28, 45, 0) 48%,
-    rgba(16, 28, 45, .10) 62%,
-    rgba(16, 28, 45, .42) 78%,
-    rgba(16, 28, 45, .82) 92%,
-    #101c2d 100%);
+  background:
+    linear-gradient(to bottom,
+      #101c2d 0%,
+      rgba(16, 28, 45, .84) 9%,
+      rgba(16, 28, 45, .34) 20%,
+      rgba(16, 28, 45, 0) 32%),
+    linear-gradient(to bottom,
+      rgba(16, 28, 45, 0) 0%,
+      rgba(16, 28, 45, 0) 52%,
+      rgba(16, 28, 45, .18) 62%,
+      rgba(16, 28, 45, .58) 76%,
+      rgba(16, 28, 45, .9) 89%,
+      #101c2d 100%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
@@ -162,16 +156,21 @@
 /* Light theme: same non-Google map, a lighter vignette/no invert, and the
    destination pin gets a border that reads on a pale background too. */
 :global(html[data-theme='light']) .host { background: transparent; }
-:global(html[data-theme='light']) .canvas { filter: none; }
 :global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%); }
 :global(html[data-theme='light']) .fadeOverlay {
-  background: linear-gradient(to bottom,
-    rgba(247, 250, 255, 0) 0%,
-    rgba(247, 250, 255, 0) 48%,
-    rgba(247, 250, 255, .10) 62%,
-    rgba(247, 250, 255, .42) 78%,
-    rgba(247, 250, 255, .82) 92%,
-    #f7faff 100%);
+  background:
+    linear-gradient(to bottom,
+      #f7faff 0%,
+      rgba(247, 250, 255, .84) 9%,
+      rgba(247, 250, 255, .34) 20%,
+      rgba(247, 250, 255, 0) 32%),
+    linear-gradient(to bottom,
+      rgba(247, 250, 255, 0) 0%,
+      rgba(247, 250, 255, 0) 52%,
+      rgba(247, 250, 255, .18) 62%,
+      rgba(247, 250, 255, .58) 76%,
+      rgba(247, 250, 255, .9) 89%,
+      #f7faff 100%);
 }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }

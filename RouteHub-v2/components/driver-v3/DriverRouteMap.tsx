@@ -28,15 +28,10 @@ const AT_DESTINATION_COPY = {
 // effectively already there.
 const AT_DESTINATION_METERS = 45
 
-// Beyond this, fitting both origin and destination in frame would zoom the
-// map out far enough that neither reads as "close" - this map is context
-// for where the driver is right now, not a full-route overview.
-const FAR_APART_METERS = 12000
-
 // Real OpenStreetMap tiles, no key, no account - this preview is context,
 // not turn-by-turn, so an approximate straight line between two points is
 // the right amount of accuracy, not a road-following route.
-const OSM_STYLE: maplibregl.StyleSpecification = {
+function osmStyle(dark: boolean): maplibregl.StyleSpecification { return {
   version: 8,
   sources: {
     osm: {
@@ -47,8 +42,13 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
       maxzoom: 19,
     },
   },
-  layers: [{id: 'osm', type: 'raster', source: 'osm'}],
-}
+  layers: [{id: 'osm', type: 'raster', source: 'osm', paint: dark ? {
+    'raster-saturation': -1,
+    'raster-brightness-min': 0.035,
+    'raster-brightness-max': 0.42,
+    'raster-contrast': 0.2,
+  } : {}}],
+} }
 
 function markerEl(kind: 'driver' | 'destination', live = true) {
   const el = document.createElement('div')
@@ -118,7 +118,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
     if (!containerRef.current || mapRef.current) return
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: OSM_STYLE,
+      style: osmStyle(document.documentElement.dataset.theme !== 'light'),
       center: [-80.19, 25.76],
       zoom: 12,
       attributionControl: {compact: true},
@@ -145,19 +145,30 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
       const routeGradient: any = ['interpolate', ['linear'], ['line-progress'], 0, '#2493FF', 1, '#37E0C9']
       map.addLayer({
         id: 'rh-route-glow', type: 'line', source: 'rh-route-line',
-        paint: {'line-gradient': routeGradient, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 7, 16, 16], 'line-opacity': 0.32, 'line-blur': 4},
+        paint: {'line-gradient': routeGradient, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 10, 16, 20], 'line-opacity': 0.5, 'line-blur': 5},
         layout: {'line-cap': 'round', 'line-join': 'round'},
       })
       map.addLayer({
         id: 'rh-route-core', type: 'line', source: 'rh-route-line',
-        paint: {'line-gradient': routeGradient, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 2.5, 16, 5], 'line-opacity': 0.95},
+        paint: {'line-gradient': routeGradient, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 4, 16, 7], 'line-opacity': 1},
         layout: {'line-cap': 'round', 'line-join': 'round'},
       })
-      const canvas = map.getCanvas()
-      canvas.classList.add(styles.canvas)
       map.resize()
     })
+    // Darken only the OSM raster tiles. Filtering MapLibre's full canvas
+    // also filtered the blue/cyan route layer and made it nearly invisible.
+    const applyRasterTheme = () => {
+      if (!map.isStyleLoaded() || !map.getLayer('osm')) return
+      const dark = document.documentElement.dataset.theme !== 'light'
+      map.setPaintProperty('osm', 'raster-saturation', dark ? -1 : 0)
+      map.setPaintProperty('osm', 'raster-brightness-min', dark ? 0.035 : 0)
+      map.setPaintProperty('osm', 'raster-brightness-max', dark ? 0.42 : 1)
+      map.setPaintProperty('osm', 'raster-contrast', dark ? 0.2 : 0)
+    }
+    const themeObserver = new MutationObserver(applyRasterTheme)
+    themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']})
     return () => {
+      themeObserver.disconnect()
       map.remove()
       mapRef.current = null
       driverMarkerRef.current = null
@@ -226,19 +237,9 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
       // destination (no origin at all yet), center on that alone.
       if (!firstFitRef.current && origin && destination) {
         firstFitRef.current = true
-        // fitBounds alone zooms out however far it takes to fit both points
-        // in frame - fine for a short hop across town, but a long route
-        // (tens of miles) forced the view out so far that neither point
-        // read as "close," just a distant overview with little detail.
-        // This is context for where the driver is right now, not a
-        // full-route overview, so a long route frames tight on the
-        // driver's own position instead of stretching to include a
-        // destination that far away.
-        if (distanceMeters(origin, destination) > FAR_APART_METERS) {
-          map.jumpTo({center: [origin.lng, origin.lat], zoom: 13})
-        } else {
-          map.fitBounds([[Math.min(origin.lng, destination.lng), Math.min(origin.lat, destination.lat)], [Math.max(origin.lng, destination.lng), Math.max(origin.lat, destination.lat)]], {padding: 56, maxZoom: 15, duration: 0})
-        }
+        // The preview must show the complete visual connection, even for a
+        // long mission, so both the driver and destination stay in frame.
+        map.fitBounds([[Math.min(origin.lng, destination.lng), Math.min(origin.lat, destination.lat)], [Math.max(origin.lng, destination.lng), Math.max(origin.lat, destination.lat)]], {padding: 56, maxZoom: 15, duration: 0})
       } else if (!firstFitRef.current && destination) {
         firstFitRef.current = true
         map.jumpTo({center: [destination.lng, destination.lat], zoom: 14})

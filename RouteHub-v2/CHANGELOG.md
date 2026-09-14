@@ -1266,3 +1266,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 51 — 2026-09-14
 - Finish the enlarged map with a progressive five-stop dissolve into the Today background, removing the visible lower canvas edge beneath the operational details.
+
+## Stage 52 — 2026-09-14
+- Strengthen the header and lower map dissolves, apply dark styling only to the OSM raster layer so route colors remain vivid, and frame both route endpoints even on long missions.
