@@ -1281,3 +1281,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 56 — 2026-09-14
 - Fix the light header selectors so map/profile icons retain contrast, and replace the straight preview segment with the single fastest street route returned by the existing OSRM operations-routing service.
+
+## Stage 57 — 2026-09-14
+- Fix the CSS Modules purity error in the light-mode header icon selector so Vercel production builds compile successfully.
