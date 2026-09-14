@@ -1307,3 +1307,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 64 — 2026-09-14
 - Restore reliable touch handling for completion sheets: the close control and all sheet actions explicitly receive pointer input, and tapping the backdrop closes the panel.
+
+## Stage 65 — 2026-09-14
+- Convert the Delivery completion flow into an in-screen Today bottom sheet: it anchors to the lower edge, rises from below the viewport while Today retracts under the header, and dismisses back downward from the Cancel/X control or backdrop.

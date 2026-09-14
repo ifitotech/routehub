@@ -174,8 +174,8 @@ export function DeliverySheet({
   busy: boolean; message: string; onConfirm: () => void; onClose: () => void
 }) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
-      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()} onClick={onClose}>
+      <section className={`card ${styles.completionDialog} ${styles.todaySheetPanel}`} style={{...dialog, width: '100%', maxWidth: 680, borderRadius: '24px 24px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))'}} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || t.drvCompleteDelivery}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
