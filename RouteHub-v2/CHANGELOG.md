@@ -268,6 +268,35 @@ correctly called out as "no le pega a este estilo":
   were left as-is - that accent already reads correctly on both themes.
 - `npm run typecheck`, `npm run build` clean.
 
+### Stage 11 — the same broken-import bug existed in 3 more places, plus 2 real Driver Settings bugs
+Re-checked every Driver file for the exact "imports from the combined driver-v3.module.css"
+pattern instead of assuming Stage 7's single fix covered it - it didn't:
+
+- `app/driver-v3/settings/page.tsx` had the **same** broken `confirmStyles` import as the
+  Today confirm dialog (used twice - both its own confirm dialogs, e.g. Sign out). Fixed
+  to import from `driver-v3-b.module.css`.
+- `app/driver-v3/truck/fuel/page.tsx` and `app/driver-v3/truck/maintenance/page.tsx` both
+  imported `shellStyles` from the same broken combined file for `.stickyAction` (the
+  floating Save bar) - it silently lost its fixed positioning and gradient background.
+  Fixed both to import from `driver-v3-a.module.css`, where `.stickyAction` is defined.
+- Generalized `tests/driver-confirm-dialog.test.mjs` into a real regression test: it now
+  scans every file under `app/driver-v3` and `components/driver-v3` for this exact broken
+  import pattern, instead of only checking the one file already known to have had it - this
+  is what should have caught the 3 additional instances immediately instead of them being
+  found one screenshot at a time.
+- **Real bug, unrelated to the import issue:** the "Check for updates" row in Driver
+  Settings is a raw `<button>` (every other row is a `<Link>`), and iOS Safari keeps its
+  native rounded/shadowed button chrome unless `appearance:none`/`-webkit-appearance:none`
+  is set explicitly - `background:transparent` alone doesn't remove it. That's why it
+  rendered as a solid white rounded box sitting starkly on top of an otherwise-dark screen
+  in the user's screenshot. Added the missing `appearance` reset to `button.row` in
+  `driver-preferences.module.css`.
+- **Real gap, not a bug:** Driver had no way to switch theme at all (Manager got one in
+  Stage 6, Driver never did) - added the same Dark/Light/System control to Driver Settings,
+  right below Language, reusing the already-dark-aware `.languageChoice` styling.
+- `npm run typecheck`, `npm run build`, `npm test` all clean (new tests included, same
+  pre-existing `ENOENT` baseline failures only).
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
