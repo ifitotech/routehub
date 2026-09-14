@@ -1382,3 +1382,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 90 — 2026-09-14
 - Turn the small handle beneath Today’s operational actions into a Delivery swipe-up trigger, giving it the same completion-sheet entrance as Arrived at Stop while preserving downward dismissal from the sheet handle.
+
+## Stage 91 — 2026-09-14
+- Extend Today’s visual system across Driver Routes, Truck, and Profile: shared elevated surfaces, token-aware light/dark backgrounds, crystal controls, stronger route history tabs/cards, and a screen marker for reliable per-screen styling.

@@ -1,0 +1,82 @@
+/* Shared visual language for every Driver screen outside the immersive
+   Today surface.  The screen marker comes from DriverV3Shell, keeping the
+   refresh scoped to Driver rather than affecting Manager/Admin UI. */
+.driver-v3-root [data-driver-screen='history'],
+.driver-v3-root [data-driver-screen='truck'],
+.driver-v3-root [data-driver-screen='more'] {
+  background:
+    radial-gradient(circle at 88% 4%, rgba(71,151,255,.12), transparent 31%),
+    var(--rh-page-bg, #f7f9fc);
+}
+
+.driver-v3-root [data-driver-screen='history'] .card,
+.driver-v3-root [data-driver-screen='truck'] .card {
+  border:1px solid var(--rh-border, rgba(101,162,255,.2));
+  border-radius:22px;
+  background:var(--rh-card-bg, #fff);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.64),0 12px 30px rgba(17,45,82,.08);
+}
+
+.driver-v3-root [data-driver-screen='history'] > label.card {
+  padding:18px!important;
+  border-radius:24px;
+}
+
+.driver-v3-root [data-driver-screen='history'] input,
+.driver-v3-root [data-driver-screen='truck'] select {
+  border-color:var(--rh-border, rgba(101,162,255,.22))!important;
+  border-radius:16px!important;
+  background:var(--rh-surface-soft, #fff)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+}
+
+.driver-v3-root [data-driver-screen='history'] [role='tablist'] button {
+  min-height:68px!important;
+  border-radius:18px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.54),0 6px 14px rgba(17,45,82,.05);
+  font-size:15px!important;
+}
+
+.driver-v3-root [data-driver-screen='history'] article.card {
+  overflow:hidden;
+  border-left-width:5px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.56),0 14px 28px rgba(17,45,82,.1);
+}
+
+.driver-v3-root [data-driver-screen='history'] article.card .secondary,
+.driver-v3-root [data-driver-screen='truck'] .secondary {
+  border-radius:16px;
+  border-color:var(--rh-border-strong, rgba(101,162,255,.3));
+  background:radial-gradient(circle at 32% 18%,rgba(113,176,255,.16),var(--rh-surface-soft,#fff));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 7px 16px rgba(17,45,82,.07);
+}
+
+.driver-v3-root [data-driver-screen='truck'] .card:first-child {
+  border-color:rgba(36,147,255,.34);
+  background:linear-gradient(145deg,rgba(59,142,255,.13),var(--rh-card-bg,#fff));
+}
+
+.driver-v3-root [data-driver-screen='more'] {
+  padding-top:8px;
+}
+
+.driver-v3-root [data-driver-screen='more'] [class*='profileHero'],
+.driver-v3-root [data-driver-screen='more'] [class*='profileSection'] {
+  border-color:var(--rh-border,rgba(101,162,255,.2));
+  border-radius:22px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 10px 24px rgba(17,45,82,.07);
+}
+
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='history'],
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='truck'],
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='more'] {
+  background:radial-gradient(circle at 88% 4%,rgba(41,124,255,.16),transparent 31%),var(--rh-page-bg,#0b1728);
+}
+
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='history'] .card,
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='truck'] .card,
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='more'] [class*='profileHero'],
+html[data-theme='dark'] .driver-v3-root [data-driver-screen='more'] [class*='profileSection'] {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 14px 30px rgba(0,0,0,.25);
+}
+

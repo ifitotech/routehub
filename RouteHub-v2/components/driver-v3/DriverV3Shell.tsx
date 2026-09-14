@@ -53,7 +53,7 @@ export default function DriverV3Shell({
   const mapOpen = pathname === '/driver/map'
 
   return (
-    <main className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
+    <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
       <header className={`${styles.header} ${styles.appHeader} ${active === 'today' ? styles.headerToday : ''}`}>
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
@@ -75,7 +75,7 @@ export default function DriverV3Shell({
         )}
       </header>
 
-      <section className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>
+      <section data-driver-screen={active} className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>
 
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
         <Link className={active === 'today' ? styles.active : ''} href="/driver">
