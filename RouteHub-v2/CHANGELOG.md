@@ -1361,3 +1361,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 83 — 2026-09-14
 - Make the completion sheet’s light and dark surfaces fully opaque while retaining its action-control depth, preventing the active route’s text and controls from bleeding through the form in light mode.
+
+## Stage 84 — 2026-09-14
+- Compact the Delivery sheet and give its Photo, Signature, and Issue controls matching RouteHub glass treatment in each theme, while preserving the green completion CTA as the primary action.
