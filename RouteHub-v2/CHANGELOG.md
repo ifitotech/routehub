@@ -711,6 +711,30 @@ the work here too - not a box-model trick.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 29 — the outer frame, fixed with an existing "full bleed" mechanism
+Asked directly where exactly the box was, the user confirmed it was the whole outer
+boundary around the entire hero (map through the CTA), not a seam in one specific spot -
+confirming the diagnosis from Stage 27 was right, even though its specific fix got reverted.
+
+- **`app/driver-v3/page.tsx` now passes `flush` to `DriverV3Shell`** - a prop that already
+  existed and is already used by the Map screen (`app/driver-v3/map/page.tsx`), instead of
+  a new box-model trick. `flush` applies `.contentFlush` (`driver-v3-b.module.css`), which
+  removes the shared `.content` wrapper's own `16px/18px/28px` padding entirely
+  (`padding:0!important`). Without that padding, there's no gap left for `.content`'s flat
+  fallback background to show through - `.page`'s own gradient now covers the *complete*
+  area, edge to edge, instead of only the area inside padding that used to expose a frame
+  around it. `.hero`'s own 18px padding still gives the text/button content the same inset
+  it always had; the map still reaches those same edges via its existing negative margins,
+  except those edges are now the screen's true edges instead of edges already inset by
+  `.content`'s padding.
+- Lower-risk than either earlier attempt: no shared component's background was changed
+  (unlike a `.content` background edit, which would have touched every Driver screen), and
+  no manual margin/width arithmetic was needed (unlike Stage 27) - `flush` is a proven,
+  already-shipped pattern for exactly this "this screen owns its own full-bleed background"
+  case.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

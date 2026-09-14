@@ -348,10 +348,20 @@ export default function DriverV3Page() {
   }
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
+  // flush (already used by the Map screen) removes .content's own
+  // 16px/18px/28px padding entirely - without it, .page's own gradient
+  // background only ever painted inside that padding, leaving .content's
+  // flat fallback color exposed as a visible frame around the whole hero
+  // (map, pill, name, address, CTA) the entire time. .hero's own 18px
+  // padding still gives the text/button content the same inset it always
+  // had; the map still reaches those same edges via its own negative
+  // margins, same as before - now those edges are the screen's true
+  // edges instead of edges already inset by .content's padding.
   return <DriverV3Shell
     active="today"
     headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}
     hideNav={Boolean((sheet&&operation)||confirmPickupOpen)}
+    flush
   >
     <div className={styles.page} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
