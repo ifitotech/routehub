@@ -192,6 +192,7 @@ export function DeliverySheet({
     if (distance > 90) onClose()
   }
   return (
+    <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()}>
     <section data-delivery-panel className={styles.inlineDeliveryPanel} style={{transform: `translateY(${dragOffset}px)`}} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
         <span className={styles.sheetHandle} aria-label={t.drvCancel || 'Cancel'} role="button" onClick={onClose} aria-hidden="false" />
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
@@ -242,5 +243,6 @@ export function DeliverySheet({
         <button className="primary" disabled={busy} onClick={onConfirm} style={{background: podPanel === 'issue' ? '#E11D48' : '#16B96B', width: '100%'}}>{busy ? t.drvBusy : (podPanel === 'issue' ? (t.drvCompleteWithIssue || 'COMPLETE WITH ISSUE') : t.drvCompleteDelivery)}</button>
         <button type="button" disabled={busy} onClick={onClose} className={styles.sheetCancel}>{t.drvCancel || 'Cancel'}</button>
     </section>
+    </div>
   )
 }

@@ -56,8 +56,6 @@ export default function DriverV3Page() {
   const refreshDistance=useRef(0)
   const [refreshing,setRefreshing]=useState(false)
   const [pullDistance,setPullDistance]=useState(0)
-  const pageRef=useRef<HTMLDivElement>(null)
-  const [deliveryShift,setDeliveryShift]=useState(0)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
@@ -71,22 +69,6 @@ export default function DriverV3Page() {
   // actually left today - real position/count still drive it, this just
   // keeps the row from overflowing a route with a dozen stops.
   const stopDots=Array.from({length: Math.min(visibleStopCount, 5)}, (_, index) => index < currentStopPosition ? (index === currentStopPosition - 1 ? 'current' : 'done') : 'upcoming')
-  useEffect(()=>{
-    if(sheet!=='delivery') { setDeliveryShift(0); return }
-    const update=()=>{
-      const page=pageRef.current
-      const panel=page?.querySelector<HTMLElement>('[data-delivery-panel]')
-      const header=document.querySelector('header')
-      if(!page||!panel) return
-      const headerBottom=header?.getBoundingClientRect().bottom||0
-      setDeliveryShift(Math.max(0,panel.getBoundingClientRect().top-headerBottom-10))
-    }
-    const frame=requestAnimationFrame(update)
-    const observer=new ResizeObserver(update)
-    const panel=pageRef.current?.querySelector<HTMLElement>('[data-delivery-panel]')
-    if(panel) observer.observe(panel)
-    return ()=>{cancelAnimationFrame(frame);observer.disconnect()}
-  },[sheet,podPanel,nameFocus])
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -388,7 +370,7 @@ export default function DriverV3Page() {
         descendants into descendants confined to *that* box instead of the
         viewport, which would trap the backdrop inside the very element
         it's meant to shrink behind. */}
-    <div ref={pageRef} className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} style={sheet==='delivery'?{transform:`translateY(-${deliveryShift}px)`}:undefined} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+    <div className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
           <span className={styles.pullRoadLine}/>
@@ -401,7 +383,7 @@ export default function DriverV3Page() {
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>
-        <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn} ${sheet==='delivery'?styles.heroDeliveryOpen:''}`}>
+        <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn}`}>
           <div className={`${styles.routeGlyphHost} ${started?styles.routeGlyphHostCompact:''}`}>
             <DriverRouteMap route={route} driverFix={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null} locale={locale}/>
           </div>
@@ -452,17 +434,6 @@ export default function DriverV3Page() {
               <span className={styles.startedHandle} aria-hidden="true"/>
             </>
           )}
-          {sheet==='delivery'&&(
-            <DeliverySheet
-              route={route} t={t}
-              recipient={recipient} onRecipientChange={value=>{setRecipient(value);if(value.trim())setAskName(false)}}
-              photo={photo} photoRef={photoRef} onRequestPhoto={requestPhoto} onPickPhoto={setPhoto}
-              signed={signed} podPanel={podPanel} onPodPanelChange={setPodPanel} issueNote={issueNote} onIssueNoteChange={setIssueNote}
-              askName={askName} nameFocus={nameFocus} onNameFocus={()=>{setNameFocus(true);setPodPanel(null)}} onNameBlur={()=>setNameFocus(false)} nameRef={nameRef}
-              canvas={canvas} onSign={sign} onClearSignature={()=>{const c=canvas.current;if(c)c.getContext('2d')?.clearRect(0,0,c.width,c.height);setSigned(false)}}
-              busy={busy} message={message} onConfirm={()=>void confirmDelivery()} onClose={()=>{setSheet(null);setPodPanel(null)}}
-            />
-          )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
@@ -481,6 +452,18 @@ export default function DriverV3Page() {
 
       {sheet==='return'&&route&&(
         <ReturnSheet route={route} t={t} busy={busy} message={message} onComplete={()=>void completeReturnNow()} onClose={()=>setSheet(null)}/>
+      )}
+
+      {sheet==='delivery'&&route&&(
+        <DeliverySheet
+          route={route} t={t}
+          recipient={recipient} onRecipientChange={value=>{setRecipient(value);if(value.trim())setAskName(false)}}
+          photo={photo} photoRef={photoRef} onRequestPhoto={requestPhoto} onPickPhoto={setPhoto}
+          signed={signed} podPanel={podPanel} onPodPanelChange={setPodPanel} issueNote={issueNote} onIssueNoteChange={setIssueNote}
+          askName={askName} nameFocus={nameFocus} onNameFocus={()=>{setNameFocus(true);setPodPanel(null)}} onNameBlur={()=>setNameFocus(false)} nameRef={nameRef}
+          canvas={canvas} onSign={sign} onClearSignature={()=>{const c=canvas.current;if(c)c.getContext('2d')?.clearRect(0,0,c.width,c.height);setSigned(false)}}
+          busy={busy} message={message} onConfirm={()=>void confirmDelivery()} onClose={()=>{setSheet(null);setPodPanel(null)}}
+        />
       )}
 
     </div>

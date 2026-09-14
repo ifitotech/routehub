@@ -1349,3 +1349,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 79 — 2026-09-14
 - Remove the duplicate completion-map band so Delivery remains a direct continuation of the original Today route content: the existing map and route slide beneath the header while the embedded form is revealed from below.
+
+## Stage 80 — 2026-09-14
+- Reframe Delivery completion as the requested bottom-anchored, translucent navy sheet: the active route card and map remain visible behind it while the sheet rises from the bottom with a rounded, electric-blue edge.
