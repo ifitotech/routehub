@@ -1355,3 +1355,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 81 — 2026-09-14
 - Keep the Today navigation in layout while Delivery is open to prevent the background route from re-centering downward; replace the see-through sheet with theme-token surfaces so light and dark mode each render a legible, opaque completion card.
+
+## Stage 82 — 2026-09-14
+- Give the Delivery completion sheet the same RouteHub glass-depth treatment as Today’s circular action controls: soft blue inner light, subtle border, inset highlight, and theme-specific light/dark surfaces.
