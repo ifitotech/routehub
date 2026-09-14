@@ -1313,3 +1313,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 67 — 2026-09-14
 - Match the approved completion interaction: Today retracts upward beneath the header while a compact bottom sheet rises over the lower portion, keeping the route context visible behind it and reusing the existing modern completion controls.
+
+## Stage 68 — 2026-09-14
+- Refine the Delivery bottom sheet to match the supplied UI: centered blue handle, explicit completion title and destination, modern RouteHub controls, and a visible Cancel action that dismisses the sheet cleanly.

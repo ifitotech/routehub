@@ -176,8 +176,10 @@ export function DeliverySheet({
   return (
     <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()} onClick={onClose}>
       <section className={`card ${styles.completionDialog} ${styles.todaySheetPanel}`} style={{...dialog, width: 'min(100%, 520px)', maxWidth: 520, borderRadius: '24px 24px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))'}} onClick={e => e.stopPropagation()}>
+        <span className={styles.sheetHandle} aria-hidden="true" />
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
-        <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || t.drvCompleteDelivery}</h2>
+        <h2 style={{margin: '0 0 4px', fontSize: 26, lineHeight: '30px'}}>{t.drvCompleteDelivery || 'Complete delivery'}</h2>
+        <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_name || route.destination_address}</p>
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
         <p className="muted" style={{margin: '0 0 12px', fontSize: 13, lineHeight: '18px'}}>{t.drvDeliveryHelp}</p>
         {route.order_number ? (
@@ -221,6 +223,7 @@ export function DeliverySheet({
         )}
         {message && <p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
         <button className="primary" disabled={busy} onClick={onConfirm} style={{background: podPanel === 'issue' ? '#E11D48' : '#16B96B', width: '100%'}}>{busy ? t.drvBusy : (podPanel === 'issue' ? (t.drvCompleteWithIssue || 'COMPLETE WITH ISSUE') : t.drvCompleteDelivery)}</button>
+        <button type="button" disabled={busy} onClick={onClose} className={styles.sheetCancel}>{t.drvCancel || 'Cancel'}</button>
       </section>
     </div>
   )
