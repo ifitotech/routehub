@@ -1367,3 +1367,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 85 — 2026-09-14
 - Make the Driver interface portrait-only: landscape now shows a dedicated rotation screen instead of allowing route, map, and completion layouts to break horizontally.
+
+## Stage 86 — 2026-09-14
+- Reduce the Delivery sheet to the approved compact footprint and convert Photo, Signature, and Issue into circular action controls with labels beneath, matching Today’s existing Maps, Call, and Issue affordances.

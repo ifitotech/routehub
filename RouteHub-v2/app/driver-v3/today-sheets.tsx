@@ -216,15 +216,18 @@ export function DeliverySheet({
         <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={e => onPickPhoto(e.target.files?.[0] || null)} />
         {!nameFocus && (
           <div style={{display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 12}}>
-            <button type="button" className="secondary" onClick={onRequestPhoto} style={{...tileBtn, color: photo ? '#16B96B' : undefined}}>
-              <Camera size={20} />{t.drvPhoto || 'Foto'}
-            </button>
-            <button type="button" className="secondary" onClick={() => onPodPanelChange(podPanel === 'signature' ? null : 'signature')} style={{...tileBtn, color: signed ? '#16B96B' : undefined}}>
-              <PenLine size={20} />{t.drvSignature || 'Firma'}
-            </button>
-            <button type="button" className="secondary" onClick={() => onPodPanelChange(podPanel === 'issue' ? null : 'issue')} style={{...tileBtn, color: '#EF5350', borderColor: '#f5c2c0'}}>
-              <TriangleAlert size={20} />{t.drvIssue}
-            </button>
+            <div className={styles.evidenceAction}>
+              <button type="button" className="secondary" aria-label={t.drvPhoto || 'Foto'} onClick={onRequestPhoto} style={{...tileBtn, color: photo ? '#16B96B' : undefined}}><Camera size={22} /></button>
+              <span>{t.drvPhoto || 'Foto'}</span>
+            </div>
+            <div className={styles.evidenceAction}>
+              <button type="button" className="secondary" aria-label={t.drvSignature || 'Firma'} onClick={() => onPodPanelChange(podPanel === 'signature' ? null : 'signature')} style={{...tileBtn, color: signed ? '#16B96B' : undefined}}><PenLine size={22} /></button>
+              <span>{t.drvSignature || 'Firma'}</span>
+            </div>
+            <div className={`${styles.evidenceAction} ${styles.evidenceActionDanger}`}>
+              <button type="button" className="secondary" aria-label={t.drvIssue} onClick={() => onPodPanelChange(podPanel === 'issue' ? null : 'issue')} style={{...tileBtn, color: '#EF5350', borderColor: '#f5c2c0'}}><TriangleAlert size={22} /></button>
+              <span>{t.drvIssue}</span>
+            </div>
           </div>
         )}
         {!nameFocus && podPanel === 'signature' && (
