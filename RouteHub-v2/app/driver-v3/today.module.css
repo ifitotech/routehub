@@ -306,6 +306,8 @@
    order and silently undo the new premium palette in dark mode. Only
    genuinely separate, still-real dark pairs stay below. */
 :global(html[data-theme='dark']) .page{color:#f4f7fb}
+:global(html[data-theme='dark']) :global(.driver-v3-root) .hero,
+:global(html[data-theme='dark']) :global(.driver-v3-root) .heroTop{background:transparent!important;border-color:transparent!important}
 :global(html[data-theme='dark']) .nextStopContent strong{color:#f4f7fb}
 :global(html[data-theme='dark']) .nextStopContent p,:global(html[data-theme='dark']) .nextStopEmpty{color:#b9c9dd}
 :global(html[data-theme='dark']) .startDay{background:#17345c;color:#9cc4ff}

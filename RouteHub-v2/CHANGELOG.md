@@ -1269,3 +1269,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 52 — 2026-09-14
 - Strengthen the header and lower map dissolves, apply dark styling only to the OSM raster layer so route colors remain vivid, and frame both route endpoints even on long missions.
+
+## Stage 53 — 2026-09-14
+- Restore the defined navy map treatment with a translucent raster over a navy base, override the global dark-theme rule that painted the Delivery row as a solid block, and add a filter-independent SVG route connection above the map.

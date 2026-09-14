@@ -111,6 +111,35 @@
       #101c2d 100%);
 }
 
+.routeOverlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 100%;
+  height: calc(100% - var(--map-bleed, 130px));
+  overflow: visible;
+  pointer-events: none;
+}
+
+.routeGlow,
+.routeCore {
+  fill: none;
+  stroke: url(#driver-route-gradient);
+  stroke-linecap: round;
+}
+.routeGlow {
+  stroke-width: 15px;
+  opacity: .5;
+  filter: blur(4px) drop-shadow(0 0 8px rgba(36, 147, 255, .72));
+}
+.routeCore {
+  stroke-width: 5px;
+  opacity: 1;
+  filter: drop-shadow(0 0 5px rgba(55, 224, 201, .72));
+}
+
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
 
 .driverDot {

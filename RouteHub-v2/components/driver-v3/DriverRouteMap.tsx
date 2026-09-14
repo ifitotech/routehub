@@ -42,12 +42,16 @@ function osmStyle(dark: boolean): maplibregl.StyleSpecification { return {
       maxzoom: 19,
     },
   },
-  layers: [{id: 'osm', type: 'raster', source: 'osm', paint: dark ? {
-    'raster-saturation': -1,
-    'raster-brightness-min': 0.035,
-    'raster-brightness-max': 0.42,
-    'raster-contrast': 0.2,
-  } : {}}],
+  layers: [
+    {id: 'osm-base', type: 'background', paint: {'background-color': dark ? '#06152c' : '#ffffff'}},
+    {id: 'osm', type: 'raster', source: 'osm', paint: dark ? {
+      'raster-opacity': 0.55,
+      'raster-saturation': -1,
+      'raster-brightness-min': 0.02,
+      'raster-brightness-max': 0.52,
+      'raster-contrast': 0.28,
+    } : {}},
+  ],
 } }
 
 function markerEl(kind: 'driver' | 'destination', live = true) {
@@ -96,6 +100,9 @@ function useResolvedPoint(known: MapPoint | null, address: string | null | undef
  */
 export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route: Route; driverFix: {lat: number; lng: number} | null; locale?: string}) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const routeOverlayRef = useRef<SVGSVGElement>(null)
+  const routeGlowRef = useRef<SVGLineElement>(null)
+  const routeCoreRef = useRef<SVGLineElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
   const destMarkerRef = useRef<maplibregl.Marker | null>(null)
@@ -110,6 +117,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
   // granted, Driving Day not on, no signal indoors) - so the map still
   // shows a real A-to-B line instead of sitting empty with only a pin.
   const routeOrigin = useResolvedPoint(knownOrigin, route.origin_address, route.id)
+  const visualOrigin = driverFix || routeOrigin
 
   // Create the map exactly once. Everything after this effect only ever
   // updates existing layers/markers, never calls `new maplibregl.Map(...)`
@@ -160,10 +168,12 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
     const applyRasterTheme = () => {
       if (!map.isStyleLoaded() || !map.getLayer('osm')) return
       const dark = document.documentElement.dataset.theme !== 'light'
+      map.setPaintProperty('osm-base', 'background-color', dark ? '#06152c' : '#ffffff')
+      map.setPaintProperty('osm', 'raster-opacity', dark ? 0.55 : 1)
       map.setPaintProperty('osm', 'raster-saturation', dark ? -1 : 0)
-      map.setPaintProperty('osm', 'raster-brightness-min', dark ? 0.035 : 0)
-      map.setPaintProperty('osm', 'raster-brightness-max', dark ? 0.42 : 1)
-      map.setPaintProperty('osm', 'raster-contrast', dark ? 0.2 : 0)
+      map.setPaintProperty('osm', 'raster-brightness-min', dark ? 0.02 : 0)
+      map.setPaintProperty('osm', 'raster-brightness-max', dark ? 0.52 : 1)
+      map.setPaintProperty('osm', 'raster-contrast', dark ? 0.28 : 0)
     }
     const themeObserver = new MutationObserver(applyRasterTheme)
     themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']})
@@ -253,6 +263,44 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverFix?.lat, driverFix?.lng, route.id, destination?.lat, destination?.lng, routeOrigin?.lat, routeOrigin?.lng])
 
+  // A DOM/SVG route sits above MapLibre's raster canvas. This makes the
+  // visual A-to-B connection independent from raster color treatment and
+  // guarantees that both endpoints remain joined in every theme.
+  useEffect(() => {
+    const map = mapRef.current
+    const svg = routeOverlayRef.current
+    const glow = routeGlowRef.current
+    const core = routeCoreRef.current
+    if (!map || !svg || !glow || !core) return
+    const sync = () => {
+      if (!visualOrigin || !destination) {
+        svg.style.display = 'none'
+        return
+      }
+      svg.style.display = ''
+      const from = map.project([visualOrigin.lng, visualOrigin.lat])
+      const to = map.project([destination.lng, destination.lat])
+      for (const line of [glow, core]) {
+        line.setAttribute('x1', String(from.x))
+        line.setAttribute('y1', String(from.y))
+        line.setAttribute('x2', String(to.x))
+        line.setAttribute('y2', String(to.y))
+      }
+    }
+    map.on('render', sync)
+    map.on('move', sync)
+    map.on('resize', sync)
+    sync()
+    return () => {
+      map.off('render', sync)
+      map.off('move', sync)
+      map.off('resize', sync)
+    }
+  // Coordinate primitives are intentional: GPS can produce a new object
+  // with unchanged values and should not rebuild these listeners.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visualOrigin?.lat, visualOrigin?.lng, destination?.lat, destination?.lng])
+
   // The map's own size is driven by the parent's CSS (large before start,
   // compact once started) - MapLibre needs an explicit resize() when that
   // container changes, it doesn't observe it on its own.
@@ -267,6 +315,16 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
 
   return <div className={styles.wrap}>
     <div ref={containerRef} className={styles.host} aria-hidden="true"/>
+    <svg ref={routeOverlayRef} className={styles.routeOverlay} aria-hidden="true">
+      <defs>
+        <linearGradient id="driver-route-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2493ff"/>
+          <stop offset="100%" stopColor="#37e0c9"/>
+        </linearGradient>
+      </defs>
+      <line ref={routeGlowRef} className={styles.routeGlow}/>
+      <line ref={routeCoreRef} className={styles.routeCore}/>
+    </svg>
     <div className={styles.fadeOverlay} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>
