@@ -672,6 +672,26 @@ on the app's own background.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 27 — found the real seam: .content's own padding/background, not .hero
+Removing `.hero`'s own card surface (Stage 26) wasn't enough - the user still saw the whole
+map+content area reading as a distinct box. The actual cause was one level up: the shared
+shell's `.content` (`driver-v3-a.module.css`, every Driver screen wraps its content in it)
+has its own flat background *and* its own `16px/18px/28px` padding around whatever it
+holds. `.page`'s rich gradient background only ever painted inside that padding - `.content`'s
+plain flat color was exposed as a visible frame around it the entire time, which is what
+still read as "a box" even with `.hero` itself fully transparent.
+
+- `app/driver-v3/today.module.css` - rather than edit `.content` itself (every other
+  Driver screen depends on that padding for normal, card-based layouts), `.page` now
+  breaks out of it with a matching negative margin (`-16px -18px -28px`) so its own
+  gradient background paints across the *full* area instead, then restores the same
+  padding for its own children - net position unchanged for everything except the map,
+  which keeps the zero top padding from Stage 25 so it still sits flush against the
+  header. `.pullScene` (the pull-to-refresh truck) got its own `top` nudged from 24px to
+  40px to compensate for `.page`'s box now starting 16px higher.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;
