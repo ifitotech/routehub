@@ -112,6 +112,17 @@ html[data-theme='light'] .driver-v3-root .nav{
 }
 .navHidden{display:none!important}
 
+/* Driver is intentionally portrait-first: landscape has no operational
+   layout, so show one focused rotation screen rather than squeezing maps,
+   stop details, or completion controls into an unsafe horizontal view. */
+.rotatePortrait{display:none}
+@media (orientation:landscape) and (max-height:600px){
+  .rotatePortrait{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:linear-gradient(145deg,#102a4f,#07182e);color:#f7faff;text-align:center}
+  .rotatePortrait svg{width:42px;height:42px;color:#35a0ff;filter:drop-shadow(0 6px 14px rgba(32,139,255,.32))}
+  .rotatePortrait strong{font-size:22px;line-height:27px;font-weight:800;letter-spacing:-.02em}
+  .rotatePortrait span{max-width:290px;color:#a9bdd9;font-size:14px;line-height:20px;font-weight:600}
+}
+
 /* Every screen swap re-mounts .content (each tab is its own route) - this
    plays a short settle-in instead of the content just popping into place. */
 @media (prefers-reduced-motion: no-preference) {

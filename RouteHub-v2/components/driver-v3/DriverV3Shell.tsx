@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
+import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck, UserRound} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
@@ -95,6 +95,11 @@ export default function DriverV3Shell({
           <span>{t.drvMore || 'More'}</span>
         </Link>
       </nav>
+      <aside className={styles.rotatePortrait} role="status" aria-live="polite">
+        <RotateCw aria-hidden="true" />
+        <strong>Rotate your device</strong>
+        <span>RouteHub Driver is designed for portrait mode.</span>
+      </aside>
     </main>
   )
 }
