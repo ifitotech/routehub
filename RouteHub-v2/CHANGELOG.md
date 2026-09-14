@@ -297,6 +297,36 @@ pattern instead of assuming Stage 7's single fix covered it - it didn't:
 - `npm run typecheck`, `npm run build`, `npm test` all clean (new tests included, same
   pre-existing `ENOENT` baseline failures only).
 
+### Stage 12 — real background map on Today, per the user's own reference image
+The user approved a reference showing the route line drawn over a real, dark street map
+instead of empty space, and confirmed this reverses the project's original "no embedded
+maps" rule (updated in the pinned memory) - it stays strictly a non-interactive **view**;
+"Open Maps" is still the only way to actually navigate.
+
+- Found `components/driver-v3/DriverRoutePreview.tsx` already existed - a non-interactive
+  Leaflet map (dragging/zoom/click all disabled) built earlier for exactly this purpose,
+  wired to nothing because the old rule was in effect. Revived it instead of building a
+  second map component from scratch.
+- Swapped its tiles from plain OpenStreetMap to **CARTO Dark Matter** (free, no API key,
+  no Google - the user picked this specifically over a paid Mapbox custom style) with a
+  light-mode fallback to the original OSM tiles, matched to the app's own theme via
+  `useThemePreference()`.
+- Restyled the whole component to the dark-premium palette: the origin marker is a plain
+  glowing blue dot, the destination is a teal/cyan pin with the stop's real name in a
+  glass label chip underneath (matching the reference image), the route line uses the same
+  blue as the rest of the app, and a radial vignette keeps the map from competing with the
+  hero card's text regardless of what the tiles underneath happen to show.
+- Wired it into `app/driver-v3/page.tsx`'s hero in place of the abstract `RouteGlyph` line
+  illustration (now unused - left in place, not deleted, in case a future no-coordinates
+  fallback needs it back).
+- **Fixed a real build break this introduced**: Leaflet touches `window` at import time,
+  which crashes Next.js's static prerendering when imported directly into a page module.
+  Loaded it via `next/dynamic` with `ssr:false`, the same pattern every other Leaflet
+  consumer in this app already uses (`driver-route-navigation`, `compact-map`, etc.) -
+  `npm run build` failed before this fix and is clean after it.
+- `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
+  baseline only).
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on

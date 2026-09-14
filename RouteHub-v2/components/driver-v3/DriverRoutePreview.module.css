@@ -5,64 +5,132 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: #eaf0f6;
+  background: #0b1526;
 }
 
-.preview :global(.leaflet-container) { width: 100%; height: 100%; min-height: 0; background: #eaf0f6; }
-.preview :global(.leaflet-tile) { max-width: none !important; max-height: none !important; }
-.preview :global(.leaflet-control-attribution) { font-size: 9px; line-height: 12px; }
+.preview :global(.leaflet-container) { width: 100%; height: 100%; min-height: 0; background: #0b1526; }
+.preview :global(.leaflet-tile) { max-width: none !important; max-height: none !important; filter: saturate(1.15) brightness(.92); }
+.preview :global(.leaflet-control-attribution) { font-size: 8px; line-height: 11px; background: rgba(6,14,28,.55) !important; color: #7f93b3 !important; }
+.preview :global(.leaflet-control-attribution a) { color: #9fb2d0 !important; }
 
-.marker {
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  border: 2px solid #fff;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px rgb(15 23 42 / 25%);
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
+/* A soft vignette over the tiles keeps the route line and card content
+   readable regardless of what the map underneath happens to show - the
+   reference image has the same effect (map fades toward the card edges
+   instead of competing with the text on top of it). */
+.preview:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 15%, transparent 0%, transparent 45%, rgba(6, 14, 28, .55) 100%);
 }
-.origin { background: #0b1f3a; }
-.destination { background: #1677ff; }
+
+/* Same two colors as the abstract route glyph this replaces - blue origin,
+   teal/cyan destination - so switching from the illustrative line to a
+   real map background doesn't change what the two ends of a route mean. */
+.originMarker { display: grid; place-items: center; }
+.originDot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid rgba(4, 16, 31, .9);
+  background: #2493ff;
+  box-shadow: 0 0 0 6px rgba(36, 147, 255, .22), 0 0 18px rgba(36, 147, 255, .6);
+}
+
+.destinationMarker { display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
+.destinationPin {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid rgba(4, 16, 31, .9);
+  background: #37e0c9;
+  box-shadow: 0 0 0 6px rgba(55, 224, 201, .2), 0 0 18px rgba(55, 224, 201, .65);
+}
+.destinationLabel {
+  max-width: 132px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(9, 20, 38, .78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #6ff0dc;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .caption {
   position: absolute;
   z-index: 500;
-  top: 7px;
+  top: 8px;
   left: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 7px;
-  border: 1px solid #e6ebf2;
+  padding: 4px 8px;
+  border: 1px solid rgba(147, 193, 255, .18);
   border-radius: 8px;
-  background: rgb(255 255 255 / 96%);
-  color: #475569;
+  background: rgba(9, 20, 38, .72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #bbd3f7;
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
   pointer-events: none;
 }
 .caption span { display: flex; align-items: center; gap: 4px; }
-.caption b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: #fff; font-size: 9px; }
-.fromBadge { background: #0b1f3a; }
-.toBadge { background: #1677ff; }
+.caption b { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; color: #04101f; font-size: 9px; }
+.fromBadge { background: #2493ff; }
+.toBadge { background: #37e0c9; }
 .status {
   position: absolute;
   z-index: 500;
-  bottom: 15px;
+  bottom: 10px;
   left: 8px;
   max-width: calc(100% - 16px);
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 6px;
-  background: rgb(255 255 255 / 96%);
-  color: #475569;
+  background: rgba(9, 20, 38, .72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #9fb2d0;
   font-size: 10px;
   font-weight: 600;
   line-height: 14px;
   pointer-events: none;
 }
-.empty { inset: 38px 12px 12px; display: grid; place-items: center; padding: 12px; background: transparent; text-align: center; font-size: 12px; }
+.empty { inset: 38px 12px 12px; display: grid; place-items: center; padding: 12px; background: transparent; color: #7f93b3; text-align: center; font-size: 12px; }
+
+/* Light theme: same non-Google, non-interactive map, lighter vignette and
+   the original pale tile background while the map itself loads. */
+:global(html[data-theme='light']) .preview,
+:global(html[data-theme='light']) .preview :global(.leaflet-container) { background: #eaf0f6; }
+:global(html[data-theme='light']) .preview:after {
+  background: radial-gradient(120% 90% at 50% 15%, transparent 0%, transparent 45%, rgba(234, 240, 246, .65) 100%);
+}
+:global(html[data-theme='light']) .preview :global(.leaflet-tile) { filter: none; }
+:global(html[data-theme='light']) .caption,
+:global(html[data-theme='light']) .status {
+  border-color: #e6ebf2;
+  background: rgba(255, 255, 255, .96);
+  color: #475569;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:global(html[data-theme='light']) .preview :global(.leaflet-control-attribution) { background: rgba(255,255,255,.85) !important; color: #64748b !important; }
+:global(html[data-theme='light']) .preview :global(.leaflet-control-attribution a) { color: #1660f0 !important; }
+:global(html[data-theme='light']) .destinationLabel {
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #0e7a6c;
+}

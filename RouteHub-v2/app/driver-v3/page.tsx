@@ -24,7 +24,11 @@ import styles from './today.module.css'
 import confirmStyles from '../../components/driver-v3/driver-v3-b.module.css'
 import DriverRouteEstimate from '../../components/driver-v3/DriverRouteEstimate'
 import {InfoSheet, PickupSheet, ReturnSheet, NextStopSheet, DeliverySheet} from './today-sheets'
-import RouteGlyph from './route-glyph'
+import dynamic from 'next/dynamic'
+// Leaflet touches `window` at import time, which breaks static
+// prerendering/SSR - load it client-only, same pattern used by every other
+// Leaflet consumer in this app (driver-route-navigation, compact-map, etc.)
+const DriverRoutePreview = dynamic(() => import('../../components/driver-v3/DriverRoutePreview'), {ssr: false})
 import ToolsSheet from './today-tools-sheet'
 
 export default function DriverV3Page() {
@@ -383,12 +387,8 @@ export default function DriverV3Page() {
             {kind==='pickup'&&route.order_number?<p className={styles.poLine}>PO {route.order_number}</p>:null}
           </button>
           <DriverRouteEstimate route={route} locale={locale}/>
-          <div className={styles.routeGlyphHost} aria-hidden="true">
-            <RouteGlyph
-              active={started}
-              originLabel={`${(kind||'return').toUpperCase()} START`}
-              destLabel={route.destination_name||route.destination_address||t.drvCurrentStopName}
-            />
+          <div className={styles.routeGlyphHost}>
+            <DriverRoutePreview route={route} locale={locale} destinationLabel={route.destination_name||route.destination_address||t.drvCurrentStopName}/>
           </div>
           <button className={styles.primary} disabled={busy} onClick={()=>void action.run()}>
             {busy?t.drvBusy:action.label}
