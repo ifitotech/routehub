@@ -876,6 +876,20 @@ layout's extra slack evenly above and below instead of letting the row sit again
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 36 — the map tucks under the header with a fade, not a header color change
+The header/map "fusion" was reverted in Stage 34 because changing the header's own color
+wasn't the right idea - but the hard cut where the flat header bar instantly became map
+tiles, no transition at all, was still real and still needed fixing.
+
+- **`components/driver-v3/DriverRouteMap.module.css`** — added `.host::before`, a 56px-tall
+  gradient overlay pinned to the map's own top edge that fades from the header's exact flat
+  color (`#0F1D35` dark / `var(--rh-navy)` light) down to transparent. The header itself is
+  untouched (still the plain flat bar from Stage 34); the map's *own* top edge now reads as
+  tucking under it instead of stopping dead against it - the fusion lives entirely on the
+  map's side of the seam, not the header's.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

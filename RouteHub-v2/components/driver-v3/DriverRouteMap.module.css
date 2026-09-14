@@ -12,17 +12,36 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  /* No background of its own, on purpose - .shell (driver-v3-b.module.css,
+  /* No background of its own, on purpose - .content (driver-v3-b.module.css,
      [data-active='today']) is the single element that actually paints
-     --rh-page-bg now, behind header+content+page+map together. Giving
-     this its own separate copy of the same gradient (the previous fix)
-     still produced a visible seam: each element paints a CSS background
-     relative to its own box, so the map's short "compact" height and the
-     header's own height each put the gradient's radial highlight in a
-     different spot - two independent copies of "the same" gradient, not
-     one continuous image. Staying transparent lets the one shared paint
-     underneath show through instead.  */
+     --rh-page-bg now, behind the page and this map together. Giving this
+     its own separate copy of the same gradient (an earlier attempt) still
+     produced a visible seam: each element paints a CSS background relative
+     to its own box, so the map's short "compact" height put the gradient's
+     radial highlight in a different spot than .content's own copy did -
+     two independent copies of "the same" gradient, not one continuous
+     image. Staying transparent lets the one shared paint underneath show
+     through instead. */
   background: transparent;
+}
+
+/* The map's top edge met the header with a hard cut - real navy bar, then
+   an instant switch to map tiles, no matter how well the map's own
+   background matched the page behind it. A short fade from the header's
+   own flat color down into the map (not a background swap on the header
+   itself - that was tried and reverted, see Stage 34) reads as the map
+   tucking under the header instead of stopping dead against it. */
+.host::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 56px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, #0F1D35 0%, rgba(15, 29, 53, 0) 100%);
+}
+:global(html[data-theme='light']) .host::before {
+  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .atDestination {
