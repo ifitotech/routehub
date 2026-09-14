@@ -35,7 +35,13 @@
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 72px;
+  /* A percentage, not a fixed px value - the compact map (after Start) can
+     now be as short as ~62px (today.module.css shrank it to free up room
+     for the contact-info block), and a fixed 72px overlay would have
+     covered nearly the whole thing instead of just fading its top edge.
+     A share of the map's own height scales down with it automatically. */
+  height: 24%;
+  max-height: 72px;
   z-index: 2;
   pointer-events: none;
   /* Multi-stop, not a straight two-color fade - a plain 0%/100% linear

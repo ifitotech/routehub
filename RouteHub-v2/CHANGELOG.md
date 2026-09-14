@@ -932,6 +932,25 @@ filter and can be much darker than the header's flat navy.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 39 — smaller compact map, room given back to the contact detail
+Asked to shrink the map further (once started) so the freed space goes to the delivery/
+pickup contact info, not to blank room.
+
+- **`app/driver-v3/today.module.css`** — `.routeGlyphHostCompact` reduced across all four
+  breakpoints (e.g. 25vh/100-180px → 19vh/84-140px on the base size). Contact name + phone
+  moved out of two plain `.phoneLine` paragraphs into a new `.contactBlock` - a small
+  labeled surface (icon + name, icon + phone) that actually uses the freed room instead of
+  leaving it blank, matching `.noteLine`'s soft-surface treatment.
+- **`app/driver-v3/page.tsx`** — the identity block now renders `.contactBlock` (with
+  `UserRound`/`Phone` icons) instead of the old plain-text phone line, once started.
+- **`components/driver-v3/DriverRouteMap.module.css`** — `.host::before` (the header-color
+  overlay from Stage 36/38) switched from a fixed `72px` to `height:24%` (capped at
+  `max-height:72px`). A fixed px value would have covered most of the now-much-shorter
+  compact map (as small as ~62px) instead of just fading its top edge; a percentage scales
+  down with the map automatically.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

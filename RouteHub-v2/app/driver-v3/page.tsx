@@ -29,7 +29,7 @@ import dynamic from 'next/dynamic'
 // prerendering/SSR - load it client-only, same pattern used by every other
 // map consumer in this app (driver-route-navigation, compact-map, etc.)
 const DriverRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
-import {MapPin, Phone, TriangleAlert} from 'lucide-react'
+import {MapPin, Phone, TriangleAlert, UserRound} from 'lucide-react'
 
 export default function DriverV3Page() {
   const router=useRouter()
@@ -392,8 +392,12 @@ export default function DriverV3Page() {
           <button type="button" className={styles.identityBlock} onClick={()=>setSheet('info')}>
             <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{route.destination_address}</span></p>}
-            {started&&route.destination_contact_name&&<p className={styles.phoneLine}>{route.destination_contact_name}</p>}
-            {started&&route.destination_phone&&<p className={styles.phoneLine}>{route.destination_phone}</p>}
+            {started&&(route.destination_contact_name||route.destination_phone)&&(
+              <div className={styles.contactBlock}>
+                {route.destination_contact_name&&<span className={styles.contactRow}><UserRound size={15}/>{route.destination_contact_name}</span>}
+                {route.destination_phone&&<span className={styles.contactRow}><Phone size={15}/>{route.destination_phone}</span>}
+              </div>
+            )}
           </button>
           <DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null}/>
           {started&&route.driver_note&&<p className={styles.noteLine}>{route.driver_note}</p>}
