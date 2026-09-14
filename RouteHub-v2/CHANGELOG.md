@@ -1334,3 +1334,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 74 — 2026-09-14
 - Remove the artificial Today-page translation entirely; the completion sheet now rises from the bottom over the existing continuous surface without exposing an empty viewport area.
+
+## Stage 75 — 2026-09-14
+- Rebuild Delivery completion as an inline extension of the Today route surface: its form is part of the same hero content and the full route surface translates beneath the fixed header to reveal it, rather than opening a separate overlay.
