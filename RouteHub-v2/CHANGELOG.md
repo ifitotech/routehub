@@ -1346,3 +1346,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 78 — 2026-09-14
 - Expand the inline Delivery map band and restore pointer input to the embedded completion flow, allowing Cancel, X, evidence controls, and completion actions to work normally.
+
+## Stage 79 — 2026-09-14
+- Remove the duplicate completion-map band so Delivery remains a direct continuation of the original Today route content: the existing map and route slide beneath the header while the embedded form is revealed from below.
