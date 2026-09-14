@@ -5,11 +5,24 @@
   min-height: 0;
 }
 
+/* Pinned to the bottom of .wrap, at its own original (unbled) height -
+   .wrap itself grows by --map-bleed (today.module.css's .routeGlyphHost/
+   Compact), but .host stays the exact size it always was and just moves
+   down within that taller box. This is what makes .host's own top edge
+   land exactly at the header's bottom edge (verified by rendering the
+   geometry with test markers before shipping this) - real occlusion by
+   the opaque header above it, not another color-matching approximation.
+   Keeping .host itself at its original size also means MapLibre's own
+   container size, resize() behavior, and fitBounds framing are all
+   completely unaffected by this - only where the box sits changed. */
 .host {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   isolation: isolate;
   width: 100%;
-  height: 100%;
+  height: calc(100% - var(--map-bleed, 130px));
   min-height: 0;
   overflow: hidden;
   /* No background of its own, on purpose - .content (driver-v3-b.module.css,
@@ -23,32 +36,6 @@
      image. Staying transparent lets the one shared paint underneath show
      through instead. */
   background: transparent;
-}
-
-/* The map's top edge met the header with a hard cut. Real cause, found by
-   actually rendering this markup (Playwright, not guessing from a
-   description) rather than iterating blindly again: empty/undetailed map
-   area, after the dark-tile filter below, renders near-black (a light OSM
-   basemap color inverts to a very dark gray, then brightness/contrast push
-   it darker still) - meaningfully darker than the header's own navy, not
-   just a different hue. A previous version of this fix lived on
-   `.host::before`, but `.host`'s own mask-image (further down) applies to
-   the ENTIRE painted box including pseudo-elements, so that overlay was
-   being faded out by the mask's own top edge right where it needed to be
-   strongest - confirmed by rendering it and watching the "fix" do nothing.
-   This is a real sibling element instead, immune to .host's mask, and
-   tall/gradual enough to actually bridge navy-header to near-black-map
-   without a visible edge (verified by rendering multiple heights). */
-.headerFade {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 60%;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(to bottom, #0F1D35 0%, #0F1D35 15%, rgba(15, 29, 53, .6) 45%, rgba(15, 29, 53, 0) 100%);
-}
-:global(html[data-theme='light']) .headerFade {
-  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, var(--rh-navy, #fff) 15%, rgba(255, 255, 255, .6) 45%, rgba(255, 255, 255, 0) 100%);
 }
 
 .atDestination {

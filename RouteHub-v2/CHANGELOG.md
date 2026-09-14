@@ -1043,6 +1043,39 @@ Two real bugs found this way, not previously visible from reading the CSS alone:
   `index.html`/`shot.js`, cached Chromium binary already present from Stage 19) fully removed
   afterward - nothing committed to the repo from it.
 
+### Stage 43 — the map now genuinely extends up behind the header, not a color match
+Asked explicitly for this: make the map bigger upward so it goes underneath the header and
+truly fuses, instead of another color/fade approximation at the boundary between them.
+
+- **Real occlusion, not another approximation.** `.page` (today.module.css) now extends its
+  own box **130px** further up than before (`--map-bleed`), with matching extra top padding
+  so every other child (pill, name, address, CTA) stays exactly where it always was - only
+  the map (`.routeGlyphHost`/`Compact`, with a correspondingly bigger negative top margin)
+  actually reaches into that new head-room. `.content[data-active='today']`
+  (driver-v3-b.module.css) switched from `overflow:hidden` to `visible` so that bleed isn't
+  clipped right at the boundary it's meant to cross. The header (`z-index:5`, opaque, already
+  established) simply paints over whatever part of the map ends up behind it - there is no
+  seam to blend anymore because there's nothing visible left at that boundary to blend.
+- **`components/driver-v3/DriverRouteMap.module.css`** — `.host` (MapLibre's own container)
+  switched from filling its parent completely to being pinned to the *bottom* of it, at its
+  original (un-bled) size: `position:absolute;bottom:0;height:calc(100% - var(--map-bleed))`.
+  This keeps `.host`'s own size, mask percentages, and MapLibre's `resize()`/`fitBounds`
+  framing completely unaffected by the bleed - only *where* the box sits changed, not its own
+  dimensions or content. Removed `.headerFade` (Stage 42) entirely; with real occlusion in
+  place, a color-matched overlay has nothing left to bridge.
+- **Verified with the same Playwright-render discipline as Stage 42, not by inspection alone**:
+  built a throwaway harness reproducing this exact structural change, placed test markers at
+  the map's own top edge, and confirmed a marker at `.host`'s true top pixel is fully visible
+  right at the boundary (nothing hidden that shouldn't be, nothing left showing that should
+  be tucked away) before touching the real files.
+- Also, separately: routes with a long span between origin and destination (tens of miles)
+  were forcing the map to zoom out so far to fit both points that neither read as "close" -
+  just a distant, low-detail overview. Past 12km apart, the initial framing now centers on
+  the driver's own position at a fixed, closer zoom instead of stretching to fit the whole
+  span - this is context for where the driver is right now, not a full-route overview.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

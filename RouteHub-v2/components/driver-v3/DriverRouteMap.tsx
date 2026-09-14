@@ -28,6 +28,11 @@ const AT_DESTINATION_COPY = {
 // effectively already there.
 const AT_DESTINATION_METERS = 45
 
+// Beyond this, fitting both origin and destination in frame would zoom the
+// map out far enough that neither reads as "close" - this map is context
+// for where the driver is right now, not a full-route overview.
+const FAR_APART_METERS = 12000
+
 // Real OpenStreetMap tiles, no key, no account - this preview is context,
 // not turn-by-turn, so an approximate straight line between two points is
 // the right amount of accuracy, not a road-following route.
@@ -221,7 +226,19 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
       // destination (no origin at all yet), center on that alone.
       if (!firstFitRef.current && origin && destination) {
         firstFitRef.current = true
-        map.fitBounds([[Math.min(origin.lng, destination.lng), Math.min(origin.lat, destination.lat)], [Math.max(origin.lng, destination.lng), Math.max(origin.lat, destination.lat)]], {padding: 56, maxZoom: 15, duration: 0})
+        // fitBounds alone zooms out however far it takes to fit both points
+        // in frame - fine for a short hop across town, but a long route
+        // (tens of miles) forced the view out so far that neither point
+        // read as "close," just a distant overview with little detail.
+        // This is context for where the driver is right now, not a
+        // full-route overview, so a long route frames tight on the
+        // driver's own position instead of stretching to include a
+        // destination that far away.
+        if (distanceMeters(origin, destination) > FAR_APART_METERS) {
+          map.jumpTo({center: [origin.lng, origin.lat], zoom: 13})
+        } else {
+          map.fitBounds([[Math.min(origin.lng, destination.lng), Math.min(origin.lat, destination.lat)], [Math.max(origin.lng, destination.lng), Math.max(origin.lat, destination.lat)]], {padding: 56, maxZoom: 15, duration: 0})
+        }
       } else if (!firstFitRef.current && destination) {
         firstFitRef.current = true
         map.jumpTo({center: [destination.lng, destination.lat], zoom: 14})
@@ -249,12 +266,6 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
 
   return <div className={styles.wrap}>
     <div ref={containerRef} className={styles.host} aria-hidden="true"/>
-    {/* A real sibling of .host, not a ::before on it - .host's own
-        mask-image (DriverRouteMap.module.css) applies to its entire
-        painted box, pseudo-elements included, which silently faded this
-        overlay out right where it needed to be strongest when it lived on
-        .host::before. Verified by actually rendering both versions. */}
-    <div className={styles.headerFade} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>
 }

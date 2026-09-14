@@ -175,7 +175,15 @@
    paints --rh-page-bg for the page+map to share (see .page/.host below),
    so a CSS background painted independently on each of those boxes doesn't
    put the gradient's radial highlight in a different spot on each one. */
-.content[data-active='today']{background:var(--rh-page-bg,#101c2d) !important}
+/* overflow:visible, not the .contentFlush default of hidden (higher
+   specificity than .contentFlush's plain class selector wins here, no
+   !important needed) - .page (today.module.css) now extends its own box
+   up past .content's top edge by --map-bleed, so the map can reach up
+   behind the header instead of being clipped right at this boundary.
+   Nothing else needs to escape .content - .page keeps its own
+   overflow:hidden for the confirm-dialog shrink clip (Stage 31), so nothing
+   can spill sideways or past .shell's outer edge either. */
+.content[data-active='today']{background:var(--rh-page-bg,#101c2d) !important;overflow:visible}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
