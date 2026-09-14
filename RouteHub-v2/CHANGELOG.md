@@ -1260,3 +1260,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 49 — 2026-09-14
 - Reduce the fade overlay opacity in both themes so the enlarged map remains the dominant visual under Today stop details.
+
+## Stage 50 — 2026-09-14
+- Extend the real MapLibre canvas far enough behind the complete Today stop summary, with a continuous late-starting fade modeled on the approved visual reference.
