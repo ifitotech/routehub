@@ -576,6 +576,25 @@ the distance/time chips against the reference.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 22 — missing address pin icon, and an oversized gap under short names
+The user circled the exact cluster (map bottom through the PO/distance/time row) on the
+reference and sent a matching current-state screenshot side by side. Two real, precise
+differences:
+
+- **No pin icon before the address** - `app/driver-v3/page.tsx`'s address line was plain
+  text (`<p>{route.destination_address}</p>`), the reference clearly shows a small location
+  pin before it. Added one (`lucide-react`'s `MapPin`), restyled `.addressLine` as a flex
+  row so the icon and the (still line-clamped) address text sit side by side instead of the
+  icon needing its own inline hack.
+- **A visibly oversized gap between the destination name and the address below it for
+  short (the common case) one-line names.** `.identityBlock h1` had `min-height: 58px` -
+  clearly sized to reserve room for a two-line name, but the heading's own font-size/
+  line-height (34px/1.08) only needs ~37px for one line, so a short name like "OPA LOCKA"
+  left ~21px of dead reserved space before the address started. Corrected the reservation
+  to match one real line (37px, scaled down at the three responsive breakpoints too) - a
+  genuine two-line name still just grows the block naturally.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

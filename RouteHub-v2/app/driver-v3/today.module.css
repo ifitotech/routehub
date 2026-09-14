@@ -30,8 +30,16 @@
 .stopDots i.current{width:16px;background:var(--rh-primary,#1677ff)}
 .stopDots i.done{background:var(--rh-primary,#1677ff)}
 .identityBlock{display:block;width:100%;margin:10px 0 0;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;touch-action:manipulation;appearance:none;-webkit-appearance:none}
-.identityBlock h1{display:-webkit-box;min-height:58px;margin:0;color:var(--rh-text,#F7FAFF);font-size:clamp(28px,7.5vw,34px);line-height:1.08;font-weight:800;letter-spacing:-.04em;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-.addressLine{display:-webkit-box;min-height:24px;margin:6px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:16px;line-height:1.4;font-weight:500;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+/* min-height matches one real line of the heading's own font-size/line-height
+   (34px * 1.08), not an arbitrary reservation - the old 58px value left a
+   short, common one-line destination name (most of them) sitting with a
+   visibly oversized gap before the address below it, since that gap was
+   sized for a two-line name that almost never happens. A genuine two-line
+   name still just grows the block naturally instead of double-reserving. */
+.identityBlock h1{display:-webkit-box;min-height:37px;margin:0;color:var(--rh-text,#F7FAFF);font-size:clamp(28px,7.5vw,34px);line-height:1.08;font-weight:800;letter-spacing:-.04em;overflow:hidden;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.addressLine{display:flex;align-items:flex-start;gap:6px;min-height:24px;margin:6px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:16px;line-height:1.4;font-weight:500}
+.addressLine svg{flex:none;margin-top:3px;color:var(--rh-primary,#1677ff)}
+.addressLine span{overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .poLine{margin:8px 0 0;color:#DCEBFF;font-size:16px;font-weight:750}
 /* Full-bleed to the card's own edges (negative margins cancel .hero's own
    18px padding) and rounded only at the top to match .hero's corners - the
@@ -173,7 +181,7 @@
 @media(max-width:374px){
   .page{gap:10px}
   .hero{padding:14px}
-  .identityBlock h1{font-size:26px}
+  .identityBlock h1{font-size:26px;min-height:29px}
   .routeGlyphHost{width:calc(100% + 28px);height:43vh;min-height:150px;max-height:300px;margin:-14px -14px 14px}
   .routeGlyphHostCompact{height:22vh;min-height:88px;max-height:150px;margin:-14px -14px 10px}
 }
@@ -186,7 +194,7 @@
   .typeBadge svg{width:13px;height:13px}
   .stopMetaRow{margin-top:10px}
   .identityBlock{margin-top:8px}
-  .identityBlock h1{font-size:23px;line-height:1.08}
+  .identityBlock h1{font-size:23px;line-height:1.08;min-height:25px}
   .addressLine{font-size:13px;margin-top:4px}
   .poLine{font-size:14px;margin-top:5px}
   .routeGlyphHost{width:calc(100% + 24px);height:36vh;min-height:120px;max-height:250px;margin:-12px -12px 10px;border-radius:18px 18px 0 0}
@@ -202,7 +210,7 @@
   .hero{padding:11px;border-radius:16px}
   .stopMetaRow{margin-top:8px}
   .identityBlock{margin-top:6px}
-  .identityBlock h1{font-size:22px;line-height:1.06}
+  .identityBlock h1{font-size:22px;line-height:1.06;min-height:24px}
   .addressLine{margin-top:3px;font-size:13px}
   .poLine{margin-top:4px;font-size:13px}
   .routeGlyphHost{width:calc(100% + 22px);height:31vh;min-height:106px;max-height:210px;margin:-11px -11px 8px;border-radius:16px 16px 0 0}

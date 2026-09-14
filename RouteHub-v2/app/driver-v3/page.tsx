@@ -379,7 +379,7 @@ export default function DriverV3Page() {
           </div>
           <button type="button" className={styles.identityBlock} onClick={()=>setSheet('info')}>
             <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
-            {route.destination_address&&<p className={styles.addressLine}>{route.destination_address}</p>}
+            {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{route.destination_address}</span></p>}
             {kind==='pickup'&&route.order_number?<p className={styles.poLine}>PO {route.order_number}</p>:null}
             {started&&route.destination_phone&&<p className={styles.phoneLine}>{route.destination_phone}</p>}
           </button>
