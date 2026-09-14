@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import {ChevronRight, Package, PackageCheck, PackagePlus, Truck, Warehouse} from 'lucide-react'
+import {Package, PackageCheck, PackagePlus, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -23,7 +23,7 @@ import styles from './today.module.css'
 // and button behind it).
 import confirmStyles from '../../components/driver-v3/driver-v3-b.module.css'
 import DriverRouteEstimate from '../../components/driver-v3/DriverRouteEstimate'
-import {InfoSheet, PickupSheet, ReturnSheet, NextStopSheet, DeliverySheet} from './today-sheets'
+import {InfoSheet, PickupSheet, ReturnSheet, DeliverySheet} from './today-sheets'
 import dynamic from 'next/dynamic'
 // MapLibre touches `window` at import time, which breaks static
 // prerendering/SSR - load it client-only, same pattern used by every other
@@ -62,10 +62,6 @@ export default function DriverV3Page() {
   // A shared Package icon for every stop type made the badge/avatar read the
   // same at a glance regardless of what the driver actually has to do next.
   const StopIcon=kind==='pickup'?PackagePlus:kind==='delivery'?PackageCheck:Warehouse
-  const nextRoute=snapshot?.queue.upcoming?.[0] as any
-  const nextKind=nextRoute?.mission_type==='branch'?'return':nextRoute?.mission_type
-  const nextLabel=nextKind==='pickup'?t.drvPickup:nextKind==='delivery'?t.drvDelivery:t.drvReturn
-  const NextStopIcon=nextKind==='pickup'?PackagePlus:nextKind==='delivery'?PackageCheck:Warehouse
   const currentStopPosition=Math.max(1,Number(route?.position)||1)
   const visibleStopCount=currentStopPosition+(snapshot?.queue.upcoming?.length||0)
   const stopLabel=locale==='es' ? `Parada ${currentStopPosition} de ${visibleStopCount}` : `Stop ${currentStopPosition} of ${visibleStopCount}`
@@ -430,16 +426,6 @@ export default function DriverV3Page() {
           )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-        {nextRoute&&(
-          <button type="button" className={styles.nextChip} onClick={()=>setSheet('next')}>
-            <NextStopIcon/>
-            <span className={styles.nextChipLabel}>
-              <small>{locale==='es'?'Siguiente parada':'Next stop'} · {nextLabel}</small>
-              <strong>{nextRoute.destination_name||nextRoute.destination_address||t.drvCurrentStopName}</strong>
-            </span>
-            <ChevronRight size={18}/>
-          </button>
-        )}
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 
       {sheet==='info'&&route&&(
@@ -456,13 +442,6 @@ export default function DriverV3Page() {
 
       {sheet==='return'&&route&&(
         <ReturnSheet route={route} t={t} busy={busy} message={message} onComplete={()=>void completeReturnNow()} onClose={()=>setSheet(null)}/>
-      )}
-
-      {sheet==='next'&&nextRoute&&(
-        <NextStopSheet
-          nextRoute={nextRoute} nextKind={nextKind||'return'} nextLabel={nextLabel} t={t} onClose={()=>setSheet(null)}
-          onOpenMaps={()=>openMapsForRoute(nextRoute)} onViewHistory={()=>router.push('/driver/history')}
-        />
       )}
 
       {sheet==='delivery'&&route&&(

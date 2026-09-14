@@ -890,6 +890,27 @@ tiles, no transition at all, was still real and still needed fixing.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 37 — removed the "next stop" preview chip; that space stays the same either way
+Asked to remove it because it broke the new design - the space under the hero has to look
+identical whether or not there's a queued route after the current one, not show a teaser
+for it.
+
+- **`app/driver-v3/page.tsx`** — removed the `.nextChip` button and the `sheet==='next'`
+  overlay (`NextStopSheet`) entirely, along with the now-unused `nextRoute`/`nextKind`/
+  `nextLabel`/`NextStopIcon` locals and the now-unused `ChevronRight`/`NextStopSheet`
+  imports. The stop counter ("Stop 2 of 2") is unaffected - it already reads
+  `snapshot?.queue.upcoming?.length` directly, not through any of the removed next-stop
+  variables.
+- **`app/driver-v3/today-sheets.tsx`** — `NextStopSheet` itself left in place (it's still a
+  correctly-typed, working component, just currently unused - same "don't delete working
+  code just because nothing calls it yet" convention as the dead `.routeSwipeZone` CSS from
+  Stage 21).
+- **`tests/maps-provider.test.mjs`** — updated the Today assertions: now asserts the removed
+  next-stop chip/sheet markers are absent (`nextChip`, `sheet==='next'`) instead of asserting
+  they exist.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

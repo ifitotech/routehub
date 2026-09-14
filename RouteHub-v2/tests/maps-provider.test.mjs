@@ -36,9 +36,11 @@ test('Driver entry uses the current operation preview and real external navigati
   assert.doesNotMatch(source,/router\.push\('\/driver\/map'\)/)
   assert.match(source,/await refresh\(\)[\s\S]*openMapsForRoute\(route\)/)
   assert.match(source,/openNavigationWithFallback\(/)
-  assert.match(source,/sheet==='next'/)
-  assert.match(source,/setSheet\('next'\)/)
-  assert.match(source,/router\.push\('\/driver\/history'\)/)
+  // The "next stop" preview chip was removed from Today - that space must
+  // read the same whether or not there's a route queued after this one,
+  // not show a teaser for it.
+  assert.doesNotMatch(source,/nextChip/)
+  assert.doesNotMatch(source,/sheet==='next'/)
   assert.match(source,/target\.destination_lat!=null&&target\.destination_lng!=null/)
   assert.doesNotMatch(source,/autoStartNavigation/)
 })
