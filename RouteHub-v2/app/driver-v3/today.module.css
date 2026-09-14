@@ -68,6 +68,7 @@
    math still cancels it) even though there's no border/background left
    for that padding to visually contain. */
 .hero{display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:18px;border:0;border-radius:0;background:transparent;box-shadow:none;box-sizing:border-box;min-height:0;color:var(--rh-text,#F7FAFF)}
+.heroDeliveryOpen{flex:0 0 auto;min-height:max-content}
 /* The soft surface/border colors used to change per stop type; the new
    glass card reads the same for every type, so Pickup/Delivery/Return are
    told apart by the pill and icon accents alone (see .pickup/.delivery/

@@ -1337,3 +1337,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 75 — 2026-09-14
 - Rebuild Delivery completion as an inline extension of the Today route surface: its form is part of the same hero content and the full route surface translates beneath the fixed header to reveal it, rather than opening a separate overlay.
+
+## Stage 76 — 2026-09-14
+- Prevent the inline Delivery form from shrinking inside Today’s viewport so its full set of fields and actions remains visible while the continuous route surface moves upward.
