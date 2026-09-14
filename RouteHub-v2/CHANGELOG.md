@@ -1331,3 +1331,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 73 — 2026-09-14
 - Reduce the integrated-sheet travel distance to a subtle 18vh cap so the route card shifts only enough to connect with the sheet instead of sliding excessively beneath the header.
+
+## Stage 74 — 2026-09-14
+- Remove the artificial Today-page translation entirely; the completion sheet now rises from the bottom over the existing continuous surface without exposing an empty viewport area.
