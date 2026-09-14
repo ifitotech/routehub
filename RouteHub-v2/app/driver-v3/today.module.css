@@ -80,14 +80,29 @@
 .phoneLine{margin:5px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:13px;font-weight:650}
 .noteLine{margin:0 0 4px;padding:9px 11px;border-radius:11px;background:var(--rh-surface-soft,rgba(255,255,255,.045));border:1px solid var(--rh-border,rgba(101,162,255,.16));color:var(--rh-text-muted,#9FB2D0);font-size:12.5px;line-height:1.4}
 
+/* Started state anchors to the bottom instead of the default vertical
+   centering (.page) - the compact map leaves real slack below the CTA/
+   secondary row that centering used to split evenly above and below,
+   reading as a stray gap floating over the nav bar instead of the row
+   sitting right against it. */
+.pageStarted{justify-content:flex-end}
 /* Maps/Call/Issue - hidden before the stop starts, then animate in
-   together as one row right under the CTA once it does. */
-.secondaryRow{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;margin-top:8px;animation:rh-secondary-in .28s cubic-bezier(.2,.8,.2,1) both}
-.secondaryAction{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:58px;padding:8px 4px;border-radius:14px;border:1px solid var(--rh-border,rgba(101,162,255,.16));background:var(--rh-surface-soft,rgba(255,255,255,.045));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--rh-text,#F7FAFF);font-size:11px;font-weight:750;transition:background .15s ease,border-color .15s ease,transform .15s ease}
-.secondaryAction:active{transform:scale(.97)}
-.secondaryActionDanger{color:#ffb6bd;border-color:rgba(255,107,122,.25);background:rgba(255,107,122,.09)}
+   together as one row right under the CTA once it does. Round icon
+   buttons (icon in its own circle, label below), not boxed tiles - matches
+   the approved reference. */
+.secondaryRow{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;margin-top:16px;animation:rh-secondary-in .28s cubic-bezier(.2,.8,.2,1) both}
+.secondaryAction{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:0;border:0;background:transparent;color:var(--rh-text,#F7FAFF);font:inherit;font-size:13px;font-weight:700;transition:transform .15s ease}
+.secondaryAction:active{transform:scale(.96)}
+.secondaryActionIcon{display:grid;place-items:center;width:60px;height:60px;border-radius:50%;border:1px solid var(--rh-border-strong,rgba(101,162,255,.28));background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.22),rgba(10,26,48,.42));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 18px rgba(4,12,26,.4);color:var(--rh-primary-bright,#5fa8ff)}
+.secondaryActionDanger .secondaryActionIcon{border-color:rgba(255,107,122,.35);color:#ffb6bd;background:radial-gradient(circle at 34% 28%,rgba(255,107,122,.22),rgba(40,12,16,.42))}
+:global(html[data-theme='light']) .secondaryActionIcon{background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.14),rgba(255,255,255,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 16px rgba(15,29,53,.1)}
+:global(html[data-theme='light']) .secondaryActionDanger .secondaryActionIcon{background:radial-gradient(circle at 34% 28%,rgba(255,107,122,.14),rgba(255,255,255,.9))}
 @keyframes rh-secondary-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.secondaryRow{animation:none}}
+/* The small pull-style handle under Maps/Call/Issue, echoing the reference
+   image's own divider between the action row and the nav bar right below
+   it - purely decorative, no swipe behavior attached. */
+.startedHandle{display:block;width:40px;height:4px;margin:14px auto 0;border-radius:999px;background:var(--rh-border-strong,rgba(101,162,255,.28))}
 .divider{height:1px;margin:12px 0;background:var(--rh-divider,rgba(151,185,234,.16))}
 .mapPreview{display:block;width:100%;height:184px;min-height:184px;max-height:184px;flex:0 0 184px;border:0;padding:0;margin:0 0 12px;border-radius:14px;overflow:hidden;background:#e8eef4;contain:layout paint}
 .mapPreview :global(.leaflet-container){width:100%!important;height:100%!important}

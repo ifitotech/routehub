@@ -856,6 +856,26 @@ Stage 30/33 extended the gradient into the header itself, which wasn't what was 
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 35 — closed the gap between the secondary row and the nav; round icon buttons
+The started state (compact map) left visible dead space between Maps/Call/Issue and the nav
+bar - `.page`'s vertical centering, meant for the taller pre-start layout, split the compact
+layout's extra slack evenly above and below instead of letting the row sit against the nav.
+
+- **`app/driver-v3/today.module.css`** — new `.pageStarted{justify-content:flex-end}`,
+  applied only while `started` is true, so the pre-start layout (which still benefits from
+  centering on a tall screen) is untouched.
+- Maps/Call/Issue (`.secondaryAction`) rebuilt from boxed tiles to round icon buttons per the
+  approved reference: a circular `.secondaryActionIcon` (glassy radial fill, no flat card
+  background) with the label underneath, not a bordered rectangle.
+- Added `.startedHandle`, a small decorative pill under the row, echoing the divider between
+  the action row and the nav bar in the reference image - no swipe behavior attached, purely
+  visual.
+- **`app/driver-v3/page.tsx`** — `started ? styles.pageStarted : ''` added to `.page`'s class
+  list; the three secondary buttons now wrap their icon in `.secondaryActionIcon`; the handle
+  renders right after the row, only while started.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

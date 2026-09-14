@@ -369,7 +369,7 @@ export default function DriverV3Page() {
         descendants into descendants confined to *that* box instead of the
         viewport, which would trap the backdrop inside the very element
         it's meant to shrink behind. */}
-    <div className={`${styles.page} ${confirmPickupOpen ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+    <div className={`${styles.page} ${started ? styles.pageStarted : ''} ${confirmPickupOpen ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
           <span className={styles.pullRoadLine}/>
@@ -408,19 +408,25 @@ export default function DriverV3Page() {
               these three animate in together right under the CTA instead
               of hiding behind a separate menu. */}
           {started&&(
-            <div className={styles.secondaryRow}>
-              <button type="button" className={styles.secondaryAction} onClick={openMaps}>
-                <MapPin size={18}/><span>{t.drvOpenMaps}</span>
-              </button>
-              {route.destination_phone&&(
-                <button type="button" className={styles.secondaryAction} onClick={callFromTools}>
-                  <Phone size={18}/><span>{locale==='es'?'Llamar':locale==='fr'?'Appeler':'Call'}</span>
+            <>
+              <div className={styles.secondaryRow}>
+                <button type="button" className={styles.secondaryAction} onClick={openMaps}>
+                  <span className={styles.secondaryActionIcon}><MapPin size={22}/></span>
+                  <span>{t.drvOpenMaps}</span>
                 </button>
-              )}
-              <button type="button" className={`${styles.secondaryAction} ${styles.secondaryActionDanger}`} onClick={openIssueFromTools}>
-                <TriangleAlert size={18}/><span>{t.drvIssue}</span>
-              </button>
-            </div>
+                {route.destination_phone&&(
+                  <button type="button" className={styles.secondaryAction} onClick={callFromTools}>
+                    <span className={styles.secondaryActionIcon}><Phone size={22}/></span>
+                    <span>{locale==='es'?'Llamar':locale==='fr'?'Appeler':'Call'}</span>
+                  </button>
+                )}
+                <button type="button" className={`${styles.secondaryAction} ${styles.secondaryActionDanger}`} onClick={openIssueFromTools}>
+                  <span className={styles.secondaryActionIcon}><TriangleAlert size={22}/></span>
+                  <span>{t.drvIssue}</span>
+                </button>
+              </div>
+              <span className={styles.startedHandle} aria-hidden="true"/>
+            </>
           )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
