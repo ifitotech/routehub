@@ -53,8 +53,13 @@ test('driver settings keep natural scroll height and internal headers remain uns
   assert.match(preferences, /\.section\{flex:0 0 auto;/)
 })
 
-test('driving day returns to settings instead of opening driver profile', () => {
-  const source = read('../app/driver-v3/driving-day/page.tsx')
-  assert.match(source, /backHref="\/driver\/settings"/)
-  assert.doesNotMatch(source, /backHref="\/driver\/more"/)
+test('driving day start/end lives inline in Settings, not a separate screen', () => {
+  // app/driver-v3/driving-day/page.tsx (a dedicated screen with its own back
+  // button) was removed - starting/ending a driving day is now an inline
+  // toggle inside Settings itself, so there's no separate screen to
+  // navigate back from anymore.
+  const source = read('../app/driver-v3/settings/page.tsx')
+  assert.match(source, /startDrivingDay\(/)
+  assert.match(source, /endDrivingDay\(/)
+  assert.doesNotMatch(source, /useRouter/)
 })

@@ -10,14 +10,15 @@ import type {MapCoordinate} from '../../lib/maps/types'
 import {resolvedTheme, useThemePreference} from '../../lib/use-preferences'
 import styles from './DriverRoutePreview.module.css'
 
-// Non-Google, no-API-key tile sources - this is a read-only illustration of
-// the current stop, never a substitute for the "Open Maps" external
-// navigation action, so there's no case for a paid/keyed provider here.
-const TILE_URLS = {
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-}
-const TILE_ATTRIBUTION = '© <a href="https://carto.com/attributions">CARTO</a> © OpenStreetMap contributors'
+// CARTO's free basemaps now require an API key (their anonymous tier was
+// discontinued), so both themes use plain OpenStreetMap - the same tiles
+// already in use for light mode. Dark mode fakes its own dark style with a
+// CSS filter on the tiles instead (see .preview :global(.leaflet-tile) in
+// the stylesheet) - this is a read-only illustration of the current stop,
+// never a substitute for the "Open Maps" external navigation action, so a
+// perfectly accurate dark basemap isn't the point; looking right is.
+const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const TILE_ATTRIBUTION = '© OpenStreetMap contributors'
 
 type PreviewRoute = {
   id: string
@@ -151,7 +152,7 @@ export default function DriverRoutePreview({route, locale = 'en', destinationLab
     {!!points.length && <MapContainer center={points[0]} zoom={12} zoomSnap={.25} zoomControl={false}
       dragging={false} touchZoom={false} doubleClickZoom={false} scrollWheelZoom={false}
       boxZoom={false} keyboard={false} zoomAnimation={false} fadeAnimation={false} markerZoomAnimation={false}>
-      <TileLayer key={dark ? 'dark' : 'light'} attribution={TILE_ATTRIBUTION} url={dark ? TILE_URLS.dark : TILE_URLS.light}/>
+      <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL}/>
       <FitPreview points={points}/>
       {geometry.line.length > 1 && <Polyline positions={geometry.line} interactive={false}
         pathOptions={{color: dark ? '#2493FF' : '#1677FF', weight: 4, opacity: .95, lineCap: 'round', lineJoin: 'round', dashArray: geometry.phase === 'approximate' ? '6 6' : undefined}}/>}

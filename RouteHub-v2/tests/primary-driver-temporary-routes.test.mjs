@@ -81,7 +81,9 @@ test('team workspaces expose assigned routes while keeping their normal workspac
 })
 
 test('a permanent Driver can start a driving day independently of a current route', () => {
-  const source = read('../app/driver-v3/driving-day/page.tsx')
+  // app/driver-v3/driving-day/page.tsx was removed - starting/ending a
+  // driving day is now an inline toggle inside Settings.
+  const source = read('../app/driver-v3/settings/page.tsx')
   assert.match(source, /startDrivingDay\(\{driverId, companyId, branchId\}\)/)
   assert.doesNotMatch(source, /currentOperation|currentRoute|routeId/)
 })

@@ -15,7 +15,10 @@ const driverDataSource = read('../lib/driver-v3/use-driver-data.ts')
 const driverTruckSource = read('../app/driver-v3/truck/page.tsx')
 const driverTruckFuelSource = read('../app/driver-v3/truck/fuel/page.tsx')
 const driverTruckMaintenanceSource = read('../app/driver-v3/truck/maintenance/page.tsx')
-const drivingDaySource = read('../app/driver-v3/driving-day/page.tsx')
+// app/driver-v3/driving-day/page.tsx was removed - starting/ending a
+// driving day is now an inline toggle inside Settings, not a screen of
+// its own.
+const drivingDaySource = read('../app/driver-v3/settings/page.tsx')
 const liveRouteSource = read('../app/routes/live-route.tsx')
 const realtimeSource = read('../lib/realtime-sync.ts')
 const middlewareSource = read('../middleware.ts')

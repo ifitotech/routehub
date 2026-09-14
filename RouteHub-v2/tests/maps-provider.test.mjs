@@ -23,9 +23,12 @@ test('android external navigation keeps a native fallback chain while non-browse
 })
 
 test('Driver entry uses the current operation preview and real external navigation',async()=>{
-  const entry=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
+  // app/driver/page.tsx was removed - /driver now rewrites to /driver-v3 in
+  // middleware.ts instead of a redirect page, so that's what proves the
+  // official /driver URL actually serves the V3 app.
+  const entry=await readFile(new URL('../middleware.ts',import.meta.url),'utf8')
   const source=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
-  assert.match(entry,/driver-v3\/page/)
+  assert.match(entry,/\/driver-v3/)
   assert.match(source,/snapshot\?\.currentOperation/)
   assert.match(source,/<DriverRouteEstimate route=\{route\} locale=\{locale\}/)
   assert.doesNotMatch(source,/<OperationsMap/)

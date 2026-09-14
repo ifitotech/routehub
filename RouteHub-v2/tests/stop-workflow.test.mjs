@@ -8,8 +8,11 @@ const driverPage=()=>readFileSync(new URL('../app/driver-v3/page.tsx',import.met
 const completedPage=()=>readFileSync(new URL('../app/driver-v3/completed/page.tsx',import.meta.url),'utf8')
 const driverData=()=>readFileSync(new URL('../lib/driver-v3/use-driver-data.ts',import.meta.url),'utf8')
 const driverActions=()=>readFileSync(new URL('../lib/driver/driver-actions.ts',import.meta.url),'utf8')
-const routesPage=()=>readFileSync(new URL('../app/routes/new-route-fields.tsx',import.meta.url),'utf8')
-const managerBuilder=()=>readFileSync(new URL('../app/routes/new-route-dialog.tsx',import.meta.url),'utf8')+readFileSync(new URL('../app/routes/new-route-fields.tsx',import.meta.url),'utf8')
+// new-route-dialog.tsx and new-route-fields.tsx were split into
+// new-route-panel.tsx (route-type picker, assignment) and
+// new-route-details.tsx (PO field, destination/contact fields).
+const routesPage=()=>readFileSync(new URL('../app/routes/new-route-details.tsx',import.meta.url),'utf8')
+const managerBuilder=()=>readFileSync(new URL('../app/routes/new-route-panel.tsx',import.meta.url),'utf8')+readFileSync(new URL('../app/routes/new-route-details.tsx',import.meta.url),'utf8')
 const migration=()=>readFileSync(new URL('../supabase/migrations/026_stop_workflow_and_finalization.sql',import.meta.url),'utf8')
 
 test('legacy return and transfer route records keep a stable stop meaning',()=>{
@@ -118,7 +121,10 @@ test('delivery retains photo and customer signature proof while pickup remains l
 
 test('pickup PO is captured in both the builder and focused driver display',()=>{
   assert.match(routesPage(),/form\.type==='pickup'&&<label[^>]*><span>\{c\.po\}/)
-  assert.match(driverPage(),/kind!=='return'&&route\.order_number/)
+  // The dark-premium Today redesign narrowed this from "any non-return
+  // stop" to pickup only, matching that redesign's own spec ("PO shown
+  // only for Pickup").
+  assert.match(driverPage(),/kind==='pickup'&&route\.order_number/)
   assert.match(driverPage(),/PO \{route\.order_number\}/)
 })
 

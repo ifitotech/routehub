@@ -369,6 +369,43 @@ of just removing a border.
 - `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
   baseline only).
 
+### Stage 15 — dropped CARTO for keyless OSM+filter; fixed 8 of 10 pre-existing test failures
+- **CARTO Dark Matter tiles from Stage 12 require an API key now** (their anonymous free
+  tier was discontinued) - the live preview showed "API KEY REQUIRED" watermarked across
+  the map. Switched both themes to plain OpenStreetMap (already used for light) and fake
+  the dark look with a CSS filter on the tiles (`invert(1) hue-rotate(190deg) brightness(.86)
+  contrast(.92) saturate(1.35)`) instead of a second, keyed tile source - still a real
+  street layout, no account needed, no cost.
+- Fixed 8 of the 10 pre-existing test failures (confirmed unrelated to this redesign,
+  present before this work started) by updating each to the file that now actually holds
+  what it was checking, since the referenced files were renamed/split/removed by earlier,
+  unrelated work: `app/driver/page.tsx` → `middleware.ts` (the /driver→/driver-v3 rewrite
+  moved there); `app/driver-v3/driving-day/page.tsx` → `app/driver-v3/settings/page.tsx`
+  (driving-day start/end is now an inline Settings toggle, not its own screen);
+  `app/routes/new-route-dialog.tsx`/`new-route-fields.tsx` → `new-route-panel.tsx`/
+  `new-route-details.tsx` (same builder, split into two files); one assertion
+  (`kind!=='return'`) was actually stale from before this session's own Today redesign,
+  which intentionally narrowed PO display to pickup-only stops - updated to match.
+- **The other 2 failures are a real, pre-existing regression, not a test-path issue**:
+  `app/driver-v3/completed/page.tsx` - a dedicated "Finish route" confirmation screen that
+  called `finalizeRoute()` - was removed with no replacement. `finalizeRoute()` and
+  `canFinalizeRoute()` are still exported from `lib/driver/driver-actions.ts` /
+  `lib/stop-workflow.ts` but **nothing in the app calls them anymore** (confirmed via a
+  repo-wide search). The database's own finalization trigger
+  (`enforce_route_queue_finalization` in migration 026) only *validates* an update to
+  `finalized_at` - it doesn't set it on its own. Net effect: **routes may never actually
+  reach `finalized_at` today**, even after every stop completes. Left these 2 tests
+  failing rather than editing them to pass, since silencing them would hide a real gap
+  instead of documenting it - flagged to the user for a product decision rather than
+  guessing at a fix.
+- Also found, while chasing one of these old paths, that `TemporaryRouteAssignments`
+  (shown to Sales/Counter roles today) is no longer rendered on the Manager or Operations
+  dashboards (`app/manager/page.tsx` and `app/operations/page.tsx` are now redirect stubs
+  to `/routes`, which doesn't render it) - same category of pre-existing gap, flagged
+  alongside the finalization one rather than fixed blind.
+- `npm run typecheck`, `npm run build` clean; `npm test` now shows 2 failures (both the
+  real finalization gap above), down from the original 10.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
