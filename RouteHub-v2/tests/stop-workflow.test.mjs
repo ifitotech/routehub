@@ -136,7 +136,10 @@ test('pickup PO is captured in both the builder and focused driver display',()=>
   // PO moved into the same row as distance/time (DriverRouteEstimate),
   // passed down as a poNumber prop, instead of its own separate line.
   assert.match(driverPage(),/poNumber=\{kind==='pickup'&&route\.order_number\?route\.order_number:null\}/)
-  assert.match(readFileSync(new URL('../components/driver-v3/DriverRouteEstimate.tsx',import.meta.url),'utf8'),/PO \{poNumber\}/)
+  // The PO slot always renders (kept visibility:hidden rather than removed
+  // for stops with no PO) so distance/time never shift position depending
+  // on stop type - see the same file's own comment on this.
+  assert.match(readFileSync(new URL('../components/driver-v3/DriverRouteEstimate.tsx',import.meta.url),'utf8'),/PO \{poNumber \|\| '—'\}/)
 })
 
 test('manager route builder supports pickup, delivery, and branch stops without bypassing the queue',()=>{

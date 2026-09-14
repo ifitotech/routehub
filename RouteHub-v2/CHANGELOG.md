@@ -634,6 +634,24 @@ things Stage 23's own read of the reference had gotten wrong:
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 25 — PO always reserves its space; the map now merges into the header
+- **PO's slot in the row is now always present**, even for Delivery/Return (no PO at all)
+  or a Pickup missing an order number - `DriverRouteEstimate` used to only render the PO
+  metric+divider when `poNumber` was truthy, so distance and time shifted left to fill the
+  gap on every stop that didn't have one. Now the PO metric and its divider always stay in
+  the DOM at the same width; without a real `poNumber` they're set to
+  `visibility:hidden` (not removed, so the layout space is still reserved) instead of being
+  conditionally rendered - distance and time land in the exact same position on every stop
+  type instead of the row visibly jumping around.
+- **The map now flows directly out from under the header instead of reading as a separate
+  boxed card below it.** Two changes: `.page` lost its 12px top padding (the map, the
+  hero's first element, now sits with zero gap against the header above it), and
+  `.routeGlyphHost` lost its top `border-radius` (flat/square top edge at every breakpoint,
+  not rounded) - a rounded card floating just under the header read as "a box," a flush,
+  flat-topped one flowing straight out from behind it does not.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

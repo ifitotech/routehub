@@ -1,4 +1,8 @@
-.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:12px 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:var(--rh-page-bg,none);overflow:hidden;touch-action:pan-y}
+/* No top padding on purpose - the map (the hero's own first element) needs
+   to sit flush against the header above it with zero gap, so it reads as
+   flowing directly out from under the header instead of a separate card
+   floating below it. */
+.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:0 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:var(--rh-page-bg,none);overflow:hidden;touch-action:pan-y}
 .pullScene{position:absolute;top:24px;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:center;width:min(220px,78vw);height:28px;margin:0 auto;pointer-events:none;transition:opacity .12s linear}
 .pullRoad{position:absolute;left:0;right:0;bottom:2px;height:2.5px;border-radius:999px;background:rgba(147,193,255,.16);overflow:hidden}
 .pullRoadLine{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(102,178,255,.6) 0 8px,transparent 8px 16px);background-size:16px 100%;opacity:.7}
@@ -50,7 +54,7 @@
    Large before the stop starts (42vh, per spec: "el mapa se reduce de
    altura, por ejemplo de 42-45% de pantalla a 22-25%"), animates down to a
    compact context strip once .routeGlyphHostCompact is added. */
-.routeGlyphHost{width:calc(100% + 36px);height:47vh;min-height:190px;max-height:360px;margin:-18px -18px 14px;border-radius:22px 22px 0 0;overflow:hidden;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
+.routeGlyphHost{width:calc(100% + 36px);height:47vh;min-height:190px;max-height:360px;margin:-18px -18px 14px;border-radius:0;overflow:hidden;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
 .routeGlyphHostCompact{height:25vh;min-height:100px;max-height:180px;margin:-18px -18px 10px}
 
 .phoneLine{margin:5px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:13px;font-weight:650}
@@ -197,7 +201,7 @@
   .identityBlock h1{font-size:23px;line-height:1.08;min-height:25px}
   .addressLine{font-size:13px;margin-top:4px}
   .poLine{font-size:14px;margin-top:5px}
-  .routeGlyphHost{width:calc(100% + 24px);height:36vh;min-height:120px;max-height:250px;margin:-12px -12px 10px;border-radius:18px 18px 0 0}
+  .routeGlyphHost{width:calc(100% + 24px);height:36vh;min-height:120px;max-height:250px;margin:-12px -12px 10px;border-radius:0}
   .routeGlyphHostCompact{height:20vh;min-height:84px;max-height:140px;margin:-12px -12px 10px}
   .hero>.divider{margin:7px 0}
   .primary{min-height:54px;height:54px;border-radius:15px;font-size:16px;margin-top:10px}
@@ -213,7 +217,7 @@
   .identityBlock h1{font-size:22px;line-height:1.06;min-height:24px}
   .addressLine{margin-top:3px;font-size:13px}
   .poLine{margin-top:4px;font-size:13px}
-  .routeGlyphHost{width:calc(100% + 22px);height:31vh;min-height:106px;max-height:210px;margin:-11px -11px 8px;border-radius:16px 16px 0 0}
+  .routeGlyphHost{width:calc(100% + 22px);height:31vh;min-height:106px;max-height:210px;margin:-11px -11px 8px;border-radius:0}
   .routeGlyphHostCompact{height:18vh;min-height:76px;max-height:120px;margin:-11px -11px 8px}
   .hero>.divider{margin:5px 0}
   .primary{min-height:50px;height:50px;font-size:15px;margin-top:8px}
