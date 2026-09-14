@@ -1373,3 +1373,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 87 — 2026-09-14
 - Restore the Delivery sheet to the supplied larger completion-window footprint and enlarge its circular evidence actions so the controls have the same comfortable visual weight as Today’s operational actions.
+
+## Stage 88 — 2026-09-14
+- Simplify Delivery proof to recipient name plus photo, removing the legacy signature flow; reduce the sheet height, keep the two evidence actions comfortably sized, and scope drag handling to the handle so tapping Photo reliably opens the device camera picker.

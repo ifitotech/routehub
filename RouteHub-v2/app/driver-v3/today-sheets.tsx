@@ -7,7 +7,7 @@
 // the values/callbacks it already computes. Splitting this out only moves
 // code; it does not change what any of it does.
 
-import {Camera, PackageCheck, PackagePlus, PenLine, Phone, TriangleAlert, Warehouse, X} from 'lucide-react'
+import {Camera, PackageCheck, PackagePlus, Phone, TriangleAlert, Warehouse, X} from 'lucide-react'
 import {useRef, useState} from 'react'
 import type {PointerEvent as ReactPointerEvent, RefObject} from 'react'
 import styles from './today.module.css'
@@ -162,16 +162,15 @@ export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpe
 }
 
 export function DeliverySheet({
-  route, t, recipient, onRecipientChange, photo, photoRef, onRequestPhoto, onPickPhoto, signed, podPanel, onPodPanelChange, issueNote, onIssueNoteChange,
-  askName, nameFocus, onNameFocus, onNameBlur, nameRef, canvas, onSign, onClearSignature, busy, message, onConfirm, onClose,
+  route, t, recipient, onRecipientChange, photo, photoRef, onRequestPhoto, onPickPhoto, podPanel, onPodPanelChange, issueNote, onIssueNoteChange,
+  askName, nameFocus, onNameFocus, onNameBlur, nameRef, busy, message, onConfirm, onClose,
 }: {
   route: any; t: any
   recipient: string; onRecipientChange: (value: string) => void
   photo: File | null; photoRef: RefObject<HTMLInputElement>; onRequestPhoto: () => void; onPickPhoto: (file: File | null) => void
-  signed: boolean; podPanel: null | 'photo' | 'signature' | 'notes' | 'issue'; onPodPanelChange: (panel: null | 'photo' | 'signature' | 'notes' | 'issue') => void
+  podPanel: null | 'photo' | 'signature' | 'notes' | 'issue'; onPodPanelChange: (panel: null | 'photo' | 'signature' | 'notes' | 'issue') => void
   issueNote: string; onIssueNoteChange: (value: string) => void
   askName: boolean; nameFocus: boolean; onNameFocus: () => void; onNameBlur: () => void; nameRef: RefObject<HTMLInputElement>
-  canvas: RefObject<HTMLCanvasElement>; onSign: (e: React.PointerEvent<HTMLCanvasElement>) => void; onClearSignature: () => void
   busy: boolean; message: string; onConfirm: () => void; onClose: () => void
 }) {
   const dragStart = useRef<number | null>(null)
@@ -193,8 +192,8 @@ export function DeliverySheet({
   }
   return (
     <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()}>
-    <section data-delivery-panel className={styles.inlineDeliveryPanel} style={{transform: `translateY(${dragOffset}px)`}} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-        <span className={styles.sheetHandle} aria-label={t.drvCancel || 'Cancel'} role="button" onClick={onClose} aria-hidden="false" />
+    <section data-delivery-panel className={styles.inlineDeliveryPanel} style={{transform: `translateY(${dragOffset}px)`}}>
+        <span className={styles.sheetHandle} aria-label={t.drvCancel || 'Cancel'} role="button" onClick={onClose} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} aria-hidden="false" />
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 26, lineHeight: '30px'}}>{t.drvCompleteDelivery || 'Complete delivery'}</h2>
         <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_name || route.destination_address}</p>
@@ -215,28 +214,15 @@ export function DeliverySheet({
         </label>
         <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={e => onPickPhoto(e.target.files?.[0] || null)} />
         {!nameFocus && (
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 12}}>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginBottom: 12}}>
             <div className={styles.evidenceAction}>
               <button type="button" className="secondary" aria-label={t.drvPhoto || 'Foto'} onClick={onRequestPhoto} style={{...tileBtn, color: photo ? '#16B96B' : undefined}}><Camera size={22} /></button>
               <span>{t.drvPhoto || 'Foto'}</span>
-            </div>
-            <div className={styles.evidenceAction}>
-              <button type="button" className="secondary" aria-label={t.drvSignature || 'Firma'} onClick={() => onPodPanelChange(podPanel === 'signature' ? null : 'signature')} style={{...tileBtn, color: signed ? '#16B96B' : undefined}}><PenLine size={22} /></button>
-              <span>{t.drvSignature || 'Firma'}</span>
             </div>
             <div className={`${styles.evidenceAction} ${styles.evidenceActionDanger}`}>
               <button type="button" className="secondary" aria-label={t.drvIssue} onClick={() => onPodPanelChange(podPanel === 'issue' ? null : 'issue')} style={{...tileBtn, color: '#EF5350', borderColor: '#f5c2c0'}}><TriangleAlert size={22} /></button>
               <span>{t.drvIssue}</span>
             </div>
-          </div>
-        )}
-        {!nameFocus && podPanel === 'signature' && (
-          <div style={{marginBottom: 10}}>
-            {/* Signature pad stays a fixed light surface on purpose, both
-                themes - ink needs a paper-like background to read, the same
-                way it would on a physical delivery slip. */}
-            <canvas ref={canvas} width={340} height={180} onPointerDown={onSign} onPointerMove={e => e.buttons === 1 && onSign(e)} style={{width: '100%', height: 180, border: '1px dashed #cbd5e1', borderRadius: 12, background: '#fff', touchAction: 'none'}} />
-            <button type="button" className="secondary" onClick={onClearSignature} style={{marginTop: 8, width: '100%'}}>{t.drvClear}</button>
           </div>
         )}
         {!nameFocus && podPanel === 'issue' && (

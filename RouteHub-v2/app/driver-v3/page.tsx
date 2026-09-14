@@ -288,7 +288,6 @@ export default function DriverV3Page() {
   }
 
   const requestPhoto=()=>{
-    if(!recipient.trim()){setAskName(true);setNameFocus(true);setMessage(t.drvNeedRecipient);return}
     photoRef.current?.click()
   }
 
@@ -459,9 +458,8 @@ export default function DriverV3Page() {
           route={route} t={t}
           recipient={recipient} onRecipientChange={value=>{setRecipient(value);if(value.trim())setAskName(false)}}
           photo={photo} photoRef={photoRef} onRequestPhoto={requestPhoto} onPickPhoto={setPhoto}
-          signed={signed} podPanel={podPanel} onPodPanelChange={setPodPanel} issueNote={issueNote} onIssueNoteChange={setIssueNote}
+          podPanel={podPanel} onPodPanelChange={setPodPanel} issueNote={issueNote} onIssueNoteChange={setIssueNote}
           askName={askName} nameFocus={nameFocus} onNameFocus={()=>{setNameFocus(true);setPodPanel(null)}} onNameBlur={()=>setNameFocus(false)} nameRef={nameRef}
-          canvas={canvas} onSign={sign} onClearSignature={()=>{const c=canvas.current;if(c)c.getContext('2d')?.clearRect(0,0,c.width,c.height);setSigned(false)}}
           busy={busy} message={message} onConfirm={()=>void confirmDelivery()} onClose={()=>{setSheet(null);setPodPanel(null)}}
         />
       )}
