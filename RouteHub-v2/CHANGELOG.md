@@ -245,6 +245,29 @@ or open the preview URL in a private window to rule out the service worker cache
 - `npm test` (including the new test) passes; only the same pre-existing
   `ENOENT` baseline failures remain, unrelated to this change.
 
+### Stage 10 — the two remaining out-of-place elements the user flagged
+Two Today-screen elements were still visually left over from before the redesign,
+correctly called out as "no le pega a este estilo":
+
+- **"Swipe up for the next route" / "No more pending routes"** (`.routeSwipeZone`)
+  used to be bare text sitting directly on the page background with no
+  container at all - it read as disconnected from the glass hero card and
+  CTA above it. Gave it the same glass-pill treatment as `.nextChip` right
+  above it (border/background from the `--rh-border`/`--rh-surface-soft`
+  tokens, backdrop-blur), so the two stack as one visual family instead of
+  a styled card followed by plain floating text.
+- **Pull-to-refresh's truck-on-a-road animation** (`.pullRoad`/`.pullRoadLine`/
+  `.pullTruck`) was still hardcoded to its original light-only colors
+  (`#dde5ee` road, white truck icon) with no dark handling at all, so
+  pulling down on Today showed a jarring light-grey road and white icon
+  against the new dark page background. Rewrote the base (unscoped) rules
+  to dark-appropriate values and added an `html[data-theme='light']`
+  override with the original light colors, matching the driver token
+  convention. The "ready to refresh" and "refreshing" states
+  (`.pullReady .pullTruck`/`.pullTruckDriving`, already a blue gradient)
+  were left as-is - that accent already reads correctly on both themes.
+- `npm run typecheck`, `npm run build` clean.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
