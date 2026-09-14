@@ -1352,3 +1352,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 80 — 2026-09-14
 - Reframe Delivery completion as the requested bottom-anchored, translucent navy sheet: the active route card and map remain visible behind it while the sheet rises from the bottom with a rounded, electric-blue edge.
+
+## Stage 81 — 2026-09-14
+- Keep the Today navigation in layout while Delivery is open to prevent the background route from re-centering downward; replace the see-through sheet with theme-token surfaces so light and dark mode each render a legible, opaque completion card.

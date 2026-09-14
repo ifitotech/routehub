@@ -361,7 +361,7 @@ export default function DriverV3Page() {
   return <DriverV3Shell
     active="today"
     headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}
-    hideNav={Boolean((sheet&&operation)||confirmPickupOpen)}
+    hideNav={Boolean((sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
     flush
   >
     {/* .page and the confirm dialog are siblings, not parent/child, on
