@@ -9,7 +9,7 @@
 .hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:8px 0 10px}.hero>div{display:grid;grid-template-columns:auto auto 1fr;align-items:center;column-gap:12px}.hero p{grid-column:2;margin:0;color:var(--rh-primary);font-size:10px;font-weight:900;letter-spacing:.14em}.hero h1{grid-column:3;grid-row:1 / span 2;margin:0;color:var(--rh-text);font-size:clamp(27px,2.5vw,38px);letter-spacing:-.05em}.hero>div>span{display:none}
 .back{grid-row:1 / span 2;display:inline-flex;align-items:center;gap:6px;color:var(--rh-text-secondary);font-size:12px;font-weight:750;text-decoration:none}.back:hover{color:var(--rh-primary)}
 .heroActions{display:flex;gap:10px;flex-wrap:wrap;justify-content:end}.heroActions .primaryAction{border-color:var(--rh-primary);background:var(--rh-primary);color:#fff;box-shadow:0 10px 22px rgb(37 99 235 / 22%)}
-.page>:last-child{flex:1;min-height:0}.error{margin:0 0 12px;padding:12px 14px;border:1px solid #fecaca;border-radius:12px;background:#fef2f2;color:#b91c1c;font-size:13px}
+.page>:last-child{flex:1;min-height:0}.error{margin:0 0 12px;padding:12px 14px;border:1px solid #fecaca;border-radius:12px;background:var(--rh-danger-soft);color:var(--rh-danger);font-size:13px}
 @media(max-width:900px){.page{min-height:auto}.hero>div{display:block}.hero p{margin:0 0 4px}.hero h1{font-size:32px}.back{margin-bottom:8px}.hero>div>span{display:block;max-width:620px;margin-top:7px;color:var(--rh-text-secondary);font-size:13px;line-height:1.45}}
 @media(max-width:760px){.page{padding:14px 14px calc(98px + env(safe-area-inset-bottom))}.topbar{padding-bottom:14px}.liveStatus{display:none}.hero{align-items:stretch;flex-direction:column;padding:20px 0 12px}.heroActions{display:grid;grid-template-columns:1fr 1fr;justify-content:stretch}.heroActions>a{padding:9px 8px}.headerActions>a{display:none}}
 
@@ -66,9 +66,9 @@
   }
 
   .managerMapPage :global([class*='operationSummary']) { padding: 22px; }
-  .managerMapPage :global([class*='operationStatus']) { padding: 16px; background: #f6f9fd; }
+  .managerMapPage :global([class*='operationStatus']) { padding: 16px; background:var(--rh-surface-2); }
   .managerMapPage :global([class*='operationFacts']) { gap: 12px; }
-  .managerMapPage :global([class*='operationActions'] a) { min-height: 44px; padding: 0 13px; border-radius: 12px; background: #eaf2ff; }
+  .managerMapPage :global([class*='operationActions'] a) { min-height: 44px; padding: 0 13px; border-radius: 12px; background:var(--rh-soft-blue); }
 }
 
 /* Keep the operational map dominant while removing the legacy page spacing
@@ -111,6 +111,6 @@
     grid-template-rows: 1fr auto;
     border-radius: 18px;
     overflow: hidden;
-    border: 1px solid #dde5ee;
+    border:1px solid var(--rh-line);
   }
 }

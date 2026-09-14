@@ -208,6 +208,23 @@
 .appHeader button.headerIcon svg,
 .headerIcon svg{color:#fff;stroke:#fff;width:22px;height:22px}
 
+/* Light theme: the header follows the page instead of staying a fixed
+   navy bar - matches the light reference (white background, navy
+   wordmark) instead of forcing the dark bar in both themes. Needs the
+   same !important weight as the rules above, since those apply
+   regardless of theme and would otherwise keep winning here. */
+:global(html[data-theme='light']) .driver-v3-root .appHeader{
+  background:var(--rh-navy,#fff) !important;
+  color:var(--rh-text,#0B1F3A) !important;
+  box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
+}
+:global(html[data-theme='light']) .driver-v3-root .headerBrand{color:var(--rh-text,#0B1F3A) !important}
+:global(html[data-theme='light']) .driver-v3-root .headerIcon,
+:global(html[data-theme='light']) .driver-v3-root .appHeader button.headerIcon,
+:global(html[data-theme='light']) .driver-v3-root .appHeader a.headerIcon{color:var(--rh-text,#0B1F3A) !important}
+:global(html[data-theme='light']) .driver-v3-root .appHeader button.headerIcon svg,
+:global(html[data-theme='light']) .driver-v3-root .headerIcon svg{color:var(--rh-text,#0B1F3A) !important;stroke:var(--rh-text,#0B1F3A) !important}
+
 
 /* .content itself lives in driver-v3-a.module.css - it is the class that
    actually reaches the DOM once DriverV3Shell merges {...shellA, ...shellB},

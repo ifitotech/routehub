@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
 import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield} from 'lucide-react'
-import {useLocale} from '../../../lib/use-preferences'
+import {useLocale, useThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
@@ -17,7 +17,11 @@ import {submitSupportRequest} from '../../../lib/support'
 import {USER_GUIDE_URL} from '../../../lib/user-guide'
 import {getSupabase} from '../../../lib/supabase'
 import styles from '../driver-preferences.module.css'
-import confirmStyles from '../../../components/driver-v3/driver-v3.module.css'
+// confirmBackdrop/confirmSheet/confirmActions live in driver-v3-b.module.css -
+// the combined driver-v3.module.css only @imports the split files, it
+// doesn't re-export their class-name maps (same bug fixed in
+// app/driver-v3/page.tsx's own confirm dialog).
+import confirmStyles from '../../../components/driver-v3/driver-v3-b.module.css'
 
 const LANGS = [
   {id: 'en', label: 'English'},
@@ -27,6 +31,7 @@ const LANGS = [
 
 export default function DriverV3Settings() {
   const {locale, setLocale, t} = useLocale()
+  const {theme, setTheme} = useThemePreference()
   const copy = settingsCopy(locale)
   const {drivingSession, driverId, companyId, branchId, refresh} = useDriverData()
   const [dayBusy, setDayBusy] = useState(false)
@@ -271,6 +276,26 @@ export default function DriverV3Settings() {
                 onClick={() => setLocale(lang.id)}
               >
                 {lang.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}><h2>{locale === 'es' ? 'Tema' : locale === 'fr' ? 'Thème' : 'Theme'}</h2></div>
+          <div className={styles.languageChoices}>
+            {([
+              {id: 'dark' as const, label: locale === 'es' ? 'Oscuro' : locale === 'fr' ? 'Sombre' : 'Dark'},
+              {id: 'light' as const, label: locale === 'es' ? 'Claro' : locale === 'fr' ? 'Clair' : 'Light'},
+              {id: 'system' as const, label: locale === 'es' ? 'Sistema' : locale === 'fr' ? 'Système' : 'System'},
+            ]).map(item => (
+              <button
+                key={item.id}
+                type="button"
+                className={`${styles.languageChoice} ${theme === item.id ? styles.languageChoiceSelected : ''}`}
+                onClick={() => setTheme(item.id)}
+              >
+                {item.label}
               </button>
             ))}
           </div>

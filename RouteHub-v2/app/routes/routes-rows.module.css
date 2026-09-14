@@ -6,9 +6,9 @@
   align-items:start;
   min-width:0;
   padding:12px;
-  border:1px solid #dde5ee;
+  border:1px solid var(--rh-line);
   border-radius:14px;
-  background:#fff;
+  background:var(--rh-card);
   box-shadow:0 4px 14px rgba(15,23,42,.04);
 }
 .row[data-status='completed']{border-left:4px solid #16b96b}
@@ -19,44 +19,44 @@
   width:32px;min-height:32px;border-radius:10px;
   display:grid;place-items:center;gap:1px;
   padding:4px 0;
-  background:#eef4ff;color:#1660f0;font-size:11px;font-weight:900;
+  background:var(--rh-soft-blue);color:var(--rh-blue);font-size:11px;font-weight:900;
 }
 .body{min-width:0;display:grid;gap:4px}
 .topline{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
-.topline small{color:#64748b;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-.body strong{color:#0f1d35;font-size:15px;line-height:1.25;font-weight:800;overflow-wrap:anywhere;word-break:break-word}
-.body p{margin:0;color:#64748b;font-size:12px;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
+.topline small{color:var(--rh-ink-soft);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.body strong{color:var(--rh-ink);font-size:15px;line-height:1.25;font-weight:800;overflow-wrap:anywhere;word-break:break-word}
+.body p{margin:0;color:var(--rh-ink-soft);font-size:12px;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
 .status{
   flex:none;padding:3px 8px;border-radius:999px;
-  background:#eef4ff;color:#1660f0;
+  background:var(--rh-soft-blue);color:var(--rh-blue);
   font-size:10px;font-weight:800;text-transform:uppercase;white-space:nowrap;
 }
-.status[data-status='completed']{background:#ecfdf5;color:#059669}
-.status[data-status='issue']{background:#fef2f2;color:#dc2626}
-.status[data-status='paused'],.status[data-status='active']{background:#eff6ff;color:#0e48c4}
-.status[data-status='cancelled']{background:#f1f5f9;color:#64748b}
-.detailsLink{display:inline-flex;align-items:center;gap:2px;margin-top:6px;padding:0;border:0;background:transparent;color:#1660f0;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
+.status[data-status='completed']{background:var(--rh-success-soft);color:var(--rh-success)}
+.status[data-status='issue']{background:var(--rh-danger-soft);color:var(--rh-danger)}
+.status[data-status='paused'],.status[data-status='active']{background:var(--rh-soft-blue);color:var(--rh-blue-700)}
+.status[data-status='cancelled']{background:var(--rh-surface-2);color:var(--rh-ink-soft)}
+.detailsLink{display:inline-flex;align-items:center;gap:2px;margin-top:6px;padding:0;border:0;background:transparent;color:var(--rh-blue);font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
 .detailsLink:hover{text-decoration:underline}
 .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .iconButton{
   display:grid;place-items:center;
   width:34px;height:34px;
   border:1px solid #d7e2f0;border-radius:10px;
-  background:#fff;color:#334155;
+  background:var(--rh-card);color:var(--rh-ink);
   cursor:pointer;
   transition:background-color 120ms ease,border-color 120ms ease,color 120ms ease;
 }
-.iconButton:hover{border-color:#93b4ef;background:#eff6ff;color:#0e48c4}
-.iconButton[data-tone='pause']{border-color:#fde68a;background:#fffbeb;color:#b45309}
+.iconButton:hover{border-color:#93b4ef;background:var(--rh-soft-blue);color:var(--rh-blue-700)}
+.iconButton[data-tone='pause']{border-color:#fde68a;background:var(--rh-warning-soft);color:var(--rh-warning)}
 .iconButton[data-tone='pause']:hover{background:#fef3c7}
-.iconButton[data-tone='resume']{border-color:#bfdbfe;background:#eff6ff;color:#0e48c4}
-.iconButton[data-tone='unassign']:hover{border-color:#94a3b8;background:#f1f5f9;color:#334155}
-.iconButton[data-tone='cancel']{border-color:#fecaca;color:#dc2626}
-.iconButton[data-tone='cancel']:hover{border-color:#f87171;background:#fef2f2;color:#b91c1c}
+.iconButton[data-tone='resume']{border-color:#bfdbfe;background:var(--rh-soft-blue);color:var(--rh-blue-700)}
+.iconButton[data-tone='unassign']:hover{border-color:var(--rh-ink-soft);background:var(--rh-surface-2);color:var(--rh-ink)}
+.iconButton[data-tone='cancel']{border-color:#fecaca;color:var(--rh-danger)}
+.iconButton[data-tone='cancel']:hover{border-color:#f87171;background:var(--rh-danger-soft);color:var(--rh-danger)}
 .iconButton:disabled{cursor:wait;opacity:.58}
 
 /* Dragging a row onto the Unassigned panel is the same action as its
    unassign button, so the grip only shows when that action is available. */
 .row[data-draggable='true']{cursor:grab}
 .row[data-draggable='true']:active{cursor:grabbing}
-.grip{color:#94a3b8}
+.grip{color:var(--rh-ink-soft)}

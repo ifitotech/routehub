@@ -7,7 +7,17 @@ import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 import {geocodeAddress} from '../../lib/maps/geocoding'
 import {calculateOperationsRoute} from '../../lib/maps/routing'
 import type {MapCoordinate} from '../../lib/maps/types'
+import {resolvedTheme, useThemePreference} from '../../lib/use-preferences'
 import styles from './DriverRoutePreview.module.css'
+
+// Non-Google, no-API-key tile sources - this is a read-only illustration of
+// the current stop, never a substitute for the "Open Maps" external
+// navigation action, so there's no case for a paid/keyed provider here.
+const TILE_URLS = {
+  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  light: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+}
+const TILE_ATTRIBUTION = '© <a href="https://carto.com/attributions">CARTO</a> © OpenStreetMap contributors'
 
 type PreviewRoute = {
   id: string
@@ -33,13 +43,22 @@ const copy = {
   fr: {label: 'Arrêt actuel : A à B', from: 'Départ', to: 'Destination', loading: 'Chargement du trajet…', approximate: 'Liaison approximative', missing: 'Carte indisponible · ouvrir Plans', noOrigin: 'Départ indisponible', noDestination: 'Destination indisponible'},
 }
 
-function endpointIcon(letter: 'A' | 'B', combined = false) {
-  const width = combined ? 48 : 28
+/** Plain glowing dot - the route's starting point, no label (matches the
+    abstract glyph this replaces, which never labeled the origin either). */
+function originIcon() {
+  return L.divIcon({className: styles.originMarker, html: `<span class="${styles.originDot}"></span>`, iconSize: [18, 18], iconAnchor: [9, 9]})
+}
+
+/** Pin + the stop's own name underneath, escaped since it's real user data
+    (a contact/company name) rendered as raw HTML inside a Leaflet icon. */
+function destinationIcon(label: string, combined: boolean) {
+  const escaped = label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const text = combined ? escaped : escaped
   return L.divIcon({
-    className: `${styles.marker} ${letter === 'A' ? styles.origin : styles.destination}`,
-    html: combined ? 'A·B' : letter,
-    iconSize: [width, 28],
-    iconAnchor: [width / 2, 14],
+    className: styles.destinationMarker,
+    html: `<span class="${styles.destinationPin}"></span><span class="${styles.destinationLabel}">${text}</span>`,
+    iconSize: [140, 44],
+    iconAnchor: [70, 16],
   })
 }
 
@@ -71,9 +90,12 @@ function FitPreview({points}: {points: MapCoordinate[]}) {
 }
 
 /** Today is a reference for the current assignment, independent of the fleet map. */
-export default function DriverRoutePreview({route, locale = 'en'}: {route: PreviewRoute; locale?: string}) {
+export default function DriverRoutePreview({route, locale = 'en', destinationLabel}: {route: PreviewRoute; locale?: string; destinationLabel?: string}) {
   const text = copy[locale as keyof typeof copy] || copy.en
+  const {theme} = useThemePreference()
+  const dark = resolvedTheme(theme) === 'dark'
   const {id, origin_address, origin_lat, origin_lng, destination_address, destination_lat, destination_lng} = route
+  const destLabel = destinationLabel || destination_address || text.to
   const initial = useMemo<Geometry>(() => ({
     key: JSON.stringify([id, origin_address, origin_lat, origin_lng, destination_address, destination_lat, destination_lng, locale]),
     origin: sanitizeCoordinate({lat: origin_lat, lng: origin_lng}),
@@ -120,7 +142,7 @@ export default function DriverRoutePreview({route, locale = 'en'}: {route: Previ
   const combined = Boolean(geometry.origin && geometry.destination
     && Math.abs(geometry.origin.lat - geometry.destination.lat) < .00001
     && Math.abs(geometry.origin.lng - geometry.destination.lng) < .00001)
-  const icons = useMemo(() => ({a: endpointIcon('A'), b: endpointIcon('B', combined)}), [combined])
+  const icons = useMemo(() => ({a: originIcon(), b: destinationIcon(destLabel, combined)}), [combined, destLabel])
   const status = geometry.phase === 'loading' ? text.loading
     : geometry.phase === 'approximate' && !combined ? text.approximate
     : geometry.phase === 'missing' ? !points.length ? text.missing : !geometry.origin ? text.noOrigin : text.noDestination : ''
@@ -129,10 +151,10 @@ export default function DriverRoutePreview({route, locale = 'en'}: {route: Previ
     {!!points.length && <MapContainer center={points[0]} zoom={12} zoomSnap={.25} zoomControl={false}
       dragging={false} touchZoom={false} doubleClickZoom={false} scrollWheelZoom={false}
       boxZoom={false} keyboard={false} zoomAnimation={false} fadeAnimation={false} markerZoomAnimation={false}>
-      <TileLayer attribution='© OpenStreetMap contributors' url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'/>
+      <TileLayer key={dark ? 'dark' : 'light'} attribution={TILE_ATTRIBUTION} url={dark ? TILE_URLS.dark : TILE_URLS.light}/>
       <FitPreview points={points}/>
       {geometry.line.length > 1 && <Polyline positions={geometry.line} interactive={false}
-        pathOptions={{color: '#1677FF', weight: 4, opacity: .95, lineCap: 'round', lineJoin: 'round', dashArray: geometry.phase === 'approximate' ? '6 6' : undefined}}/>}
+        pathOptions={{color: dark ? '#2493FF' : '#1677FF', weight: 4, opacity: .95, lineCap: 'round', lineJoin: 'round', dashArray: geometry.phase === 'approximate' ? '6 6' : undefined}}/>}
       {geometry.origin && !combined && <Marker position={geometry.origin} icon={icons.a} interactive={false} keyboard={false} alt={`A · ${text.from}`}/>}
       {geometry.destination && <Marker position={geometry.destination} icon={icons.b} interactive={false} keyboard={false} alt={`B · ${text.to}`}/>}
     </MapContainer>}

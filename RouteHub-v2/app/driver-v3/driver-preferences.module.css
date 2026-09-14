@@ -9,7 +9,7 @@
 .sectionHeader p{margin:4px 0 0;color:#667892;font-size:13px;line-height:1.42}
 .row{display:flex;align-items:center;gap:11px;min-height:64px;padding:10px 14px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5;transition:background-color .15s ease,transform .1s ease}
 .row:first-of-type{border-top:0}
-button.row{width:100%;text-align:left;border:0;background:transparent;font:inherit;box-sizing:border-box}
+button.row{width:100%;text-align:left;border:0;background:transparent;font:inherit;box-sizing:border-box;appearance:none;-webkit-appearance:none;border-radius:0;box-shadow:none;color:inherit;cursor:pointer}
 .row:active{background-color:#f2f6fb;transform:scale(.99)}
 .rowIcon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:#eaf2ff;color:#1667f2}
 .rowCopy{min-width:0;flex:1;display:grid;gap:2px}

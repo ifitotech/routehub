@@ -43,7 +43,7 @@
   height: 32px;
   border-radius: 8px;
   background: rgba(100, 116, 139, 0.1);
-  color: #64748b;
+  color:var(--rh-ink-soft);
   flex-shrink: 0;
 }
 
@@ -119,7 +119,7 @@
 .grip {
   flex: none;
   margin-top: 1px;
-  color: #94a3b8;
+  color:var(--rh-ink-soft);
 }
 
 .assignButton {
@@ -135,7 +135,7 @@
 }
 
 .assignButton:hover:not(:disabled) {
-  background: #0e48c4;
+  background:var(--rh-blue-700);
 }
 
 .assignButton:disabled {
@@ -147,7 +147,7 @@
   padding: 7px 10px;
   border: 1.5px solid var(--rh-border, #dde5ee);
   border-radius: 8px;
-  background: #fff;
+  background:var(--rh-card);
   color: var(--rh-text, #0f1d35);
   font-size: 12px;
   font-weight: 600;
@@ -185,7 +185,7 @@
 .chevron,
 .chevronOpen {
   flex: none;
-  color: #94a3b8;
+  color:var(--rh-ink-soft);
   transition: transform 140ms ease;
 }
 
@@ -195,12 +195,12 @@
 
 .headerIconIssue {
   background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  color:var(--rh-danger);
 }
 
 .headerIconDone {
   background: rgba(5, 150, 105, 0.1);
-  color: #059669;
+  color:var(--rh-success);
 }
 
 .detailsButton {
@@ -220,6 +220,60 @@
 
 .detailsButton:hover {
   text-decoration: underline;
+}
+
+:global(html[data-theme='dark']) .panel {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 16px rgba(2, 8, 20, 0.35);
+}
+
+:global(html[data-theme='dark']) .panel[data-drop-active='true'] {
+  border-color: #2493ff;
+  background: rgba(36, 147, 255, 0.12);
+}
+
+:global(html[data-theme='dark']) .headerIcon {
+  background: rgba(147, 193, 255, 0.1);
+}
+
+:global(html[data-theme='dark']) .count,
+:global(html[data-theme='dark']) .empty {
+  background: rgba(255, 255, 255, 0.06);
+  color: #9fb2d0;
+}
+
+:global(html[data-theme='dark']) .item {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(147, 193, 255, 0.14);
+}
+
+:global(html[data-theme='dark']) .assignButton {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #2493ff, #1677ff, #0a5fe8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 16px rgba(22, 119, 255, 0.22);
+}
+
+:global(html[data-theme='dark']) .assignButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2493ff, #1677ff, #0a5fe8);
+  filter: brightness(1.06);
+}
+
+:global(html[data-theme='dark']) .assignSelect {
+  border-color: rgba(147, 193, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  color: #bbd3f7;
+}
+
+:global(html[data-theme='dark']) .subsection {
+  border-top-color: rgba(147, 193, 255, 0.14);
+}
+
+:global(html[data-theme='dark']) .headerIconIssue {
+  background: rgba(248, 113, 113, 0.14);
+}
+
+:global(html[data-theme='dark']) .headerIconDone {
+  background: rgba(52, 211, 153, 0.14);
 }
 
 @media (max-width: 768px) {

@@ -8,10 +8,10 @@
   gap: 8px;
   min-height: 50px;
   padding: 0 16px;
-  border: 1px solid #cbd5e1;
+  border:1px solid var(--rh-line);
   border-radius: 14px;
-  background: #fff;
-  color: #1e3a5f;
+  background:var(--rh-card);
+  color:var(--rh-ink);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -28,8 +28,8 @@
 .trigger:hover,
 .trigger[data-open='true'] {
   border-color: #93b4ef;
-  background: #eff6ff;
-  color: #0e48c4;
+  background:var(--rh-soft-blue);
+  color:var(--rh-blue-700);
 }
 
 .chevron {
@@ -53,9 +53,9 @@
   min-width: 200px;
   max-width: 280px;
   padding: 6px;
-  border: 1px solid #dde5ee;
+  border:1px solid var(--rh-line);
   border-radius: 14px;
-  background: #fff;
+  background:var(--rh-card);
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
   animation: menuIn 120ms ease;
 }
@@ -74,7 +74,7 @@
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: #0f1d35;
+  color:var(--rh-ink);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -105,23 +105,23 @@
 }
 
 .personRole {
-  color: #64748b;
+  color:var(--rh-ink-soft);
   font-size: 11px;
   font-weight: 600;
 }
 
 .item[data-active='true'] .personRole {
-  color: #1660f0;
+  color:var(--rh-blue);
   opacity: 0.75;
 }
 
 .item:hover {
-  background: #f1f5f9;
+  background:var(--rh-surface-2);
 }
 
 .item[data-active='true'] {
-  background: #eaf2ff;
-  color: #1660f0;
+  background:var(--rh-soft-blue);
+  color:var(--rh-blue);
 }
 
 .count {
@@ -130,7 +130,7 @@
   padding: 1px 6px;
   border-radius: 999px;
   background: rgba(22, 96, 240, 0.1);
-  color: #1660f0;
+  color:var(--rh-blue);
   font-size: 11px;
   font-weight: 800;
   text-align: center;

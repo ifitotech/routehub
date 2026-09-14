@@ -3,7 +3,10 @@ import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {Camera} from 'lucide-react'
 import DriverV3Shell from '../../../../components/driver-v3/DriverV3Shell'
-import shellStyles from '../../../../components/driver-v3/driver-v3.module.css'
+// .stickyAction lives in driver-v3-a.module.css - the combined
+// driver-v3.module.css only @imports the split files, it doesn't
+// re-export their class-name maps.
+import shellStyles from '../../../../components/driver-v3/driver-v3-a.module.css'
 import {useDriverData} from '../../../../lib/driver-v3/use-driver-data'
 import {useLocale} from '../../../../lib/use-preferences'
 import {getSupabase} from '../../../../lib/supabase'

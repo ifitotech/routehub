@@ -58,7 +58,7 @@
   padding: 6px 8px;
   border: 1px solid var(--rh-border, #dde5ee);
   border-radius: 10px;
-  background: #fff;
+  background:var(--rh-card);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   color: var(--rh-text, #0f1d35);
   font-size: 11px;
@@ -72,12 +72,12 @@
 
 .day:hover {
   border-color: #b8cdf4;
-  background: #fafbfc;
+  background:var(--rh-surface-2);
 }
 
 .day.selected {
   background: linear-gradient(135deg, #1660f0, #3b82f6);
-  border-color: #1660f0;
+  border-color:var(--rh-blue);
   color: #fff;
   box-shadow: 0 4px 12px rgba(22, 96, 240, 0.2);
 }
@@ -133,7 +133,7 @@
   padding: 0 4px;
   border: 2px solid var(--rh-card, #fff);
   border-radius: 999px;
-  background: #cbd5e1;
+  background:var(--rh-surface-2);
   color: #fff;
   font-size: 9px;
   font-weight: 800;
@@ -141,12 +141,58 @@
 }
 
 .badge[data-tone='pending'] {
-  background: #ff3b30;
+  background:var(--rh-danger);
   color: #fff;
 }
 
 .day.selected .badge {
-  border-color: #1660f0;
+  border-color:var(--rh-blue);
+}
+
+:global(html[data-theme='dark']) .calendar {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 16px rgba(2, 8, 20, 0.35);
+}
+
+:global(html[data-theme='dark']) .navButton {
+  border-color: rgba(147, 193, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  color: #bbd3f7;
+}
+
+:global(html[data-theme='dark']) .navButton:hover {
+  border-color: rgba(147, 193, 255, 0.3);
+  background: rgba(147, 193, 255, 0.09);
+  color: #e2ecff;
+}
+
+:global(html[data-theme='dark']) .day {
+  border-color: rgba(147, 193, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  color: #bbd3f7;
+  box-shadow: none;
+}
+
+:global(html[data-theme='dark']) .day:hover {
+  border-color: rgba(147, 193, 255, 0.3);
+  background: rgba(147, 193, 255, 0.09);
+}
+
+:global(html[data-theme='dark']) .day.selected {
+  background: linear-gradient(135deg, #2493ff, #1677ff, #0a5fe8);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 18px rgba(10, 95, 232, 0.35);
+}
+
+:global(html[data-theme='dark']) .day.today:not(.selected) {
+  border-color: rgba(36, 147, 255, 0.5);
+  background: rgba(36, 147, 255, 0.14);
+  color: #cfe2ff;
+}
+
+:global(html[data-theme='dark']) .badge {
+  border-color: #0f1c30;
 }
 
 @media (max-width: 720px) {
