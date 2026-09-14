@@ -28,8 +28,8 @@
 .pageShrink{transform:scale(.94) translateY(22px);border-radius:26px 26px 0 0;pointer-events:none;transition:transform .42s cubic-bezier(.32,.72,0,1),border-radius .42s cubic-bezier(.32,.72,0,1)}
 .completionOverlay{animation:completionBackdropIn .32s ease both}
 .completionDialog{animation:completionPanelIn .46s cubic-bezier(.32,.72,0,1) both;transform-origin:center bottom}
-.todaySheetOverlay{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:6}
-.todaySheetPanel{box-shadow:0 -18px 48px rgba(0,0,0,.34);animation:todaySheetIn .46s cubic-bezier(.32,.72,0,1) both;overflow-y:auto}
+.todaySheetOverlay{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.todaySheetPanel{box-shadow:0 -18px 48px rgba(0,0,0,.34);animation:todaySheetIn .46s cubic-bezier(.32,.72,0,1) both}
 @keyframes todaySheetIn{from{transform:translateY(100%);opacity:.72}to{transform:translateY(0);opacity:1}}
 .completionOverlay,.completionOverlay *{pointer-events:auto}
 .completionOverlay button{position:relative;z-index:2;touch-action:manipulation;cursor:pointer}

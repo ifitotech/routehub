@@ -1310,6 +1310,3 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 65 — 2026-09-14
 - Convert the Delivery completion flow into an in-screen Today bottom sheet: it anchors to the lower edge, rises from below the viewport while Today retracts under the header, and dismisses back downward from the Cancel/X control or backdrop.
-
-## Stage 66 — 2026-09-14
-- Make the Delivery completion sheet occupy the Today content area directly below the fixed header, using the existing Today surface and button actions so it reads as an integrated route state instead of a centered popup.
