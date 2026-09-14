@@ -54,6 +54,7 @@ export default function DriverV3Page() {
   const openedCompletionRef=useRef('')
   const refreshStartY=useRef<number|null>(null)
   const refreshDistance=useRef(0)
+  const completionHandleStartY=useRef<number|null>(null)
   const [refreshing,setRefreshing]=useState(false)
   const [pullDistance,setPullDistance]=useState(0)
   const operation=snapshot?.currentOperation
@@ -346,6 +347,23 @@ export default function DriverV3Page() {
     if(distance>=64)void refreshToday()
     else setPullDistance(0)
   }
+  const completionHandleStart=(event:React.TouchEvent<HTMLSpanElement>)=>{
+    if(kind!=='delivery'||!started)return
+    completionHandleStartY.current=event.touches[0]?.clientY??null
+    event.stopPropagation()
+  }
+  const completionHandleMove=(event:React.TouchEvent<HTMLSpanElement>)=>{
+    if(completionHandleStartY.current===null)return
+    event.preventDefault()
+    event.stopPropagation()
+  }
+  const completionHandleEnd=(event:React.TouchEvent<HTMLSpanElement>)=>{
+    const start=completionHandleStartY.current
+    const end=event.changedTouches[0]?.clientY
+    completionHandleStartY.current=null
+    event.stopPropagation()
+    if(start!==null&&end!==undefined&&start-end>28)openDelivery()
+  }
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
   // flush (already used by the Map screen) removes .content's own
@@ -430,7 +448,7 @@ export default function DriverV3Page() {
                   <span>{t.drvIssue}</span>
                 </button>
               </div>
-              <span className={styles.startedHandle} aria-hidden="true"/>
+              <span className={styles.startedHandle} role={kind==='delivery'?'button':undefined} aria-label={kind==='delivery'?'Swipe up to complete delivery':undefined} aria-hidden={kind==='delivery'?undefined:'true'} onTouchStart={completionHandleStart} onTouchMove={completionHandleMove} onTouchEnd={completionHandleEnd}/>
             </>
           )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}

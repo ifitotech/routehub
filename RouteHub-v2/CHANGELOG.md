@@ -1379,3 +1379,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 89 — 2026-09-14
 - Make the Delivery primary CTA explicitly consume its tap and open the integrated completion sheet, preventing an accidental map-navigation interaction when the driver presses Arrived at Stop.
+
+## Stage 90 — 2026-09-14
+- Turn the small handle beneath Today’s operational actions into a Delivery swipe-up trigger, giving it the same completion-sheet entrance as Arrived at Stop while preserving downward dismissal from the sheet handle.

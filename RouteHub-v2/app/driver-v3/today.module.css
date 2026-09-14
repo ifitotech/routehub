@@ -160,6 +160,8 @@
    image's own divider between the action row and the nav bar right below
    it - purely decorative, no swipe behavior attached. */
 .startedHandle{display:block;width:40px;height:4px;margin:14px auto 0;border-radius:999px;background:var(--rh-border-strong,rgba(101,162,255,.28))}
+.startedHandle[role='button']{width:48px;height:5px;background:linear-gradient(90deg,#1677ff,#17d9d2);box-shadow:0 0 10px rgba(36,147,255,.32);cursor:grab;touch-action:none}
+.startedHandle[role='button']:active{cursor:grabbing;transform:scaleX(1.08)}
 .divider{height:1px;margin:12px 0;background:var(--rh-divider,rgba(151,185,234,.16))}
 .mapPreview{display:block;width:100%;height:184px;min-height:184px;max-height:184px;flex:0 0 184px;border:0;padding:0;margin:0 0 12px;border-radius:14px;overflow:hidden;background:#e8eef4;contain:layout paint}
 .mapPreview :global(.leaflet-container){width:100%!important;height:100%!important}
