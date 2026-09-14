@@ -480,6 +480,27 @@ the whole hero around a two-state (before start / started) layout.
   149/149 still passing (no operational handler was touched, only labels/layout/the map
   component itself).
 
+### Stage 18 — "at destination" state, no fake route line, full validation sweep
+Refinement pass against a second, more detailed version of the Stage 17 spec (same
+reference image). Most of it already matched (map-first layout, two-state hero, inline
+Maps/Call/Issue after start, phase-driven state survives external Maps); the one real gap:
+
+- **"Si distancia es 0, mostrar estado 'En destino'; no mostrar una ruta falsa."** Added
+  a distance check to `DriverRouteMap.tsx` (`distanceMeters` from `lib/location.ts`,
+  reused rather than re-implemented): under 45m between the driver and the destination,
+  the line source is cleared (`FeatureCollection` with no features, not a near-zero-length
+  line) and a small "At destination"/"En destino"/"Sur place" pill fades in over the map
+  instead. Localized via a `locale` prop threaded from `page.tsx`.
+- Ran the full validation sweep the spec explicitly asked for -
+  `typecheck`/`lint`/`test`/`build`, not just the first three used in earlier stages.
+  `lint` surfaced one real new warning (`DriverRouteMap.tsx`'s GPS-update effect
+  intentionally depends on `driverFix.lat/lng` instead of the object reference, so a
+  same-coordinates re-render doesn't reset the map) - annotated with an explained
+  eslint-disable rather than either silencing it blindly or "fixing" it into a bug.
+  Confirmed no other file introduced a new warning (every other warning in the report
+  predates this work).
+- `npm test`: still 149/149.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on

@@ -1,3 +1,10 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
 .host {
   position: relative;
   isolation: isolate;
@@ -6,6 +13,31 @@
   min-height: 0;
   overflow: hidden;
   background: #0b1526;
+}
+
+.atDestination {
+  position: absolute;
+  z-index: 500;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(9, 20, 38, .78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(55, 224, 201, .3);
+  color: #6ff0dc;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+:global(html[data-theme='light']) .atDestination {
+  background: rgba(255, 255, 255, .92);
+  border-color: rgba(14, 122, 108, .3);
+  color: #0e7a6c;
 }
 
 .host :global(.maplibregl-map) { width: 100%; height: 100%; }

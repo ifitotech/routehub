@@ -1,10 +1,11 @@
 'use client'
 
-import {useEffect, useMemo, useRef} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
 import {geocodeAddress} from '../../lib/maps/geocoding'
+import {distanceMeters} from '../../lib/location'
 import styles from './DriverRouteMap.module.css'
 
 type Route = {
@@ -13,6 +14,16 @@ type Route = {
   destination_lat?: number | null
   destination_lng?: number | null
 }
+
+const AT_DESTINATION_COPY = {
+  en: 'At destination',
+  es: 'En destino',
+  fr: 'Sur place',
+}
+
+// Under this, drawing a "route" would just be noise - the driver is
+// effectively already there.
+const AT_DESTINATION_METERS = 45
 
 // Real OpenStreetMap tiles, no key, no account - this preview is context,
 // not turn-by-turn, so an approximate straight line between two points is
@@ -52,13 +63,14 @@ function lineGeoJson(from: MapPoint, to: MapPoint): GeoJSON.Feature<GeoJSON.Line
  * the line's data update, so the view never jumps or reloads while a
  * driver is watching it.
  */
-export default function DriverRouteMap({route, driverFix}: {route: Route; driverFix: {lat: number; lng: number} | null}) {
+export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route: Route; driverFix: {lat: number; lng: number} | null; locale?: string}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
   const destMarkerRef = useRef<maplibregl.Marker | null>(null)
   const destinationRef = useRef<MapPoint | null>(null)
   const firstFitRef = useRef(false)
+  const [atDestination, setAtDestination] = useState(false)
 
   const knownDestination = useMemo(() => sanitizeCoordinate({lat: route.destination_lat, lng: route.destination_lng}), [route.destination_lat, route.destination_lng])
 
@@ -137,7 +149,16 @@ export default function DriverRouteMap({route, driverFix}: {route: Route; driver
         else destMarkerRef.current.setLngLat([destination.lng, destination.lat])
       }
       if (driverFix && destination) {
-        (map.getSource('rh-route-line') as maplibregl.GeoJSONSource).setData(lineGeoJson(driverFix, destination))
+        const atStop = distanceMeters(driverFix, destination) < AT_DESTINATION_METERS
+        setAtDestination(atStop)
+        // A near-zero-length line reads as a rendering glitch, not "you've
+        // arrived" - clear it instead of drawing a fake route when the
+        // driver is effectively already at the stop.
+        const lineSource = map.getSource('rh-route-line') as maplibregl.GeoJSONSource
+        if (atStop) lineSource.setData({type: 'FeatureCollection', features: []})
+        else lineSource.setData(lineGeoJson(driverFix, destination))
+      } else {
+        setAtDestination(false)
       }
       // Fit the view once real points are first available (or the
       // destination changes to a new stop) - not on every GPS tick, so the
@@ -152,6 +173,10 @@ export default function DriverRouteMap({route, driverFix}: {route: Route; driver
     }
     if (map.isStyleLoaded()) apply()
     else map.once('load', apply)
+  // Depends on the coordinates themselves, not the `driverFix` object
+  // reference, on purpose - a new object with the same lat/lng (e.g. a
+  // parent re-render) must not re-run this and reset the map's state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverFix?.lat, driverFix?.lng, route.id, knownDestination])
 
   // The map's own size is driven by the parent's CSS (large before start,
@@ -164,5 +189,10 @@ export default function DriverRouteMap({route, driverFix}: {route: Route; driver
     return () => observer.disconnect()
   }, [])
 
-  return <div ref={containerRef} className={styles.host} aria-hidden="true"/>
+  const atDestinationText = AT_DESTINATION_COPY[locale as keyof typeof AT_DESTINATION_COPY] || AT_DESTINATION_COPY.en
+
+  return <div className={styles.wrap}>
+    <div ref={containerRef} className={styles.host} aria-hidden="true"/>
+    {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
+  </div>
 }
