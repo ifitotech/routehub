@@ -62,7 +62,7 @@ export default function DriverRouteEstimate({route, locale = 'en'}: {route: any;
       </div>
       <span className={styles.divider} aria-hidden="true" />
       <div className={styles.metric}>
-        <span className={styles.icon}><Clock3 size={18}/></span>
+        <span className={`${styles.icon} ${styles.iconTime}`}><Clock3 size={18}/></span>
         <span><strong>{hasEstimate ? formatDuration(estimate!.durationSeconds!, locale) : '—'}</strong><small>{locale === 'es' ? 'tiempo estimado' : 'estimated time'}</small></span>
       </div>
       <span className={styles.caption}>{loading ? (locale === 'es' ? 'Calculando ruta…' : 'Calculating route…') : (locale === 'es' ? 'Referencia de la ruta · abre Mapas para navegar' : 'Route reference · open Maps to navigate')}</span>

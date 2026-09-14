@@ -52,7 +52,6 @@ export default function DriverV3Page() {
   const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
-  const swipeStartY=useRef<number|null>(null)
   const refreshStartY=useRef<number|null>(null)
   const refreshDistance=useRef(0)
   const [refreshing,setRefreshing]=useState(false)
@@ -325,14 +324,6 @@ export default function DriverV3Page() {
     return {label:t.drvCompleteDelivery, run:openFlow}
   }
   const action=primary()
-  const routeSwipeAction=()=>nextRoute?setSheet('next'):router.push('/driver/history')
-  const routeSwipeStart=(event:React.TouchEvent<HTMLButtonElement>)=>{swipeStartY.current=event.touches[0]?.clientY??null}
-  const routeSwipeEnd=(event:React.TouchEvent<HTMLButtonElement>)=>{
-    if(swipeStartY.current==null)return
-    const delta=swipeStartY.current-(event.changedTouches[0]?.clientY??swipeStartY.current)
-    swipeStartY.current=null
-    if(delta>28)routeSwipeAction()
-  }
   const refreshToday=async()=>{
     if(refreshing||sheet)return
     setRefreshing(true)
@@ -428,10 +419,6 @@ export default function DriverV3Page() {
             <ChevronRight size={18}/>
           </button>
         )}
-        <button className={styles.routeSwipeZone} type="button" aria-label={nextRoute ? (locale==='es'?'Abrir siguiente ruta':'Open next route') : (locale==='es'?'Ver historial':'View history')} onClick={routeSwipeAction} onTouchStart={routeSwipeStart} onTouchEnd={routeSwipeEnd}>
-          <span className={styles.routeSwipeHandle} aria-hidden="true">↑</span>
-          <span>{nextRoute ? (locale==='es'?'Desliza hacia arriba para ver la siguiente ruta':'Swipe up for the next route') : (locale==='es'?'No hay más rutas pendientes':'No more pending routes')}</span>
-        </button>
       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
 
       {sheet==='info'&&route&&(

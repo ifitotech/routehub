@@ -2,11 +2,14 @@
    distance/time metrics sit directly on the hero's own glass surface,
    identified only by their icon chips, not by a second nested box. */
 .estimate{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);align-items:center;gap:12px;min-height:60px;padding:6px 2px;margin:14px 0 0;color:var(--rh-text,#0f172a);box-sizing:border-box}
-.metric{display:flex;align-items:center;gap:9px;min-width:0}
-.icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(22,119,255,.14);color:var(--rh-primary,#1677ff);flex:none}
+.metric{display:flex;align-items:center;gap:10px;min-width:0}
+.icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:rgba(22,119,255,.14);color:var(--rh-primary,#1677ff);flex:none}
+/* Distance and time are told apart by color, matching the reference - blue
+   for distance/route, amber/gold for time, not the same tint twice. */
+.iconTime{background:rgba(245,158,11,.16);color:#f5a623}
 .metric span:last-child{display:grid;gap:1px;min-width:0}
-.metric strong{font-size:22px;line-height:26px;font-weight:780;white-space:nowrap;color:var(--rh-text,#0f172a)}
+.metric strong{font-size:24px;line-height:28px;font-weight:780;white-space:nowrap;color:var(--rh-text,#0f172a)}
 .metric small{color:var(--rh-text-muted,#64748b);font-size:12px;line-height:15px;font-weight:600;white-space:nowrap}
-.divider{width:1px;height:34px;background:var(--rh-divider,#dbe5ef)}
+.divider{width:1px;height:36px;background:var(--rh-divider,#dbe5ef)}
 .caption{grid-column:1/-1;color:var(--rh-text-subtle,#64748b);font-size:10.5px;line-height:13px;font-weight:600;text-align:center}
-@media (max-width:400px){.estimate{gap:8px;padding:10px;margin-bottom:8px;border-radius:13px}.icon{width:29px;height:29px}.metric{gap:6px}.metric strong{font-size:18px;line-height:21px}.metric small{font-size:10px;line-height:12px}.caption{font-size:9px;line-height:12px}}
+@media (max-width:400px){.estimate{gap:8px;padding:10px;margin-bottom:8px;border-radius:13px}.icon{width:32px;height:32px}.metric{gap:7px}.metric strong{font-size:19px;line-height:22px}.metric small{font-size:10px;line-height:12px}.caption{font-size:9px;line-height:12px}}

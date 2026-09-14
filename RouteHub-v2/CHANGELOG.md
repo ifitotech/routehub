@@ -553,6 +553,29 @@ in the middle) - a completely different shape from a top-to-bottom fade.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 21 — dropped the swipe-to-next-route strip for a bigger map; fixed the estimate icons
+The user liked the map fade fix ("mucho mejor") and asked to remove the swipe-for-next-
+route strip entirely so that reclaimed space goes to an even bigger map, plus to compare
+the distance/time chips against the reference.
+
+- **Removed `.routeSwipeZone`** (the "Swipe up for the next route" / "No more pending
+  routes" strip below the hero) from `app/driver-v3/page.tsx`, along with the
+  `routeSwipeAction`/`routeSwipeStart`/`routeSwipeEnd` handlers and `swipeStartY` ref that
+  existed only for it - the `.nextChip` card above it already gives a tap-based way to see
+  the next stop, so this wasn't the only way in or out.
+- **Grew the map** into the reclaimed space: `.routeGlyphHost` (all 3 responsive
+  breakpoints included) went from 42vh to 47vh before the stop starts (43/36/31vh on the
+  narrower/shorter breakpoints), and the compact started-state height grew proportionally
+  too (23vh → 25vh, etc.).
+- **Fixed a real mismatch in `DriverRouteEstimate`**: the distance and time chips both used
+  the exact same blue icon tint - the reference clearly uses blue for distance and amber/
+  gold for time. Added a `.iconTime` variant and applied it only to the clock icon. Also
+  sized the chips up slightly to match the reference's visual weight (icon box 34px→38px,
+  number 22px→24px, divider 34px→36px), with the same proportional bump on its own
+  narrow-screen breakpoint.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

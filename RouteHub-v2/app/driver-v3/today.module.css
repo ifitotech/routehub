@@ -42,8 +42,8 @@
    Large before the stop starts (42vh, per spec: "el mapa se reduce de
    altura, por ejemplo de 42-45% de pantalla a 22-25%"), animates down to a
    compact context strip once .routeGlyphHostCompact is added. */
-.routeGlyphHost{width:calc(100% + 36px);height:42vh;min-height:170px;max-height:320px;margin:-18px -18px 14px;border-radius:22px 22px 0 0;overflow:hidden;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
-.routeGlyphHostCompact{height:23vh;min-height:92px;max-height:160px;margin:-18px -18px 10px}
+.routeGlyphHost{width:calc(100% + 36px);height:47vh;min-height:190px;max-height:360px;margin:-18px -18px 14px;border-radius:22px 22px 0 0;overflow:hidden;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
+.routeGlyphHostCompact{height:25vh;min-height:100px;max-height:180px;margin:-18px -18px 10px}
 
 .phoneLine{margin:5px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:13px;font-weight:650}
 .noteLine{margin:0 0 4px;padding:9px 11px;border-radius:11px;background:var(--rh-surface-soft,rgba(255,255,255,.045));border:1px solid var(--rh-border,rgba(101,162,255,.16));color:var(--rh-text-muted,#9FB2D0);font-size:12.5px;line-height:1.4}
@@ -174,8 +174,8 @@
   .page{gap:10px}
   .hero{padding:14px}
   .identityBlock h1{font-size:26px}
-  .routeGlyphHost{width:calc(100% + 28px);height:38vh;min-height:140px;max-height:260px;margin:-14px -14px 14px}
-  .routeGlyphHostCompact{height:20vh;min-height:80px;max-height:130px;margin:-14px -14px 10px}
+  .routeGlyphHost{width:calc(100% + 28px);height:43vh;min-height:150px;max-height:300px;margin:-14px -14px 14px}
+  .routeGlyphHostCompact{height:22vh;min-height:88px;max-height:150px;margin:-14px -14px 10px}
 }
 
 @media (max-width:400px) and (max-height:850px){
@@ -189,8 +189,8 @@
   .identityBlock h1{font-size:23px;line-height:1.08}
   .addressLine{font-size:13px;margin-top:4px}
   .poLine{font-size:14px;margin-top:5px}
-  .routeGlyphHost{width:calc(100% + 24px);height:32vh;min-height:110px;max-height:220px;margin:-12px -12px 10px;border-radius:18px 18px 0 0}
-  .routeGlyphHostCompact{height:18vh;min-height:76px;max-height:120px;margin:-12px -12px 10px}
+  .routeGlyphHost{width:calc(100% + 24px);height:36vh;min-height:120px;max-height:250px;margin:-12px -12px 10px;border-radius:18px 18px 0 0}
+  .routeGlyphHostCompact{height:20vh;min-height:84px;max-height:140px;margin:-12px -12px 10px}
   .hero>.divider{margin:7px 0}
   .primary{min-height:54px;height:54px;border-radius:15px;font-size:16px;margin-top:10px}
   .routeSwipeZone{min-height:50px;font-size:10px;margin-top:4px}
@@ -205,8 +205,8 @@
   .identityBlock h1{font-size:22px;line-height:1.06}
   .addressLine{margin-top:3px;font-size:13px}
   .poLine{margin-top:4px;font-size:13px}
-  .routeGlyphHost{width:calc(100% + 22px);height:28vh;min-height:96px;max-height:190px;margin:-11px -11px 8px;border-radius:16px 16px 0 0}
-  .routeGlyphHostCompact{height:16vh;min-height:68px;max-height:104px;margin:-11px -11px 8px}
+  .routeGlyphHost{width:calc(100% + 22px);height:31vh;min-height:106px;max-height:210px;margin:-11px -11px 8px;border-radius:16px 16px 0 0}
+  .routeGlyphHostCompact{height:18vh;min-height:76px;max-height:120px;margin:-11px -11px 8px}
   .hero>.divider{margin:5px 0}
   .primary{min-height:50px;height:50px;font-size:15px;margin-top:8px}
   .routeSwipeZone{min-height:44px}
