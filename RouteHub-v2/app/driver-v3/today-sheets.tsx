@@ -8,9 +8,12 @@
 // code; it does not change what any of it does.
 
 import {Camera, PackageCheck, PackagePlus, PenLine, Phone, TriangleAlert, Warehouse, X} from 'lucide-react'
+import dynamic from 'next/dynamic'
 import {useRef, useState} from 'react'
 import type {PointerEvent as ReactPointerEvent, RefObject} from 'react'
 import styles from './today.module.css'
+
+const DeliveryRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
 
 export const overlay: React.CSSProperties = {
   position: 'fixed',
@@ -162,10 +165,11 @@ export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpe
 }
 
 export function DeliverySheet({
-  route, t, recipient, onRecipientChange, photo, photoRef, onRequestPhoto, onPickPhoto, signed, podPanel, onPodPanelChange, issueNote, onIssueNoteChange,
+  route, t, locale, driverFix, recipient, onRecipientChange, photo, photoRef, onRequestPhoto, onPickPhoto, signed, podPanel, onPodPanelChange, issueNote, onIssueNoteChange,
   askName, nameFocus, onNameFocus, onNameBlur, nameRef, canvas, onSign, onClearSignature, busy, message, onConfirm, onClose,
 }: {
   route: any; t: any
+  locale: string; driverFix: {lat: number; lng: number} | null
   recipient: string; onRecipientChange: (value: string) => void
   photo: File | null; photoRef: RefObject<HTMLInputElement>; onRequestPhoto: () => void; onPickPhoto: (file: File | null) => void
   signed: boolean; podPanel: null | 'photo' | 'signature' | 'notes' | 'issue'; onPodPanelChange: (panel: null | 'photo' | 'signature' | 'notes' | 'issue') => void
@@ -193,6 +197,7 @@ export function DeliverySheet({
   }
   return (
     <section data-delivery-panel className={styles.inlineDeliveryPanel} style={{transform: `translateY(${dragOffset}px)`}} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
+        <div className={styles.deliveryMapBand} aria-hidden="true"><DeliveryRouteMap route={route} driverFix={driverFix} locale={locale}/></div>
         <span className={styles.sheetHandle} aria-label={t.drvCancel || 'Cancel'} role="button" onClick={onClose} aria-hidden="false" />
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 26, lineHeight: '30px'}}>{t.drvCompleteDelivery || 'Complete delivery'}</h2>

@@ -1340,3 +1340,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 76 — 2026-09-14
 - Prevent the inline Delivery form from shrinking inside Today’s viewport so its full set of fields and actions remains visible while the continuous route surface moves upward.
+
+## Stage 77 — 2026-09-14
+- Add a compact, real MapLibre route band above the inline Delivery handle, with a dark bottom dissolve, so the completion transition keeps the route visually connected to the form instead of pushing all map context beneath the header.

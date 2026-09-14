@@ -454,7 +454,7 @@ export default function DriverV3Page() {
           )}
           {sheet==='delivery'&&(
             <DeliverySheet
-              route={route} t={t}
+              route={route} t={t} locale={locale} driverFix={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null}
               recipient={recipient} onRecipientChange={value=>{setRecipient(value);if(value.trim())setAskName(false)}}
               photo={photo} photoRef={photoRef} onRequestPhoto={requestPhoto} onPickPhoto={setPhoto}
               signed={signed} podPanel={podPanel} onPodPanelChange={setPodPanel} issueNote={issueNote} onIssueNoteChange={setIssueNote}
