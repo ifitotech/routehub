@@ -91,14 +91,12 @@
    real imagery right up to the screen edges) and only dissolves downward
    into the card's dark background near the bottom, where the stop details
    begin - a top-to-bottom fade, not a radial vignette on every side. */
-/* No top fade-in here on purpose - that was tried (fading the canvas in
-   from nothing) to soften the same header handoff, but .headerFade (above)
-   is what actually bridges it now, sits on top of the canvas regardless of
-   this mask, and covers a taller share of the map than a top mask fade
-   alone comfortably could without hiding too much real map underneath. */
+/* The map's top edge is intentionally feathered into the navy header. The
+   header remains unchanged; the first part of the real MapLibre canvas fades
+   in from transparent so there is no second rectangular bar at the seam. */
 .host {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
@@ -147,6 +145,6 @@
    destination pin gets a border that reads on a pale background too. */
 :global(html[data-theme='light']) .host { background: transparent; }
 :global(html[data-theme='light']) .canvas { filter: none; }
-:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%); }
+:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%); }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }

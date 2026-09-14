@@ -1,5 +1,13 @@
 # Changelog
 
+### Stage 45 — Header/map seam fade
+
+Adjusted only the real MapLibre map's top mask on Driver Today so its canvas
+fades in from transparent into the existing navy header, matching the supplied
+reference without changing the header controls, layout, or content. The lower
+map fade remains intact. No route data, navigation behavior, or decorative
+content was changed.
+
 ## Manager — dark-premium foundation (stage 1 of the app-wide redesign)
 
 Scope for this stage: build the dark/light token pair for Manager and remove
