@@ -1275,3 +1275,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 54 — 2026-09-14
 - Blend the Today header into the map in both themes and refit the complete route whenever the responsive map height changes, reserving the lower overlay area so both endpoints remain visible.
+
+## Stage 55 — 2026-09-14
+- Extend the Today header fade in both themes, restore light-mode header icon contrast, and slightly strengthen the route glow for clearer presentation on pale maps.

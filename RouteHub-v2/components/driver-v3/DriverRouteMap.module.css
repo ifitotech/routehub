@@ -201,5 +201,7 @@
       rgba(247, 250, 255, .9) 89%,
       #f7faff 100%);
 }
+:global(html[data-theme='light']) .routeGlow { opacity: .6; }
+:global(html[data-theme='light']) .routeCore { stroke-width: 5.5px; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }
