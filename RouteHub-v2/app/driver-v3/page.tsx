@@ -65,6 +65,10 @@ export default function DriverV3Page() {
   const currentStopPosition=Math.max(1,Number(route?.position)||1)
   const visibleStopCount=currentStopPosition+(snapshot?.queue.upcoming?.length||0)
   const stopLabel=locale==='es' ? `Parada ${currentStopPosition} de ${visibleStopCount}` : `Stop ${currentStopPosition} of ${visibleStopCount}`
+  // Compact, capped at a handful of dots regardless of how many stops are
+  // actually left today - real position/count still drive it, this just
+  // keeps the row from overflowing a route with a dozen stops.
+  const stopDots=Array.from({length: Math.min(visibleStopCount, 5)}, (_, index) => index < currentStopPosition ? (index === currentStopPosition - 1 ? 'current' : 'done') : 'upcoming')
   useEffect(()=>{
     if(!sheet)return
     const html=document.documentElement
@@ -385,7 +389,10 @@ export default function DriverV3Page() {
           </div>
           <div className={styles.heroTop}>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><StopIcon/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
+          </div>
+          <div className={styles.stopMetaRow}>
             <span className={styles.stopLabel}>{stopLabel}</span>
+            <span className={styles.stopDots} aria-hidden="true">{stopDots.map((state,index)=><i key={index} className={styles[state]}/>)}</span>
           </div>
           <button type="button" className={styles.identityBlock} onClick={()=>setSheet('info')}>
             <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>

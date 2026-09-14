@@ -3,12 +3,10 @@
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
 import {ChevronLeft, History, Home, Map as MapIcon, Settings, Truck, UserRound} from 'lucide-react'
-import {useEffect, useState} from 'react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
 import {useLocale} from '../../lib/use-preferences'
-import NotificationBell from '../../app/notification-bell'
 
 const styles = {...shellA, ...shellB}
 
@@ -47,45 +45,17 @@ export default function DriverV3Shell({
   swipeDownTo,
   rightSlot,
 }: Props) {
-  const {t, locale} = useLocale()
-  const [headerNow, setHeaderNow] = useState<Date | null>(null)
+  const {t} = useLocale()
   const pathname = usePathname()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
   const mapOpen = pathname === '/driver/map'
-  const isToday = active === 'today'
-
-  useEffect(() => {
-    const update = () => setHeaderNow(new Date())
-    update()
-    const timer = window.setInterval(update, 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
-
-  const language = locale === 'es' ? 'es-US' : locale === 'fr' ? 'fr-FR' : 'en-US'
-  const hour = headerNow?.getHours() ?? 9
-  const greeting = locale === 'es'
-    ? hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches'
-    : locale === 'fr'
-      ? hour < 12 ? 'Bonjour' : hour < 19 ? 'Bon après-midi' : 'Bonsoir'
-      : hour < 12 ? 'Good morning' : hour < 19 ? 'Good afternoon' : 'Good evening'
-  const dateLabel = headerNow ? new Intl.DateTimeFormat(language, {weekday: 'short', month: 'short', day: 'numeric'}).format(headerNow) : ''
 
   return (
     <main className={styles.shell}>
-      <header className={`${styles.header} ${styles.appHeader} ${isToday ? styles.todayReferenceHeader : ''}`}>
-        {isToday ? <>
-          <Link href="/driver" className={styles.todayReferenceBrand} aria-label="RouteHub">
-            <span className={styles.todayBrandLine}><img src="/routehub-driver-new.jpg" alt="" width={32} height={32} /><strong>Route<span>Hub</span></strong></span>
-            <small>DRIVE <i>·</i> PICKUP <i>·</i> DELIVER</small>
-          </Link>
-          <div className={styles.todayReferenceMeta}>
-            <NotificationBell />
-            <span>{dateLabel}</span>
-            <strong>{greeting}</strong>
-          </div>
-        </> : isStack ? (
+      <header className={`${styles.header} ${styles.appHeader}`}>
+        {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
