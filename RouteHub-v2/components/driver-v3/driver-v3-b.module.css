@@ -206,7 +206,7 @@
    silently reorder and break. */
 .contentToday{background:transparent !important;overflow:visible !important}
 .appHeader.headerToday{
-  background:linear-gradient(to bottom,#0F1D35 0%,#0F1D35 58%,rgba(15,29,53,.82) 76%,rgba(15,29,53,.28) 91%,transparent 100%)!important;
+  background:linear-gradient(to bottom,#0F1D35 0%,#0F1D35 48%,rgba(15,29,53,.82) 68%,rgba(15,29,53,.3) 86%,transparent 100%)!important;
   box-shadow:none!important;
 }
 .appHeader *{
@@ -269,7 +269,7 @@
   box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
 }
 :global(html[data-theme='light']) .driver-v3-root .appHeader.headerToday{
-  background:linear-gradient(to bottom,#fff 0%,#fff 56%,rgba(255,255,255,.78) 74%,rgba(255,255,255,.28) 91%,transparent 100%)!important;
+  background:linear-gradient(to bottom,#fff 0%,#fff 48%,rgba(255,255,255,.84) 68%,rgba(255,255,255,.34) 86%,transparent 100%)!important;
   box-shadow:none!important;
 }
 :global(html[data-theme='light'] .driver-v3-root > main > header) .headerIcon,

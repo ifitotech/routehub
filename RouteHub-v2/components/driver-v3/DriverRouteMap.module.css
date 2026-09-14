@@ -83,8 +83,11 @@
    header remains unchanged; the first part of the real MapLibre canvas fades
    in from transparent so there is no second rectangular bar at the seam. */
 .host {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%);
+  /* The header provides the long dissolve.  Only feather the first few
+     pixels of the canvas here; a 24% mask made a pale blank strip appear
+     between the light header and the actual map. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%);
 }
 
 /* The map wrapper is intentionally taller than the visible canvas so the
@@ -98,17 +101,16 @@
   pointer-events: none;
   background:
     linear-gradient(to bottom,
-      #101c2d 0%,
-      rgba(16, 28, 45, .84) 9%,
-      rgba(16, 28, 45, .34) 20%,
-      rgba(16, 28, 45, 0) 32%),
+      rgba(17, 24, 39, .72) 0%,
+      rgba(17, 24, 39, .42) 10%,
+      rgba(17, 24, 39, 0) 24%),
     linear-gradient(to bottom,
       rgba(16, 28, 45, 0) 0%,
       rgba(16, 28, 45, 0) 52%,
-      rgba(16, 28, 45, .18) 62%,
-      rgba(16, 28, 45, .58) 76%,
-      rgba(16, 28, 45, .9) 89%,
-      #101c2d 100%);
+      rgba(17, 24, 39, .16) 62%,
+      rgba(17, 24, 39, .52) 76%,
+      rgba(17, 24, 39, .86) 89%,
+      #111827 100%);
 }
 
 .routeOverlay {
@@ -126,7 +128,7 @@
 .routeGlow,
 .routeCore {
   fill: none;
-  stroke: url(#driver-route-gradient);
+  stroke: url(#driver-road-gradient);
   stroke-linecap: round;
 }
 .routeGlow {
@@ -185,14 +187,13 @@
 /* Light theme: same non-Google map, a lighter vignette/no invert, and the
    destination pin gets a border that reads on a pale background too. */
 :global(html[data-theme='light']) .host { background: transparent; }
-:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%); }
+:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 100%); }
 :global(html[data-theme='light']) .fadeOverlay {
   background:
     linear-gradient(to bottom,
-      #f7faff 0%,
-      rgba(247, 250, 255, .84) 9%,
-      rgba(247, 250, 255, .34) 20%,
-      rgba(247, 250, 255, 0) 32%),
+      rgba(255, 255, 255, .58) 0%,
+      rgba(255, 255, 255, .26) 10%,
+      rgba(255, 255, 255, 0) 24%),
     linear-gradient(to bottom,
       rgba(247, 250, 255, 0) 0%,
       rgba(247, 250, 255, 0) 52%,

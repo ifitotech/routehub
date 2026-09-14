@@ -30,8 +30,8 @@ const AT_DESTINATION_COPY = {
 const AT_DESTINATION_METERS = 45
 
 // Real OpenStreetMap tiles, no key, no account - this preview is context,
-// not turn-by-turn, so an approximate straight line between two points is
-// the right amount of accuracy, not a road-following route.
+// not turn-by-turn. The line itself is supplied separately by the existing
+// fastest-road routing service, so it always follows a real street geometry.
 function osmStyle(dark: boolean): maplibregl.StyleSpecification { return {
   version: 8,
   sources: {
@@ -44,13 +44,13 @@ function osmStyle(dark: boolean): maplibregl.StyleSpecification { return {
     },
   },
   layers: [
-    {id: 'osm-base', type: 'background', paint: {'background-color': dark ? '#06152c' : '#ffffff'}},
+    {id: 'osm-base', type: 'background', paint: {'background-color': dark ? '#111827' : '#ffffff'}},
     {id: 'osm', type: 'raster', source: 'osm', paint: dark ? {
-      'raster-opacity': 0.55,
+      'raster-opacity': 0.5,
       'raster-saturation': -1,
       'raster-brightness-min': 0.02,
-      'raster-brightness-max': 0.52,
-      'raster-contrast': 0.28,
+      'raster-brightness-max': 0.48,
+      'raster-contrast': 0.2,
     } : {}},
   ],
 } }
@@ -110,19 +110,23 @@ function useResolvedPoint(known: MapPoint | null, address: string | null | undef
 /**
  * A styled, non-interactive map that is illustrative context, never real
  * navigation - the driver's own live position (blue) and the current stop
- * (gold/teal), joined by an approximate line. The map instance is created
+ * (gold/teal), joined by the fastest available street route. The map instance is created
  * once and never torn down for a GPS tick; only the marker positions and
  * the line's data update, so the view never jumps or reloads while a
  * driver is watching it.
  */
 export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route: Route; driverFix: {lat: number; lng: number} | null; locale?: string}) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const routeOverlayRef = useRef<SVGSVGElement>(null)
+  const routeGlowRef = useRef<SVGPolylineElement>(null)
+  const routeCoreRef = useRef<SVGPolylineElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
   const destMarkerRef = useRef<maplibregl.Marker | null>(null)
   const firstFitRef = useRef(false)
   const lastRouteIdRef = useRef<string | null>(null)
   const [atDestination, setAtDestination] = useState(false)
+  const [mapReady, setMapReady] = useState(false)
   const [roadGeometry, setRoadGeometry] = useState<MapPoint[] | null>(null)
 
   const knownDestination = useMemo(() => sanitizeCoordinate({lat: route.destination_lat, lng: route.destination_lng}), [route.destination_lat, route.destination_lng])
@@ -190,18 +194,19 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
         layout: {'line-cap': 'round', 'line-join': 'round'},
       })
       map.resize()
+      setMapReady(true)
     })
     // Darken only the OSM raster tiles. Filtering MapLibre's full canvas
     // also filtered the blue/cyan route layer and made it nearly invisible.
     const applyRasterTheme = () => {
       if (!map.isStyleLoaded() || !map.getLayer('osm')) return
       const dark = document.documentElement.dataset.theme !== 'light'
-      map.setPaintProperty('osm-base', 'background-color', dark ? '#06152c' : '#ffffff')
-      map.setPaintProperty('osm', 'raster-opacity', dark ? 0.55 : 1)
+      map.setPaintProperty('osm-base', 'background-color', dark ? '#111827' : '#ffffff')
+      map.setPaintProperty('osm', 'raster-opacity', dark ? 0.5 : 1)
       map.setPaintProperty('osm', 'raster-saturation', dark ? -1 : 0)
       map.setPaintProperty('osm', 'raster-brightness-min', dark ? 0.02 : 0)
-      map.setPaintProperty('osm', 'raster-brightness-max', dark ? 0.52 : 1)
-      map.setPaintProperty('osm', 'raster-contrast', dark ? 0.28 : 0)
+      map.setPaintProperty('osm', 'raster-brightness-max', dark ? 0.48 : 1)
+      map.setPaintProperty('osm', 'raster-contrast', dark ? 0.2 : 0)
     }
     const themeObserver = new MutationObserver(applyRasterTheme)
     themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']})
@@ -212,6 +217,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
       driverMarkerRef.current = null
       destMarkerRef.current = null
       firstFitRef.current = false
+      setMapReady(false)
     }
   }, [])
 
@@ -263,7 +269,10 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
         // A near-zero-length line reads as a rendering glitch, not "you've
         // arrived" - clear it instead of drawing a fake route when the
         // driver is effectively already at the stop.
-        lineSource.setData(atStop ? {type: 'FeatureCollection', features: []} : lineGeoJson(roadGeometry?.length ? roadGeometry : [origin, destination]))
+        // The visible road line is rendered by the SVG overlay below. Keep
+        // MapLibre's own line source empty so there is never a straight-line
+        // fallback when the routing provider has not returned geometry yet.
+        lineSource.setData({type: 'FeatureCollection', features: []})
       } else {
         setAtDestination(false)
         lineSource.setData({type: 'FeatureCollection', features: []})
@@ -291,6 +300,34 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverFix?.lat, driverFix?.lng, route.id, destination?.lat, destination?.lng, routeOrigin?.lat, routeOrigin?.lng, roadGeometry])
 
+  useEffect(() => {
+    const map = mapRef.current
+    const svg = routeOverlayRef.current
+    const glow = routeGlowRef.current
+    const core = routeCoreRef.current
+    const geometry = roadGeometry && roadGeometry.length > 2 ? roadGeometry : null
+    if (!map || !svg || !glow || !core) return
+    const sync = () => {
+      if (!geometry) { svg.style.display = 'none'; return }
+      svg.style.display = ''
+      const points = geometry.map(point => {
+        const projected = map.project([point.lng, point.lat])
+        return `${projected.x},${projected.y}`
+      }).join(' ')
+      glow.setAttribute('points', points)
+      core.setAttribute('points', points)
+    }
+    map.on('render', sync)
+    map.on('move', sync)
+    map.on('resize', sync)
+    sync()
+    return () => {
+      map.off('render', sync)
+      map.off('move', sync)
+      map.off('resize', sync)
+    }
+  }, [mapReady, roadGeometry])
+
   // The map's own size is driven by the parent's CSS (large before start,
   // compact once started) - MapLibre needs an explicit resize() when that
   // container changes, it doesn't observe it on its own.
@@ -313,6 +350,16 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
 
   return <div className={styles.wrap}>
     <div ref={containerRef} className={styles.host} aria-hidden="true"/>
+    <svg ref={routeOverlayRef} className={styles.routeOverlay} aria-hidden="true">
+      <defs>
+        <linearGradient id="driver-road-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2493ff"/>
+          <stop offset="100%" stopColor="#37e0c9"/>
+        </linearGradient>
+      </defs>
+      <polyline ref={routeGlowRef} className={styles.routeGlow}/>
+      <polyline ref={routeCoreRef} className={styles.routeCore}/>
+    </svg>
     <div className={styles.fadeOverlay} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>

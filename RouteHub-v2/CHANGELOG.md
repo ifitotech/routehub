@@ -1284,3 +1284,7 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 57 — 2026-09-14
 - Fix the CSS Modules purity error in the light-mode header icon selector so Vercel production builds compile successfully.
+
+## Stage 58 — 2026-09-14
+- Remove the light-mode header/map blank seam with a short canvas feather and a transparent top map fade; keep the header controls high-contrast.
+- Draw only the fastest real road geometry returned by the routing service, never a straight fallback segment, and use a neutral charcoal treatment for dark map tiles.
