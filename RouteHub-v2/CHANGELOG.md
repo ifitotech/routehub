@@ -1254,3 +1254,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 47 — 2026-09-14
 - Extend the dark/light map fade across the full expanded preview area, eliminating the hard navy band between the map and stop details while preserving the existing Driver Today header and controls.
+
+## Stage 48 — 2026-09-14
+- Keep the Today content surface transparent so the enlarged map and its fade remain visible underneath the delivery badge, stop counter, destination and address.

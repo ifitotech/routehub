@@ -204,7 +204,7 @@
    .contentFlush are both plain classes (equal specificity), so without it
    this only wins by source-order position, which a future edit could
    silently reorder and break. */
-.contentToday{background:var(--rh-page-bg,#101c2d) !important;overflow:visible !important}
+.contentToday{background:transparent !important;overflow:visible !important}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
