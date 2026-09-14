@@ -1263,3 +1263,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 50 — 2026-09-14
 - Extend the real MapLibre canvas far enough behind the complete Today stop summary, with a continuous late-starting fade modeled on the approved visual reference.
+
+## Stage 51 — 2026-09-14
+- Finish the enlarged map with a progressive five-stop dissolve into the Today background, removing the visible lower canvas edge beneath the operational details.
