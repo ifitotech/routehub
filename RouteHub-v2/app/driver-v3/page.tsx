@@ -73,11 +73,16 @@ export default function DriverV3Page() {
     if(!sheet)return
     const html=document.documentElement
     const body=document.body
-    const prevHtml=html.style.overflow
-    const prevBody=body.style.overflow
     html.style.overflow='hidden'
     body.style.overflow='hidden'
-    return()=>{html.style.overflow=prevHtml;body.style.overflow=prevBody}
+    // Always back to '' on cleanup, not whatever was captured before this
+    // ran - nothing else in the app sets this property, so there is no
+    // legitimate prior value to restore, and restoring a captured value
+    // is exactly how a lock could get "stuck" (e.g. re-entrant sheet opens
+    // capturing 'hidden' as the "previous" value) and silently carry over
+    // to every other screen navigated to afterward, since documentElement/
+    // body are global, not scoped to this component.
+    return()=>{html.style.overflow='';body.style.overflow=''}
   },[sheet])
   const phase=route?driverOperationPhase(route):'pending'
   const started=phase==='started'||phase==='arrived'

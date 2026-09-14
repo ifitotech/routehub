@@ -126,9 +126,9 @@ export default function Maintenance() {
                   style={{
                     justifyContent: 'flex-start',
                     paddingLeft: 14,
-                    borderColor: type === item.id ? '#1667F2' : undefined,
-                    background: type === item.id ? '#EAF2FF' : undefined,
-                    color: type === item.id ? '#1667F2' : undefined,
+                    borderColor: type === item.id ? 'var(--rh-primary, #1667F2)' : undefined,
+                    background: type === item.id ? 'rgba(22,119,255,.14)' : undefined,
+                    color: type === item.id ? 'var(--rh-primary, #1667F2)' : undefined,
                     fontWeight: type === item.id ? 800 : 600,
                   }}
                 >
@@ -192,8 +192,8 @@ export default function Maintenance() {
                   marginTop: 12,
                   padding: '10px 12px',
                   borderRadius: 10,
-                  background: messageType === 'ok' ? '#EAF9F1' : '#FFF0F0',
-                  color: messageType === 'ok' ? '#147a4a' : '#b42318',
+                  background: messageType === 'ok' ? 'rgba(37,216,133,.14)' : 'rgba(255,107,122,.14)',
+                  color: messageType === 'ok' ? 'var(--rh-success, #147a4a)' : 'var(--rh-danger, #b42318)',
                   fontWeight: 600,
                 }}
               >

@@ -980,6 +980,35 @@ phone, not a separate line further down the card; and the map/header overlay fro
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 41 — Routes (history) and Truck adapted to the dark theme; hardened the scroll lock
+Asked to adapt Routes and Truck to the new interface, and reported Settings as locked with no
+scroll (cause not found by reading the code - see below).
+
+- **`app/driver-v3/history/page.tsx`** (the "Routes" tab) — this whole screen had never been
+  touched since before the dark-premium redesign: status colors (`tone()`), the date/search
+  inputs, and the pending/done tab buttons were all hardcoded flat light hex (`#fff`,
+  `#DDE5EE`, `#EAF2FF`, pastel status backgrounds like `#FFF1F2`/`#ECFDF3`/`#FFFBEB`) as
+  inline styles - same bug shape as Stage 32's Today sheets: inline styles silently beat the
+  global dark `.card`/input rules regardless of theme. Converted every one of them to
+  `--rh-*` tokens or a translucent rgba tint of the same accent color (danger/success/
+  warning), so status cards read as a tint on top of the current theme's card surface
+  instead of a fixed pastel that only worked on white.
+- **`app/driver-v3/truck/fuel/page.tsx`** / **`app/driver-v3/truck/maintenance/page.tsx`** —
+  same fix for their smaller pockets of hardcoded hex (the ok/error status banner, the
+  selected maintenance-type chip). The main Truck screen itself (`truck/page.tsx`) was
+  already clean - it only used the shared `.card`/`.primary`/`.secondary`/`.row` classes,
+  which already have dark overrides.
+- **`app/driver-v3/page.tsx`** — hardened the sheet-open scroll lock as a precaution (could
+  not reproduce the reported Settings freeze by reading the code, so this is a real but
+  unconfirmed candidate, not a verified fix): its cleanup now always resets
+  `document.documentElement`/`body` `overflow` back to `''` instead of restoring whatever
+  value was captured when the lock was applied - nothing else in the app sets that property,
+  so there's no legitimate other value to restore, and restoring a captured value was the one
+  way this global, unscoped lock could theoretically carry over to another screen instead of
+  clearing itself.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

@@ -157,8 +157,8 @@ export default function Fuel() {
                   marginTop: 12,
                   padding: '10px 12px',
                   borderRadius: 10,
-                  background: messageType === 'ok' ? '#EAF9F1' : '#FFF0F0',
-                  color: messageType === 'ok' ? '#147a4a' : '#b42318',
+                  background: messageType === 'ok' ? 'rgba(37,216,133,.14)' : 'rgba(255,107,122,.14)',
+                  color: messageType === 'ok' ? 'var(--rh-success, #147a4a)' : 'var(--rh-danger, #b42318)',
                   fontWeight: 600,
                 }}
               >

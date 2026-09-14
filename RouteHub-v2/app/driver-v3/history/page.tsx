@@ -17,11 +17,16 @@ function typeLabel(kind: string | null | undefined, labels: Record<string, strin
   return labels.drvDelivery
 }
 
+// Translucent, token-based tones instead of flat pastel hex (#FFF1F2 etc.) -
+// a flat light pastel only ever reads right on a white card; these work as
+// a soft tint on either the dark or light --rh-card-bg, the same "overlay
+// tint, not a flat fill" approach already used for the secondary-action
+// icons and stop-type badges on Today.
 function tone(status: string, isCurrent: boolean) {
-  if (status === 'issue') return {border: '#E11D48', bg: '#FFF1F2', badge: '#E11D48', labelKey: 'issue' as const}
-  if (status === 'completed') return {border: '#16B96B', bg: '#ECFDF3', badge: '#147A4A', labelKey: 'done' as const}
-  if (isCurrent || status === 'active') return {border: '#EAB308', bg: '#FFFBEB', badge: '#B45309', labelKey: 'current' as const}
-  return {border: '#CBD5E1', bg: '#fff', badge: '#64748B', labelKey: 'other' as const}
+  if (status === 'issue') return {border: 'var(--rh-danger, #E11D48)', bg: 'rgba(255,107,122,.12)', badge: 'var(--rh-danger, #E11D48)', labelKey: 'issue' as const}
+  if (status === 'completed') return {border: 'var(--rh-success, #16B96B)', bg: 'rgba(37,216,133,.12)', badge: 'var(--rh-success, #16B96B)', labelKey: 'done' as const}
+  if (isCurrent || status === 'active') return {border: 'var(--rh-warning, #EAB308)', bg: 'rgba(255,181,71,.14)', badge: 'var(--rh-warning, #EAB308)', labelKey: 'current' as const}
+  return {border: 'var(--rh-border, #CBD5E1)', bg: 'var(--rh-card-bg, #fff)', badge: 'var(--rh-text-muted, #64748B)', labelKey: 'other' as const}
 }
 
 export default function History() {
@@ -99,9 +104,9 @@ export default function History() {
           type="date"
           value={day}
           onChange={event => setDay(event.target.value || operationalDate())}
-          style={{width: '100%', minHeight: 48, border: '1px solid #dde5ee', borderRadius: 12, padding: '0 12px', font: 'inherit'}}
+          style={{width: '100%', minHeight: 48, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}}
         />
-        <input aria-label="Search routes" value={query} onChange={event => setQuery(event.target.value)} placeholder="Route, customer, address or PO" style={{width: '100%', minHeight: 48, marginTop: 8, border: '1px solid #dde5ee', borderRadius: 12, padding: '0 12px', font: 'inherit'}} />
+        <input aria-label="Search routes" value={query} onChange={event => setQuery(event.target.value)} placeholder="Route, customer, address or PO" style={{width: '100%', minHeight: 48, marginTop: 8, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}} />
       </label>
 
       {loading ? (
@@ -121,7 +126,7 @@ export default function History() {
           <div role="tablist" aria-label={t.drvRouteHistory} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8}}>
             {[{id: 'pending' as const, title: t.drvPendingStops, count: rows.pending.length}, {id: 'done' as const, title: t.drvCompletedTag, count: rows.done.length}].map(tab => {
               const selected = section === tab.id
-              return <button key={tab.id} type="button" role="tab" aria-selected={selected} onClick={() => setSection(tab.id)} style={{minHeight: 48, border: `1px solid ${selected ? '#1667F2' : '#DDE5EE'}`, borderRadius: 12, background: selected ? '#EAF2FF' : '#fff', color: selected ? '#1667F2' : '#64748B', font: 'inherit', fontWeight: 800, cursor: 'pointer'}}>{tab.title} · {tab.count}</button>
+              return <button key={tab.id} type="button" role="tab" aria-selected={selected} onClick={() => setSection(tab.id)} style={{minHeight: 48, border: `1px solid ${selected ? 'var(--rh-primary, #1667F2)' : 'var(--rh-border, #DDE5EE)'}`, borderRadius: 12, background: selected ? 'rgba(22,119,255,.14)' : 'var(--rh-surface-soft, #fff)', color: selected ? 'var(--rh-primary, #1667F2)' : 'var(--rh-text-muted, #64748B)', font: 'inherit', fontWeight: 800, cursor: 'pointer'}}>{tab.title} · {tab.count}</button>
             })}
           </div>
           <section>
@@ -142,7 +147,7 @@ export default function History() {
               <article
                 key={r.id}
                 className="card"
-                style={{background: look.bg, borderColor: look.border, borderLeftWidth: 6, padding: 14}}
+                style={{background: look.bg, borderColor: look.border, borderLeftWidth: 6, padding: 14, color: 'var(--rh-text, #0f1d35)'}}
               >
                 <div style={{display: 'grid', gridTemplateColumns: '36px minmax(0,1fr)', gap: 10, alignItems: 'start'}}>
                   <strong style={{width: 36, height: 36, borderRadius: 18, background: look.badge, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 15}}>
@@ -153,7 +158,7 @@ export default function History() {
                       {typeLabel(r.mission_type, t)} · {statusText}
                     </p>
                     <p className="muted" style={{margin: '3px 0 0', fontSize: 12, fontWeight: 700}}>ROUTE {routeNumber(r)}</p>
-                    <h2 style={{margin: '4px 0 4px', fontSize: 17}}>
+                    <h2 style={{margin: '4px 0 4px', fontSize: 17, color: 'var(--rh-text, #0f1d35)'}}>
                       {r.destination_name || r.destination_address || t.drvRoute}
                     </h2>
                     {r.destination_address ? <p className="muted" style={{margin: 0, fontSize: 13}}>{r.destination_address}</p> : null}
