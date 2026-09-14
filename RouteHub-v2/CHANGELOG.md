@@ -652,6 +652,26 @@ things Stage 23's own read of the reference had gotten wrong:
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 26 — the whole hero card still read as a box, not just the map
+The user pointed out that even with the map merged into the header, everything below it
+(pill, name, address, PO row, CTA) still visibly reads as its own floating rectangle - a
+distinct card background, a 1px border, and a `0 18px 48px` drop shadow all signal "a
+separate raised surface," most visible at the card's own rounded bottom corners against the
+page background. The reference doesn't show any such boundary - content just sits directly
+on the app's own background.
+
+- `app/driver-v3/today.module.css` - `.hero` no longer has its own background, border, or
+  box-shadow (all set to `transparent`/`0`/`none`). Padding stays, since the map's own
+  negative-margin math still needs it to reach the card's former edges, but there's no
+  longer a border/background for that padding to visually contain. Everything below the
+  map now sits directly on `.page`'s own dark gradient background - only the CTA button
+  still gets its own glass treatment, since it's meant to read as a distinct control, not
+  a grouping container.
+- `--rh-card-bg` (the token this removed) is still used by `.stateCard` (the empty/error
+  state message), which is unrelated and correctly still looks like a card.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

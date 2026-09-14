@@ -16,7 +16,17 @@
 @keyframes pullBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
 @keyframes pullDrive{0%{left:2%;transform:translate(-50%,-50%)}48%{left:82%;transform:translate(-50%,-50%)}50%{left:82%;transform:translate(-50%,-50%) scaleX(-1)}98%{left:2%;transform:translate(-50%,-50%) scaleX(-1)}100%{left:2%;transform:translate(-50%,-50%)}}
 .startDay{display:grid;place-items:center;width:100%;height:44px;border-radius:12px;background:#eaf2ff;color:#1667f2;font-size:13px;font-weight:800;text-decoration:none}
-.hero{display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:18px;border:1px solid rgba(125,180,255,.14);border-radius:22px;background:var(--rh-card-bg,linear-gradient(145deg,rgba(19,53,96,.70),rgba(5,20,42,.52)));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 18px 48px rgba(0,0,0,.22);box-sizing:border-box;min-height:0;color:var(--rh-text,#F7FAFF)}
+/* No card surface of its own on purpose - a distinct background/border/
+   drop-shadow here is exactly what read as "a box sitting on the page"
+   instead of content that's part of the same app surface, the same
+   problem already fixed for the map itself. Everything below the map
+   (pill, name, address, PO/distance/time, the CTA) now sits directly on
+   .page's own background - only the CTA button still gets its own glass
+   treatment, since it's meant to read as a distinct interactive control,
+   not a grouping container. Padding stays (the map's own negative-margin
+   math still cancels it) even though there's no border/background left
+   for that padding to visually contain. */
+.hero{display:flex;flex-direction:column;flex:0 1 auto;width:100%;padding:18px;border:0;border-radius:0;background:transparent;box-shadow:none;box-sizing:border-box;min-height:0;color:var(--rh-text,#F7FAFF)}
 /* The soft surface/border colors used to change per stop type; the new
    glass card reads the same for every type, so Pickup/Delivery/Return are
    told apart by the pill and icon accents alone (see .pickup/.delivery/
