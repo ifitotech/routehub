@@ -911,6 +911,27 @@ for it.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 38 — contact name surfaced for the driver; the map/header handoff softened further
+Two asks: (1) delivery stops already saved a `destination_contact_name` (the route builder
+has had this field since migration 041) but Today never showed it anywhere, so the driver
+had no way to see who to ask for at the door; (2) the map/header seam was still visible,
+especially over rural/empty map tiles, which render almost solid black through the dark-tile
+filter and can be much darker than the header's flat navy.
+
+- **`app/driver-v3/page.tsx`** — the contact name now renders on the main card (same
+  `.phoneLine` styling as the phone number, right above it), once started - matching where
+  the phone number already appears.
+- **`app/driver-v3/today-sheets.tsx`** — `InfoSheet` (opened by tapping the stop name/address)
+  now also shows the contact name, right above the Call button.
+- **`components/driver-v3/DriverRouteMap.module.css`** — the map's own mask now also fades
+  in over its first 8% (previously only faded out at the bottom), so very dark tiles don't
+  snap straight to full opacity right where the header-color overlay (`.host::before`, Stage
+  36) ends. That overlay itself grew from 56px to 72px and switched from a plain two-stop
+  fade to a three-stop one (full color → half → transparent), since a straight linear fade
+  reads as ending abruptly partway through.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

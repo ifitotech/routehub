@@ -72,6 +72,7 @@ export function InfoSheet({route, kind, t, onClose, onOpenMaps}: {route: any; ki
           {kind === 'pickup' ? t.drvPickupHelp : kind === 'delivery' ? t.drvDeliveryHelp : (t.drvReturnHelp || t.drvReturn)}
         </p>
         {route.notes ? <p className="muted" style={{margin: '0 0 14px'}}>{route.notes}</p> : null}
+        {route.destination_contact_name ? <p style={{margin: '0 0 10px', fontSize: 15, fontWeight: 700}}>{route.destination_contact_name}</p> : null}
         {route.destination_phone ? (
           <a href={`tel:${String(route.destination_phone).replace(/[^\d+]/g, '')}`} className="primary" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', marginBottom: 10}}>
             <Phone size={18} />{t.drvCall || 'Call'} {route.destination_phone}

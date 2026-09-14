@@ -35,13 +35,17 @@
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 56px;
+  height: 72px;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(to bottom, #0F1D35 0%, rgba(15, 29, 53, 0) 100%);
+  /* Multi-stop, not a straight two-color fade - a plain 0%/100% linear
+     fade reads as ending abruptly (the eye is more sensitive to the
+     lighter end of a fade), so an eased middle stop keeps it soft all
+     the way down instead of visibly "cutting off" partway through. */
+  background: linear-gradient(to bottom, #0F1D35 0%, rgba(15, 29, 53, .5) 45%, rgba(15, 29, 53, 0) 100%);
 }
 :global(html[data-theme='light']) .host::before {
-  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, rgba(255, 255, 255, .5) 45%, rgba(255, 255, 255, 0) 100%);
 }
 
 .atDestination {
@@ -97,9 +101,17 @@
    real imagery right up to the screen edges) and only dissolves downward
    into the card's dark background near the bottom, where the stop details
    begin - a top-to-bottom fade, not a radial vignette on every side. */
+/* A small fade-in at the very top too, not just the fade-out at the
+   bottom - real map tiles (especially open/rural areas, which render
+   almost solid black through the dark-tile filter) can be much darker
+   than the header's flat navy, so even with .host::before's color-matched
+   overlay right below the header, the map tiles themselves used to snap
+   to full opacity right where that overlay ended. Fading the tiles in
+   from nothing over the first 8% softens that handoff instead of leaving
+   a second, smaller hard edge just past the overlay. */
 .host {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 62%, transparent 96%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 62%, transparent 96%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
