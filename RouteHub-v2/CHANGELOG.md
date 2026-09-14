@@ -222,6 +222,29 @@ entirely rather than re-checking files already known to be fine.
 - `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
   baseline failures only).
 
+### Stage 9 — confirmed the confirm-dialog fix, added a regression test
+The user still saw the broken confirm dialog (no backdrop) on a fresh screenshot after
+Stage 7's fix was pushed. Re-verified from the actual compiled build output rather than
+re-reading source: ran `npm run build` and grepped `.next/static/css/*.css` for the real,
+hashed `.confirmBackdrop` rule - it correctly compiles to
+`position:fixed;inset:0;z-index:210;background:rgba(15,29,53,.52)...`, i.e. the Stage 7
+fix is genuinely correct and present in the build. Also confirmed via the GitHub
+deployments API that the latest Vercel deployment (state: success) matches this exact
+commit. So the screenshot was very likely a stale PWA/browser cache showing the
+pre-fix bundle, not a remaining code bug - the fix is real; ask the user to hard-refresh
+or open the preview URL in a private window to rule out the service worker cache.
+
+- Added `tests/driver-confirm-dialog.test.mjs`: asserts `page.tsx` imports
+  `confirmStyles` from `driver-v3-b.module.css` (not the combined
+  `driver-v3.module.css`, which only `@import`s its split files and
+  re-exports no classNames), that all three dialog classNames it uses are
+  actually defined there, and that `.confirmBackdrop` is `position:fixed`
+  with a real `z-index` - so a future edit that reintroduces this exact
+  bug fails a test instead of only being caught by eyeballing a
+  screenshot.
+- `npm test` (including the new test) passes; only the same pre-existing
+  `ENOENT` baseline failures remain, unrelated to this change.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
