@@ -1257,3 +1257,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 48 — 2026-09-14
 - Keep the Today content surface transparent so the enlarged map and its fade remain visible underneath the delivery badge, stop counter, destination and address.
+
+## Stage 49 — 2026-09-14
+- Reduce the fade overlay opacity in both themes so the enlarged map remains the dominant visual under Today stop details.

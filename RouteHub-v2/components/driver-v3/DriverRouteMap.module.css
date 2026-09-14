@@ -110,9 +110,9 @@
   pointer-events: none;
   background: linear-gradient(to bottom,
     rgba(16, 28, 45, 0) 0%,
-    rgba(16, 28, 45, .06) 30%,
-    rgba(16, 28, 45, .58) 70%,
-    #101c2d 100%);
+    rgba(16, 28, 45, .025) 30%,
+    rgba(16, 28, 45, .22) 70%,
+    rgba(16, 28, 45, .62) 100%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
@@ -165,9 +165,9 @@
 :global(html[data-theme='light']) .fadeOverlay {
   background: linear-gradient(to bottom,
     rgba(247, 250, 255, 0) 0%,
-    rgba(247, 250, 255, .04) 30%,
-    rgba(247, 250, 255, .62) 70%,
-    #f7faff 100%);
+    rgba(247, 250, 255, .018) 30%,
+    rgba(247, 250, 255, .24) 70%,
+    rgba(247, 250, 255, .64) 100%);
 }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }
