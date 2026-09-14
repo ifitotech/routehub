@@ -1322,3 +1322,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 70 — 2026-09-14
 - Remove the scaled/retracted page gap behind the completion sheet so the map and active route card remain a continuous Today surface beneath the integrated panel.
+
+## Stage 71 — 2026-09-14
+- Drive the Today surface translation from the measured completion-sheet height, allowing the map and route content to move upward by exactly the space occupied by the integrated sheet.

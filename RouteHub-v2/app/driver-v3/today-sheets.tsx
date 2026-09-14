@@ -8,7 +8,7 @@
 // code; it does not change what any of it does.
 
 import {Camera, PackageCheck, PackagePlus, PenLine, Phone, TriangleAlert, Warehouse, X} from 'lucide-react'
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import type {PointerEvent as ReactPointerEvent, RefObject} from 'react'
 import styles from './today.module.css'
 
@@ -175,7 +175,20 @@ export function DeliverySheet({
   busy: boolean; message: string; onConfirm: () => void; onClose: () => void
 }) {
   const dragStart = useRef<number | null>(null)
+  const panelRef = useRef<HTMLElement>(null)
   const [dragOffset, setDragOffset] = useState(0)
+  useEffect(() => {
+    const panel = panelRef.current
+    if (!panel) return
+    const update = () => document.documentElement.style.setProperty('--today-sheet-height', `${panel.getBoundingClientRect().height}px`)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(panel)
+    return () => {
+      observer.disconnect()
+      document.documentElement.style.removeProperty('--today-sheet-height')
+    }
+  }, [])
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     dragStart.current = event.clientY
     event.currentTarget.setPointerCapture?.(event.pointerId)
@@ -193,7 +206,7 @@ export function DeliverySheet({
   }
   return (
     <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()} onClick={onClose}>
-      <section className={`card ${styles.completionDialog} ${styles.todaySheetPanel}`} style={{...dialog, width: 'min(100%, 520px)', maxWidth: 520, borderRadius: '24px 24px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))', transform: `translateY(${dragOffset}px)`}} onClick={e => e.stopPropagation()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
+      <section ref={panelRef} className={`card ${styles.completionDialog} ${styles.todaySheetPanel}`} style={{...dialog, width: 'min(100%, 520px)', maxWidth: 520, borderRadius: '24px 24px 0 0', padding: '20px 18px calc(20px + env(safe-area-inset-bottom))', transform: `translateY(${dragOffset}px)`}} onClick={e => e.stopPropagation()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
         <span className={styles.sheetHandle} aria-label={t.drvCancel || 'Cancel'} role="button" onClick={onClose} aria-hidden="false" />
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 26, lineHeight: '30px'}}>{t.drvCompleteDelivery || 'Complete delivery'}</h2>
