@@ -71,6 +71,22 @@ function lineGeoJson(from: MapPoint, to: MapPoint): GeoJSON.Feature<GeoJSON.Line
   return {type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: [[from.lng, from.lat], [to.lng, to.lat]]}}
 }
 
+function fitVisualRoute(map: maplibregl.Map, from: MapPoint, to: MapPoint) {
+  const container = map.getContainer()
+  const height = Math.max(container.clientHeight, 280)
+  const width = Math.max(container.clientWidth, 280)
+  const verticalTop = Math.round(Math.max(28, height * 0.08))
+  // The operational content overlays the lower part of this canvas. Reserve
+  // enough space for it so both endpoints and the full route stay visible in
+  // the unobstructed portion on every phone height.
+  const verticalBottom = Math.round(Math.max(90, height * 0.34))
+  const horizontal = Math.round(Math.max(34, Math.min(68, width * 0.12)))
+  map.fitBounds(
+    [[Math.min(from.lng, to.lng), Math.min(from.lat, to.lat)], [Math.max(from.lng, to.lng), Math.max(from.lat, to.lat)]],
+    {padding: {top: verticalTop, bottom: verticalBottom, left: horizontal, right: horizontal}, maxZoom: 13, duration: 0},
+  )
+}
+
 /** Resolves a stop's coordinate: the lat/lng already on the record when
     present, geocoding its address only when it isn't - as real React state,
     not a ref, so a geocode result that arrives later actually triggers the
@@ -249,7 +265,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
         firstFitRef.current = true
         // The preview must show the complete visual connection, even for a
         // long mission, so both the driver and destination stay in frame.
-        map.fitBounds([[Math.min(origin.lng, destination.lng), Math.min(origin.lat, destination.lat)], [Math.max(origin.lng, destination.lng), Math.max(origin.lat, destination.lat)]], {padding: 56, maxZoom: 15, duration: 0})
+        fitVisualRoute(map, origin, destination)
       } else if (!firstFitRef.current && destination) {
         firstFitRef.current = true
         map.jumpTo({center: [destination.lng, destination.lat], zoom: 14})
@@ -306,10 +322,18 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
   // container changes, it doesn't observe it on its own.
   useEffect(() => {
     if (!containerRef.current) return
-    const observer = new ResizeObserver(() => mapRef.current?.resize())
+    const observer = new ResizeObserver(() => {
+      const map = mapRef.current
+      if (!map) return
+      map.resize()
+      if (visualOrigin && destination) fitVisualRoute(map, visualOrigin, destination)
+    })
     observer.observe(containerRef.current)
     return () => observer.disconnect()
-  }, [])
+  // Recreate only when endpoint coordinates change; resize events themselves
+  // are handled by the observer without rebuilding it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visualOrigin?.lat, visualOrigin?.lng, destination?.lat, destination?.lng])
 
   const atDestinationText = AT_DESTINATION_COPY[locale as keyof typeof AT_DESTINATION_COPY] || AT_DESTINATION_COPY.en
 

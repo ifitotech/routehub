@@ -205,6 +205,10 @@
    this only wins by source-order position, which a future edit could
    silently reorder and break. */
 .contentToday{background:transparent !important;overflow:visible !important}
+.appHeader.headerToday{
+  background:linear-gradient(to bottom,#0F1D35 0%,#0F1D35 68%,rgba(15,29,53,.9) 84%,rgba(15,29,53,.42) 100%)!important;
+  box-shadow:none!important;
+}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
@@ -263,6 +267,10 @@
   background:var(--rh-navy,#fff) !important;
   color:var(--rh-text,#0B1F3A) !important;
   box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
+}
+:global(html[data-theme='light']) .driver-v3-root .appHeader.headerToday{
+  background:linear-gradient(to bottom,#fff 0%,#fff 68%,rgba(255,255,255,.9) 84%,rgba(255,255,255,.42) 100%)!important;
+  box-shadow:none!important;
 }
 :global(html[data-theme='light']) .driver-v3-root .headerBrand{color:var(--rh-text,#0B1F3A) !important}
 :global(html[data-theme='light']) .driver-v3-root .headerIcon,
