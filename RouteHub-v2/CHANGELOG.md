@@ -533,6 +533,26 @@ reading of the spec, but not what the reference always shows).
 - `npm run typecheck`, `npm run lint` (no new warnings), `npm run build`, `npm test`
   (149/149) all clean.
 
+### Stage 20 — the map's fade was the wrong shape entirely
+The user pointed specifically at "la difusión del mapa" - it didn't match the reference.
+Looking again, the mismatch wasn't subtle: the reference map runs full-bleed to the
+screen's left/right/top edges with no fade at all there, and only dissolves downward into
+the card near the bottom. The shipped version instead inset the map 18px inside the card
+on every side and faded it with a *radial* vignette (soft on all four sides, like a blob
+in the middle) - a completely different shape from a top-to-bottom fade.
+
+- `app/driver-v3/today.module.css` - `.routeGlyphHost` (and its three responsive
+  breakpoint overrides) now use negative margins to cancel `.hero`'s own padding exactly,
+  so the map spans the card's full width and reaches its top edge instead of sitting
+  inset - rounded only at the top (`border-radius: <hero's own radius> <same> 0 0`) to
+  match the card's corners exactly where the map's edge lands on them.
+- `components/driver-v3/DriverRouteMap.module.css` - replaced the radial
+  `mask-image` with a linear one (`to bottom, #000 0% 62%, transparent 96%`): fully
+  opaque through the top ~60%, fading out only in the last stretch before the pill/text
+  begins. No fade on the sides at all now, matching the reference's edge-to-edge look.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;
