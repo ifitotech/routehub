@@ -1,5 +1,14 @@
 # Changelog
 
+### Stage 46 — Extend the Today map into stop details
+
+Expanded the existing MapLibre preview downward behind the Today stop details,
+using compensating negative flow space so the operational content keeps its
+position. The map now sits behind the badge, stop label, destination, address,
+and metrics and fades out through that area. The top mask uses the same deep
+navy base in dark mode and a pale base in light mode, removing the hard seam
+while preserving the existing header controls and route behavior.
+
 ### Stage 45 — Header/map seam fade
 
 Adjusted only the real MapLibre map's top mask on Driver Today so its canvas

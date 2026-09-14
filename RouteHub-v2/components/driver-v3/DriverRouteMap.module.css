@@ -35,7 +35,7 @@
      two independent copies of "the same" gradient, not one continuous
      image. Staying transparent lets the one shared paint underneath show
      through instead. */
-  background: transparent;
+  background: #101c2d;
 }
 
 .atDestination {
@@ -95,8 +95,8 @@
    header remains unchanged; the first part of the real MapLibre canvas fades
    in from transparent so there is no second rectangular bar at the seam. */
 .host {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
@@ -143,8 +143,8 @@
 
 /* Light theme: same non-Google map, a lighter vignette/no invert, and the
    destination pin gets a border that reads on a pale background too. */
-:global(html[data-theme='light']) .host { background: transparent; }
+:global(html[data-theme='light']) .host { background: #f7faff; }
 :global(html[data-theme='light']) .canvas { filter: none; }
-:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 96%); }
+:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%); }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }
