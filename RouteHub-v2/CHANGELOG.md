@@ -1358,3 +1358,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 82 — 2026-09-14
 - Give the Delivery completion sheet the same RouteHub glass-depth treatment as Today’s circular action controls: soft blue inner light, subtle border, inset highlight, and theme-specific light/dark surfaces.
+
+## Stage 83 — 2026-09-14
+- Make the completion sheet’s light and dark surfaces fully opaque while retaining its action-control depth, preventing the active route’s text and controls from bleeding through the form in light mode.
