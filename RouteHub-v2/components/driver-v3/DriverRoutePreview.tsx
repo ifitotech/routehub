@@ -158,7 +158,6 @@ export default function DriverRoutePreview({route, locale = 'en', destinationLab
       {geometry.origin && !combined && <Marker position={geometry.origin} icon={icons.a} interactive={false} keyboard={false} alt={`A · ${text.from}`}/>}
       {geometry.destination && <Marker position={geometry.destination} icon={icons.b} interactive={false} keyboard={false} alt={`B · ${text.to}`}/>}
     </MapContainer>}
-    <div className={styles.caption}><span><b className={styles.fromBadge}>A</b>{text.from}</span><span aria-hidden="true">→</span><span><b className={styles.toBadge}>B</b>{text.to}</span></div>
     {status && <div className={`${styles.status} ${points.length ? '' : styles.empty}`} role="status">{status}</div>}
   </section>
 }

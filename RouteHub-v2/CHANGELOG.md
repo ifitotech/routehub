@@ -348,6 +348,27 @@ actually styled by, not just whether it imports a `.module.css`:
 - `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
   baseline only).
 
+### Stage 14 — the map reads as fused into the card, not pasted on top of it
+The user pointed at the abstract-glyph reference again and asked for the same "no frame,
+merged into the card" feel now that the map is a real one - the glyph never had a visible
+box because it was just SVG lines drawn straight on the hero's own background; a real map
+has an actual rectangle of tiles, so getting the same feel needed a deliberate fade instead
+of just removing a border.
+
+- Removed `.routeGlyphHost`'s border and border-radius clipping in `today.module.css`.
+- Added a radial `mask-image`/`-webkit-mask-image` to `DriverRoutePreview.module.css`'s
+  `.preview` (opaque through the middle, fading to fully transparent at every edge) so the
+  map's own rectangle dissolves into the hero card's glass background instead of ending in
+  a hard-edged box - this masks the whole element as one unit (tiles, route line, markers),
+  since `.preview` is already its own stacking context (`isolation: isolate`).
+- Removed the small "A → B" caption chip entirely - it sat in the corner the mask fades
+  hardest first (so it would have looked washed out), it wasn't in the reference image,
+  and it duplicated information already shown in the address line above it. Kept the
+  operational status text (loading/approximate/map-unavailable) since a driver actually
+  needs that - recentered it at the bottom instead of bottom-left so it clears the mask.
+- `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
+  baseline only).
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
