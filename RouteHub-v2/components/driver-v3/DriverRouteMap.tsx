@@ -6,6 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
 import {geocodeAddress} from '../../lib/maps/geocoding'
 import {distanceMeters} from '../../lib/location'
+import {calculateOperationsRoute} from '../../lib/maps/routing'
 import styles from './DriverRouteMap.module.css'
 
 type Route = {
@@ -67,8 +68,8 @@ function markerEl(kind: 'driver' | 'destination', live = true) {
   return el
 }
 
-function lineGeoJson(from: MapPoint, to: MapPoint): GeoJSON.Feature<GeoJSON.LineString> {
-  return {type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: [[from.lng, from.lat], [to.lng, to.lat]]}}
+function lineGeoJson(points: MapPoint[]): GeoJSON.Feature<GeoJSON.LineString> {
+  return {type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: points.map(point => [point.lng, point.lat])}}
 }
 
 function fitVisualRoute(map: maplibregl.Map, from: MapPoint, to: MapPoint) {
@@ -116,15 +117,13 @@ function useResolvedPoint(known: MapPoint | null, address: string | null | undef
  */
 export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route: Route; driverFix: {lat: number; lng: number} | null; locale?: string}) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const routeOverlayRef = useRef<SVGSVGElement>(null)
-  const routeGlowRef = useRef<SVGLineElement>(null)
-  const routeCoreRef = useRef<SVGLineElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
   const destMarkerRef = useRef<maplibregl.Marker | null>(null)
   const firstFitRef = useRef(false)
   const lastRouteIdRef = useRef<string | null>(null)
   const [atDestination, setAtDestination] = useState(false)
+  const [roadGeometry, setRoadGeometry] = useState<MapPoint[] | null>(null)
 
   const knownDestination = useMemo(() => sanitizeCoordinate({lat: route.destination_lat, lng: route.destination_lng}), [route.destination_lat, route.destination_lng])
   const knownOrigin = useMemo(() => sanitizeCoordinate({lat: route.origin_lat, lng: route.origin_lng}), [route.origin_lat, route.origin_lng])
@@ -134,6 +133,19 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
   // shows a real A-to-B line instead of sitting empty with only a pin.
   const routeOrigin = useResolvedPoint(knownOrigin, route.origin_address, route.id)
   const visualOrigin = driverFix || routeOrigin
+
+  useEffect(() => {
+    const origin = routeOrigin || driverFix
+    if (!origin || !destination) { setRoadGeometry(null); return }
+    const controller = new AbortController()
+    void calculateOperationsRoute([origin, destination], controller.signal, locale).then(result => {
+      if (!controller.signal.aborted && result.coordinates.length > 1) setRoadGeometry(result.coordinates as MapPoint[])
+    })
+    return () => controller.abort()
+  // Route geometry is intentionally anchored to the persisted origin so a
+  // frequent GPS tick does not fire a network request for every update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.id, routeOrigin?.lat, routeOrigin?.lng, destination?.lat, destination?.lng, locale])
 
   // Create the map exactly once. Everything after this effect only ever
   // updates existing layers/markers, never calls `new maplibregl.Map(...)`
@@ -251,7 +263,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
         // A near-zero-length line reads as a rendering glitch, not "you've
         // arrived" - clear it instead of drawing a fake route when the
         // driver is effectively already at the stop.
-        lineSource.setData(atStop ? {type: 'FeatureCollection', features: []} : lineGeoJson(origin, destination))
+        lineSource.setData(atStop ? {type: 'FeatureCollection', features: []} : lineGeoJson(roadGeometry?.length ? roadGeometry : [origin, destination]))
       } else {
         setAtDestination(false)
         lineSource.setData({type: 'FeatureCollection', features: []})
@@ -277,45 +289,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
   // reference, on purpose - a new object with the same lat/lng (e.g. a
   // parent re-render) must not re-run this and reset the map's state.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [driverFix?.lat, driverFix?.lng, route.id, destination?.lat, destination?.lng, routeOrigin?.lat, routeOrigin?.lng])
-
-  // A DOM/SVG route sits above MapLibre's raster canvas. This makes the
-  // visual A-to-B connection independent from raster color treatment and
-  // guarantees that both endpoints remain joined in every theme.
-  useEffect(() => {
-    const map = mapRef.current
-    const svg = routeOverlayRef.current
-    const glow = routeGlowRef.current
-    const core = routeCoreRef.current
-    if (!map || !svg || !glow || !core) return
-    const sync = () => {
-      if (!visualOrigin || !destination) {
-        svg.style.display = 'none'
-        return
-      }
-      svg.style.display = ''
-      const from = map.project([visualOrigin.lng, visualOrigin.lat])
-      const to = map.project([destination.lng, destination.lat])
-      for (const line of [glow, core]) {
-        line.setAttribute('x1', String(from.x))
-        line.setAttribute('y1', String(from.y))
-        line.setAttribute('x2', String(to.x))
-        line.setAttribute('y2', String(to.y))
-      }
-    }
-    map.on('render', sync)
-    map.on('move', sync)
-    map.on('resize', sync)
-    sync()
-    return () => {
-      map.off('render', sync)
-      map.off('move', sync)
-      map.off('resize', sync)
-    }
-  // Coordinate primitives are intentional: GPS can produce a new object
-  // with unchanged values and should not rebuild these listeners.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualOrigin?.lat, visualOrigin?.lng, destination?.lat, destination?.lng])
+  }, [driverFix?.lat, driverFix?.lng, route.id, destination?.lat, destination?.lng, routeOrigin?.lat, routeOrigin?.lng, roadGeometry])
 
   // The map's own size is driven by the parent's CSS (large before start,
   // compact once started) - MapLibre needs an explicit resize() when that
@@ -339,16 +313,6 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
 
   return <div className={styles.wrap}>
     <div ref={containerRef} className={styles.host} aria-hidden="true"/>
-    <svg ref={routeOverlayRef} className={styles.routeOverlay} aria-hidden="true">
-      <defs>
-        <linearGradient id="driver-route-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#2493ff"/>
-          <stop offset="100%" stopColor="#37e0c9"/>
-        </linearGradient>
-      </defs>
-      <line ref={routeGlowRef} className={styles.routeGlow}/>
-      <line ref={routeCoreRef} className={styles.routeCore}/>
-    </svg>
     <div className={styles.fadeOverlay} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>

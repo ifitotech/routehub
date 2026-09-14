@@ -1278,3 +1278,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 55 — 2026-09-14
 - Extend the Today header fade in both themes, restore light-mode header icon contrast, and slightly strengthen the route glow for clearer presentation on pale maps.
+
+## Stage 56 — 2026-09-14
+- Fix the light header selectors so map/profile icons retain contrast, and replace the straight preview segment with the single fastest street route returned by the existing OSRM operations-routing service.

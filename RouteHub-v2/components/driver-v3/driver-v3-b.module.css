@@ -272,8 +272,8 @@
   background:linear-gradient(to bottom,#fff 0%,#fff 56%,rgba(255,255,255,.78) 74%,rgba(255,255,255,.28) 91%,transparent 100%)!important;
   box-shadow:none!important;
 }
-:global(html[data-theme='light']) .driver-v3-root > main > header .headerIcon,
-:global(html[data-theme='light']) .driver-v3-root > main > header .headerIcon svg{
+:global(html[data-theme='light'] .driver-v3-root > main > header .headerIcon),
+:global(html[data-theme='light'] .driver-v3-root > main > header .headerIcon svg){
   color:#0B1F3A!important;
   stroke:#0B1F3A!important;
 }
