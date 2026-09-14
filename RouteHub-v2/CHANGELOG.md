@@ -838,6 +838,24 @@ of 2"), the header→map fusion from Stage 30 still showed a visible seam on the
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 34 — reverted the header gradient; the fuse was never meant to reach that high
+Corrected: the "fuse into one surface" effect was always meant to be the map blending
+into the stop info/content beneath it, not the map reaching up into the header above it -
+Stage 30/33 extended the gradient into the header itself, which wasn't what was asked for.
+
+- **`components/driver-v3/driver-v3-b.module.css`** — removed `.appHeader[data-active=
+  'today']` and its light-mode counterpart entirely. The header is back to the same plain
+  flat bar every other Driver screen uses (`#0F1D35` dark / `var(--rh-navy)` light), same as
+  before Stage 30.
+- **`components/driver-v3/DriverV3Shell.tsx`** — removed `data-active` from `<main
+  className={styles.shell}>` and from `<header>` (neither needs it anymore); `.content`
+  keeps it, since that's still the single element painting `--rh-page-bg` for the page and
+  map to share below it (Stage 33's fix for the compact-map seam is otherwise unchanged -
+  `.content[data-active='today']` still paints the gradient once, `.page`/`.host` stay
+  transparent).
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

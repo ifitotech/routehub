@@ -165,22 +165,17 @@
   text-shadow:none !important;
   -webkit-font-smoothing:antialiased;
 }
-/* Today only, not every Driver screen. First attempt (kept here as the
-   record of why the simpler version doesn't work): giving the header, the
-   scrollable content, the page and the map's own host each their own copy
-   of the same --rh-page-bg gradient. That still produced a visible seam,
-   because a CSS background is painted relative to *that element's own box*
-   - four separately-sized boxes each painting "the same" gradient means
-   four independent radial highlights landing in four different places, not
-   one continuous image. Fixed properly below: .shell (the single ancestor
-   that actually spans header+content+nav) paints the gradient exactly
-   once, and everything nested inside it for Today - header, content, the
-   page, the map's own host - stays transparent so that one paint shows
-   through all of them at once, pixel-aligned, instead of each layer
-   redrawing its own copy. */
-.shell[data-active='today']{background:var(--rh-page-bg,#0b1526) !important}
-.appHeader[data-active='today']{background:transparent !important}
-.content[data-active='today']{background:transparent !important}
+/* The header itself stays the plain flat bar every Driver screen uses -
+   an earlier attempt (Stage 30/33) extended the map's own gradient up into
+   the header too, but that's not what was asked for: the fuse is meant to
+   be the map blending into the stop info/content below it, not the header
+   above it. Reverted; header no longer reads [data-active] for its
+   background at all. */
+/* Today only, not every Driver screen: .content is the single element that
+   paints --rh-page-bg for the page+map to share (see .page/.host below),
+   so a CSS background painted independently on each of those boxes doesn't
+   put the gradient's radial highlight in a different spot on each one. */
+.content[data-active='today']{background:var(--rh-page-bg,#101c2d) !important}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
@@ -239,13 +234,6 @@
   background:var(--rh-navy,#fff) !important;
   color:var(--rh-text,#0B1F3A) !important;
   box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
-}
-/* Same Today-only transparency as the dark-mode rule above, with matching
-   specificity (adds the [data-active='today'] attribute) so it actually
-   beats the rule right above instead of losing to it on source order. */
-:global(html[data-theme='light']) .driver-v3-root .appHeader[data-active='today']{
-  background:transparent !important;
-  box-shadow:none !important;
 }
 :global(html[data-theme='light']) .driver-v3-root .headerBrand{color:var(--rh-text,#0B1F3A) !important}
 :global(html[data-theme='light']) .driver-v3-root .headerIcon,
