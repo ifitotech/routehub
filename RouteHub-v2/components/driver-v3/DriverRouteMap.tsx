@@ -122,12 +122,32 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
     })
     mapRef.current = map
     map.on('load', () => {
-      map.addSource('rh-route-line', {type: 'geojson', data: {type: 'FeatureCollection', features: []}})
+      // lineMetrics is what makes `line-gradient` (below) possible - without
+      // it the line can only take one flat color, not a gradient along its
+      // own length.
+      map.addSource('rh-route-line', {type: 'geojson', lineMetrics: true, data: {type: 'FeatureCollection', features: []}})
       // Two passes of the same line - a wide, soft, low-opacity glow layer
       // under a slim, saturated core - is the same neon-line look the
-      // abstract glyph used, now drawn on the real map.
-      map.addLayer({id: 'rh-route-glow', type: 'line', source: 'rh-route-line', paint: {'line-color': '#2493FF', 'line-width': 9, 'line-opacity': 0.22, 'line-blur': 3}, layout: {'line-cap': 'round', 'line-join': 'round'}})
-      map.addLayer({id: 'rh-route-core', type: 'line', source: 'rh-route-line', paint: {'line-color': '#37E0C9', 'line-width': 3, 'line-opacity': 0.9}, layout: {'line-cap': 'round', 'line-join': 'round'}})
+      // abstract glyph reference used (blue at the origin end fading to
+      // teal at the destination end), now drawn on the real map with a
+      // genuine along-the-line gradient instead of one flat color, and
+      // widths that scale with zoom so the line still reads at the very
+      // wide-open zoom levels a long route (tens of miles) fits to.
+      // Typed loosely on purpose - MapLibre's own ExpressionSpecification type isn't
+      // re-exported from the `maplibre-gl` package itself (it lives in the internal
+      // @maplibre/maplibre-gl-style-spec dependency), so this avoids importing from an
+      // undocumented subpath just to name the type.
+      const routeGradient: any = ['interpolate', ['linear'], ['line-progress'], 0, '#2493FF', 1, '#37E0C9']
+      map.addLayer({
+        id: 'rh-route-glow', type: 'line', source: 'rh-route-line',
+        paint: {'line-gradient': routeGradient, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 7, 16, 16], 'line-opacity': 0.32, 'line-blur': 4},
+        layout: {'line-cap': 'round', 'line-join': 'round'},
+      })
+      map.addLayer({
+        id: 'rh-route-core', type: 'line', source: 'rh-route-line',
+        paint: {'line-gradient': routeGradient, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 2.5, 16, 5], 'line-opacity': 0.95},
+        layout: {'line-cap': 'round', 'line-join': 'round'},
+      })
       const canvas = map.getCanvas()
       canvas.classList.add(styles.canvas)
       map.resize()

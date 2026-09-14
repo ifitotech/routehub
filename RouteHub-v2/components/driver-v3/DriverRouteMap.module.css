@@ -40,18 +40,21 @@
      for the contact-info block), and a fixed 72px overlay would have
      covered nearly the whole thing instead of just fading its top edge.
      A share of the map's own height scales down with it automatically. */
-  height: 24%;
-  max-height: 72px;
+  height: 16%;
+  max-height: 46px;
   z-index: 2;
   pointer-events: none;
-  /* Multi-stop, not a straight two-color fade - a plain 0%/100% linear
-     fade reads as ending abruptly (the eye is more sensitive to the
-     lighter end of a fade), so an eased middle stop keeps it soft all
-     the way down instead of visibly "cutting off" partway through. */
-  background: linear-gradient(to bottom, #0F1D35 0%, rgba(15, 29, 53, .5) 45%, rgba(15, 29, 53, 0) 100%);
+  /* A plain two-stop fade, not the three-stop version tried before - that
+     one held near-full color through its first half, which read as a
+     second solid bar sitting right under the header rather than a blend
+     (the exact "still looks like two things, not one" complaint). Fading
+     immediately from the very first pixel, over a shorter distance, keeps
+     the join color-accurate right at the header's edge without lingering
+     as its own visible block. */
+  background: linear-gradient(to bottom, #0F1D35 0%, rgba(15, 29, 53, 0) 100%);
 }
 :global(html[data-theme='light']) .host::before {
-  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, rgba(255, 255, 255, .5) 45%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .atDestination {

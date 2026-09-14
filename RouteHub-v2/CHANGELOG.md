@@ -951,6 +951,35 @@ pickup contact info, not to blank room.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 40 — a real blue-to-teal route line; notes joined the contact block; a simpler map/header fade
+Three things from the same round of feedback: the route line on the map was a single flat
+color, not the blue-at-origin/teal-at-destination gradient from the original approved
+reference; delivery/pickup instructions belonged in the same block as the contact name and
+phone, not a separate line further down the card; and the map/header overlay from Stage 36/
+38/39 was itself starting to look like a second flat bar rather than a blend.
+
+- **`components/driver-v3/DriverRouteMap.tsx`** — the route line's source now sets
+  `lineMetrics: true`, and both the glow and core layers use a `line-gradient` (blue `#2493FF`
+  at the origin end to teal `#37E0C9` at the destination end) instead of one flat color per
+  layer - matching the original abstract-glyph reference's own coloring, now on the real map.
+  Line widths also scale with zoom (`interpolate` on `['zoom']`) instead of one fixed width,
+  since a long route (tens of miles) fits to a much wider-open zoom where a fixed-width line
+  read as too thin to notice.
+- **`app/driver-v3/page.tsx`** / **`today.module.css`** — `driver_note` moved out of its own
+  `.noteLine` paragraph (further down, under the PO/distance/time row) into a third row
+  inside `.contactBlock`, right alongside the contact name and phone - one place for "info
+  the driver needs at the door," not three separate locations on the card. New
+  `.contactRowNote` variant allows wrapping and uses the muted/subtle text tone, since a note
+  can run much longer than a name or phone number.
+- **`components/driver-v3/DriverRouteMap.module.css`** — `.host::before` (the header-color
+  overlay) simplified back to a plain two-stop fade and shrunk (24%/72px max → 16%/46px max).
+  The three-stop version held near-full color through roughly its first half, which read as
+  its own small solid bar sitting under the header rather than a blend - the same "doesn't
+  look like one thing" complaint, just relocated. A shorter, immediate fade keeps the color
+  match right at the header's edge without lingering as a visible block of its own.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;
