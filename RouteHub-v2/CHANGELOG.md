@@ -327,6 +327,27 @@ maps" rule (updated in the pinned memory) - it stays strictly a non-interactive 
 - `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
   baseline only).
 
+### Stage 13 — the app-wide generic classes still made Truck/History feel like an older app
+Audited every Driver sub-route (`help`, `history`, `issue`, `map`, `more`, `privacy`,
+`route`, `settings`, `stop`, `truck`, `truck/fuel`, `truck/maintenance`) for what it's
+actually styled by, not just whether it imports a `.module.css`:
+
+- `truck/page.tsx` and `history/page.tsx` use the app-wide generic `.card`/`.row`/
+  `.eyebrow`/`.muted` classes from `app/globals.css` (shared with Manager/Admin), not a
+  Driver-specific module. These already resolved correct dark/light **colors** through
+  globals.css's own theme tokens - not a legibility bug - but rendered as flat, plainly
+  bordered boxes sitting right next to Today's glass hero card, reading as an older,
+  plainer screen in the same app.
+- Added a `.driver-v3-root`-scoped override for exactly these four classes in
+  `app/driver-v3/v3-app.css` (same file and pattern already used for the Primary/
+  Secondary/Danger button glass recipe): translucent gradient card with backdrop-blur and
+  a soft inset highlight in dark, a lighter glass equivalent in light - both classes beat
+  globals.css's single-class selector on specificity, so no `!important` was needed.
+  `issue`, `route`, and `stop` are thin redirect pages with no real UI of their own; `map`
+  already reads from its own properly dark-aware classes in `driver-v3-b.module.css`.
+- `npm run typecheck`, `npm run build`, `npm test` all clean (same pre-existing `ENOENT`
+  baseline only).
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on

@@ -406,3 +406,44 @@ html[data-theme='light'] body:has(.driver-v3-root) {
   background: #f5f9ff !important;
   background-color: #f5f9ff !important;
 }
+
+/* A few older Driver screens (Truck, History) still use the app-wide
+   generic .card/.row/.eyebrow/.muted classes from app/globals.css instead
+   of a dedicated module - those already pick up dark/light COLORS
+   correctly through globals.css's own theme tokens, but read as flat,
+   plain boxes next to Today's glass hero card. Give the same classes a
+   "crystallized" glass treatment when they're inside Driver, so every
+   screen reads as one system instead of Today looking premium and
+   everything else looking like an earlier, plainer app. Two classes beats
+   globals.css's one-class selector on specificity, so no !important. */
+.driver-v3-root .card {
+  border: 1px solid rgba(147, 193, 255, .16);
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(20, 38, 64, .78) 0%, rgba(11, 24, 43, .82) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 14px 34px rgba(0, 0, 0, .28);
+}
+.driver-v3-root .row {
+  border-top-color: rgba(147, 193, 255, .14);
+}
+.driver-v3-root .eyebrow {
+  color: #6fb1ff;
+}
+.driver-v3-root .muted {
+  color: #9fb2d0;
+}
+html[data-theme='light'] .driver-v3-root .card {
+  border-color: rgba(31, 96, 170, .12);
+  background: rgba(255, 255, 255, .8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 10px 26px rgba(15, 35, 65, .08);
+}
+html[data-theme='light'] .driver-v3-root .row {
+  border-top-color: rgba(11, 31, 58, .08);
+}
+html[data-theme='light'] .driver-v3-root .eyebrow {
+  color: #1660f0;
+}
+html[data-theme='light'] .driver-v3-root .muted {
+  color: #667892;
+}
