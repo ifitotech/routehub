@@ -1304,3 +1304,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 63 — 2026-09-14
 - Apply the completion transition to the new Today sheets themselves: the backdrop fades in and the delivery, pickup, return, and detail panels rise with a spring motion while the map retracts beneath the fixed header.
+
+## Stage 64 — 2026-09-14
+- Restore reliable touch handling for completion sheets: the close control and all sheet actions explicitly receive pointer input, and tapping the backdrop closes the panel.

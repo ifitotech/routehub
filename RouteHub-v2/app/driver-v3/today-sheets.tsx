@@ -62,7 +62,7 @@ function SheetHeader({label, onClose, t}: {label: string; onClose: () => void; t
 
 export function InfoSheet({route, kind, t, onClose, onOpenMaps}: {route: any; kind: string; t: any; onClose: () => void; onOpenMaps: () => void}) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
       <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={kind === 'pickup' ? t.drvPickup : kind === 'delivery' ? t.drvDelivery : t.drvReturn} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22}}>{route.destination_name || t.drvCurrentStopName}</h2>
@@ -89,7 +89,7 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
   onIssueNoteChange: (value: string) => void; onSavePickupNote: () => void; onConfirmPickup: () => void; onOpenIssue: () => void; onClose: () => void
 }) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
       <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvPickup} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || route.destination_address}</h2>
@@ -117,7 +117,7 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
 
 export function ReturnSheet({route, t, busy, message, onComplete, onClose}: {route: any; t: any; busy: boolean; message: string; onComplete: () => void; onClose: () => void}) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
       <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvReturn} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 5px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || route.destination_address || t.drvReturn}</h2>
@@ -135,7 +135,7 @@ export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpe
 }) {
   const NextIcon = nextKind === 'pickup' ? PackagePlus : nextKind === 'delivery' ? PackageCheck : Warehouse
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
       <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvNextStop} onClose={onClose} t={t} />
         <span className={`${styles.typeBadge} ${styles[nextKind || 'return']}`} style={{marginBottom: 12}}><NextIcon />{nextLabel}</span>
@@ -174,7 +174,7 @@ export function DeliverySheet({
   busy: boolean; message: string; onConfirm: () => void; onClose: () => void
 }) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()}>
+    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
       <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvDelivery} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || t.drvCompleteDelivery}</h2>
