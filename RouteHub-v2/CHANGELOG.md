@@ -1295,3 +1295,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 60 — 2026-09-14
 - Move the OpenStreetMap attribution from the bottom edge of the map to the upper-right gap between the destination address and contact details, matching the approved Today composition in both themes.
+
+## Stage 61 — 2026-09-14
+- Lower the attribution to the upper-right edge of the contact card so it no longer competes with the stop dots or map route.
