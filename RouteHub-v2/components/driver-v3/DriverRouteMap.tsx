@@ -266,6 +266,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
 
   return <div className={styles.wrap}>
     <div ref={containerRef} className={styles.host} aria-hidden="true"/>
+    <div className={styles.fadeOverlay} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>
 }

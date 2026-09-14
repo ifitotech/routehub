@@ -35,7 +35,7 @@
      two independent copies of "the same" gradient, not one continuous
      image. Staying transparent lets the one shared paint underneath show
      through instead. */
-  background: #101c2d;
+  background: transparent;
 }
 
 .atDestination {
@@ -95,8 +95,24 @@
    header remains unchanged; the first part of the real MapLibre canvas fades
    in from transparent so there is no second rectangular bar at the seam. */
 .host {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%);
+}
+
+/* The map wrapper is intentionally taller than the visible canvas so the
+   imagery can continue behind the stop details. Keep this fade outside the
+   masked canvas: it must cover the entire expanded area, including the
+   lower bleed, instead of revealing a hard rectangular background band. */
+.fadeOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(16, 28, 45, 0) 0%,
+    rgba(16, 28, 45, .06) 30%,
+    rgba(16, 28, 45, .58) 70%,
+    #101c2d 100%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
@@ -143,8 +159,15 @@
 
 /* Light theme: same non-Google map, a lighter vignette/no invert, and the
    destination pin gets a border that reads on a pale background too. */
-:global(html[data-theme='light']) .host { background: #f7faff; }
+:global(html[data-theme='light']) .host { background: transparent; }
 :global(html[data-theme='light']) .canvas { filter: none; }
-:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 68%, transparent 100%); }
+:global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%); }
+:global(html[data-theme='light']) .fadeOverlay {
+  background: linear-gradient(to bottom,
+    rgba(247, 250, 255, 0) 0%,
+    rgba(247, 250, 255, .04) 30%,
+    rgba(247, 250, 255, .62) 70%,
+    #f7faff 100%);
+}
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib a) { color: #1660f0 !important; }

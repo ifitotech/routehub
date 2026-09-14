@@ -1251,3 +1251,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
   `page.tsx`'s handlers after the edit and by `npm run typecheck` /
   `npm run build` passing clean.
 - No screen or route was deleted or renamed.
+
+## Stage 47 — 2026-09-14
+- Extend the dark/light map fade across the full expanded preview area, eliminating the hard navy band between the map and stop details while preserving the existing Driver Today header and controls.
