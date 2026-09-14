@@ -1076,6 +1076,46 @@ truly fuses, instead of another color/fade approximation at the boundary between
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 44 — found the real bug behind the seam: a silent CSS Modules export collision
+Stage 43's geometry was verified correct in isolation, but the seam persisted in production
+after shipping it - a sign the real element in the running app wasn't getting the CSS at all,
+not that the geometry itself was wrong. Digging into the actual **compiled** output (not just
+the source) instead of iterating on the source again found it.
+
+- **The bug**: `driver-v3-b.module.css` had `.content[data-active='today']{...}` (added Stage
+  30, renamed at each subsequent stage but never renamed AWAY from the identifier "content").
+  CSS Modules hashes every class token it finds in a selector, including ones inside a
+  compound/attribute-qualified selector like this - not just a bare `.content{}` rule. That
+  gave `driver-v3-b.module.css` its own "content" export, a genuinely different hash than
+  `driver-v3-a.module.css`'s. `DriverV3Shell.tsx` merges `{...shellA, ...shellB}`, and a later
+  spread key always wins a collision - so the class actually applied to the DOM was **always**
+  b's hash, on every Driver screen, regardless of `data-active`. This meant
+  `driver-v3-a.module.css`'s real `.content{min-height:0;overflow-y:auto;max-width:680px;
+  margin:0 auto;padding:16px 18px 28px;...}` rule - scroll behavior, width, padding, for
+  every Driver screen - never matched anything, at all, full stop. Every Today-specific
+  background/overflow rule added on `.content[data-active='today']` since Stage 30 (including
+  Stage 43's `overflow:visible`, the fix the map's up-behind-the-header bleed actually needs
+  to render) was compiling correctly and matching the right element in isolation, but the
+  base layout rule it was layered on top of had been unreachable the entire time - explaining
+  both the seam surviving every fix aimed at it, and a strong, previously-unconfirmed
+  candidate for the separately-reported "Settings is locked, no scroll" bug (missing
+  `overflow-y:auto`, on every non-Today screen, not just Settings).
+- **The fix**: renamed the rule to `.contentToday` - a distinctly-named class in
+  `driver-v3-b.module.css` with no identifier overlap with `driver-v3-a.module.css` at all -
+  applied conditionally from `DriverV3Shell.tsx` (`active === 'today' ? styles.contentToday :
+  ''`, the same pattern `flush` already uses) instead of via the `[data-active]` attribute
+  selector. Verified directly in the compiled build output: the merged `styles` object now
+  has exactly one "content" key (`driver-v3-a`'s), and `contentToday` a separate one.
+- **Also found, not yet fixed** (flagged for a follow-up, not touched now since neither is
+  currently referenced through the merged `styles` object anywhere, so neither has a live
+  bug today): `.tag` and `.stickyAction` have the exact same shape of collision between the
+  two files - `driver-v3-a.module.css` has each rule's real base styling, `driver-v3-b.
+  module.css` has only a same-named dark-mode-only override for each. If either ever gets
+  wired up through the merged `styles` object, the base rule would go silently unreachable
+  the same way `.content` did.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

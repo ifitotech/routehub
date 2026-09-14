@@ -171,19 +171,40 @@
    be the map blending into the stop info/content below it, not the header
    above it. Reverted; header no longer reads [data-active] for its
    background at all. */
-/* Today only, not every Driver screen: .content is the single element that
-   paints --rh-page-bg for the page+map to share (see .page/.host below),
-   so a CSS background painted independently on each of those boxes doesn't
-   put the gradient's radial highlight in a different spot on each one. */
-/* overflow:visible, not the .contentFlush default of hidden (higher
-   specificity than .contentFlush's plain class selector wins here, no
-   !important needed) - .page (today.module.css) now extends its own box
-   up past .content's top edge by --map-bleed, so the map can reach up
-   behind the header instead of being clipped right at this boundary.
-   Nothing else needs to escape .content - .page keeps its own
-   overflow:hidden for the confirm-dialog shrink clip (Stage 31), so nothing
-   can spill sideways or past .shell's outer edge either. */
-.content[data-active='today']{background:var(--rh-page-bg,#101c2d) !important;overflow:visible}
+/* Today only, not every Driver screen: this element is the single one
+   that paints --rh-page-bg for the page+map to share (see .page/.host in
+   today.module.css), so a CSS background painted independently on each of
+   those boxes doesn't put the gradient's radial highlight in a different
+   spot on each one. overflow:visible (not .contentFlush's hidden) lets
+   .page (today.module.css) extend its own box up past this element's top
+   edge by --map-bleed, so the map can reach up behind the header instead
+   of being clipped right at that boundary. Nothing else needs to escape -
+   .page keeps its own overflow:hidden for the confirm-dialog shrink clip
+   (Stage 31), so nothing can spill sideways or past .shell's outer edge
+   either.
+
+   A REAL BUG FOUND WHILE CHASING THE SEAM (not the seam's own cause, but
+   serious on its own): this used to be named `.content[data-active=
+   'today']`, reusing the identifier "content" - CSS Modules hashes EVERY
+   class token it finds, including ones inside a compound/attribute-
+   qualified selector like this, not just bare `.className{}` rules. That
+   gave driver-v3-b.module.css its OWN "content" export (a genuinely
+   different hash than driver-v3-a.module.css's), and DriverV3Shell.tsx's
+   `{...shellA, ...shellB}` merge let shellB's "content" key silently win -
+   meaning the actual class applied to the DOM was ALWAYS b's hash, and
+   a.module.css's real `.content{min-height:0;overflow-y:auto;max-width:
+   680px;margin:0 auto;padding:16px 18px 28px;...}` rule (scroll behavior,
+   width, padding, for EVERY Driver screen, not just Today) never matched
+   anything, on any screen, regardless of data-active - the exact
+   "content is locked, no scroll" shape reported for Settings. Renamed to
+   `.contentToday` (applied conditionally by DriverV3Shell.tsx when
+   active==='today', not via this attribute selector) specifically so this
+   file no longer exports an identifier named "content" at all. */
+/* !important on overflow too, not just background - .contentToday and
+   .contentFlush are both plain classes (equal specificity), so without it
+   this only wins by source-order position, which a future edit could
+   silently reorder and break. */
+.contentToday{background:var(--rh-page-bg,#101c2d) !important;overflow:visible !important}
 .appHeader *{
   filter:none !important;
   backdrop-filter:none !important;
@@ -253,8 +274,18 @@
 
 /* .content itself lives in driver-v3-a.module.css - it is the class that
    actually reaches the DOM once DriverV3Shell merges {...shellA, ...shellB},
-   since a later spread key wins. Rules here must never redeclare a bare
-   .content{} block, or they silently make the real one unreachable again. */
+   since a later spread key wins. Rules here must never use the identifier
+   "content" again in ANY selector - not just a bare `.content{}` block,
+   but any selector containing that token at all (`.content[attr=x]`,
+   `.content .child`, etc.) - CSS Modules hashes every class token it
+   finds, compound selectors included, so even a qualified one gives this
+   file its own "content" export and silently wins the merge above,
+   making the real rule in driver-v3-a.module.css unreachable on every
+   Driver screen, not just wherever the qualifier matched. Found and fixed
+   once already (see .contentToday above, was `.content[data-active=
+   'today']`) - use a distinctly-named class instead, applied
+   conditionally from DriverV3Shell.tsx, the same pattern `flush` already
+   uses. */
 
 /* Sheets and shared form states use the same high-contrast dark palette as tabs. */
 :global(html[data-theme='dark']) .sheet,:global(html[data-theme='dark']) .confirmSheet,:global(html[data-theme='dark']) .mapSheet{background:#18263b;color:#f4f7fb;border-color:#31445f}
