@@ -1,21 +1,5 @@
-/* The shared shell's .content (driver-v3-a.module.css, every Driver screen)
-   has its own flat background AND its own 16px/18px/28px padding around
-   whatever it holds - .page's rich gradient background only ever painted
-   inside that padding, leaving .content's plain flat color exposed as a
-   visible frame around it (this is what still read as "a box" even after
-   removing .hero's own card surface). Rather than touch .content itself
-   (every other Driver screen depends on that padding), .page breaks out of
-   it with a matching negative margin so its own background paints across
-   the full area instead, then restores the same padding for its own
-   children - net position unchanged, just no more exposed seam. Top stays
-   at 0 (not restored) so the map keeps sitting flush against the header
-   with zero gap, per the earlier fix. */
-.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:calc(100% + 36px);max-width:none;height:100%;min-height:0;margin:-16px -18px -28px;padding:0 18px 30px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:var(--rh-page-bg,none);overflow:hidden;touch-action:pan-y}
-/* top nudged from 24px to 40px - .page's own box now starts 16px higher
-   (the negative margin that cancels .content's padding, see .page's own
-   comment above), so this needs the same 16px to stay in the same visual
-   spot relative to the map/header instead of sitting higher than before. */
-.pullScene{position:absolute;top:40px;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:center;width:min(220px,78vw);height:28px;margin:0 auto;pointer-events:none;transition:opacity .12s linear}
+.page{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;padding:0 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:var(--rh-page-bg,none);overflow:hidden;touch-action:pan-y}
+.pullScene{position:absolute;top:24px;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:center;width:min(220px,78vw);height:28px;margin:0 auto;pointer-events:none;transition:opacity .12s linear}
 .pullRoad{position:absolute;left:0;right:0;bottom:2px;height:2.5px;border-radius:999px;background:rgba(147,193,255,.16);overflow:hidden}
 .pullRoadLine{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(102,178,255,.6) 0 8px,transparent 8px 16px);background-size:16px 100%;opacity:.7}
 .pullTruck{position:absolute;top:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);color:#8fbcff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 12px rgba(0,0,0,.28);transition:transform .14s cubic-bezier(.34,1.56,.64,1),left .06s linear,box-shadow .16s ease}

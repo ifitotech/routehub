@@ -692,6 +692,25 @@ still read as "a box" even with `.hero` itself fully transparent.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 28 — reverted Stage 27's approach; fixed the map's own color match instead
+The user didn't like Stage 27's fix and asked directly for it to be reverted, and for the
+same fade technique already used to blend the map with its surroundings to be the one doing
+the work here too - not a box-model trick.
+
+- Reverted `.page` and `.pullScene` in `app/driver-v3/today.module.css` back to their
+  pre-Stage-27 values (no negative margin/width/padding changes, `.pullScene` back to
+  `top: 24px`).
+- **Fixed what was actually still causing a visible seam**: `DriverRouteMap.module.css`'s
+  `.host` rested on a flat, guessed hex color (`#0b1526`) instead of the same
+  `--rh-page-bg` gradient token `.page` itself uses - wherever the map's own mask fades
+  toward transparent (see Stage 20), it was blending toward a color that never quite
+  matched the richer gradient underneath it, leaving a faint but real seam right at that
+  boundary. `.host` (both themes) now uses `var(--rh-page-bg)` directly, so the map's
+  resting color and its fade target are the same gradient family the rest of the page
+  already uses, instead of a second, slightly-off color standing in for it.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

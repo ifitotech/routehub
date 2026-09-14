@@ -12,7 +12,11 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: #0b1526;
+  /* Same gradient token as .page (today.module.css), not a flat guessed
+     hex - a flat resting color never quite matched the richer gradient
+     it fades into at the bottom, leaving a faint but real seam right where
+     the two were supposed to read as one surface. */
+  background: var(--rh-page-bg, #0b1526);
 }
 
 .atDestination {
@@ -117,7 +121,7 @@
 
 /* Light theme: same non-Google map, a lighter vignette/no invert, and the
    destination pin gets a border that reads on a pale background too. */
-:global(html[data-theme='light']) .host { background: #eaf0f6; }
+:global(html[data-theme='light']) .host { background: var(--rh-page-bg, #eaf0f6); }
 :global(html[data-theme='light']) .canvas { filter: none; }
 :global(html[data-theme='light']) .host { mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%); }
 :global(html[data-theme='light']) .host :global(.maplibregl-ctrl-attrib) { background: rgba(255, 255, 255, .82) !important; color: #64748b !important; }
