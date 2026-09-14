@@ -102,6 +102,7 @@
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }
+.destinationMarker{position:relative}
 
 .driverDot {
   display: block;
@@ -132,6 +133,23 @@
   border: 3px solid rgba(4, 16, 31, .9);
   background: linear-gradient(135deg, #ffd166, #37e0c9);
   box-shadow: 0 0 0 5px rgba(255, 209, 102, .16), 0 0 18px rgba(55, 224, 201, .5);
+}
+
+.destinationLabel{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 10px);
+  transform:translateX(-50%);
+  max-width:132px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#ffd166;
+  font-size:11px;
+  font-weight:800;
+  line-height:14px;
+  letter-spacing:-.01em;
+  text-shadow:0 1px 8px rgba(0,0,0,.9);
 }
 
 @keyframes rh-pulse {

@@ -10,6 +10,7 @@ import styles from './DriverRouteMap.module.css'
 
 type Route = {
   id: string
+  destination_name?: string | null
   origin_address?: string | null
   origin_lat?: number | null
   origin_lng?: number | null
@@ -50,7 +51,7 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
   layers: [{id: 'osm', type: 'raster', source: 'osm'}],
 }
 
-function markerEl(kind: 'driver' | 'destination', live = true) {
+function markerEl(kind: 'driver' | 'destination', live = true, label = '') {
   const el = document.createElement('div')
   el.className = kind === 'driver' ? styles.driverMarker : styles.destinationMarker
   const dot = document.createElement('span')
@@ -60,6 +61,15 @@ function markerEl(kind: 'driver' | 'destination', live = true) {
   // that isn't there.
   dot.className = kind === 'driver' ? `${styles.driverDot}${live ? '' : ` ${styles.driverDotStatic}`}` : styles.destinationPin
   el.appendChild(dot)
+  // The destination remains legible directly on the real map. This is not a
+  // duplicate stop title below the map: it labels the pin the driver is
+  // navigating toward, matching the route composition at a glance.
+  if (kind === 'destination' && label) {
+    const name = document.createElement('span')
+    name.className = styles.destinationLabel
+    name.textContent = label
+    el.appendChild(name)
+  }
   return el
 }
 
@@ -197,7 +207,7 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
         driverMarkerRef.current = null
       }
       if (destination) {
-        if (!destMarkerRef.current) destMarkerRef.current = new maplibregl.Marker({element: markerEl('destination'), anchor: 'bottom'}).setLngLat([destination.lng, destination.lat]).addTo(map)
+        if (!destMarkerRef.current) destMarkerRef.current = new maplibregl.Marker({element: markerEl('destination', true, route.destination_name || route.destination_address || ''), anchor: 'bottom'}).setLngLat([destination.lng, destination.lat]).addTo(map)
         else destMarkerRef.current.setLngLat([destination.lng, destination.lat])
       } else if (destMarkerRef.current) {
         destMarkerRef.current.remove()

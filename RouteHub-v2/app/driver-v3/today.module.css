@@ -58,14 +58,14 @@
    glass card reads the same for every type, so Pickup/Delivery/Return are
    told apart by the pill and icon accents alone (see .pickup/.delivery/
    .return below), not by the whole card recoloring. */
-.heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
+.heroTop{display:flex;align-items:center;justify-content:flex-start;gap:12px;min-height:30px}
 .typeBadge{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;font-size:12px;line-height:30px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border:1px solid transparent}
 .typeBadge svg{width:15px;height:15px}
 .delivery{background:var(--rh-delivery-bg,rgba(139,92,246,.16));border-color:var(--rh-delivery-border,rgba(167,139,250,.26));color:var(--rh-delivery-fg,#c4b5fd)}
 .pickup{background:var(--rh-pickup-bg,rgba(22,119,255,.16));border-color:var(--rh-pickup-border,rgba(36,147,255,.25));color:var(--rh-pickup-fg,#8ec7ff)}
 .return{background:var(--rh-return-bg,rgba(148,163,184,.14));border-color:var(--rh-return-border,rgba(203,213,225,.18));color:var(--rh-return-fg,#cbd5e1)}
 .stopMetaRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 0}
-.stopLabel{color:var(--rh-text-muted,#9FB2D0);font-size:15px;font-weight:650}
+.stopLabel{color:var(--rh-text-muted,#9FB2D0);font-size:15px;font-weight:650;white-space:nowrap}
 .stopDots{display:inline-flex;align-items:center;gap:6px}
 .stopDots i{display:block;width:7px;height:7px;border-radius:99px;background:var(--rh-divider,rgba(151,185,234,.3))}
 .stopDots i.current{width:16px;background:var(--rh-primary,#1677ff)}

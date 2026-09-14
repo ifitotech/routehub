@@ -1,5 +1,17 @@
 # Changelog
 
+### Stage 45 — Driver Today header/map reference alignment
+
+Aligned the Driver Today surface with the supplied mobile reference while
+keeping route data and MapLibre behavior real. Today now has a dedicated deep-
+navy header with the RouteHub wordmark and `DRIVE · PICKUP · DELIVER` descriptor,
+the existing notification bell with its unread indicator, and a localized live
+date/greeting; generic map/profile header controls are not rendered on Today.
+The stop type pill and `Stop X of Y` label share one compact row, and the real
+MapLibre destination marker now carries the destination name. No decorative
+slogans or fabricated intermediate points were added. Typecheck and the full
+149-test suite pass; lint retains only the repository's existing warnings.
+
 ## Manager — dark-premium foundation (stage 1 of the app-wide redesign)
 
 Scope for this stage: build the dark/light token pair for Manager and remove
