@@ -1325,3 +1325,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 71 — 2026-09-14
 - Drive the Today surface translation from the measured completion-sheet height, allowing the map and route content to move upward by exactly the space occupied by the integrated sheet.
+
+## Stage 72 — 2026-09-14
+- Cap the Today translation to the visible upper section so only the content above the completion sheet tucks beneath the header, preventing the blank lower viewport seen on mobile.
