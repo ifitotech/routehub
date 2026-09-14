@@ -249,6 +249,12 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {route
 
   return <div className={styles.wrap}>
     <div ref={containerRef} className={styles.host} aria-hidden="true"/>
+    {/* A real sibling of .host, not a ::before on it - .host's own
+        mask-image (DriverRouteMap.module.css) applies to its entire
+        painted box, pseudo-elements included, which silently faded this
+        overlay out right where it needed to be strongest when it lived on
+        .host::before. Verified by actually rendering both versions. */}
+    <div className={styles.headerFade} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>
 }

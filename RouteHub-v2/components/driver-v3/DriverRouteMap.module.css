@@ -25,36 +25,30 @@
   background: transparent;
 }
 
-/* The map's top edge met the header with a hard cut - real navy bar, then
-   an instant switch to map tiles, no matter how well the map's own
-   background matched the page behind it. A short fade from the header's
-   own flat color down into the map (not a background swap on the header
-   itself - that was tried and reverted, see Stage 34) reads as the map
-   tucking under the header instead of stopping dead against it. */
-.host::before {
-  content: '';
+/* The map's top edge met the header with a hard cut. Real cause, found by
+   actually rendering this markup (Playwright, not guessing from a
+   description) rather than iterating blindly again: empty/undetailed map
+   area, after the dark-tile filter below, renders near-black (a light OSM
+   basemap color inverts to a very dark gray, then brightness/contrast push
+   it darker still) - meaningfully darker than the header's own navy, not
+   just a different hue. A previous version of this fix lived on
+   `.host::before`, but `.host`'s own mask-image (further down) applies to
+   the ENTIRE painted box including pseudo-elements, so that overlay was
+   being faded out by the mask's own top edge right where it needed to be
+   strongest - confirmed by rendering it and watching the "fix" do nothing.
+   This is a real sibling element instead, immune to .host's mask, and
+   tall/gradual enough to actually bridge navy-header to near-black-map
+   without a visible edge (verified by rendering multiple heights). */
+.headerFade {
   position: absolute;
   inset: 0 0 auto 0;
-  /* A percentage, not a fixed px value - the compact map (after Start) can
-     now be as short as ~62px (today.module.css shrank it to free up room
-     for the contact-info block), and a fixed 72px overlay would have
-     covered nearly the whole thing instead of just fading its top edge.
-     A share of the map's own height scales down with it automatically. */
-  height: 16%;
-  max-height: 46px;
+  height: 60%;
   z-index: 2;
   pointer-events: none;
-  /* A plain two-stop fade, not the three-stop version tried before - that
-     one held near-full color through its first half, which read as a
-     second solid bar sitting right under the header rather than a blend
-     (the exact "still looks like two things, not one" complaint). Fading
-     immediately from the very first pixel, over a shorter distance, keeps
-     the join color-accurate right at the header's edge without lingering
-     as its own visible block. */
-  background: linear-gradient(to bottom, #0F1D35 0%, rgba(15, 29, 53, 0) 100%);
+  background: linear-gradient(to bottom, #0F1D35 0%, #0F1D35 15%, rgba(15, 29, 53, .6) 45%, rgba(15, 29, 53, 0) 100%);
 }
-:global(html[data-theme='light']) .host::before {
-  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, rgba(255, 255, 255, 0) 100%);
+:global(html[data-theme='light']) .headerFade {
+  background: linear-gradient(to bottom, var(--rh-navy, #fff) 0%, var(--rh-navy, #fff) 15%, rgba(255, 255, 255, .6) 45%, rgba(255, 255, 255, 0) 100%);
 }
 
 .atDestination {
@@ -110,17 +104,14 @@
    real imagery right up to the screen edges) and only dissolves downward
    into the card's dark background near the bottom, where the stop details
    begin - a top-to-bottom fade, not a radial vignette on every side. */
-/* A small fade-in at the very top too, not just the fade-out at the
-   bottom - real map tiles (especially open/rural areas, which render
-   almost solid black through the dark-tile filter) can be much darker
-   than the header's flat navy, so even with .host::before's color-matched
-   overlay right below the header, the map tiles themselves used to snap
-   to full opacity right where that overlay ended. Fading the tiles in
-   from nothing over the first 8% softens that handoff instead of leaving
-   a second, smaller hard edge just past the overlay. */
+/* No top fade-in here on purpose - that was tried (fading the canvas in
+   from nothing) to soften the same header handoff, but .headerFade (above)
+   is what actually bridges it now, sits on top of the canvas regardless of
+   this mask, and covers a taller share of the map than a top mask fade
+   alone comfortably could without hiding too much real map underneath. */
 .host {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 62%, transparent 96%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 62%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 96%);
 }
 
 .driverMarker, .destinationMarker { display: grid; place-items: center; pointer-events: none; }

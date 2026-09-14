@@ -1009,6 +1009,40 @@ scroll (cause not found by reading the code - see below).
 - `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
   warnings) all clean.
 
+### Stage 42 — actually rendered the header/map seam instead of guessing at it again
+Marked up a screenshot circling the header and the band right below it, still reading as two
+separate things after five rounds of CSS-only guesses (Stage 36/38/39/40). Instead of a sixth
+guess, built a throwaway static-HTML harness reproducing the exact compiled CSS and rendered
+it with Playwright (the same discipline already used once before for the dark-tile filter
+recipe, Stage 19) - actually seeing the pixels instead of reasoning about them blind.
+
+Two real bugs found this way, not previously visible from reading the CSS alone:
+- **The overlay was silently defeated by the map's own mask.** `.headerFade` lived on
+  `.host::before`; `.host`'s `mask-image` applies to its *entire* painted box, pseudo-elements
+  included - the overlay's own top edge (meant to be the most opaque, header-matched point)
+  was being faded toward zero by the mask's own top-fade-in at the exact same spot. Rendering
+  it confirmed the "fix" was doing close to nothing. Moved to a real sibling `<div>` in
+  `DriverRouteMap.tsx` (`.headerFade`, absolutely positioned next to `.host` inside `.wrap`,
+  not inside the masked element), immune to `.host`'s mask entirely.
+- **Empty/undetailed map area is much darker than the header, not just a different hue.**
+  Worked through the dark-tile filter chain by hand on a typical light OSM basemap color: grayscale
+  keeps it light, invert flips it to a very dark gray (~16,16,16), and the existing
+  `brightness(.92) contrast(1.05)` pushes it darker still - meaningfully darker than the
+  header's navy (15,29,53), which is why routes with a lot of open/rural area at the top of
+  frame showed the worst version of this seam. A short color-matched fade can't bridge that
+  gap in a few pixels; rendered several heights/gradients and settled on a taller, four-stop
+  fade (`.headerFade`, 60% of the map's own height: solid navy through 15%, half-strength by
+  45%, transparent by 100%) that reads as one continuous surface at every compact-map size
+  tested (62px-140px), not a shorter, faster one that leaves a visible remaining jump into the
+  near-black tile color below it.
+- **`components/driver-v3/DriverRouteMap.module.css`** — `.host`'s mask-image simplified back
+  to a bottom-only fade (the top fade-in it grew in Stage 40 was compensating for the same
+  masked-overlay bug above, and is redundant now that `.headerFade` isn't subject to it).
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean. Verification harness (temp npm install of `playwright`, a scratch
+  `index.html`/`shot.js`, cached Chromium binary already present from Stage 19) fully removed
+  afterward - nothing committed to the repo from it.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;
