@@ -1,6 +1,6 @@
 'use client'
 
-import {Clock3, MapPin, Route as RouteIcon} from 'lucide-react'
+import {Clock3, FileText, Navigation} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {calculateOperationsRoute} from '../../lib/maps/routing'
 import {geocodeAddress} from '../../lib/maps/geocoding'
@@ -29,7 +29,11 @@ function formatDuration(seconds: number, locale: string) {
   return `${hours} h${rest ? ` ${rest} min` : ''}`
 }
 
-export default function DriverRouteEstimate({route, locale = 'en'}: {route: any; locale?: string}) {
+/** poNumber is optional - when the current stop is a Pickup with an order
+    number, it joins this same row (its own circle + value, first in line)
+    instead of sitting on its own separate line above/below, matching the
+    reference's single "PO · distance · time" row. */
+export default function DriverRouteEstimate({route, locale = 'en', poNumber}: {route: any; locale?: string; poNumber?: string | null}) {
   const [estimate, setEstimate] = useState<RouteEstimate | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -56,14 +60,23 @@ export default function DriverRouteEstimate({route, locale = 'en'}: {route: any;
   const hasEstimate = Boolean(estimate?.distanceMeters != null && estimate?.durationSeconds != null)
   return (
     <section className={styles.estimate} aria-label={locale === 'es' ? 'Resumen de ruta' : 'Route summary'}>
-      <div className={styles.metric}>
-        <span className={styles.icon}><RouteIcon size={18}/></span>
-        <span><strong>{hasEstimate ? formatDistance(estimate!.distanceMeters!, locale) : '—'}</strong><small>{locale === 'es' ? 'distancia' : 'distance'}</small></span>
-      </div>
-      <span className={styles.divider} aria-hidden="true" />
-      <div className={styles.metric}>
-        <span className={`${styles.icon} ${styles.iconTime}`}><Clock3 size={18}/></span>
-        <span><strong>{hasEstimate ? formatDuration(estimate!.durationSeconds!, locale) : '—'}</strong><small>{locale === 'es' ? 'tiempo estimado' : 'estimated time'}</small></span>
+      <div className={styles.row}>
+        {poNumber && (<>
+          <span className={styles.metric}>
+            <span className={`${styles.icon} ${styles.iconPo}`}><FileText size={15}/></span>
+            <span className={styles.value}>PO {poNumber}</span>
+          </span>
+          <span className={styles.divider} aria-hidden="true" />
+        </>)}
+        <span className={styles.metric}>
+          <span className={`${styles.icon} ${styles.iconDistance}`}><Navigation size={15}/></span>
+          <span className={styles.value}>{hasEstimate ? formatDistance(estimate!.distanceMeters!, locale) : '—'}</span>
+        </span>
+        <span className={styles.divider} aria-hidden="true" />
+        <span className={styles.metric}>
+          <span className={`${styles.icon} ${styles.iconTime}`}><Clock3 size={15}/></span>
+          <span className={styles.value}>{hasEstimate ? formatDuration(estimate!.durationSeconds!, locale) : '—'}</span>
+        </span>
       </div>
       <span className={styles.caption}>{loading ? (locale === 'es' ? 'Calculando ruta…' : 'Calculating route…') : (locale === 'es' ? 'Referencia de la ruta · abre Mapas para navegar' : 'Route reference · open Maps to navigate')}</span>
     </section>

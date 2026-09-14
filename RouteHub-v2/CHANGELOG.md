@@ -595,6 +595,45 @@ differences:
   genuine two-line name still just grows the block naturally.
 - `npm run typecheck`, `npm run build`, `npm test` (149/149) all clean.
 
+### Stage 23 — glass treatment for the distance/time icon chips
+The user liked the overall result ("se ve mucho mejor") but asked for the distance/time
+icon chips specifically: smaller, more vivid color, more "crystallized"/glowing - the same
+glass language already used on the CTA and the map's own markers, not yet applied here.
+
+- `components/driver-v3/DriverRouteEstimate.module.css` - `.icon`/`.iconTime` rebuilt with
+  the same glass recipe as the rest of the app: a vivid gradient fill (blue for distance,
+  amber for time) instead of a flat rgba tint, a tinted 1px border, an inset top highlight,
+  and an outer glow - and sized down from 38px to 30px (26px on the narrow-screen
+  breakpoint) so it reads as a compact accent, not a second button.
+- Added a light-mode override (this component never had one before) since the new dark
+  colors were tuned for a dark background - softer fill, darker glyph color, so it reads as
+  vivid glass on a pale card instead of low-contrast pastel.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
+### Stage 24 — corrected the PO/distance/time row from a real zoomed reference
+The user sent a screenshot zoomed to real iPhone scale of just this one row. It showed two
+things Stage 23's own read of the reference had gotten wrong:
+
+- **Single-line value text, not a stacked big-number-then-small-label pair.** The zoomed
+  crop shows "PO 048472", "7.8 mi", "14 min" each on one line next to their icon, no
+  separate muted caption underneath - `DriverRouteEstimate` had been rendering a large bold
+  number with a small label below it since Stage 17. Rebuilt the row as icon + single-line
+  value.
+- **PO belongs in the same row as distance/time, not its own separate line above it.** The
+  reference shows all three - PO, distance, time - in one row with matching circular icons
+  and dividers between them. `DriverRouteEstimate` now takes an optional `poNumber` prop
+  and renders it as the row's first item (PO violet, distance teal, time amber - three
+  distinct accents); `page.tsx`'s separate `.poLine` paragraph was removed in favor of
+  passing `poNumber={kind==='pickup'&&route.order_number?route.order_number:null}`.
+- **Icon badges are circles with a thin colored outline and a near-transparent fill**, not
+  the filled gradient-glow squares Stage 23 had just added - corrected to match the
+  reference exactly.
+- Updated `tests/stop-workflow.test.mjs`'s PO assertion to check the new prop/location
+  instead of the old inline `<p>` line it replaced.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (no new
+  warnings) all clean.
+
 ### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
 Everything below this line was accurate as of Stage 1 and is now stale - kept for history
 rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;

@@ -380,10 +380,9 @@ export default function DriverV3Page() {
           <button type="button" className={styles.identityBlock} onClick={()=>setSheet('info')}>
             <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{route.destination_address}</span></p>}
-            {kind==='pickup'&&route.order_number?<p className={styles.poLine}>PO {route.order_number}</p>:null}
             {started&&route.destination_phone&&<p className={styles.phoneLine}>{route.destination_phone}</p>}
           </button>
-          <DriverRouteEstimate route={route} locale={locale}/>
+          <DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null}/>
           {started&&route.driver_note&&<p className={styles.noteLine}>{route.driver_note}</p>}
           <button className={styles.primary} disabled={busy} onClick={()=>void action.run()}>
             {busy?t.drvBusy:action.label}
