@@ -1319,3 +1319,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 69 — 2026-09-14
 - Integrate the Delivery sheet directly into Today without a blurred backdrop; add handle drag-to-dismiss behavior while preserving the X/Cancel action and existing completion logic.
+
+## Stage 70 — 2026-09-14
+- Remove the scaled/retracted page gap behind the completion sheet so the map and active route card remain a continuous Today surface beneath the integrated panel.
