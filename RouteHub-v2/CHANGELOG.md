@@ -1370,3 +1370,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 86 — 2026-09-14
 - Reduce the Delivery sheet to the approved compact footprint and convert Photo, Signature, and Issue into circular action controls with labels beneath, matching Today’s existing Maps, Call, and Issue affordances.
+
+## Stage 87 — 2026-09-14
+- Restore the Delivery sheet to the supplied larger completion-window footprint and enlarge its circular evidence actions so the controls have the same comfortable visual weight as Today’s operational actions.
