@@ -533,22 +533,24 @@ reading of the spec, but not what the reference always shows).
 - `npm run typecheck`, `npm run lint` (no new warnings), `npm run build`, `npm test`
   (149/149) all clean.
 
-### Not done yet (real, not hidden)
-- **Manager still renders light-only.** `useManagerLightTheme()` in
-  `app/manager/manager-shell.tsx` still forces the document to light on
-  every Manager mount - the same mechanism Driver had, removed there but
-  deliberately left in place here until the rest of this list is done.
-  Removing it now, before the next item, would reproduce the exact
-  dark-on-dark bug that got Manager's dark mode disabled before.
-- **~19 files still hardcode a near-white card background** (`#fff`,
-  `#f8fafc`, etc.) that would show as a glaring white box on the new dark
-  page background. This needs a careful pass, not a blanket find/replace -
-  some of those whites are correct in any theme (text on a solid blue
-  button, for instance) and a mechanical substitution would break those.
-- Border colors (`#dbe3ed`, `#e5e7eb`, etc.) and the long tail of one-off
-  badge/status colors are also unconverted.
-- Admin/CEO, Login/Onboarding, and the rest of the app-wide redesign
-  (per the user's own stated order of work) have not been started.
+### Not done yet (real, not hidden) — superseded, see Stage 19's own note below
+Everything below this line was accurate as of Stage 1 and is now stale - kept for history
+rather than rewritten in place. `useManagerLightTheme()` was removed in Stage 2;
+Manager renders dark by default today. The near-white-background sweep this note flagged
+was completed across Stages 2-8 (verified again just now, Sept 2026: a repo-wide grep for
+`#fff`/`#f8fafc` card backgrounds under `app/manager`, `app/routes`, `app/contacts`,
+`app/settings` finds only 4 files, and every one of them already has a matching
+`html[data-theme='dark']` override next to it - `history.module.css`,
+`add-route-desktop.css`, `new-route-ui.module.css`, `routes.module.css`). Admin/CEO and
+Login/Onboarding remain explicitly out of scope per the user's own later instruction
+("ceo admin dejalos fuera no necesiton esto"), not because they were forgotten.
+
+- ~~**Manager still renders light-only.**~~ Fixed in Stage 2.
+- ~~**~19 files still hardcode a near-white card background**~~ Fixed across Stages 2-8,
+  reconfirmed above.
+- ~~Border colors... also unconverted.~~ Covered in the same sweeps.
+- ~~Admin/CEO, Login/Onboarding... have not been started.~~ Still true, but by explicit
+  user instruction, not oversight - see above.
 
 
 ## RouteHub Driver — dark-premium redesign (Today + Tools)
