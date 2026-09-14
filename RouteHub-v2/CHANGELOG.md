@@ -1316,3 +1316,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 68 — 2026-09-14
 - Refine the Delivery bottom sheet to match the supplied UI: centered blue handle, explicit completion title and destination, modern RouteHub controls, and a visible Cancel action that dismisses the sheet cleanly.
+
+## Stage 69 — 2026-09-14
+- Integrate the Delivery sheet directly into Today without a blurred backdrop; add handle drag-to-dismiss behavior while preserving the X/Cancel action and existing completion logic.
