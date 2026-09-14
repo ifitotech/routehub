@@ -183,3 +183,37 @@
   .footerActions{gap:8px}
   .footerActions .secondaryButton,.footerActions .publishButton{flex:1;min-width:0}
 }
+
+/* This panel's own hardcoded light values (never converted in the earlier
+   dark passes - it lives in a separate file from routes.module.css's
+   builder) needed a dedicated dark block instead of the shared token
+   cascade alone, since several colors here are literal (#fff, #172033,
+   #64748B) rather than var(--rh-*). */
+:global(html[data-theme='dark']) .typeCard{color:var(--rh-text)}
+:global(html[data-theme='dark']) .typeCardActive{background:rgba(36,147,255,.14);border-color:#4a7fe0;color:#bcd6ff}
+:global(html[data-theme='dark']) .typeCardDesc,
+:global(html[data-theme='dark']) .statusLabel,
+:global(html[data-theme='dark']) .stopsEmpty,
+:global(html[data-theme='dark']) .detailsToggleSummary,
+:global(html[data-theme='dark']) .compactTitle span,
+:global(html[data-theme='dark']) .driverCard .driverInfo span,
+:global(html[data-theme='dark']) .footerNotice{color:var(--rh-text-secondary)}
+:global(html[data-theme='dark']) .statusCard{background:#142238;border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .stopsEmpty{border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .timelineDotEmpty{border-color:#4c72a4;background:#0f1c2d}
+:global(html[data-theme='dark']) .timelineLine{border-color:#30445f}
+:global(html[data-theme='dark']) .contactBlock{border-color:#30445f}
+:global(html[data-theme='dark']) .assignmentPanel{background:#142238;border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .driverMenuItem:hover{background:#1d3150}
+:global(html[data-theme='dark']) .scheduleToggle{background:#0f1c2d;border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .originToggle{background:#0f1c2d;border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .originSubChip{background:#18263b;color:var(--rh-text-secondary)}
+:global(html[data-theme='dark']) .formFooter{border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .inlinePanel{background:#0f172a}
+@media (pointer: coarse) and (min-width: 641px) {
+  :global(html[data-theme='dark']) .formFooter{background:#142238}
+}
+@media (max-width: 640px) {
+  :global(html[data-theme='dark']) .inlinePanel{background:#0f172a}
+  :global(html[data-theme='dark']) .formFooter{background:#142238}
+}

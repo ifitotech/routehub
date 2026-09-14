@@ -54,7 +54,7 @@
   /* 44px, not the spec's 48px - matches the header's own existing grid
      column (grid-template-columns:44px ... 44px in driver-v3-b.module.css)
      so it doesn't overflow the reserved slot next to the centered logo. */
-  width:44px;height:44px;border-radius:50%;
+  width:44px;height:44px;border-radius:50%!important;
   background:linear-gradient(145deg,rgba(26,62,108,.72),rgba(9,29,59,.78))!important;
   border:1px solid rgba(131,185,255,.22)!important;
   color:#DCEBFF!important;
@@ -64,6 +64,16 @@
   display:grid;place-items:center;touch-action:manipulation;
 }
 :global(.driver-v3-root) :global(header) .toolsButton:active{transform:scale(.94)}
+/* Light mode: the dark-navy glass recipe above composited over a white
+   header read as a flat, dull grey-blue box instead of glass - give light
+   its own pale/blue-tinted equivalent, same recipe used for .primary's
+   light override just above. */
+:global(html[data-theme='light']) :global(.driver-v3-root) :global(header) .toolsButton{
+  background:rgba(255,255,255,.74)!important;
+  border:1px solid rgba(47,112,194,.16)!important;
+  color:#0B5FCE!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 8px 20px rgba(35,78,130,.09)!important;
+}
 .feedback{margin:10px 0 0;padding:9px 10px;border-radius:9px;background:rgba(37,216,133,.14);color:var(--rh-success,#25D885);font-size:13px;line-height:17px;font-weight:650}
 .feedbackError{background:rgba(255,107,122,.14);color:var(--rh-danger,#FF6B7A)}
 .progressCard{display:grid;grid-template-columns:58px minmax(0,1fr) 58px;align-items:center;gap:10px;width:100%;min-height:64px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.05);box-sizing:border-box}

@@ -107,3 +107,45 @@
   }
   [aria-labelledby='new-route-title'] [class*='formColumn'] { overscroll-behavior: contain; scrollbar-gutter: stable; }
 }
+
+/* This file's own rules above are all !important, so on desktop they beat
+   routes.module.css's dark overrides regardless of source order - without
+   a matching dark set here, the desktop Add Route panel stayed white in
+   dark mode no matter what the rest of the app did. */
+@media (min-width: 1024px) {
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] {
+    border-color: #30445f !important;
+    background: #142238 !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] > div:first-child {
+    border-bottom-color: #30445f !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='eyebrow'] {
+    background: rgba(36, 147, 255, 0.16) !important; color: #8fbcff !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='builderSubtitle'] {
+    color: #9fb2d0 !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] > div:last-child {
+    background: #0f1c2d !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='builderSection'] {
+    border-color: #30445f !important; background: #18263b !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='sectionNumber'] {
+    background: rgba(36, 147, 255, 0.16) !important; color: #8fbcff !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='segmentActive'],
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='segmented'] button[aria-pressed='true'] {
+    background: rgba(36, 147, 255, 0.16) !important; border-color: #4a7fe0 !important; color: #bcd6ff !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='detailsToggle'] {
+    border-color: #30445f !important; background: #18263b !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='builderFooter'] {
+    background: #142238 !important;
+  }
+  html[data-theme='dark'] [aria-labelledby='new-route-title'] [class*='previewCard'] {
+    border-color: #30445f !important; background: #18263b !important;
+  }
+}

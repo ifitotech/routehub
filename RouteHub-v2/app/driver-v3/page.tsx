@@ -15,7 +15,13 @@ import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './today.module.css'
-import confirmStyles from '../../components/driver-v3/driver-v3.module.css'
+// confirmBackdrop/confirmSheet/confirmActions live in driver-v3-b.module.css -
+// the combined driver-v3.module.css only @imports the two split files for
+// their raw CSS, it doesn't re-export their class-name maps, so importing
+// from it left this dialog with undefined classNames (no backdrop, no fixed
+// position, no z-index - it just rendered inline and collided with the card
+// and button behind it).
+import confirmStyles from '../../components/driver-v3/driver-v3-b.module.css'
 import DriverRouteEstimate from '../../components/driver-v3/DriverRouteEstimate'
 import {InfoSheet, PickupSheet, ReturnSheet, NextStopSheet, DeliverySheet} from './today-sheets'
 import RouteGlyph from './route-glyph'

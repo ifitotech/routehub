@@ -153,6 +153,50 @@ Scope: CEO/Admin explicitly excluded from this redesign per the user.
   correct, it just had no way to be seen on an already-poisoned browser.
 - `npm run typecheck` and `npm run build` both clean.
 
+### Stage 7 — real bugs found from live screenshots, not just CSS sweep
+The user pushed the branch to a real Vercel preview and reviewed it live, which surfaced
+issues no amount of reading CSS in isolation would catch:
+
+- **Driver: the "Complete pickup" confirm dialog had no backdrop at all.**
+  `app/driver-v3/page.tsx` imported its `confirmBackdrop`/`confirmSheet`/
+  `confirmActions` classes from `components/driver-v3/driver-v3.module.css`,
+  a file that only `@import`s two split CSS files for their raw styles -
+  it never re-exports their class-name maps to JS. Every one of those
+  three classNames resolved to `undefined`, so the dialog rendered with no
+  fixed position, no backdrop, and no z-index: it just appeared inline and
+  visually collided with the card and CTA button behind it (see the user's
+  screenshot). Fixed by importing from `driver-v3-b.module.css` directly,
+  where those classes are actually defined - the same pattern every other
+  component in this folder already uses.
+- **Driver: the Tools (⋮) header button rendered as a flat grey square
+  instead of a glass circle.** Two separate causes: (1) its
+  `border-radius:50%` in `today.module.css` wasn't `!important`, so it lost
+  to the header's own reset rule (`header button{border-radius:0!important}`
+  in `v3-app.css`) on that one property, even though the rest of the rule's
+  `!important`s did win on specificity; (2) it had no light-mode variant,
+  so in light mode the dark-navy glass recipe composited over the white
+  header as a dull grey-blue box instead of adapting. Added `!important` to
+  `border-radius` and a proper `html[data-theme='light']` override using
+  the same pale-glass recipe as the other secondary buttons.
+- **Contacts empty state and Add Route builder were still visibly
+  light-only in dark mode**, confirmed from the user's own screenshots:
+  `.empty`/`.dialog` in `app/contacts/contacts.module.css` used literal
+  `rgb(255 255 255 / X%)` instead of a token; the desktop top bar
+  (`.sidebar` in `app/manager/manager-shell.module.css`, ≥1201px) had no
+  dark override at all; `app/routes/routes.module.css`'s `.operationSummary`/
+  `.summaryCard`/`.mapShortcut`/`.dateTabs` (the Routes dashboard's KPI
+  row) had none either; `app/routes/new-route-ui.module.css` (the inline/
+  mobile Add Route panel's type cards, timeline, origin toggle, driver
+  card, schedule toggle) had **no dark handling anywhere in the file**;
+  and `app/routes/add-route-desktop.css` - a separate `!important`-only
+  override file for the desktop Add Route drawer - forced white
+  backgrounds regardless of theme, silently beating the dark rules in
+  `routes.module.css` since importance ties go to specificity/source order
+  and this file had no `!important` dark counterpart at all. Added a
+  matching `html[data-theme='dark']` block to each.
+- `npm run typecheck`, `npm run build` clean; `npm test` shows only the
+  same pre-existing `ENOENT` failures as the baseline.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on

@@ -283,6 +283,13 @@
 :global([data-theme='dark']) .closeButton,
 :global([data-theme='dark']) .cancelButton,
 :global([data-theme='dark']) .field input { background: #0e1c2f; }
+:global([data-theme='dark']) .empty {
+  border-color: rgba(147, 193, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+:global([data-theme='dark']) .dialog {
+  border-color: rgba(147, 193, 255, 0.16);
+}
 
 /* Phase 6: manager contacts use the shared RouteHub operational language. */
 .page {

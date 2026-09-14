@@ -96,6 +96,11 @@
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0%);
   }
 
+  :global(html[data-theme='dark']) .sidebar {
+    background: rgba(9, 17, 32, 0.92);
+    border-bottom-color: rgba(147, 193, 255, 0.14);
+  }
+
   .sidebarStart,
   .sidebarEnd {
     display: flex;
