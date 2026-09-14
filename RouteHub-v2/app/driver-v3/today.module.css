@@ -33,7 +33,7 @@
 .sheetHandle{display:block;width:54px;height:5px;margin:0 auto 16px;border-radius:999px;background:linear-gradient(90deg,#1677ff,#17d9d2);box-shadow:0 0 10px rgba(36,147,255,.35)}
 .sheetCancel{display:block;width:100%;margin:12px 0 0;padding:8px;border:0;background:transparent;color:var(--rh-text-muted,#9fb2d0);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .inlineDeliveryPanel{width:100%;margin:22px 0 0;padding:0 18px calc(26px + env(safe-area-inset-bottom));border-top:1px solid rgba(73,151,255,.38);background:transparent;color:var(--rh-text,#F7FAFF);box-sizing:border-box;touch-action:none}
-.deliveryMapBand{position:relative;width:calc(100% + 36px);height:142px;margin:0 -18px;overflow:hidden;border-radius:0 0 22px 22px;background:var(--today-surface,#101c2d);mask-image:linear-gradient(to bottom,#000 0%,#000 48%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 48%,transparent 100%)}
+.deliveryMapBand{position:relative;width:calc(100% + 36px);height:220px;margin:0 -18px;overflow:hidden;border-radius:0 0 22px 22px;background:var(--today-surface,#101c2d);mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 100%)}
 .inlineDeliveryPanel .sheetHandle{position:relative;z-index:4;margin:-14px auto 16px;cursor:pointer}
 @keyframes todaySheetIn{from{transform:translateY(100%);opacity:.72}to{transform:translateY(0);opacity:1}}
 .completionOverlay,.completionOverlay *{pointer-events:auto}

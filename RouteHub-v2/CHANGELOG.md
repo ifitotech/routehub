@@ -1343,3 +1343,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 77 — 2026-09-14
 - Add a compact, real MapLibre route band above the inline Delivery handle, with a dark bottom dissolve, so the completion transition keeps the route visually connected to the form instead of pushing all map context beneath the header.
+
+## Stage 78 — 2026-09-14
+- Expand the inline Delivery map band and restore pointer input to the embedded completion flow, allowing Cancel, X, evidence controls, and completion actions to work normally.
