@@ -51,11 +51,16 @@
 .host :global(.maplibregl-ctrl-attrib a) { color: #9fb2d0 !important; }
 .host :global(.maplibregl-ctrl-attrib-button) { display: none !important; }
 
-/* Real OSM tiles are only ever the light/paper style - invert + hue-rotate
-   fakes a dark, RouteHub-navy map from those same tiles, applied straight
-   to MapLibre's own canvas (one <canvas> per map instance). */
+/* Real OSM tiles are only ever the light/paper style, with many different
+   hues (green parks, tan buildings, blue water) - inverting that directly
+   produced blotchy, wrong-colored patches instead of a clean navy map,
+   since hue-rotate shifts every one of those hues differently. Grayscale
+   first removes all of that hue variance, invert then flips the now-flat
+   image dark, and sepia+hue-rotate re-tints the resulting uniform gray
+   into one consistent RouteHub navy/blue instead of many mismatched
+   colors - applied straight to MapLibre's own canvas. */
 .canvas {
-  filter: invert(1) hue-rotate(190deg) brightness(.86) contrast(.92) saturate(1.35);
+  filter: grayscale(1) invert(1) brightness(.92) contrast(1.05) sepia(.6) hue-rotate(190deg) saturate(2.6);
 }
 
 /* No visible frame - the map fades to fully transparent at every edge via
@@ -78,6 +83,15 @@
   background: #2493ff;
   box-shadow: 0 0 0 6px rgba(36, 147, 255, .24), 0 0 20px rgba(36, 147, 255, .65);
   animation: rh-pulse 2.2s ease-in-out infinite;
+}
+
+/* No live GPS fix yet - this is the route's own starting point standing in
+   for it, not a moving signal, so it shouldn't pulse like one. Same color,
+   softer glow, no animation. */
+.driverDotStatic {
+  animation: none;
+  box-shadow: 0 0 0 5px rgba(36, 147, 255, .16), 0 0 12px rgba(36, 147, 255, .4);
+  opacity: .85;
 }
 
 .destinationPin {

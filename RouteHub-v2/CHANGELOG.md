@@ -501,6 +501,38 @@ Maps/Call/Issue after start, phase-driven state survives external Maps); the one
   predates this work).
 - `npm test`: still 149/149.
 
+### Stage 19 — fixed the map's actual dark color, and a real "no line when no GPS" gap
+The user sent a live screenshot of the deployed map next to the reference again: the dark
+style was rendering as blotchy green/yellow patches instead of clean navy, and with no
+live GPS fix the map showed only the destination pin with no line at all (matching a
+reading of the spec, but not what the reference always shows).
+
+- **Fixed the dark tile color, verified with a real rendered screenshot before shipping**
+  (same discipline as every dark-mode check earlier this session - never trust a filter
+  recipe by description alone). The old `invert() + hue-rotate()` chain shifted OSM's many
+  different tile hues (green parks, tan buildings, blue water) unpredictably, since
+  hue-rotate turns each of those differently. Rebuilt it as `grayscale(1)` first (removes
+  all that hue variance) → `invert(1)` (flips the now-flat image dark) → `sepia(.6)
+  hue-rotate(190deg) saturate(2.6)` (re-tints the single resulting gray into one uniform
+  RouteHub navy instead of many mismatched colors). Rendered it with a local Playwright
+  harness (MapLibre's real ESM build, real OSM tiles) before touching the shipped
+  component - confirmed clean navy streets/labels close to the reference, not assumed.
+- **Added a route-origin fallback** (`components/driver-v3/DriverRouteMap.tsx`): when
+  there's no live `driverFix` yet (GPS permission not granted, Driving Day not on, no
+  signal indoors), the map now falls back to the route's own `origin_lat/origin_lng` (or
+  geocodes `origin_address`) so it still draws a real line instead of showing only a lone
+  pin. The fallback marker uses the same blue dot but without the pulse animation
+  (`.driverDotStatic`), since a static stand-in shouldn't read as a live signal. "At
+  destination" only ever triggers off a real live fix - a route whose static origin
+  happens to equal its destination isn't the driver actually being there.
+- **Fixed a real bug found while building the fallback**: both the destination and origin
+  coordinates were held in refs, not React state - a geocoded result (no `lat/lng` on the
+  record, resolved from the address) arrived asynchronously and never triggered the map's
+  own update effect, so a stop needing geocoding could silently show no marker at all.
+  Replaced both with a small `useResolvedPoint` hook backed by `useState`.
+- `npm run typecheck`, `npm run lint` (no new warnings), `npm run build`, `npm test`
+  (149/149) all clean.
+
 ### Not done yet (real, not hidden)
 - **Manager still renders light-only.** `useManagerLightTheme()` in
   `app/manager/manager-shell.tsx` still forces the document to light on
