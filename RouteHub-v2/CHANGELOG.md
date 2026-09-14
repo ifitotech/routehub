@@ -1292,3 +1292,6 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 ## Stage 59 — 2026-09-14
 - Rework Today map composition around one full-bleed coordinate space: the MapLibre canvas now reaches behind the header, the lower dissolve begins at the stop details, and the route is fitted to the real available area.
 - Verify the compiled production CSS in a mobile Chromium render with a 1,174-vertex OSRM route across light and dark themes; keep the header controls and route colors visible while the map adopts the correct theme treatment.
+
+## Stage 60 — 2026-09-14
+- Move the OpenStreetMap attribution from the bottom edge of the map to the upper-right gap between the destination address and contact details, matching the approved Today composition in both themes.
