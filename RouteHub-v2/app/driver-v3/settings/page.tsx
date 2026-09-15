@@ -188,11 +188,6 @@ export default function DriverV3Settings() {
   return (
     <DriverV3Shell active="more" title={t.drvSettings} hideNav={confirmEnd || confirmSignOut}>
       <div className={styles.page}>
-        <header className={styles.pageHeader}>
-          <p>{locale === 'es' ? 'PREFERENCIAS' : locale === 'fr' ? 'PRÉFÉRENCES' : 'PREFERENCES'}</p>
-          <h1>{t.drvSettings}</h1>
-        </header>
-
         <section className={styles.section}>
           <Link href="/driver/more" className={styles.row}>
             <span className={styles.rowIcon}><UserRound size={18} /></span>
