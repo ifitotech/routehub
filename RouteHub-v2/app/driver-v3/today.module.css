@@ -417,3 +417,11 @@
    rules use the .page shorthand and must not put the started CTA back under
    the fixed navigation. */
 .page.pageStarted{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+
+/* The hero can still be taller than the shell's grid row because the map
+   intentionally underlaps the content. Keep the started CTA in the visible
+   action zone above the fixed nav instead of allowing that overflow to be
+   painted over by the nav surface. This is visual-only; its layout box and
+   click target remain unchanged. */
+.page.pageStarted .hero>.primary{position:relative;z-index:8;transform:translateY(-40px)}
+.page.pageStarted .hero>.primary:active{transform:translateY(-40px) scale(.985)}
