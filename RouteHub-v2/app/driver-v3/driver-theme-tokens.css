@@ -7,8 +7,8 @@
   --rh-ink: #06152c;
   --rh-navy: #081b35;
   --rh-navy-2: #0b2345;
-  --rh-surface: rgba(10, 31, 61, 0.72);
-  --rh-surface-strong: rgba(8, 26, 52, 0.92);
+  --rh-surface: #0f1f3c;
+  --rh-surface-strong: #081a34;
   --rh-surface-soft: rgba(255, 255, 255, 0.045);
   --rh-border: rgba(101, 162, 255, 0.16);
   --rh-border-strong: rgba(64, 142, 255, 0.3);
@@ -43,15 +43,15 @@
     radial-gradient(circle at 15% 85%, rgba(23, 217, 210, .09), transparent 28%),
     linear-gradient(155deg, #0b2345 0%, #06152c 46%, #030c1c 100%);
 
-  --rh-card-bg: linear-gradient(145deg, rgba(19, 53, 96, .70), rgba(5, 20, 42, .52));
+  --rh-card-bg: linear-gradient(145deg, #133560, #05142a);
 }
 
 html[data-theme='light'] .driver-v3-root {
   --rh-ink: #f5f9ff;
   --rh-navy: #ffffff;
   --rh-navy-2: #eef6ff;
-  --rh-surface: rgba(255, 255, 255, .80);
-  --rh-surface-strong: rgba(255, 255, 255, .94);
+  --rh-surface: #fff;
+  --rh-surface-strong: #fff;
   --rh-surface-soft: rgba(15, 62, 120, .035);
   --rh-border: rgba(31, 96, 170, .13);
   --rh-border-strong: rgba(31, 96, 170, .22);
@@ -79,5 +79,5 @@ html[data-theme='light'] .driver-v3-root {
     radial-gradient(circle at 14% 78%, rgba(23, 217, 210, .09), transparent 30%),
     linear-gradient(155deg, #f8fbff 0%, #eef6ff 55%, #f7fcff 100%);
 
-  --rh-card-bg: linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(238, 246, 255, .82));
+  --rh-card-bg: linear-gradient(145deg, #ffffff, #eef6ff);
 }

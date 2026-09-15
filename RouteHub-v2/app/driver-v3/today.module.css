@@ -179,7 +179,7 @@
 /* Crystallized primary CTA - dark values by default (Driver's tokens
    default to dark), light override right below softens it without
    changing what it communicates: this is the one operational action. */
-.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;height:64px;margin-top:14px;padding:0 16px;border:1px solid rgba(181,225,255,.40);border-radius:20px;background:linear-gradient(135deg,rgba(55,157,255,.98) 0%,rgba(22,119,255,.98) 52%,rgba(10,95,232,.98) 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,48,130,.20),0 12px 28px rgba(22,119,255,.28),0 2px 6px rgba(0,0,0,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font:inherit;font-size:19px;line-height:22px;font-weight:750;letter-spacing:-.01em;text-decoration:none;box-sizing:border-box;touch-action:manipulation;flex:0 0 auto;transition:transform 150ms ease,filter 150ms ease}
+.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;height:64px;margin-top:14px;padding:0 16px;border:1px solid rgba(181,225,255,.40);border-radius:20px;background:linear-gradient(135deg,rgba(55,157,255,.98) 0%,rgba(22,119,255,.98) 52%,rgba(10,95,232,.98) 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,48,130,.20),0 12px 28px rgba(22,119,255,.28),0 2px 6px rgba(0,0,0,.22);font:inherit;font-size:19px;line-height:22px;font-weight:750;letter-spacing:-.01em;text-decoration:none;box-sizing:border-box;touch-action:manipulation;flex:0 0 auto;transition:transform 150ms ease,filter 150ms ease}
 .primary svg{width:22px;height:22px}
 .primary:active{transform:scale(.985);filter:brightness(.97)}
 .primary:focus-visible{outline:3px solid rgba(132,207,255,.42);outline-offset:3px}
@@ -194,11 +194,9 @@
      column (grid-template-columns:44px ... 44px in driver-v3-b.module.css)
      so it doesn't overflow the reserved slot next to the centered logo. */
   width:44px;height:44px;border-radius:50%!important;
-  background:linear-gradient(145deg,rgba(26,62,108,.72),rgba(9,29,59,.78))!important;
+  background:linear-gradient(145deg,#1c3f6c,#091d3b)!important;
   border:1px solid rgba(131,185,255,.22)!important;
   color:#DCEBFF!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 22px rgba(0,0,0,.18)!important;
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   box-shadow:0 10px 28px rgba(0,0,0,.20)!important;
   display:grid;place-items:center;touch-action:manipulation;
 }
@@ -237,7 +235,7 @@
 .nextCard p{margin:3px 0 0;color:#667280;font-size:13px;line-height:17px;font-weight:500;overflow-wrap:anywhere}
 .nextCard i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#eef6ff;color:#1667f2}
 .nextCard i svg{width:20px;height:20px}
-.stateCard{display:grid;justify-items:center;gap:10px;width:100%;padding:36px 20px;border:1px solid rgba(125,180,255,.14);border-radius:18px;background:var(--rh-card-bg,linear-gradient(145deg,rgba(19,53,96,.70),rgba(5,20,42,.52)));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);text-align:center;box-sizing:border-box}
+.stateCard{display:grid;justify-items:center;gap:10px;width:100%;padding:36px 20px;border:1px solid rgba(125,180,255,.14);border-radius:18px;background:var(--rh-card-bg,linear-gradient(145deg,#133560,#05142a));text-align:center;box-sizing:border-box}
 .stateCard>svg{width:36px;height:36px;color:var(--rh-text-subtle,#6F86AA)}
 .stateCard h1{margin:0;color:var(--rh-text,#F7FAFF);font-size:22px;line-height:27px}
 .stateCard p{margin:0;color:var(--rh-text-muted,#9FB2D0);font-size:15px;line-height:20px}
@@ -272,11 +270,11 @@
 .routeMoreButton small{overflow:hidden;color:#64748b;font-size:11px;line-height:15px;text-overflow:ellipsis;white-space:nowrap}
 .routeMoreButton>svg{color:#1677ff}
 .routeMoreIcon{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eaf3ff;color:#1677ff;font-size:19px;font-weight:900;line-height:1}
-.routeSwipeZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:100%;min-height:58px;margin-top:8px;padding:10px 8px;border:1px solid var(--rh-border,rgba(101,162,255,.16));border-radius:14px;background:var(--rh-surface-soft,rgba(255,255,255,.045));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--rh-text-subtle,#6F86AA);font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:pan-y;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease}
+.routeSwipeZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:100%;min-height:58px;margin-top:8px;padding:10px 8px;border:1px solid var(--rh-border,rgba(101,162,255,.16));border-radius:14px;background:var(--rh-surface-soft,rgba(255,255,255,.045));color:var(--rh-text-subtle,#6F86AA);font:inherit;font-size:11px;line-height:16px;font-weight:750;cursor:pointer;touch-action:pan-y;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease}
 .routeSwipeZone:active{transform:scale(.98);color:var(--rh-primary,#1677ff);border-color:var(--rh-border-strong,rgba(64,142,255,.3))}
 .routeSwipeZone:focus-visible{outline:3px solid rgba(132,207,255,.42);outline-offset:2px;border-radius:14px}
 .routeSwipeHandle{display:block;width:42px;height:4px;border-radius:999px;background:var(--rh-divider,#b8c6d8);font-size:0;line-height:0}
-.nextChip{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border:1px solid var(--rh-border,rgba(101,162,255,.16));border-radius:12px;background:var(--rh-surface,rgba(10,31,61,.72));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--rh-text,#F7FAFF);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.nextChip{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border:1px solid var(--rh-border,rgba(101,162,255,.16));border-radius:12px;background:var(--rh-surface,#0f1f3c);color:var(--rh-text,#F7FAFF);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
 .nextChip:active{transform:scale(.99)}
 .nextChipLabel{flex:1;min-width:0}
 .nextChipLabel small{display:block;color:var(--rh-text-subtle,#6F86AA);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}

@@ -133,16 +133,12 @@ body[data-driver-app='v3'] {
   border: 1px solid rgba(181,225,255,.40);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,48,130,.20), 0 12px 28px rgba(22,119,255,.28), 0 2px 6px rgba(0,0,0,.22);
   color: #fff;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 .driver-v3-root .secondary {
-  background: linear-gradient(145deg, rgba(26,62,108,.72), rgba(9,29,59,.78));
+  background: linear-gradient(145deg, #1c3f6d, #0a1e3d);
   border: 1px solid rgba(131,185,255,.22);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 8px 22px rgba(0,0,0,.18);
   color: #dcebff;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 .driver-v3-root .danger {
   background: rgba(255,107,122,.12);
@@ -412,9 +408,7 @@ html[data-theme='light'] body[data-driver-app='v3'] {
 .driver-v3-root .card {
   border: 1px solid rgba(147, 193, 255, .16);
   border-radius: 18px;
-  background: linear-gradient(165deg, rgba(20, 38, 64, .78) 0%, rgba(11, 24, 43, .82) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(165deg, #142640 0%, #0b182b 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 14px 34px rgba(0, 0, 0, .28);
 }
 .driver-v3-root .row {
