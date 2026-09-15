@@ -436,6 +436,20 @@ html[data-theme='light'] body:has(.driver-v3-root) {
   background-color: #f5f9ff !important;
 }
 
+/* Final guard for WebView/iOS compositing: keep the Driver header out of any
+   glass treatment used by the rest of RouteHub. This intentionally lives at
+   the end of the Driver stylesheet so it wins regardless of import order. */
+html[data-driver-app='v3'] .driver-v3-root > main > header,
+body[data-driver-app='v3'] .driver-v3-root > main > header,
+body:has(.driver-v3-root) .driver-v3-root > main > header {
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
 /* A few older Driver screens (Truck, History) still use the app-wide
    generic .card/.row/.eyebrow/.muted classes from app/globals.css instead
    of a dedicated module - those already pick up dark/light COLORS
