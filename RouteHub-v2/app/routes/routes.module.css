@@ -343,10 +343,10 @@
 }
 
 .segmented button{
-  min-height:32px;
-  padding:5px 7px;
+  min-height:37px;
+  padding:6px 8px;
   border:1px solid var(--rh-line);
-  border-radius:10px;
+  border-radius:11px;
   background:var(--rh-surface-2);
   color:#44566d;
   font-size:11px;
@@ -385,13 +385,13 @@
 
 .field input,.field select,.field textarea,
 .fieldset .inputWrap input,.fieldset .inputWrap select{
-  min-height:38px;
+  min-height:41px;
   border:1px solid var(--rh-line);
   border-radius:11px;
   background:var(--rh-card);
   box-shadow:0 1px 0 rgb(15 23 42 / 2%);
-  padding-top:7px;
-  padding-bottom:7px;
+  padding-top:9px;
+  padding-bottom:9px;
   font-size:13px;
 }
 

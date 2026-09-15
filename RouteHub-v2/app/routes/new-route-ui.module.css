@@ -1,7 +1,7 @@
 /* Full width of the left column now (matches the Deliver-to search field
    below it), same as the Search-to-Deliver row's width. */
-.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0}
-.typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;padding:6px;border-radius:11px;border:1px solid var(--rh-line);background:var(--rh-card);cursor:pointer;color:#172033;text-align:center;min-width:0}
+.typeCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:0}
+.typeCard,.typeCardActive{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:9px;border-radius:12px;border:1px solid var(--rh-line);background:var(--rh-card);cursor:pointer;color:#172033;text-align:center;min-width:0}
 .typeCardActive{background:var(--rh-soft-blue);border:1.5px solid #4263EB;color:#3157E8}
 .typeCardIcon{display:inline-flex}
 .typeCardTitle{font-size:13px;font-weight:700;line-height:1.2}
@@ -86,7 +86,7 @@
    the common case. Choosing "Otro punto" reveals Last route/Custom as
    sub-options instead of sharing the same row. */
 .originToggle{display:flex;border:1px solid var(--rh-line);border-radius:10px;padding:3px;background:var(--rh-card);margin-bottom:6px}
-.originToggle button{flex:1;min-height:30px;border:0;border-radius:7px;background:transparent;color:var(--rh-ink);font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.originToggle button{flex:1;min-height:34px;border:0;border-radius:8px;background:transparent;color:var(--rh-ink);font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
 .originToggleActive{background:#1660f0!important;color:#fff!important}
 .originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:6px}
 .originSubChip{min-height:28px;border:1px solid var(--rh-line);border-radius:7px;background:var(--rh-surface-2);color:var(--rh-ink-soft);font-size:11px;font-weight:700;cursor:pointer}
@@ -118,7 +118,7 @@
    while the date input itself only appears once "Choose date" is picked -
    it used to always show a bare <input type=date>. */
 .scheduleToggle{display:flex;gap:2px;padding:3px;border:1px solid var(--rh-line);border-radius:10px;background:#fff}
-.scheduleToggle button{flex:1;min-height:30px;border:0;border-radius:7px;background:transparent;color:var(--rh-ink);font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.scheduleToggle button{flex:1;min-height:34px;border:0;border-radius:8px;background:transparent;color:var(--rh-ink);font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
 .scheduleToggleActive{background:#1660f0!important;color:#fff!important}
 
 .field{display:block;min-width:0}
