@@ -24,13 +24,15 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover' as const,
-  themeColor: '#ffffff',
+  // The app defaults to the dark driver chrome. Keeping the static value in
+  // sync prevents a blue/white browser safe-area strip before hydration.
+  themeColor: '#0f1d35',
 }
 
 // Apply the stored theme before React paints. ThemeBoot continues to keep it
 // in sync after hydration, but this prevents the document's light default from
 // peeking through underneath Manager or Driver while dark mode is loading.
-const themeBootstrap = `(()=>{try{const saved=localStorage.getItem('routehub_theme');const preference=saved==='light'||saved==='dark'||saved==='system'?saved:'dark';const theme=preference==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):preference;document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#0f1d35':'#ffffff')}catch{}})()`
+const themeBootstrap = `(()=>{try{const saved=localStorage.getItem('routehub_theme');const preference=saved==='light'||saved==='dark'||saved==='system'?saved:'dark';const theme=preference==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):preference;const color=theme==='dark'?'#0f1d35':'#ffffff';document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;const applyThemeColor=()=>{const metas=document.querySelectorAll('meta[name="theme-color"]');if(!metas.length&&document.head){const meta=document.createElement('meta');meta.name='theme-color';document.head.appendChild(meta)}document.querySelectorAll('meta[name="theme-color"]').forEach(meta=>meta.setAttribute('content',color))};applyThemeColor();document.addEventListener('DOMContentLoaded',applyThemeColor,{once:true})}catch{}})()`
 
 export default function Layout({children}: {children: React.ReactNode}) {
   return <html lang="en"><head><script dangerouslySetInnerHTML={{__html: themeBootstrap}}/></head><body><PwaRegister/><ThemeBoot/><AppErrorListener/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
