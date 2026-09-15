@@ -1391,3 +1391,4 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 - Raise the OpenStreetMap attribution away from the stop-information edge.
 - Cache each Driver map preview's road geometry by route id and endpoint version, avoiding repeat routing requests without sharing a route line across assignments.
 - Use a Google Static Maps preview exclusively in Driver Today when the browser-restricted key is configured, with route-specific styling, markers, geometry, and a MapLibre fallback for environments without that key.
+- Remove that route-specific Driver map-preview cache as soon as its pickup, delivery, or return is completed.

@@ -31,6 +31,21 @@ import dynamic from 'next/dynamic'
 const DriverRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
 import {MapPin, Phone, StickyNote, TriangleAlert, UserRound} from 'lucide-react'
 
+// Driver Today owns only temporary presentation data. A completed route must
+// not leave its route geometry behind on this device (nor affect another
+// assigned route), so remove just that route's versioned preview entries.
+function clearRouteMapPreview(routeId: string) {
+  try {
+    const prefix = `routehub:map-preview:v1:${routeId}:`
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index)
+      if (key?.startsWith(prefix)) window.localStorage.removeItem(key)
+    }
+  } catch {
+    // Private browsing can deny storage access; there is nothing to clean.
+  }
+}
+
 export default function DriverV3Page() {
   const router=useRouter()
   const searchParams=useSearchParams()
@@ -165,6 +180,7 @@ export default function DriverV3Page() {
     setMessage('')
     try{
       await completePickupWithEvidence(ctx())
+      clearRouteMapPreview(String(route.id))
       setSheet(null)
       await refresh()
     }catch(error){
@@ -186,6 +202,7 @@ export default function DriverV3Page() {
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
       await completeReturn(ctx(),{location})
+      clearRouteMapPreview(String(route.id))
       await refresh()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
@@ -255,6 +272,7 @@ export default function DriverV3Page() {
       }else{
         await completeDelivery(ctx())
       }
+      if (!withIssue) clearRouteMapPreview(String(route.id))
       setSheet(null)
       setRecipient('')
       setPhoto(null)
