@@ -102,10 +102,8 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
     query.append('style', 'feature:all|element:labels.text.fill|color:0xaec0d8')
     query.append('style', 'feature:all|element:labels.text.stroke|color:0x11233c')
   } else {
-    query.append('style', 'feature:all|element:geometry|color:0xf2f6fb')
-    query.append('style', 'feature:road|element:geometry|color:0xd9e5f1')
-    query.append('style', 'feature:water|element:geometry|color:0xd3e8f5')
-    query.append('style', 'feature:all|element:labels.text.fill|color:0x58718e')
+    // Keep Google's native light roadmap colors; the information fade below
+    // provides legibility without washing out the route itself.
   }
   return `https://maps.googleapis.com/maps/api/staticmap?${query.toString()}`
 }
