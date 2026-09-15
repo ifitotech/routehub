@@ -463,3 +463,14 @@ html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav:
   background: #fff !important;
   background-color: #fff !important;
 }
+
+/* The shell itself must not expose its old #f7f9fc surface through the
+   safe-area gap above the header. */
+html body:has(.driver-v3-root) .driver-v3-root > main {
+  background: #0f1d35 !important;
+  background-image: none !important;
+}
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main {
+  background: #fff !important;
+  background-image: none !important;
+}
