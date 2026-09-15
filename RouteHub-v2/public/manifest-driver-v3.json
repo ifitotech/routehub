@@ -8,8 +8,8 @@
   "display": "standalone",
   "display_override": ["standalone"],
   "orientation": "portrait-primary",
-  "background_color": "#0F1D35",
-  "theme_color": "#0F1D35",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "lang": "en",
   "categories": [
     "business",

@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'routehub-static-v18'
+const STATIC_CACHE = 'routehub-static-v19'
 const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-new.jpg?v=19']
 
 self.addEventListener('install', event => {
@@ -62,7 +62,16 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  const staticRequest = url.pathname.startsWith('/_next/static/') || ['style', 'script', 'font', 'image'].includes(request.destination)
+  const liveCode = request.destination === 'style' || request.destination === 'script' || url.pathname.startsWith('/_next/static/css/') || url.pathname.startsWith('/_next/static/chunks/')
+  if (liveCode) {
+    event.respondWith(fetch(request, {cache: 'no-store'}).then(response => {
+      if (response.ok) caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()))
+      return response
+    }).catch(() => caches.match(request).then(cached => cached || Response.error())))
+    return
+  }
+
+  const staticRequest = url.pathname.startsWith('/_next/static/') || ['font', 'image'].includes(request.destination)
   if (!staticRequest) return
   event.respondWith(caches.match(request).then(cached => {
     const network = fetch(request).then(response => {
