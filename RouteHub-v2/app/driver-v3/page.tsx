@@ -461,7 +461,7 @@ export default function DriverV3Page() {
             </div>
           )}
           <DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null}/>
-          <button type="button" className={styles.primary} disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
+          <button type="button" className={styles.primary} data-map-cta disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
             {busy?t.drvBusy:action.label}
           </button>
           {/* Maps/Call/Issue only appear once the stop is actually started -

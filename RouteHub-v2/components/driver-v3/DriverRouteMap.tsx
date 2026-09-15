@@ -241,13 +241,14 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
     const header = shell?.querySelector('header')
     const details = shell?.querySelector('[data-map-details]')
     const estimate = shell?.querySelector('[data-map-estimate]')
+    const cta = shell?.querySelector('[data-map-cta]')
     const layout = () => {
       map.resize()
       const rect = host.getBoundingClientRect()
       if (!rect.width || !rect.height) return
       const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
-      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 92
+      const fadeStart = cta ? cta.getBoundingClientRect().top - rect.top : (estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 92)
       wrapper.style.setProperty('--map-header-edge', `${headerEdge}px`)
       wrapper.style.setProperty('--map-details-start', `${detailsStart}px`)
       wrapper.style.setProperty('--map-fade-start', `${fadeStart}px`)
@@ -364,15 +365,16 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
     const header = shell?.querySelector('header')
     const details = shell?.querySelector('[data-map-details]')
     const estimate = shell?.querySelector('[data-map-estimate]')
+    const cta = shell?.querySelector('[data-map-cta]')
     const layout = () => {
       const rect = wrapper.getBoundingClientRect()
       if (!rect.width || !estimate) return
       const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
-      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 92
+      const fadeStart = cta ? cta.getBoundingClientRect().top - rect.top : (estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 92)
       // The previous percentage height ended above the contact card. Measure
       // the actual metrics instead; an absolute layer cannot move those metrics.
-      const height = Math.ceil(estimate.getBoundingClientRect().bottom - rect.top + 32)
+      const height = Math.ceil((cta || estimate).getBoundingClientRect().bottom - rect.top + 24)
       wrapper.style.height = `${height}px`
       const scale = 640 / Math.max(rect.width, height)
       setImageSize(`${Math.round(rect.width * scale)}x${Math.round(height * scale)}`)
@@ -384,7 +386,8 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
     observer.observe(wrapper)
     if (header) observer.observe(header)
     if (details?.parentElement) observer.observe(details.parentElement)
-    if (estimate?.parentElement) observer.observe(estimate.parentElement)
+      if (estimate?.parentElement) observer.observe(estimate.parentElement)
+      if (cta?.parentElement) observer.observe(cta.parentElement)
     layout()
     return () => observer.disconnect()
   }, [])
