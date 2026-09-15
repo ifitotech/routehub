@@ -20,8 +20,8 @@ export const metadata: Metadata = {
     statusBarStyle: 'black',
   },
   icons: {
-    icon: '/routehub-driver-icon.png?v=20',
-    apple: '/routehub-driver-icon.png?v=20',
+    icon: '/routehub-driver-new.jpg?v=20',
+    apple: '/routehub-driver-new.jpg?v=20',
   },
   formatDetection: {
     telephone: true,
