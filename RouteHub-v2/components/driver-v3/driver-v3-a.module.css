@@ -6,12 +6,9 @@
   --border:#dde5ee;
   height:100svh;
   height:100dvh;
-  height:calc(var(--app-1vh, 1dvh) * 100);
   max-height:100svh;
   max-height:100dvh;
-  max-height:calc(var(--app-1vh, 1dvh) * 100);
-  /* Keep the page and its header on one uninterrupted solid surface. */
-  background:#fff;
+  background:#f7f9fc;
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
   display:grid;
@@ -68,7 +65,9 @@
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:4px;
-  background:var(--rh-nav-bg,#0a1023);
+  background:var(--rh-nav-bg,rgba(4,16,35,.82));
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--rh-nav-border,rgba(124,173,255,.13));
   box-shadow:none;
   box-sizing:border-box;
@@ -106,7 +105,7 @@
   background:linear-gradient(90deg,#17D9D2,#1677FF);
 }
 html[data-theme='light'] .driver-v3-root .nav{
-  --rh-nav-bg:#fff;
+  --rh-nav-bg:rgba(255,255,255,.86);
   --rh-nav-border:rgba(11,31,58,.08);
   --rh-nav-inactive:#7B91AC;
   --rh-nav-active:#0A5FE8;
@@ -123,7 +122,6 @@ html[data-theme='light'] .driver-v3-root .nav{
   .rotatePortrait strong{font-size:22px;line-height:27px;font-weight:800;letter-spacing:-.02em}
   .rotatePortrait span{max-width:290px;color:#a9bdd9;font-size:14px;line-height:20px;font-weight:600}
 }
-:global(html[data-theme='light']) .shell{background:#fff}
 
 /* Every screen swap re-mounts .content (each tab is its own route) - this
    plays a short settle-in instead of the content just popping into place. */
