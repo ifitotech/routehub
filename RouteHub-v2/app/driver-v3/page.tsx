@@ -454,7 +454,7 @@ export default function DriverV3Page() {
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{compactAddress(route.destination_address)}</span></p>}
           </button>
           {started&&(route.destination_contact_name||route.destination_phone)&&(
-            <div className={styles.contactBlock}>
+            <div className={styles.contactBlock} data-map-contact>
               <span className={styles.contactLabel}>{locale==='es'?'CONTACTO':'CONTACT'}</span>
               {route.destination_contact_name&&<span className={styles.contactRow}><UserRound size={15}/><strong>{route.destination_contact_name}</strong></span>}
               {route.destination_phone&&<span className={styles.contactRow}><Phone size={15}/><strong>{formatPhone(route.destination_phone)}</strong></span>}

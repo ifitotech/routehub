@@ -83,8 +83,8 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
   // Static Maps otherwise hugs the path too tightly. These four invisible
   // viewport anchors add a stable visual margin so the route remains visible
   // above the Today details instead of being hidden by the fade/card.
-  const latMargin = Math.max((maxLat - minLat) * .14, .018)
-  const lngMargin = Math.max((maxLng - minLng) * .14, .018)
+  const latMargin = Math.max((maxLat - minLat) * .24, .028)
+  const lngMargin = Math.max((maxLng - minLng) * .24, .028)
   const query = new URLSearchParams({
     size, scale: '2', format: 'png', maptype: 'roadmap', key,
     markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
@@ -240,6 +240,7 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
     const shell = wrapper.closest('main')
     const header = shell?.querySelector('header')
     const details = shell?.querySelector('[data-map-details]')
+    const contact = shell?.querySelector('[data-map-contact]')
     const estimate = shell?.querySelector('[data-map-estimate]')
     const cta = shell?.querySelector('[data-map-cta]')
     const layout = () => {
@@ -250,7 +251,7 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
       // The reference keeps the complete route crisp, then dissolves into
       // the information surface as soon as the badge/title begins.
-      const fadeStart = Math.max(detailsStart + 18, headerEdge + 220)
+      const fadeStart = contact ? contact.getBoundingClientRect().top - rect.top - 18 : Math.max(detailsStart + 18, headerEdge + 220)
       wrapper.style.setProperty('--map-header-edge', `${headerEdge}px`)
       wrapper.style.setProperty('--map-details-start', `${detailsStart}px`)
       wrapper.style.setProperty('--map-fade-start', `${fadeStart}px`)
@@ -265,7 +266,7 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
       const side = Math.min(48, rect.width * .1)
       map.fitBounds(bounds, {
         padding: {top, bottom: Math.max(24, rect.height - visibleBottom), left: side, right: side},
-        maxZoom: points.length === 1 ? 13 : 14, duration: 0,
+        maxZoom: points.length === 1 ? 12 : 13, duration: 0,
       })
     }
     const observer = new ResizeObserver(layout)
@@ -366,6 +367,7 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
     const shell = wrapper.closest('main')
     const header = shell?.querySelector('header')
     const details = shell?.querySelector('[data-map-details]')
+    const contact = shell?.querySelector('[data-map-contact]')
     const estimate = shell?.querySelector('[data-map-estimate]')
     const cta = shell?.querySelector('[data-map-cta]')
     const layout = () => {
@@ -373,7 +375,7 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
       if (!rect.width || !estimate) return
       const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
-      const fadeStart = Math.max(detailsStart + 18, headerEdge + 220)
+      const fadeStart = contact ? contact.getBoundingClientRect().top - rect.top - 18 : Math.max(detailsStart + 18, headerEdge + 220)
       // The previous percentage height ended above the contact card. Measure
       // the actual metrics instead; an absolute layer cannot move those metrics.
       const height = Math.ceil((cta || estimate).getBoundingClientRect().bottom - rect.top + 24)
