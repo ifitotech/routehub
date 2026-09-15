@@ -458,6 +458,23 @@ html body .driver-v3-root > main > header > * {
   will-change: auto !important;
 }
 
+/* Keep the iOS safe-area/status strip and the app header on one flat paint
+   surface. A different body color here reads as a translucent blur band. */
+html body:has(.driver-v3-root),
+html body[data-driver-app='v3'],
+html body:has(.driver-v3-root) .driver-v3-root,
+html body[data-driver-app='v3'] .driver-v3-root {
+  background: #0f1d35 !important;
+  background-image: none !important;
+}
+html[data-theme='light'] body:has(.driver-v3-root),
+html[data-theme='light'] body[data-driver-app='v3'],
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root,
+html[data-theme='light'] body[data-driver-app='v3'] .driver-v3-root {
+  background: #fff !important;
+  background-image: none !important;
+}
+
 /* A few older Driver screens (Truck, History) still use the app-wide
    generic .card/.row/.eyebrow/.muted classes from app/globals.css instead
    of a dedicated module - those already pick up dark/light COLORS
