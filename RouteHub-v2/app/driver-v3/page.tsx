@@ -29,7 +29,7 @@ import dynamic from 'next/dynamic'
 // prerendering/SSR - load it client-only, same pattern used by every other
 // map consumer in this app (driver-route-navigation, compact-map, etc.)
 const DriverRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
-import {MapPin, Phone, TriangleAlert, UserRound} from 'lucide-react'
+import {Info, MapPin, TriangleAlert} from 'lucide-react'
 
 // Driver Today owns only temporary presentation data. A completed route must
 // not leave its route geometry behind on this device (nor affect another
@@ -56,14 +56,6 @@ function compactAddress(value: unknown) {
   const parts = String(value || '').split(',').map(part => part.trim()).filter(Boolean)
   if (parts.length <= 2) return parts.join(' · ')
   return `${parts.slice(0, 2).join(', ')} · ${parts.at(-1)}`
-}
-
-function formatPhone(value: unknown) {
-  const raw = String(value || '').trim()
-  const digits = raw.replace(/\D/g, '')
-  if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-  if (digits.length === 11 && digits.startsWith('1')) return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
-  return raw
 }
 
 export default function DriverV3Page() {
@@ -337,9 +329,6 @@ export default function DriverV3Page() {
     if(kind==='delivery'){setSheet('delivery');setPodPanel('issue')}
     else {setSheet('pickup');setIssueOpen(true)}
   }
-  const callFromTools=()=>{
-    if(route?.destination_phone) window.location.href=`tel:${String(route.destination_phone).replace(/[^\d+]/g,'')}`
-  }
 
   const primary=()=>{
     if(!started) {
@@ -453,13 +442,6 @@ export default function DriverV3Page() {
             <h1>{shortDestination(route.destination_name||route.destination_address)||t.drvCurrentStopName}</h1>
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{compactAddress(route.destination_address)}</span></p>}
           </button>
-          {started&&(route.destination_contact_name||route.destination_phone)&&(
-            <div className={styles.contactBlock} data-map-contact>
-              <span className={styles.contactLabel}>{locale==='es'?'CONTACTO':'CONTACT'}</span>
-              {route.destination_contact_name&&<span className={styles.contactRow}><UserRound size={15}/><strong>{route.destination_contact_name}</strong></span>}
-              {route.destination_phone&&<span className={styles.contactRow}><Phone size={15}/><strong>{formatPhone(route.destination_phone)}</strong></span>}
-            </div>
-          )}
           <DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null}/>
           <button type="button" className={styles.primary} data-map-cta disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
             {busy?t.drvBusy:action.label}
@@ -475,12 +457,10 @@ export default function DriverV3Page() {
                   <span className={styles.secondaryActionIcon}><MapPin size={22}/></span>
                   <span>{t.drvOpenMaps}</span>
                 </button>
-                {route.destination_phone&&(
-                  <button type="button" className={styles.secondaryAction} onClick={callFromTools}>
-                    <span className={styles.secondaryActionIcon}><Phone size={22}/></span>
-                    <span>{locale==='es'?'Llamar':locale==='fr'?'Appeler':'Call'}</span>
-                  </button>
-                )}
+                <button type="button" className={styles.secondaryAction} onClick={()=>setSheet('info')}>
+                  <span className={styles.secondaryActionIcon}><Info size={22}/></span>
+                  <span>{locale==='es'?'Info':locale==='fr'?'Infos':'Info'}</span>
+                </button>
                 <button type="button" className={`${styles.secondaryAction} ${styles.secondaryActionDanger}`} onClick={openIssueFromTools}>
                   <span className={styles.secondaryActionIcon}><TriangleAlert size={22}/></span>
                   <span>{t.drvIssue}</span>

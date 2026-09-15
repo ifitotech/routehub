@@ -351,6 +351,8 @@
 :global(html[data-theme='light']) .contactBlock{background:rgba(255,255,255,.5)}
 .hero :global([data-map-estimate]){position:relative;z-index:2;padding:4px 0;background:rgba(247,249,252,.9)}
 :global(html[data-theme='light']) .contactBlock{background:rgba(247,249,252,.94);box-shadow:0 3px 12px rgba(35,78,130,.07)}
+.hero>.secondaryRow{order:1}
+.hero>.primary{order:2}
 @media(max-width:380px){
   .hero{padding-inline:14px}
   .routeGlyphHost,.routeGlyphHostCompact{width:calc(100% + 28px);margin-inline:-14px}
