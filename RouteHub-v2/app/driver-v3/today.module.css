@@ -16,7 +16,7 @@
    paints over whatever of the map ends up behind it either way, so
    bleeding a bit further than strictly necessary is harmless - bleeding
    too little would leave the exact gap this is meant to close. */
-.page{--map-bleed:130px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:calc(100% + var(--map-bleed, 130px));min-height:0;margin-top:calc(-1 * var(--map-bleed, 130px));padding:var(--map-bleed, 130px) 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:transparent;overflow:hidden;touch-action:pan-y;transition:transform .34s cubic-bezier(.32,.72,0,1),border-radius .34s cubic-bezier(.32,.72,0,1);transform-origin:center top}
+.page{--map-bleed:0px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;width:100%;max-width:100%;height:100%;min-height:0;margin-top:0;padding:0 0 2px;box-sizing:border-box;color:var(--rh-text,#0f172a);background:transparent;overflow:hidden;touch-action:pan-y;transition:transform .34s cubic-bezier(.32,.72,0,1),border-radius .34s cubic-bezier(.32,.72,0,1);transform-origin:center top}
 /* The confirm sheet (.confirmSheet, driver-v3-b.module.css) is meant to
    read as opening "out of" the bottom bar while the map/hero recede up
    into the header behind it, not just a plain dialog stacked on top -
