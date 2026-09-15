@@ -73,11 +73,25 @@ function encodePolyline(points: MapPoint[]) {
 }
 
 function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geometry: MapPoint[], theme: 'light' | 'dark') {
+  const points = geometry.length > 2 ? geometry : [origin, destination]
+  const latitudes = points.map(point => point.lat)
+  const longitudes = points.map(point => point.lng)
+  const minLat = Math.min(...latitudes)
+  const maxLat = Math.max(...latitudes)
+  const minLng = Math.min(...longitudes)
+  const maxLng = Math.max(...longitudes)
+  // Static Maps otherwise hugs the path too tightly. These four invisible
+  // viewport anchors add a stable visual margin so the route remains visible
+  // above the Today details instead of being hidden by the fade/card.
+  const latMargin = Math.max((maxLat - minLat) * .14, .018)
+  const lngMargin = Math.max((maxLng - minLng) * .14, .018)
   const query = new URLSearchParams({
     size: '640x640', scale: '2', format: 'png', maptype: 'roadmap', key,
     markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
   })
   query.append('markers', `size:mid|color:0xffbd4aff|${destination.lat},${destination.lng}`)
+  query.append('visible', `${minLat - latMargin},${minLng - lngMargin}`)
+  query.append('visible', `${maxLat + latMargin},${maxLng + lngMargin}`)
   // Do not invent a straight line while routing is unavailable. A static
   // preview either has the verified road geometry or simply shows its stops.
   if (geometry.length > 2) query.append('path', `weight:5|color:0x149cfaff|enc:${encodePolyline(geometry)}`)
