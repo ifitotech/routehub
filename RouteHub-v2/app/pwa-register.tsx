@@ -4,6 +4,18 @@ import {useEffect} from 'react'
 
 export default function PwaRegister() {
   useEffect(() => {
+    // Standalone PWAs and supported mobile browsers can lock the document to
+    // portrait. Native Android is additionally locked in AndroidManifest.xml;
+    // iOS simply ignores this promise when its WebKit build does not expose
+    // Screen Orientation API.
+    const lockPortrait = () => {
+      const orientation = window.screen.orientation as ScreenOrientation & {
+        lock?: (value: OrientationLockType) => Promise<void>
+      }
+      if (typeof orientation?.lock === 'function') void orientation.lock('portrait-primary').catch(() => {})
+    }
+    lockPortrait()
+    window.addEventListener('orientationchange', lockPortrait)
     const onInstallPrompt = (event: Event) => {
       event.preventDefault()
       window.dispatchEvent(new CustomEvent('routehub:install-available', {detail: event}))
@@ -50,6 +62,7 @@ export default function PwaRegister() {
     return () => {
       active = false
       window.removeEventListener('beforeinstallprompt', onInstallPrompt)
+      window.removeEventListener('orientationchange', lockPortrait)
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       window.removeEventListener('online', update)
       window.removeEventListener('focus', update)
