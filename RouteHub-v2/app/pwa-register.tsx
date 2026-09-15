@@ -10,7 +10,7 @@ export default function PwaRegister() {
     // Screen Orientation API.
     const lockPortrait = () => {
       const orientation = window.screen.orientation as ScreenOrientation & {
-        lock?: (value: OrientationLockType) => Promise<void>
+        lock?: (value: 'portrait-primary' | 'portrait') => Promise<void>
       }
       if (typeof orientation?.lock === 'function') void orientation.lock('portrait-primary').catch(() => {})
     }
