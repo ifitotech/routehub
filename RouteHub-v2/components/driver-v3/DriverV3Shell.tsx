@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck, UserRound} from 'lucide-react'
+import {Bell, ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
@@ -48,8 +48,6 @@ export default function DriverV3Shell({
   const {t} = useLocale()
   const pathname = usePathname()
   const isStack = mode === 'stack'
-  const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
-  const menuHref = profileOpen ? '/driver' : '/driver/more'
   const mapOpen = pathname === '/driver/map'
 
   return (
@@ -69,8 +67,8 @@ export default function DriverV3Shell({
           <span>RouteHub</span>
         </Link>
         {rightSlot || (
-          <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
-            <UserRound strokeWidth={2.2} />
+          <Link href="/driver/settings" className={styles.headerIcon} aria-label="Notifications">
+            <Bell strokeWidth={2.2} />
           </Link>
         )}
       </header>

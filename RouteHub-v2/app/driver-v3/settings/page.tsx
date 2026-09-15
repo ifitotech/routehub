@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield} from 'lucide-react'
+import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield, UserRound} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
@@ -192,6 +192,17 @@ export default function DriverV3Settings() {
           <p>{locale === 'es' ? 'PREFERENCIAS' : locale === 'fr' ? 'PRÉFÉRENCES' : 'PREFERENCES'}</p>
           <h1>{t.drvSettings}</h1>
         </header>
+
+        <section className={styles.section}>
+          <Link href="/driver/more" className={styles.row}>
+            <span className={styles.rowIcon}><UserRound size={18} /></span>
+            <span className={styles.rowCopy}>
+              <strong>{t.drvProfile}</strong>
+              <small>{locale === 'es' ? 'Datos personales y contraseña' : locale === 'fr' ? 'Informations personnelles et mot de passe' : 'Personal details and password'}</small>
+            </span>
+            <ChevronRight className={styles.rowChevron} size={19} />
+          </Link>
+        </section>
 
         {(workspace.company || workspace.branch) && (
           <section className={styles.section}>
