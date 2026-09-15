@@ -1,6 +1,6 @@
 // Bump this whenever the worker's caching contract changes. Old caches are
 // removed during activate so an installed PWA cannot keep stale shell assets.
-const STATIC_CACHE = 'routehub-static-v21'
+const STATIC_CACHE = 'routehub-static-v22'
 const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-new.jpg?v=20']
 
 self.addEventListener('install', event => {
