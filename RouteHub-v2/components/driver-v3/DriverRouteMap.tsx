@@ -283,11 +283,14 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
       for (const point of points) bounds.extend([point.lng, point.lat])
       // Keep both endpoints above the badge, with room for the top dissolve.
       const available = Math.max(48, detailsStart - headerEdge)
-      const top = headerEdge + Math.min(36, available * .22)
+      // Keep a real breathing margin around both endpoints. The compact
+      // Today map can be taller/shorter depending on the device, so fixed
+      // zoom values crop the first or last marker on some phones.
+      const top = Math.max(72, headerEdge + Math.min(54, available * .24))
       const visibleBottom = Math.max(top + 24, Math.min(detailsStart - 18, rect.height - 24))
-      const side = Math.min(48, rect.width * .1)
+      const side = Math.max(56, Math.min(72, rect.width * .12))
       map.fitBounds(bounds, {
-        padding: {top, bottom: Math.max(24, rect.height - visibleBottom), left: side, right: side},
+        padding: {top, bottom: Math.max(72, rect.height - visibleBottom), left: side, right: side},
         duration: 0,
       })
     }
