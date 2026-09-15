@@ -1418,3 +1418,4 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 - Add expanded static-map viewport anchors so the complete route stays visible above Today’s details and fade.
 - Give the Today preview more vertical canvas so the decorative map reads larger without moving or covering the operational controls.
 - Extend the map layer behind the contact card through distance/ETA, keeping the route centered while leaving the operational content above it.
+- Delay the lower dissolve so light and dark map imagery remains visible through contact and ETA before blending into the page surface.

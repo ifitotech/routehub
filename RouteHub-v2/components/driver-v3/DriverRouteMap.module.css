@@ -31,8 +31,8 @@
       transparent calc(var(--map-header-edge) + 54px)),
     linear-gradient(to bottom,
       transparent 0px,
-      transparent calc(var(--map-details-start) - 32px),
-      rgba(var(--today-surface-rgb,16,28,45),.66) calc(var(--map-details-start) + 64px),
+      transparent calc(var(--map-details-start) + 92px),
+      rgba(var(--today-surface-rgb,16,28,45),.34) calc(var(--map-details-start) + 250px),
       var(--today-surface,#101c2d) 100%);
 }
 .driverMarker,.destinationMarker {display:grid;place-items:center;pointer-events:none}

@@ -116,7 +116,7 @@
    all the way up to .page's own, now-higher, top edge - the real top of
    the header) - height grows by --map-bleed too so the map's BOTTOM edge
    stays exactly where it was; only the top extends further up. */
-.routeGlyphHost{--map-extra:clamp(280px,38vh,390px);--map-underlap:150px;position:relative;z-index:0;width:calc(100% + 36px);height:calc(47vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(210px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(400px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-18px - var(--map-bleed, 130px)) -18px calc(14px - var(--map-extra));border-radius:0;overflow:visible;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
+.routeGlyphHost{--map-extra:clamp(280px,38vh,390px);--map-underlap:280px;position:relative;z-index:0;width:calc(100% + 36px);height:calc(47vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(210px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(400px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-18px - var(--map-bleed, 130px)) -18px calc(14px - var(--map-extra));border-radius:0;overflow:visible;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
 .routeGlyphHost>div{position:absolute;top:0;right:0;left:0;height:calc(100% + var(--map-underlap));overflow:hidden}
 .routeGlyphHostCompact{--map-extra:clamp(190px,26vh,280px);height:calc(19vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(92px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(155px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-18px - var(--map-bleed, 130px)) -18px calc(10px - var(--map-extra))}
 .hero> :not(.routeGlyphHost){position:relative;z-index:1}
@@ -281,7 +281,7 @@
   .page{gap:10px}
   .hero{padding:14px}
   .identityBlock h1{font-size:26px;min-height:29px}
-  .routeGlyphHost{--map-extra:clamp(230px,35vh,330px);--map-underlap:132px;width:calc(100% + 28px);height:calc(43vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(170px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(340px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-14px - var(--map-bleed, 130px)) -14px calc(14px - var(--map-extra))}
+  .routeGlyphHost{--map-extra:clamp(230px,35vh,330px);--map-underlap:230px;width:calc(100% + 28px);height:calc(43vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(170px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(340px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-14px - var(--map-bleed, 130px)) -14px calc(14px - var(--map-extra))}
   .routeGlyphHostCompact{--map-extra:clamp(165px,24vh,240px);height:calc(17vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(80px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(135px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-14px - var(--map-bleed, 130px)) -14px calc(10px - var(--map-extra))}
 }
 
@@ -296,7 +296,7 @@
   .identityBlock h1{font-size:23px;line-height:1.08;min-height:25px}
   .addressLine{font-size:13px;margin-top:4px}
   .poLine{font-size:14px;margin-top:5px}
-  .routeGlyphHost{--map-extra:clamp(215px,33vh,300px);--map-underlap:118px;width:calc(100% + 24px);height:calc(36vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(140px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(280px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-12px - var(--map-bleed, 130px)) -12px calc(10px - var(--map-extra));border-radius:0}
+  .routeGlyphHost{--map-extra:clamp(215px,33vh,300px);--map-underlap:205px;width:calc(100% + 24px);height:calc(36vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(140px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(280px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-12px - var(--map-bleed, 130px)) -12px calc(10px - var(--map-extra));border-radius:0}
   .routeGlyphHostCompact{--map-extra:clamp(155px,23vh,220px);height:calc(15vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(74px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(125px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-12px - var(--map-bleed, 130px)) -12px calc(8px - var(--map-extra))}
   .hero>.divider{margin:7px 0}
   .primary{min-height:54px;height:54px;border-radius:15px;font-size:16px;margin-top:10px}
@@ -312,7 +312,7 @@
   .identityBlock h1{font-size:22px;line-height:1.06;min-height:24px}
   .addressLine{margin-top:3px;font-size:13px}
   .poLine{margin-top:4px;font-size:13px}
-  .routeGlyphHost{--map-extra:clamp(160px,25vh,220px);--map-underlap:104px;width:calc(100% + 22px);height:calc(31vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(106px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(210px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-11px - var(--map-bleed, 130px)) -11px calc(8px - var(--map-extra));border-radius:0}
+  .routeGlyphHost{--map-extra:clamp(160px,25vh,220px);--map-underlap:180px;width:calc(100% + 22px);height:calc(31vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(106px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(210px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-11px - var(--map-bleed, 130px)) -11px calc(8px - var(--map-extra));border-radius:0}
   .routeGlyphHostCompact{--map-extra:clamp(120px,18vh,170px);height:calc(14vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(62px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(100px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-11px - var(--map-bleed, 130px)) -11px calc(8px - var(--map-extra))}
   .hero>.divider{margin:5px 0}
   .primary{min-height:50px;height:50px;font-size:15px;margin-top:8px}
