@@ -54,7 +54,7 @@
 /* A dark workspace is one coherent operational surface.  Route cards used to
    retain their light-only backgrounds, which made the route list feel like two
    unrelated themes stitched together. */
-:global(html[data-theme="dark"]) .page{color:var(--rh-text);background:var(--rh-bg)}
+:global(html[data-theme="dark"]) .page{color:var(--rh-text);background:transparent}
 :global(html[data-theme="dark"]) .header p:not(.eyebrow),
 :global(html[data-theme="dark"]) .listHeading p{color:var(--rh-text-secondary)}
 :global(html[data-theme="dark"]) .secondaryButton{border-color:var(--rh-border);background:#18263b;color:var(--rh-text)}
