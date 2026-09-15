@@ -143,7 +143,14 @@
    secondary row that centering used to split evenly above and below,
    reading as a stray gap floating over the nav bar instead of the row
    sitting right against it. */
-.pageStarted{justify-content:flex-end}
+.pageStarted{justify-content:flex-end;
+  /* The Today page lives in the grid row immediately above the fixed
+     Driver nav, but its map underlap makes the visual content taller than
+     that row. Reserve the nav's touch area when actions are visible so the
+     primary CTA is lifted clear of the nav instead of being clipped behind
+     it on short phones and in mobile browser chrome. */
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+}
 /* Maps/Call/Issue - hidden before the stop starts, then animate in
    together as one row right under the CTA once it does. Round icon
    buttons (icon in its own circle, label below), not boxed tiles - matches
@@ -405,3 +412,8 @@
 :global(html[data-theme='dark']) .progressDots i,:global(html[data-theme='dark']) .progressDots .upcoming{background:#18263b;border-color:#60738c}
 :global(html[data-theme='dark']) .mapPreview :global(.openstreet-route-empty),:global(html[data-theme='dark']) .mapEmpty{background:#102036;color:#b9c9dd}
 :global(html[data-theme='dark']) .loadingHero,:global(html[data-theme='dark']) .loadingProgress,:global(html[data-theme='dark']) .loadingNext{border-color:#31445f;background:linear-gradient(90deg,#18263b 20%,#21334b 50%,#18263b 80%)}
+
+/* Keep this reservation after the compact-phone media rules above; those
+   rules use the .page shorthand and must not put the started CTA back under
+   the fixed navigation. */
+.page.pageStarted{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
