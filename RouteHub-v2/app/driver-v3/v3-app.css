@@ -229,6 +229,10 @@ body:has(.driver-v3-root) .global-chrome {
   background: transparent !important;
 }
 .driver-v3-root > main > header {
+  position: relative !important;
+  isolation: isolate !important;
+  contain: paint !important;
+  z-index: 300 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
@@ -236,6 +240,20 @@ body:has(.driver-v3-root) .global-chrome {
   background-color: #0F1D35 !important;
   background-image: none !important;
   opacity: 1 !important;
+}
+
+/* Keep the shared Driver header fully opaque on every screen (including
+   Profile/Settings).  Those stack pages sit over a tinted hero, so relying
+   on the theme attribute alone can let the hero bleed through while the
+   attribute is being hydrated. */
+.driver-v3-root > main > header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #0F1D35;
+  opacity: 1;
+  pointer-events: none;
 }
 
 .driver-v3-root .card {
@@ -395,6 +413,9 @@ html[data-theme='dark'] .driver-v3-root textarea {
 html[data-theme='light'] .driver-v3-root > main > header {
   background: #fff !important;
   background-color: #fff !important;
+}
+html:not([data-theme='dark']) .driver-v3-root > main > header::before {
+  background: #fff;
 }
 html[data-theme='light'] .driver-v3-root > main > header button,
 html[data-theme='light'] .driver-v3-root > main > header a {
