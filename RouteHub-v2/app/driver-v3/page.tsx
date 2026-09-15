@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useRouter, useSearchParams} from 'next/navigation'
-import {Package, PackageCheck, PackagePlus, Truck, Warehouse} from 'lucide-react'
+import {Package, PackageCheck, PackagePlus, RefreshCw, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -471,7 +471,15 @@ export default function DriverV3Page() {
           )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-      </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
+      </>:<section className={styles.stateCard} aria-live="polite">
+        <div className={styles.emptyRouteArt} aria-hidden="true"><span/><i/><b/></div>
+        <Package className={styles.emptyRouteIcon}/>
+        <h1>{locale==='es'?'Todo listo por ahora':'You’re all caught up'}</h1>
+        <p>{t.drvNoStops}</p>
+        <button type="button" className={styles.emptyRefresh} onClick={()=>void refreshToday()} disabled={refreshing}>
+          <RefreshCw size={16} className={refreshing?styles.spin:''}/>{locale==='es'?'Actualizar rutas':'Refresh routes'}
+        </button>
+      </section>}
 
       {sheet==='info'&&route&&(
         <InfoSheet route={route} kind={kind||'return'} t={t} onClose={()=>setSheet(null)} onOpenMaps={()=>{setSheet(null);openMaps()}}/>

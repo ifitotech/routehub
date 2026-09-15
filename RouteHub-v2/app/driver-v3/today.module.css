@@ -235,6 +235,17 @@
 .stateCard h1{margin:0;color:var(--rh-text,#F7FAFF);font-size:22px;line-height:27px}
 .stateCard p{margin:0;color:var(--rh-text-muted,#9FB2D0);font-size:15px;line-height:20px}
 .stateCard button{width:100%;height:52px;margin-top:6px;border:0;border-radius:12px;background:var(--rh-primary,#1677f2);color:#fff;font:inherit;font-size:15px;font-weight:800}
+.emptyRouteArt{position:relative;width:190px;height:72px;margin:-4px auto 2px;opacity:.72;color:#a9c8f7}
+.emptyRouteArt:before{content:"";position:absolute;left:20px;right:18px;top:35px;border-top:2px dashed currentColor;transform:rotate(-8deg);transform-origin:center}
+.emptyRouteArt:after{content:"";position:absolute;right:4px;top:9px;width:22px;height:28px;border:4px solid #5d9cf5;border-radius:16px 16px 16px 2px;transform:rotate(45deg);box-shadow:0 5px 12px rgba(22,119,255,.18)}
+.emptyRouteArt span,.emptyRouteArt i,.emptyRouteArt b{position:absolute;display:block;border-radius:50%;background:#b9d3fa}
+.emptyRouteArt span{left:10px;top:29px;width:13px;height:13px;border:3px solid #6fa8f5;background:#fff}
+.emptyRouteArt i{left:74px;top:22px;width:9px;height:9px}.emptyRouteArt b{left:111px;top:39px;width:7px;height:7px}
+.emptyRouteIcon{display:none!important}
+.emptyRefresh{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;width:auto!important;min-width:168px;height:44px!important;padding:0 18px;border:1px solid #6aa7f8!important;border-radius:999px!important;background:transparent!important;color:#1677f2!important;font-size:14px!important;box-shadow:none!important}
+.emptyRefresh:disabled{opacity:.6}.spin{animation:emptySpin .8s linear infinite}@keyframes emptySpin{to{transform:rotate(360deg)}}
+:global(html[data-theme='light']) .stateCard{border-color:rgba(95,151,224,.18);background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(242,247,255,.9));box-shadow:0 14px 34px rgba(53,105,170,.08)}
+:global(html[data-theme='light']) .stateCard h1{color:#0b1f3a}.stateCard p{font-weight:600}
 .loading{display:flex;flex-direction:column;gap:12px}
 .loadingHero,.loadingProgress,.loadingNext{border:1px solid #e5e7eb;border-radius:18px;background:linear-gradient(90deg,#fff 20%,#f2f5f9 50%,#fff 80%);background-size:220% 100%;animation:shimmer 1.4s infinite}
 .loadingHero{height:286px}
