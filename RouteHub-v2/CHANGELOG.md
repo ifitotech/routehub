@@ -1,5 +1,22 @@
 # Changelog
 
+## Stage 94 — 2026-09-14
+- Continue trimming confirmed-dead CSS from `app/final-polish.css`: removed `.live-route-
+  navigation` (a turn list view with zero references anywhere in the codebase - the live
+  map view actually used, `.live-route-map`/`.live-route-map-head`/`.live-route-canvas`,
+  is untouched) and `.route-map-marker`/`.route-map-marker-wrap`/`.route-map-marker-driver`/
+  `-origin`/`-destination` (also zero references). Confirmed the file's ~130-line Driver
+  `.route-plan-*`/`.route-plan-navigate`/`.route-plan-driver-*` section (line ~372 on,
+  explicitly commented as Driver's own) is untouched and out of scope.
+- Left the triple-redefined `.global-chrome` block alone (flagged by the audit, lines
+  ~17/48/85) - each of the three definitions sets different, partially-overlapping
+  properties across plain and `!important` declarations; safely collapsing them to one
+  rule needs the actual computed styles verified in a real browser first, not manual
+  cascade tracing, to avoid dropping a property that's still silently in effect. Left as
+  a known next step, not attempted blind.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (same 15 as
+  Stage 93 - the one Driver-owned warning, untouched) all clean.
+
 ## Stage 93 — 2026-09-14
 - Trim confirmed-dead CSS from `app/final-polish.css` (543 → 502 lines): removed rules for
   `.report-pagination`, `.metric-card`/`.metric-link`, `.live-page-title`/`.live-page-intro`,
