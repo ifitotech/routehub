@@ -9,7 +9,8 @@
   height:100dvh;
   max-height:100svh;
   max-height:100dvh;
-  background:#f7f9fc;
+  /* Keep the page and its header on one uninterrupted solid surface. */
+  background:#fff;
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
   display:grid;
@@ -123,7 +124,7 @@ html[data-theme='light'] .driver-v3-root .nav{
   .rotatePortrait strong{font-size:22px;line-height:27px;font-weight:800;letter-spacing:-.02em}
   .rotatePortrait span{max-width:290px;color:#a9bdd9;font-size:14px;line-height:20px;font-weight:600}
 }
-:global(html[data-theme='light']) .shell{--driver-header-bg:#fff}
+:global(html[data-theme='light']) .shell{--driver-header-bg:#fff;background:#fff}
 
 /* Every screen swap re-mounts .content (each tab is its own route) - this
    plays a short settle-in instead of the content just popping into place. */

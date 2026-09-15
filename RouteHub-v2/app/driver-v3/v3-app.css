@@ -429,6 +429,8 @@ body:has(.driver-v3-root) .driver-v3-root > main > header {
   filter: none !important;
   opacity: 1 !important;
   mix-blend-mode: normal !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 /* Keep every Driver screen header as one crisp, solid bar. In particular,
