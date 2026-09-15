@@ -1,6 +1,6 @@
 // Bump this whenever the worker's caching contract changes. Old caches are
 // removed during activate so an installed PWA cannot keep stale shell assets.
-const STATIC_CACHE = 'routehub-static-v20'
+const STATIC_CACHE = 'routehub-static-v21'
 const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-new.jpg?v=19']
 
 self.addEventListener('install', event => {
@@ -75,11 +75,10 @@ self.addEventListener('fetch', event => {
 
   const staticRequest = url.pathname.startsWith('/_next/static/') || ['font', 'image'].includes(request.destination)
   if (!staticRequest) return
-  event.respondWith(caches.match(request).then(cached => {
-    const network = fetch(request).then(response => {
-      if (response.ok) caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()))
-      return response
-    })
-    return cached || network
-  }))
+  // Network first keeps an installed PWA aligned with the latest deployment.
+  // The cache is only an offline fallback, never the preferred version.
+  event.respondWith(fetch(request, {cache: 'no-store'}).then(response => {
+    if (response.ok) caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()))
+    return response
+  }).catch(() => caches.match(request).then(cached => cached || Response.error())))
 })
