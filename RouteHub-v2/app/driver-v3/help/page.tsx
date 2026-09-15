@@ -14,42 +14,59 @@ import {
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import {useLocale} from '../../../lib/use-preferences'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
+import {USER_GUIDE_URL} from '../../../lib/user-guide'
 import styles from '../driver-preferences.module.css'
 
 function topics(locale: string) {
   if (locale === 'es') {
     return [
-      ['Today', 'Ahí sale la parada asignada: tipo (recogida, entrega o retorno), dirección, contacto y PO. Si no hay paradas, la sucursal todavía no te asignó trabajo.'],
-      ['Cómo completar', 'Inicia la ruta, marca Llegué y completa. Recogida: confirma que llevas el material. Entrega: nombre de quien recibe, foto o firma. Retorno: llegar a la sucursal, sin PO.'],
-      ['Issue', 'Si el cliente no está, la dirección falla o hay daño, usa Issue en la parada. Queda en el historial para la sucursal. No inventes destinatario.'],
-      ['Jornada y GPS', 'Driving Day On empieza el turno y puede pedir ubicación. Off la corta. El permiso de iPhone es aparte: si lo niegas, la app sigue y el mapa no tendrá pin en vivo.'],
-      ['Mapas', 'Open Maps abre Apple/Google Maps con la dirección real. El mapa de RouteHub dibuja paradas geocodificadas; sin señal no hay GPS de fondo.'],
-      ['Avisos', 'Las notificaciones avisan rutas nuevas o cambios. Si las apagas aquí y siguen saliendo, ciérralas en Ajustes del iPhone → RouteHub.'],
-      ['Camión e historial', 'Truck muestra el vehículo asignado y combustible/mantenimiento. History lista paradas ya cerradas del día, en orden.'],
-      ['Cuenta', 'Usuario, sucursal y rol los pone tu empresa. Para login o un camión mal asignado habla con el manager, no desde esta pantalla.'],
+      ['Hoy',
+        'Hoy es la parada que te toca ahora. Arriba ves el mapa de la ruta. Abajo la ficha: tipo (Pickup, Delivery o Return), dirección, contacto y, si es recogida, el PO. Vacío significa que la sucursal todavía no te asignó trabajo para hoy.'],
+      ['Cómo completar',
+        'En la ficha usas Maps para abrir la navegación del teléfono. Al llegar, desliza o confirma llegada. Se abre una hoja sobre Hoy: Pickup pide confirmar que llevas el material; Delivery pide el nombre de quien recibe y una foto; Return es llegar a la sucursal, sin PO. Issue si no se puede entregar.'],
+      ['Issue',
+        'Cliente ausente, dirección mala o daño: Issue en esa parada. Queda en el historial para la sucursal. No inventes un destinatario solo para cerrar la entrega.'],
+      ['Jornada y GPS',
+        'Driving Day On empieza el turno. Off lo cierra. El permiso de ubicación del iPhone o Android es otro interruptor. Si lo niegas, puedes trabajar; el pin en vivo no se mueve. Esta PWA no sigue el GPS con la app cerrada.'],
+      ['Mapas',
+        'Maps entrega la dirección real a Apple o Google Maps. El mapa de RouteHub dibuja las paradas que ya tienen coordenada. Sin señal no hay ruta dibujada.'],
+      ['Avisos',
+        'La campana del encabezado y el interruptor de Ajustes avisan rutas nuevas o cambios. Si las apagas aquí y siguen saliendo, ciérralas también en Ajustes del teléfono → RouteHub.'],
+      ['Camión e historial',
+        'Camión muestra el vehículo asignado. Historial lista las paradas ya cerradas del día, en orden: recogida, entrega, retorno.'],
+      ['Cuenta y legal',
+        'Usuario, sucursal y rol los pone tu empresa. Contraseña o camión mal asignado: habla con el manager. Privacidad y Términos están en Ajustes. La guía larga se abre desde Ajustes → Guía de uso.'],
     ]
   }
   if (locale === 'fr') {
     return [
-      ['Today', 'Arrêt assigné : type (collecte, livraison, retour), adresse, contact et PO. Vide = pas encore de travail.'],
-      ['Terminer un arrêt', 'Démarrez, Arrivé, puis terminer. Collecte : confirmez le matériel. Livraison : nom du destinataire, photo ou signature. Retour : succursale, sans PO.'],
-      ['Incident', 'Client absent, mauvaise adresse ou dégât : Incident sur l’arrêt. Visible par la succursale.'],
-      ['Journée et GPS', 'Driving Day On démarre le service et peut demander la position. Off l’arrête. Le permis iPhone est séparé.'],
-      ['Cartes', 'Open Maps ouvre Plans/Google. RouteHub place les arrêts géocodés. Pas de GPS en arrière-plan.'],
-      ['Alertes', 'Nouvelles routes et changements. Pour les couper vraiment : Réglages iPhone → RouteHub.'],
-      ['Camion et historique', 'Truck = véhicule assigné. History = arrêts déjà terminés.'],
-      ['Compte', 'Compte et rôle gérés par l’entreprise. Mot de passe / camion : votre manager.'],
+      ['Aujourd’hui', 'Carte en haut, fiche en bas : type (collecte, livraison, retour), adresse, contact et PO si collecte. Vide = pas encore de travail.'],
+      ['Terminer un arrêt', 'Maps ouvre la navigation du téléphone. À l’arrivée, confirmez. Collecte : confirmez le matériel. Livraison : nom du destinataire et photo. Retour : succursale, sans PO. Incident si c’est impossible.'],
+      ['Incident', 'Client absent, mauvaise adresse ou dégât : Incident. Visible par la succursale. N’inventez pas de destinataire.'],
+      ['Journée et GPS', 'Driving Day On démarre le service. Le permis de l’appareil est séparé. Pas de GPS appli fermée.'],
+      ['Cartes', 'Maps ouvre Plans/Google. RouteHub place les arrêts géocodés.'],
+      ['Alertes', 'Cloche et réglage Ajustes. Pour tout couper : Réglages du téléphone → RouteHub.'],
+      ['Camion et historique', 'Camion = véhicule assigné. Historique = arrêts déjà terminés.'],
+      ['Compte', 'Compte et rôle gérés par l’entreprise. Confidentialité et Conditions dans Ajustes.'],
     ]
   }
   return [
-    ['Today', 'This is the assigned stop: type (pickup, delivery or return), address, contact and PO. Empty means the branch has not assigned work yet.'],
-    ['How to finish a stop', 'Start the route, tap Arrived, then complete. Pickup: confirm you have the material. Delivery: recipient name plus a photo or signature. Return: arrive at the branch. No PO on return.'],
-    ['Issue', 'Customer gone, wrong address or damaged goods: use Issue on the stop. It is stored for the branch. Do not invent a recipient name.'],
-    ['Driving Day and GPS', 'Driving Day On starts the shift and may ask for location. Off stops sharing. iPhone permission is separate. If you deny it, you can still work; the live pin will not update.'],
-    ['Maps', 'Open Maps hands the real address to Apple or Google Maps. The in-app map plots geocoded stops. This PWA cannot keep GPS running after you leave the app.'],
-    ['Alerts', 'Device notifications are for new routes and changes. To silence them fully, also turn them off in iPhone Settings → RouteHub.'],
-    ['Truck and History', 'Truck shows the assigned vehicle plus fuel and maintenance logs. History lists completed stops for the day, pickup then delivery then return.'],
-    ['Account', 'Login, branch and role are set by your company. Password or wrong truck: talk to your manager. RouteHub Support does not change workspace access from this screen.'],
+    ['Today',
+      'Today is the stop in front of you. The map sits on top. The sheet underneath shows type (Pickup, Delivery or Return), address, contact and the PO on pickup. Empty means the branch has not assigned work for today.'],
+    ['How to finish a stop',
+      'Use Maps to hand the real address to Apple or Google Maps. When you get there, slide or confirm arrival. A sheet opens on Today: Pickup asks you to confirm the material; Delivery asks for the recipient name and a photo; Return is arrive at the branch with no PO. Use Issue if the stop cannot be finished.'],
+    ['Issue',
+      'Customer gone, bad address or damaged goods: Issue on that stop. It is stored for the branch. Do not invent a recipient name just to close a delivery.'],
+    ['Driving Day and GPS',
+      'Driving Day On starts the shift. Off ends it. Phone location permission is a separate switch. If you deny it you can still work; the live pin will not move. This PWA cannot keep GPS running after you leave the app.'],
+    ['Maps',
+      'Maps opens the phone navigation app with the real address. The RouteHub map plots stops that already have coordinates. No signal means no drawn line.'],
+    ['Alerts',
+      'The header bell and the Settings toggle send new-route and change alerts. If you turn them Off here and they still appear, also disable them in the phone Settings app → RouteHub.'],
+    ['Truck and History',
+      'Truck shows the assigned vehicle. History lists closed stops for the day in order: pickup, then delivery, then return.'],
+    ['Account and legal',
+      'Login, branch and role are set by your company. Password or wrong truck: talk to your manager. Privacy and Terms live in Settings. The long walkthrough is Settings → User guide.'],
   ]
 }
 
@@ -57,10 +74,10 @@ export default function DriverHelpPage() {
   const {locale, t} = useLocale()
   const title = locale === 'es' ? 'Ayuda' : locale === 'fr' ? 'Aide' : 'Help'
   const intro = locale === 'es'
-    ? 'Guía de la app Driver. Los datos salen de las rutas que asigna tu sucursal.'
+    ? 'Guía corta de Driver. Los datos salen de las rutas que asigna tu sucursal.'
     : locale === 'fr'
-      ? 'Guide de l’app Driver. Les données viennent des routes de votre succursale.'
-      : 'Driver app guide. Everything here uses the routes your branch assigns.'
+      ? 'Guide court du Driver. Les données viennent des routes de votre succursale.'
+      : 'Short Driver guide. Everything here uses the routes your branch assigns.'
 
   return (
     <DriverV3Shell active="more" mode="stack" title={title} backHref="/driver/settings" backLabel={t.drvBack}>
@@ -89,7 +106,9 @@ export default function DriverHelpPage() {
         <p className={styles.footer}>
           <Link href="/driver/privacy">{locale === 'es' ? 'Privacidad' : locale === 'fr' ? 'Confidentialité' : 'Privacy'}</Link>
           {' · '}
-          <Link href="/terms">Terms</Link>
+          <Link href="/terms">{locale === 'es' ? 'Términos' : locale === 'fr' ? 'Conditions' : 'Terms'}</Link>
+          {' · '}
+          <a href={USER_GUIDE_URL} target="_blank" rel="noreferrer">{locale === 'es' ? 'Guía' : locale === 'fr' ? 'Guide' : 'Guide'}</a>
           {' · '}
           {DRIVER_APP_VERSION}
         </p>
