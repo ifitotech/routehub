@@ -53,8 +53,8 @@ export default function DriverV3Shell({
   const mapOpen = pathname === '/driver/map'
 
   return (
-    <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
-      <header style={active === 'today' ? {position: 'relative', zIndex: 300} : {zIndex: 300}} className={`${styles.header} ${styles.appHeader} ${active === 'today' ? styles.headerToday : ''}`}>
+    <main data-driver-screen={active} style={active === 'today' ? {isolation: 'isolate'} : undefined} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
+      <header style={active === 'today' ? {position: 'relative', zIndex: 300, isolation: 'isolate', transform: 'none', filter: 'none', backdropFilter: 'none', WebkitBackdropFilter: 'none'} : {zIndex: 300}} className={`${styles.header} ${styles.appHeader} ${active === 'today' ? styles.headerToday : ''}`}>
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
             <ChevronLeft size={22} strokeWidth={2.4} />
