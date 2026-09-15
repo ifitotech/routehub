@@ -164,6 +164,8 @@
   filter:none !important;
   text-shadow:none !important;
   -webkit-font-smoothing:antialiased;
+  background-image:none !important;
+  isolation:isolate;
 }
 /* The header itself stays the plain flat bar every Driver screen uses -
    an earlier attempt (Stage 30/33) extended the map's own gradient up into
@@ -286,6 +288,9 @@
   filter:none !important;
   opacity:1 !important;
 }
+.appHeader :global(.notification-bell){justify-self:end;z-index:2}
+.appHeader :global(.notification-bell__button){width:44px;height:44px;border:0!important;border-radius:0;background:transparent!important;box-shadow:none!important;color:inherit!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.appHeader :global(.notification-bell__button) svg{color:inherit!important;stroke:currentColor!important}
 :global(html[data-theme='light']) :global(.driver-v3-root) .appHeader.headerToday{
   background:var(--today-header,#fff)!important;
   box-shadow:none!important;

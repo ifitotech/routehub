@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {Bell, ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck} from 'lucide-react'
+import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
 import {useLocale} from '../../lib/use-preferences'
+import NotificationBell from '../../app/notification-bell'
 
 const styles = {...shellA, ...shellB}
 
@@ -66,11 +67,7 @@ export default function DriverV3Shell({
           <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
           <span>RouteHub</span>
         </Link>
-        {rightSlot || (
-          <Link href="/driver/settings" className={styles.headerIcon} aria-label="Notifications">
-            <Bell strokeWidth={2.2} />
-          </Link>
-        )}
+        {rightSlot || <NotificationBell />}
       </header>
 
       <section data-driver-screen={active} className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>
