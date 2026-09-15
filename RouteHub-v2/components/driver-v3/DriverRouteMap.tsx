@@ -90,6 +90,11 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
     markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
   })
   query.append('markers', `size:mid|color:0xffbd4aff|${destination.lat},${destination.lng}`)
+  // Clean navigation-style cartography: keep roads and area names, hide
+  // businesses, attractions and other nearby POI clutter.
+  query.append('style', 'feature:poi|element:labels|visibility:off')
+  query.append('style', 'feature:transit|element:labels|visibility:off')
+  query.append('style', 'feature:landscape.man_made|element:labels|visibility:off')
   query.append('visible', `${minLat - latMargin},${minLng - lngMargin}`)
   query.append('visible', `${maxLat + latMargin},${maxLng + lngMargin}`)
   // Do not invent a straight line while routing is unavailable. A static
