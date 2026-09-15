@@ -9,82 +9,120 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,sans-serif}
 a{color:#8cb4ff}
-.wrap{max-width:880px;margin:0 auto;padding:20px 16px 80px}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px calc(80px + env(safe-area-inset-bottom))}
 .hero{display:flex;gap:12px;align-items:center;margin-bottom:8px}
-.hero img{width:44px;height:44px;border-radius:12px;object-fit:cover}
-.lead{color:var(--muted)}
+.hero img{width:48px;height:48px;border-radius:12px;object-fit:cover;flex:0 0 auto}
+.lead{color:var(--muted);font-size:14px}
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
 .bar button{border:1px solid var(--line);background:#101c2d;color:var(--muted);border-radius:999px;padding:10px 14px;font-weight:700;min-height:44px}
 .bar button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px}
 .card h2{margin:0 0 8px;font-size:18px}
-.card p{color:var(--muted);margin:0}
+.card p{color:var(--muted);margin:0 0 12px}
 .tag{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9cc0ff;margin-bottom:6px}
 .pane[hidden]{display:none}
-.shot{margin:12px 0 0;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
-.phone{max-width:360px}
-.screen{padding:12px;background:linear-gradient(#13233a,#0f1d35)}
-.sbar{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;font-weight:800;gap:8px}
-.map{height:110px;margin:10px 0;border-radius:10px;background:linear-gradient(180deg,#1b3a2c,#16324a);position:relative}
-.pin{position:absolute;width:12px;height:12px;border-radius:50% 50% 50% 0;background:#1667F2;transform:rotate(-45deg)}
-.chip{display:inline-block;background:#1d4ed8;color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:3px 8px}
-.h{font-size:20px;font-weight:800;margin:6px 0 2px}
-.sub{font-size:12px;color:#9bb0c9}
-.cta{margin-top:10px;background:#1667F2;color:#fff;text-align:center;border-radius:12px;padding:12px;font-weight:800}
-.row{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
-.mini{flex:1;background:#1a2b42;border-radius:10px;padding:8px;font-size:11px;color:#9bb0c9}
-.nav{display:flex;justify-content:space-around;margin-top:10px;font-size:10px;color:#7f93ab}
+.shot{margin:0 0 12px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0f1d35}
+.shot img{width:100%;aspect-ratio:16/10;object-fit:cover}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:700;background:#1667F2;color:#fff}
+.actions a.ghost{background:#1a2b42;color:#d7e6ff;border:1px solid var(--line)}
 footer{margin-top:22px;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hero">
-    <img src="/routehub-regular-new.jpg" alt="RouteHub">
+    <img src="/routehub-icon-192.png" alt="RouteHub">
     <div><strong>RouteHub</strong><div class="lead" id="lead"></div></div>
   </div>
-  <h1>Guía</h1>
+  <h1 id="title">Guía</h1>
   <div class="bar">
-    <button type="button" id="tab-m" aria-pressed="true" onclick="show('m')">Manager</button>
-    <button type="button" id="tab-d" aria-pressed="false" onclick="show('d')">Driver</button>
-    <button type="button" onclick="lang('es')">ES</button>
-    <button type="button" onclick="lang('en')">EN</button>
-    <button type="button" onclick="lang('fr')">FR</button>
+    <button type="button" id="tab-m" aria-pressed="true">Manager</button>
+    <button type="button" id="tab-d" aria-pressed="false">Driver</button>
+    <button type="button" data-lang="es">ES</button>
+    <button type="button" data-lang="en">EN</button>
+    <button type="button" data-lang="fr">FR</button>
   </div>
   <div id="pane-m" class="pane">
-    <article class="card"><span class="tag">Dashboard</span><h2 id="m1t"></h2><p id="m1"></p>
-      <div class="shot"><div class="screen"><div class="sbar"><span>Routes</span><span>Tue 15</span></div>
-      <div class="mini" style="margin-top:8px">01 DELIVERY · FOX ELECTRIC</div>
-      <div class="mini">02 DELIVERY · HORSEPOWER</div>
-      <div class="mini">03 PICKUP · EDSUN · 48497</div></div></div></article>
-    <article class="card"><span class="tag">Add route</span><h2 id="m2t"></h2><p id="m2"></p>
-      <div class="shot"><div class="screen"><div class="sbar"><span>New route</span><span>Ces Opa</span></div>
-      <div class="row"><div class="mini">Pickup</div><div class="mini" style="background:#1667F2;color:#fff">Delivery</div><div class="mini">Return</div></div>
-      <div class="mini" style="margin-top:8px">Origin · Last route</div><div class="mini">Destination</div></div></div></article>
-    <article class="card"><span class="tag">Edit routes</span><h2 id="m3t"></h2><p id="m3"></p></article>
-    <article class="card"><span class="tag">Settings</span><h2 id="m4t"></h2><p id="m4"></p></article>
+    <article class="card">
+      <span class="tag">Dashboard</span>
+      <h2 id="m1t"></h2>
+      <p id="m1"></p>
+      <div class="shot"><img src="/login-hero-v2.png" alt="RouteHub Manager"></div>
+      <div class="actions">
+        <a href="/routes">Abrir Dashboard</a>
+        <a class="ghost" href="/login">Iniciar sesión</a>
+      </div>
+    </article>
+    <article class="card">
+      <span class="tag">Add route</span>
+      <h2 id="m2t"></h2>
+      <p id="m2"></p>
+      <div class="actions"><a href="/routes">Crear ruta</a></div>
+    </article>
+    <article class="card">
+      <span class="tag">Edit routes</span>
+      <h2 id="m3t"></h2>
+      <p id="m3"></p>
+      <div class="actions"><a href="/routes">Manejar rutas</a></div>
+    </article>
+    <article class="card">
+      <span class="tag">Settings</span>
+      <h2 id="m4t"></h2>
+      <p id="m4"></p>
+      <div class="actions">
+        <a href="/settings">Ajustes</a>
+        <a class="ghost" href="/terms">Términos</a>
+        <a class="ghost" href="/privacy">Privacidad</a>
+      </div>
+    </article>
   </div>
   <div id="pane-d" class="pane" hidden>
-    <article class="card"><span class="tag">Today</span><h2 id="d1t"></h2><p id="d1"></p>
-      <div class="shot phone"><div class="screen">
-        <div class="sbar"><img src="/routehub-driver-app.jpg" alt="" width="22" height="22" style="border-radius:6px"> RouteHub</div>
-        <div class="map"><span class="pin" style="left:28%;top:30%"></span><span class="pin" style="left:62%;top:58%;background:#f59e0b"></span></div>
-        <span class="chip">DELIVERY</span><div class="sub">Stop 1 of 3</div>
-        <div class="h">FOX ELECTRIC</div><div class="sub">6095 NW 167th St, D1</div>
-        <div class="row"><div class="mini">3.7 mi</div><div class="mini">9 min</div></div>
-        <div class="cta">START DELIVERY</div>
-        <div class="nav"><span>Today</span><span>Routes</span><span>Truck</span><span>More</span></div>
-      </div></div></article>
-    <article class="card"><span class="tag">Complete</span><h2 id="d2t"></h2><p id="d2"></p></article>
-    <article class="card"><span class="tag">Settings</span><h2 id="d3t"></h2><p id="d3"></p></article>
-    <article class="card"><span class="tag">GPS</span><h2 id="d4t"></h2><p id="d4"></p></article>
+    <article class="card">
+      <span class="tag">Today</span>
+      <h2 id="d1t"></h2>
+      <p id="d1"></p>
+      <div class="shot"><img src="/routehub-driver-new.jpg" alt="RouteHub Driver"></div>
+      <div class="actions">
+        <a href="/driver">Abrir Driver</a>
+        <a class="ghost" href="/login">Iniciar sesión</a>
+      </div>
+    </article>
+    <article class="card">
+      <span class="tag">Complete</span>
+      <h2 id="d2t"></h2>
+      <p id="d2"></p>
+      <div class="actions"><a href="/driver">Ir a Hoy</a></div>
+    </article>
+    <article class="card">
+      <span class="tag">Settings</span>
+      <h2 id="d3t"></h2>
+      <p id="d3"></p>
+      <div class="actions">
+        <a href="/driver/settings">Ajustes Driver</a>
+        <a class="ghost" href="/driver/help">Ayuda</a>
+      </div>
+    </article>
+    <article class="card">
+      <span class="tag">GPS</span>
+      <h2 id="d4t"></h2>
+      <p id="d4"></p>
+    </article>
   </div>
-  <footer><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a><br><span id="foot"></span></footer>
+  <footer>
+    <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/login">Sign in</a><br>
+    <span id="foot"></span>
+  </footer>
 </div>
 <script>
-var L={es:{lead:'App en vivo, 15 Sep 2026. Ces Opa.',m1t:'Ver el día',m1:'Calendario + lista + mapa. En el teléfono: List / Map.',m2t:'Crear ruta',m2:'Pickup, Delivery o Return. PO solo en Pickup.',m3t:'Mover o cancelar',m3:'Edit routes en la misma pantalla. Solo rutas abiertas.',m4t:'Ajustes',m4:'Idioma, tema, notificaciones, sucursal, esta guía, privacidad y términos. Help del Driver está dentro de Ajustes (pide login).',d1t:'Hoy',d1:'Mapa + ficha. Tabs: Today, Routes, Truck, More.',d2t:'Completar',d2:'START DELIVERY. Delivery: nombre y foto. Issue si no se puede.',d3t:'Ajustes',d3:'Driving Day, ubicación, alertas.',d4t:'GPS',d4:'Driving Day y el permiso del teléfono son distintos. Sin GPS si cierras la PWA.',foot:'Público: /guide.html · /terms · /privacy'},en:{lead:'Live app, 15 Sep 2026.',m1t:'See the day',m1:'Calendar + list + map.',m2t:'Create a route',m2:'PO on Pickup only.',m3t:'Move or cancel',m3:'Same page, open stops only.',m4t:'Settings',m4:'Guide, privacy and terms. In-app Help needs login.',d1t:'Today',d1:'Map + sheet.',d2t:'Finish',d2:'START DELIVERY. Use Issue if it cannot close.',d3t:'Settings',d3:'Driving Day and alerts.',d4t:'GPS',d4:'No GPS after you leave the PWA.',foot:'/guide.html · /terms · /privacy'},fr:{lead:'App réelle, 15 Sep 2026.',m1t:'Journée',m1:'Liste + carte.',m2t:'Créer',m2:'PO à la collecte seulement.',m3t:'Gérer',m3:'Même page.',m4t:'Réglages',m4:'Guide et confidentialité.',d1t:'Aujourd’hui',d1:'Carte + fiche.',d2t:'Terminer',d2:'START DELIVERY.',d3t:'Réglages',d3:'Driving Day.',d4t:'GPS',d4:'Pas de GPS appli fermée.',foot:'/guide.html · /terms · /privacy'}};
-function lang(c){var t=L[c];document.documentElement.lang=c;['lead','m1t','m1','m2t','m2','m3t','m3','m4t','m4','d1t','d1','d2t','d2','d3t','d3','d4t','d4','foot'].forEach(function(id){document.getElementById(id).textContent=t[id]});}
+var L={es:{lead:'App en vivo. Las pantallas de abajo abren la función real.',title:'Guía',m1t:'Ver el día',m1:'Dashboard = calendario + lista + mapa. En el teléfono cambia List / Map. Pide cuenta Manager.',m2t:'Crear ruta',m2:'Pickup, Delivery o Return. PO solo en Pickup. El botón abre /routes.',m3t:'Mover o cancelar',m3:'Edit routes está en la misma página. Solo rutas que no estén activas o cerradas.',m4t:'Ajustes',m4:'Idioma, tema, notificaciones, sucursal, esta guía, privacidad y términos.',d1t:'Hoy',d1:'Mapa + ficha. Tabs reales: Today, Routes, Truck, More.',d2t:'Completar',d2:'START DELIVERY abre la hoja. Delivery: nombre y foto. Pickup: material y PO. Return: sin PO. Issue si no se puede.',d3t:'Ajustes',d3:'Driving Day, ubicación y alertas. Ayuda pide login de Driver.',d4t:'GPS',d4:'Driving Day y el permiso del teléfono son distintos. La PWA no sigue el GPS con la app cerrada.',foot:'Enlaces reales: /routes · /driver · /settings · /terms · /privacy'},en:{lead:'Live app. Buttons below open the real screens.',title:'Guide',m1t:'See the day',m1:'Dashboard = calendar + list + map. Phone uses List / Map.',m2t:'Create a route',m2:'Pickup, Delivery or Return. PO on Pickup only.',m3t:'Move or cancel',m3:'Same page. Only open stops.',m4t:'Settings',m4:'Language, theme, notifications, this guide, privacy and terms.',d1t:'Today',d1:'Map + sheet. Tabs: Today, Routes, Truck, More.',d2t:'Finish',d2:'START DELIVERY opens the sheet. Use Issue if it cannot close.',d3t:'Settings',d3:'Driving Day, location, alerts. In-app Help needs Driver login.',d4t:'GPS',d4:'Driving Day is not the phone permission. No GPS after you leave the PWA.',foot:'Live links: /routes · /driver · /settings · /terms · /privacy'},fr:{lead:'App réelle. Les boutons ouvrent les écrans.',title:'Guide',m1t:'Journée',m1:'Calendrier + liste + carte.',m2t:'Créer',m2:'PO seulement à la collecte.',m3t:'Gérer',m3:'Même page, arrêts ouverts.',m4t:'Réglages',m4:'Langue, thème, guide, confidentialité.',d1t:'Aujourd’hui',d1:'Carte + fiche. Today, Routes, Truck, More.',d2t:'Terminer',d2:'START DELIVERY. Incident si impossible.',d3t:'Réglages',d3:'Driving Day et alertes.',d4t:'GPS',d4:'Pas de GPS appli fermée.',foot:'/routes · /driver · /settings · /terms · /privacy'}};
+function lang(c){var t=L[c];document.documentElement.lang=c;document.getElementById('title').textContent=t.title;['lead','m1t','m1','m2t','m2','m3t','m3','m4t','m4','d1t','d1','d2t','d2','d3t','d3','d4t','d4','foot'].forEach(function(id){document.getElementById(id).textContent=t[id]});}
 function show(w){document.getElementById('pane-m').hidden=w!=='m';document.getElementById('pane-d').hidden=w!=='d';document.getElementById('tab-m').setAttribute('aria-pressed',w==='m'?'true':'false');document.getElementById('tab-d').setAttribute('aria-pressed',w==='d'?'true':'false');}
+document.getElementById('tab-m').onclick=function(){show('m')};
+document.getElementById('tab-d').onclick=function(){show('d')};
+document.querySelectorAll('[data-lang]').forEach(function(b){b.onclick=function(){lang(b.getAttribute('data-lang'))}});
 lang('es');
 </script>
-</body></html>
+</body>
+</html>
