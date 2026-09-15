@@ -1385,3 +1385,8 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 
 ## Stage 91 — 2026-09-14
 - Extend Today’s visual system across Driver Routes, Truck, and Profile: shared elevated surfaces, token-aware light/dark backgrounds, crystal controls, stronger route history tabs/cards, and a screen marker for reliable per-screen styling.
+
+## Stage 92 — 2026-09-14
+- Apply the saved theme before first paint and enforce dark document surfaces for Driver and Manager, eliminating the light layer visible beneath dark screens.
+- Raise the OpenStreetMap attribution away from the stop-information edge.
+- Cache each Driver map preview's road geometry by route id and endpoint version, avoiding repeat routing requests without sharing a route line across assignments.

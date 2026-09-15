@@ -27,6 +27,11 @@ export const viewport = {
   themeColor: '#2563eb',
 }
 
+// Apply the stored theme before React paints. ThemeBoot continues to keep it
+// in sync after hydration, but this prevents the document's light default from
+// peeking through underneath Manager or Driver while dark mode is loading.
+const themeBootstrap = `(()=>{try{const saved=localStorage.getItem('routehub_theme');const preference=saved==='light'||saved==='dark'||saved==='system'?saved:'dark';const theme=preference==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):preference;document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme}catch{}})()`
+
 export default function Layout({children}: {children: React.ReactNode}) {
-  return <html lang="en"><body><PwaRegister/><ThemeBoot/><AppErrorListener/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
+  return <html lang="en"><head><script dangerouslySetInnerHTML={{__html: themeBootstrap}}/></head><body><PwaRegister/><ThemeBoot/><AppErrorListener/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
 }

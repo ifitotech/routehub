@@ -21,6 +21,33 @@ type Route = {
 const AT_DESTINATION_COPY = {en: 'At destination', es: 'En destino', fr: 'Sur place'}
 const AT_DESTINATION_METERS = 45
 
+// This cache deliberately includes the route id and both endpoints.  A driver
+// can therefore return to a route without another routing request, while a
+// different route (even to the same destination) can never inherit its line.
+function previewCacheKey(routeId: string, origin: MapPoint, destination: MapPoint) {
+  return `routehub:map-preview:v1:${routeId}:${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}:${destination.lat.toFixed(5)},${destination.lng.toFixed(5)}`
+}
+
+function readPreviewGeometry(key: string): MapPoint[] | null {
+  try {
+    const value = JSON.parse(window.localStorage.getItem(key) || 'null')
+    if (!Array.isArray(value) || value.length < 3) return null
+    const points = value.map(sanitizeCoordinate).filter((point): point is MapPoint => Boolean(point))
+    return points.length > 2 ? points : null
+  } catch {
+    return null
+  }
+}
+
+function savePreviewGeometry(key: string, points: MapPoint[]) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(points))
+  } catch {
+    // Storage can be unavailable in private browsing. The live map remains a
+    // safe fallback in that case.
+  }
+}
+
 // Theme filters affect only the raster canvas. Markers and the SVG road retain
 // their colors, and swapping themes cannot destroy/recreate the route layers.
 const osmStyle: maplibregl.StyleSpecification = {
@@ -86,11 +113,20 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {
   useEffect(() => {
     setRoadGeometry(null)
     if (!routingOrigin || !destination) return
+    const cacheKey = previewCacheKey(route.id, routingOrigin, destination)
+    const cachedGeometry = readPreviewGeometry(cacheKey)
+    if (cachedGeometry) {
+      setRoadGeometry(cachedGeometry)
+      return
+    }
     const controller = new AbortController()
     void calculateOperationsRoute([routingOrigin, destination], controller.signal, locale).then(result => {
       // The adapter's unavailable-provider fallback consists of two endpoints.
       // Never mistake that fallback for a road-following route.
-      if (!controller.signal.aborted && result.coordinates.length > 2) setRoadGeometry(result.coordinates)
+      if (!controller.signal.aborted && result.coordinates.length > 2) {
+        savePreviewGeometry(cacheKey, result.coordinates)
+        setRoadGeometry(result.coordinates)
+      }
     })
     return () => controller.abort()
   // Coordinates, rather than object identity, determine whether a request changed.
