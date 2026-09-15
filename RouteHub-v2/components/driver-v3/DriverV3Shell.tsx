@@ -75,7 +75,7 @@ export default function DriverV3Shell({
         )}
       </header>
 
-      <section data-driver-screen={active} className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>
+      <section data-driver-screen={active} style={active === 'today' ? {position: 'relative', zIndex: 0} : undefined} className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>
 
       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
         <Link className={active === 'today' ? styles.active : ''} href="/driver">

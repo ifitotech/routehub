@@ -331,8 +331,8 @@
 .routeGlyphHostCompact{--map-underlap:130px;height:calc(40vh + var(--map-bleed,130px));min-height:calc(240px + var(--map-bleed,130px));max-height:calc(430px + var(--map-bleed,130px));margin:calc(-16px - var(--map-bleed,130px)) -18px 0}
 .heroTop{margin-top:0;min-height:26px}
 .typeBadge{height:28px;padding:0 11px;font-size:11px;line-height:28px}
-:global(html[data-theme='light']) .typeBadge{background:rgba(255,255,255,.62);border-color:rgba(63,125,194,.28);color:#155fc4}
-:global(html[data-theme='dark']) .typeBadge{background:rgba(13,35,64,.68);border-color:rgba(112,177,255,.3);color:#d7e7ff}
+:global(html[data-theme='light']) .typeBadge{background:rgba(255,255,255,.86);border-color:rgba(63,125,194,.34);color:#155fc4}
+:global(html[data-theme='dark']) .typeBadge{background:rgba(13,35,64,.86);border-color:rgba(112,177,255,.38);color:#d7e7ff}
 .stopMetaRow{margin-top:8px}
 .stopLabel{font-size:14px}
 .identityBlock{margin-top:6px}
