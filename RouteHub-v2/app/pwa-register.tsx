@@ -30,6 +30,13 @@ export default function PwaRegister() {
       })
     }).catch(() => {})
 
+    // Mobile browsers may suspend the page and skip the normal focus event.
+    // Check when visibility returns and periodically while the app is open so
+    // a deployed worker is picked up without asking the driver to reinstall.
+    const onVisibilityChange = () => update()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    const updateTimer = window.setInterval(update, 60_000)
+
     const onControllerChange = () => {
       if (sessionStorage.getItem('routehub_sw_reloaded') === '1') return
       sessionStorage.setItem('routehub_sw_reloaded', '1')
@@ -46,6 +53,8 @@ export default function PwaRegister() {
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       window.removeEventListener('online', update)
       window.removeEventListener('focus', update)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.clearInterval(updateTimer)
     }
   }, [])
   return null
