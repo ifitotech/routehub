@@ -434,3 +434,32 @@ html[data-theme='light'] .driver-v3-root .eyebrow {
 html[data-theme='light'] .driver-v3-root .muted {
   color: #667892;
 }
+
+/* Final chrome reset: the header and bottom navigation are flat app chrome,
+   never glass surfaces. Keep every descendant and pseudo-element on the same
+   paint layer so iOS cannot show the page through a translucent seam. */
+html body:has(.driver-v3-root) .driver-v3-root > main > header,
+html body:has(.driver-v3-root) .driver-v3-root > main > header::before,
+html body:has(.driver-v3-root) .driver-v3-root > main > header::after,
+html body:has(.driver-v3-root) .driver-v3-root > main > nav,
+html body:has(.driver-v3-root) .driver-v3-root > main > nav::before,
+html body:has(.driver-v3-root) .driver-v3-root > main > nav::after {
+  background: #0f1d35 !important;
+  background-color: #0f1d35 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal !important;
+}
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header,
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::before,
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::after,
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav,
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav::before,
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav::after {
+  background: #fff !important;
+  background-color: #fff !important;
+}
