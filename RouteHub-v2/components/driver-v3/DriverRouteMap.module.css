@@ -22,8 +22,8 @@
 }
 :global(html[data-theme='light']) .staticWrap .fadeOverlay {
   background:
-    linear-gradient(to bottom,#fff var(--map-header-edge),rgba(255,255,255,.18) calc(var(--map-header-edge) + 54px)),
-    linear-gradient(to bottom,transparent var(--map-fade-start),rgba(247,249,252,.38) calc(var(--map-fade-start) + 145px),#f7f9fc 100%);
+    linear-gradient(to bottom,#fff var(--map-header-edge),rgba(255,255,255,.12) calc(var(--map-header-edge) + 54px)),
+    linear-gradient(to bottom,transparent var(--map-fade-start),rgba(247,249,252,.82) calc(var(--map-fade-start) + 96px),#f7f9fc calc(var(--map-fade-start) + 210px),#f7f9fc 100%);
 }
 .host :global(.maplibregl-marker) {z-index:2}
 .host :global(.maplibregl-canvas) {
@@ -54,7 +54,7 @@
 :global(html[data-theme='light']) .fadeOverlay {
   background:
     linear-gradient(to bottom,#fff 0px,#fff var(--map-header-edge),transparent calc(var(--map-header-edge) + 54px)),
-    linear-gradient(to bottom,transparent 0px,transparent var(--map-fade-start),rgba(247,249,252,.38) calc(var(--map-fade-start) + 145px),#f7f9fc 100%);
+    linear-gradient(to bottom,transparent 0px,transparent var(--map-fade-start),rgba(247,249,252,.82) calc(var(--map-fade-start) + 96px),#f7f9fc calc(var(--map-fade-start) + 210px),#f7f9fc 100%);
 }
 .driverMarker,.destinationMarker {display:grid;place-items:center;pointer-events:none}
 .driverDot {
