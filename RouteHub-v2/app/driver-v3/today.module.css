@@ -424,3 +424,6 @@
    painted over by the nav surface. This is visual-only; its layout box and
    click target remain unchanged. */
 .page.pageStarted .hero{position:relative;z-index:3;transform:translateY(-40px)}
+/* Give the map a little more visual headroom in the started state without
+   moving the action row or CTA that the driver needs to reach. */
+.page.pageStarted .hero>.routeGlyphHostCompact{transform:translateY(-30px)}
