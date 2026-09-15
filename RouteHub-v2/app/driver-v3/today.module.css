@@ -120,6 +120,7 @@
 .routeGlyphHost>div{position:absolute;top:0;right:0;left:0;height:calc(100% + var(--map-underlap));overflow:hidden}
 .routeGlyphHostCompact{--map-extra:clamp(190px,26vh,280px);height:calc(19vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(92px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(155px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-18px - var(--map-bleed, 130px)) -18px calc(10px - var(--map-extra))}
 .hero> :not(.routeGlyphHost){position:relative;z-index:1}
+:global(.driver-v3-root) :global(header){position:relative;z-index:20}
 
 .phoneLine{margin:5px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:13px;font-weight:650}
 /* Contact name + phone, once started - a small labeled surface instead of

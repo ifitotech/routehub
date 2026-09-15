@@ -15,7 +15,7 @@
 .staticWrap {position:absolute;top:0;left:0;right:0;pointer-events:none}
 .staticWrap .staticImage {height:100%;max-height:none;object-fit:fill}
 .staticWrap .fadeOverlay {
-  bottom:20px;height:auto;
+  bottom:0;height:auto;
   background:
     linear-gradient(to bottom,var(--today-header,#0f1d35) var(--map-header-edge),transparent calc(var(--map-header-edge) + 54px)),
     linear-gradient(to bottom,transparent var(--map-fade-start),var(--today-surface,#101c2d) 100%);
