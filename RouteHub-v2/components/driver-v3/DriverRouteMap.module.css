@@ -6,6 +6,9 @@
 /* Tiles, road and dissolve share one coordinate space behind the header. */
 .host,.routeOverlay,.fadeOverlay {position:absolute;inset:0;width:100%;height:100%}
 .host {overflow:hidden;background:var(--today-header,#0f1d35)}
+.staticImage,.staticLoading {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.staticImage {display:block;background:var(--today-header,#0f1d35)}
+.staticLoading {background:var(--today-header,#0f1d35)}
 .host :global(.maplibregl-marker) {z-index:2}
 .host :global(.maplibregl-canvas) {
   filter:grayscale(1) invert(1) brightness(.85) contrast(.85) sepia(.35) hue-rotate(175deg) saturate(1.4);

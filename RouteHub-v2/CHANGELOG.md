@@ -1390,3 +1390,4 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 - Apply the saved theme before first paint and enforce dark document surfaces for Driver and Manager, eliminating the light layer visible beneath dark screens.
 - Raise the OpenStreetMap attribution away from the stop-information edge.
 - Cache each Driver map preview's road geometry by route id and endpoint version, avoiding repeat routing requests without sharing a route line across assignments.
+- Use a Google Static Maps preview exclusively in Driver Today when the browser-restricted key is configured, with route-specific styling, markers, geometry, and a MapLibre fallback for environments without that key.

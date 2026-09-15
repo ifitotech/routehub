@@ -20,6 +20,7 @@ type Route = {
 }
 const AT_DESTINATION_COPY = {en: 'At destination', es: 'En destino', fr: 'Sur place'}
 const AT_DESTINATION_METERS = 45
+const STATIC_MAP_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY
 
 // This cache deliberately includes the route id and both endpoints.  A driver
 // can therefore return to a route without another routing request, while a
@@ -46,6 +47,53 @@ function savePreviewGeometry(key: string, points: MapPoint[]) {
     // Storage can be unavailable in private browsing. The live map remains a
     // safe fallback in that case.
   }
+}
+
+function encodePolyline(points: MapPoint[]) {
+  let previousLat = 0
+  let previousLng = 0
+  let output = ''
+  const encode = (value: number) => {
+    let next = value < 0 ? ~(value << 1) : value << 1
+    while (next >= 0x20) {
+      output += String.fromCharCode((0x20 | (next & 0x1f)) + 63)
+      next >>= 5
+    }
+    output += String.fromCharCode(next + 63)
+  }
+  for (const point of points) {
+    const lat = Math.round(point.lat * 1e5)
+    const lng = Math.round(point.lng * 1e5)
+    encode(lat - previousLat)
+    encode(lng - previousLng)
+    previousLat = lat
+    previousLng = lng
+  }
+  return output
+}
+
+function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geometry: MapPoint[], theme: 'light' | 'dark') {
+  const query = new URLSearchParams({
+    size: '640x640', scale: '2', format: 'png', maptype: 'roadmap', key,
+    markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
+  })
+  query.append('markers', `size:mid|color:0xffbd4aff|${destination.lat},${destination.lng}`)
+  // Do not invent a straight line while routing is unavailable. A static
+  // preview either has the verified road geometry or simply shows its stops.
+  if (geometry.length > 2) query.append('path', `weight:5|color:0x149cfaff|enc:${encodePolyline(geometry)}`)
+  if (theme === 'dark') {
+    query.append('style', 'feature:all|element:geometry|color:0x11233c')
+    query.append('style', 'feature:road|element:geometry|color:0x294968')
+    query.append('style', 'feature:water|element:geometry|color:0x0a1a31')
+    query.append('style', 'feature:all|element:labels.text.fill|color:0xaec0d8')
+    query.append('style', 'feature:all|element:labels.text.stroke|color:0x11233c')
+  } else {
+    query.append('style', 'feature:all|element:geometry|color:0xf2f6fb')
+    query.append('style', 'feature:road|element:geometry|color:0xd9e5f1')
+    query.append('style', 'feature:water|element:geometry|color:0xd3e8f5')
+    query.append('style', 'feature:all|element:labels.text.fill|color:0x58718e')
+  }
+  return `https://maps.googleapis.com/maps/api/staticmap?${query.toString()}`
 }
 
 // Theme filters affect only the raster canvas. Markers and the SVG road retain
@@ -88,7 +136,7 @@ function useResolvedPoint(known: MapPoint | null, address: string | null | undef
 
 /** Real road preview with camera padding measured from the visible header and
  * stop summary. Routing and the map instance are independent of theme changes. */
-export default function DriverRouteMap({route, driverFix, locale = 'en'}: {
+function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
   route: Route; driverFix: MapPoint | null; locale?: string
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -246,4 +294,85 @@ export default function DriverRouteMap({route, driverFix, locale = 'en'}: {
     <small className={styles.attribution}>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a></small>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
   </div>
+}
+
+function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
+  route: Route; driverFix: MapPoint | null; locale?: string
+}) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [roadGeometry, setRoadGeometry] = useState<MapPoint[] | null>(null)
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const knownDestination = useMemo(() => sanitizeCoordinate({lat: route.destination_lat, lng: route.destination_lng}), [route.destination_lat, route.destination_lng])
+  const knownOrigin = useMemo(() => sanitizeCoordinate({lat: route.origin_lat, lng: route.origin_lng}), [route.origin_lat, route.origin_lng])
+  const destination = useResolvedPoint(knownDestination, route.destination_address, route.id)
+  const routeOrigin = useResolvedPoint(knownOrigin, route.origin_address, route.id)
+  const routingOrigin = routeOrigin || driverFix
+  const atDestination = Boolean(driverFix && destination && distanceMeters(driverFix, destination) < AT_DESTINATION_METERS)
+
+  useEffect(() => {
+    const syncTheme = () => setTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark')
+    syncTheme()
+    window.addEventListener('routehub:theme-change', syncTheme)
+    return () => window.removeEventListener('routehub:theme-change', syncTheme)
+  }, [])
+
+  useEffect(() => {
+    setRoadGeometry(null)
+    if (!routingOrigin || !destination) return
+    const cacheKey = previewCacheKey(route.id, routingOrigin, destination)
+    const cachedGeometry = readPreviewGeometry(cacheKey)
+    if (cachedGeometry) {
+      setRoadGeometry(cachedGeometry)
+      return
+    }
+    const controller = new AbortController()
+    void calculateOperationsRoute([routingOrigin, destination], controller.signal, locale).then(result => {
+      if (!controller.signal.aborted && result.coordinates.length > 2) {
+        savePreviewGeometry(cacheKey, result.coordinates)
+        setRoadGeometry(result.coordinates)
+      } else if (!controller.signal.aborted) {
+        setRoadGeometry([])
+      }
+    })
+    return () => controller.abort()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.id, routingOrigin?.lat, routingOrigin?.lng, destination?.lat, destination?.lng, locale])
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const shell = wrapper.closest('main')
+    const header = shell?.querySelector('header')
+    const details = shell?.querySelector('[data-map-details]')
+    const layout = () => {
+      const rect = wrapper.getBoundingClientRect()
+      const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
+      const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
+      wrapper.style.setProperty('--map-header-edge', `${headerEdge}px`)
+      wrapper.style.setProperty('--map-details-start', `${detailsStart}px`)
+    }
+    const observer = new ResizeObserver(layout)
+    observer.observe(wrapper)
+    if (header) observer.observe(header)
+    if (details?.parentElement) observer.observe(details.parentElement)
+    layout()
+    return () => observer.disconnect()
+  }, [])
+
+  const imageUrl = STATIC_MAP_KEY && routingOrigin && destination && roadGeometry !== null
+    ? staticMapUrl(STATIC_MAP_KEY, routingOrigin, destination, roadGeometry || [], theme)
+    : null
+  const atDestinationText = AT_DESTINATION_COPY[locale as keyof typeof AT_DESTINATION_COPY] || AT_DESTINATION_COPY.en
+  return <div ref={wrapperRef} className={styles.wrap}>
+    {imageUrl ? <img className={styles.staticImage} src={imageUrl} alt="" aria-hidden="true"/> : <div className={styles.staticLoading} aria-hidden="true"/>}
+    <div className={styles.fadeOverlay} aria-hidden="true"/>
+    {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}
+  </div>
+}
+
+/** Today uses a zero-JavaScript map image when the browser-restricted Google
+ * Static Maps key is configured. Older/local environments safely retain the
+ * MapLibre preview until that key is available. */
+export default function DriverRouteMap(props: {route: Route; driverFix: MapPoint | null; locale?: string}) {
+  return STATIC_MAP_KEY ? <StaticDriverRouteMap {...props}/> : <LiveDriverRouteMap {...props}/>
 }
