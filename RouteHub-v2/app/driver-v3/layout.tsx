@@ -11,7 +11,9 @@ import './driver-modern.css'
 export const metadata: Metadata = {
   title: 'RouteHub Driver',
   applicationName: 'RouteHub Driver',
-  manifest: '/manifest-driver.json',
+  // Version the manifest URL so installed PWAs re-read orientation/theme
+  // metadata instead of retaining the browser's previous manifest snapshot.
+  manifest: '/manifest-driver.json?v=2',
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',
