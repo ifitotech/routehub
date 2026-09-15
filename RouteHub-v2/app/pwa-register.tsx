@@ -14,8 +14,10 @@ export default function PwaRegister() {
       }
       if (typeof orientation?.lock === 'function') void orientation.lock('portrait-primary').catch(() => {})
     }
+    // Lock once when the document is ready. Calling lock() from an
+    // orientationchange handler makes WebView/WebKit re-layout twice and can
+    // visibly freeze the driver screen for a few seconds after rotating.
     lockPortrait()
-    window.addEventListener('orientationchange', lockPortrait)
     const onInstallPrompt = (event: Event) => {
       event.preventDefault()
       window.dispatchEvent(new CustomEvent('routehub:install-available', {detail: event}))
@@ -62,7 +64,6 @@ export default function PwaRegister() {
     return () => {
       active = false
       window.removeEventListener('beforeinstallprompt', onInstallPrompt)
-      window.removeEventListener('orientationchange', lockPortrait)
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       window.removeEventListener('online', update)
       window.removeEventListener('focus', update)
