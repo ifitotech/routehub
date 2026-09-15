@@ -423,5 +423,4 @@
    action zone above the fixed nav instead of allowing that overflow to be
    painted over by the nav surface. This is visual-only; its layout box and
    click target remain unchanged. */
-.page.pageStarted .hero>.primary{position:relative;z-index:8;transform:translateY(-40px)}
-.page.pageStarted .hero>.primary:active{transform:translateY(-40px) scale(.985)}
+.page.pageStarted .hero{position:relative;z-index:3;transform:translateY(-40px)}
