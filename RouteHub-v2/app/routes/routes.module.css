@@ -947,4 +947,15 @@
   }
   .headerActions::-webkit-scrollbar{display:none}
   .headerActions>*{flex:0 0 auto!important}
+
+  /* ManagerShell's mobile nav is fixed above the browser gesture/URL area.
+     Keep enough scroll tail below the last queue section so Unassigned and
+     Issues can always be read and tapped instead of ending underneath it. */
+  .page{padding-bottom:calc(188px + env(safe-area-inset-bottom))}
+  .calendarRow{gap:7px}
+  .calendarRow .mapShortcut{min-width:44px;padding:0 11px}
+  .mobileToggle{margin-top:2px}
+  .emptyState{padding:34px 16px;border-radius:18px}
+  .emptyState h2{font-size:21px}
+  .emptyState p{font-size:14px;line-height:1.4}
 }
