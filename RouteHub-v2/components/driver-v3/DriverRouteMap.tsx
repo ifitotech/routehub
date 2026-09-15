@@ -115,8 +115,8 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
   // Bias the viewport a little south so the route itself sits higher on the
   // screen. This keeps the destination clear of the type badge at the lower
   // edge while preserving the same overall zoom and full-route visibility.
-  query.append('visible', `${minLat - latMargin * 1.3},${minLng - lngMargin}`)
-  query.append('visible', `${maxLat + latMargin * .7},${maxLng + lngMargin}`)
+  query.append('visible', `${minLat - latMargin * 1.45},${minLng - lngMargin}`)
+  query.append('visible', `${maxLat + latMargin * .55},${maxLng + lngMargin}`)
   // Do not invent a straight line while routing is unavailable. A static
   // preview either has the verified road geometry or simply shows its stops.
   if (geometry.length > 2) query.append('path', `weight:5|color:0x149cfaff|enc:${encodePolyline(geometry)}`)
