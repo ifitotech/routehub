@@ -246,7 +246,15 @@
   -webkit-font-smoothing:antialiased;
   filter:none;
 }
- .headerBrand img{width:32px;height:32px;border-radius:8px;background:#fff;object-fit:contain;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important}
+ /* The logo file is a solid black rounded square with a glowing blue
+    graphic inside it - on this header's own dark navy (#0F1D35) that
+    square's edge nearly disappears (black on navy is barely a contrast
+    step), so the glow inside reads as if it were bleeding out into the
+    header itself. Same file looks perfectly crisp on a light header,
+    where black-on-white is a hard edge - this ring is what gives it that
+    same hard, defined edge on dark. */
+ .headerBrand img{width:32px;height:32px;border-radius:8px;background:#fff;object-fit:contain;image-rendering:-webkit-optimize-contrast;filter:none!important;-webkit-filter:none!important;box-shadow:0 0 0 1px rgba(255,255,255,.22)}
+:global(html[data-theme='light']) .driver-v3-root .headerBrand img{box-shadow:0 0 0 1px rgba(15,29,53,.14)}
 .headerIcon,
 .appHeader button.headerIcon,
 .appHeader a.headerIcon{
