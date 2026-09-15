@@ -7,9 +7,9 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone"],
-  "orientation": "any",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF",
+  "orientation": "portrait-primary",
+  "background_color": "#0F1D35",
+  "theme_color": "#0F1D35",
   "lang": "en",
   "categories": [
     "business",
