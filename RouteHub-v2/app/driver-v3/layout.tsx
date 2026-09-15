@@ -14,10 +14,16 @@ export const metadata: Metadata = {
   // Version the manifest URL so installed PWAs re-read orientation/theme
   // metadata instead of retaining the browser's previous manifest snapshot.
   manifest: '/manifest-driver.json?v=2',
+  // black-translucent, not black: 'black' paints iOS's own solid black bar,
+  // which reads as pure black next to this app's navy (#0F1D35) header - a
+  // visible two-tone seam/haze right where they meet. black-translucent
+  // makes the status bar transparent instead, so the header's own
+  // safe-area-inset-top padding (see .appHeader in driver-v3-b.module.css)
+  // paints the real navy all the way up, with nothing else layered on top.
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',
-    statusBarStyle: 'black',
+    statusBarStyle: 'black-translucent',
   },
   icons: {
     icon: '/routehub-driver-new.jpg?v=20',
@@ -30,8 +36,6 @@ export const metadata: Metadata = {
   },
   other: {
     'mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-status-bar-style': 'black-opaque',
   },
 }
 
