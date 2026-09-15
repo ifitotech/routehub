@@ -338,13 +338,6 @@ body:has(.driver-v3-root) .global-chrome {
   -webkit-font-smoothing: antialiased;
 }
 
-html[data-driver-app='v3'],
-body[data-driver-app='v3'],
-body:has(.driver-v3-root) {
-  background: #0F1D35 !important;
-  background-color: #0F1D35 !important;
-}
-
 html[data-theme='dark'] .driver-v3-root {
   background: #0b1628;
   color: #f4f7fb;
@@ -388,94 +381,21 @@ html[data-theme='dark'] .driver-v3-root textarea {
   border-color: #31445f;
 }
 
-/* Light theme: the app header/shell backdrop follows the page instead of
-   staying forced navy in both themes - matches the light reference
-   (white header, navy wordmark) instead of a dark bar over a light page.
-   Same !important weight as the dark-forcing rules above, since those
-   apply unconditionally and would otherwise keep winning here. */
-html[data-theme='light'] .driver-v3-root > main > header {
-  background: #fff !important;
-  background-color: #fff !important;
-}
-html:not([data-theme='dark']) .driver-v3-root > main > header::before {
-  background: #fff;
-}
-html[data-theme='light'] .driver-v3-root > main > header button,
-html[data-theme='light'] .driver-v3-root > main > header a {
-  color: #0b1f3a !important;
-}
-html[data-theme='light'][data-driver-app='v3'],
-html[data-theme='light'] body[data-driver-app='v3'],
-html[data-theme='light'] body:has(.driver-v3-root) {
-  background: #fff !important;
-  background-color: #fff !important;
-  background-image: none !important;
-}
-html[data-theme='light'] .driver-v3-root,
-html[data-theme='light'] .driver-v3-root > main > header {
-  background-color: #fff !important;
-  background-image: none !important;
-}
-
-/* Final guard for WebView/iOS compositing: keep the Driver header out of any
-   glass treatment used by the rest of RouteHub. This intentionally lives at
-   the end of the Driver stylesheet so it wins regardless of import order. */
-html[data-driver-app='v3'] .driver-v3-root > main > header,
-body[data-driver-app='v3'] .driver-v3-root > main > header,
-body:has(.driver-v3-root) .driver-v3-root > main > header {
-  background-image: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
-  opacity: 1 !important;
-  mix-blend-mode: normal !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-/* Keep every Driver screen header as one crisp, solid bar. In particular,
-   Settings/stack screens must not inherit glass effects from older chrome.
-   The fallback here matters: the app's own default theme (see layout.tsx's
-   themeBootstrap) is dark, not light, so a stale/unset --driver-header-bg
-   must fall back to the dark navy, not white - a white flash under
-   dark-mode-colored icons is what made icons vanish/read as blank on
-   reload. */
-html body .driver-v3-root > main > header,
-html body .driver-v3-root > main > header::before,
-html body .driver-v3-root > main > header::after {
-  background-color: var(--driver-header-bg, #0f1d35) !important;
-  background-image: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
-  opacity: 1 !important;
-  mix-blend-mode: normal !important;
-}
-
-/* Avoid a stale compositor layer softening the chrome after navigation on
-   iOS/WebView when a parent retained a transform or animation. */
-html body .driver-v3-root,
-html body .driver-v3-root > main,
-html body .driver-v3-root > main > header,
-html body .driver-v3-root > main > header > * {
-  animation: none !important;
-  transform: none !important;
-  will-change: auto !important;
-}
-
-/* Keep the iOS safe-area/status strip and the app header on one flat paint
-   surface. A different body color here reads as a translucent blur band. */
+/* The Driver header itself (solid navy / solid white, no filters, no
+   glass) is owned entirely by .appHeader in driver-v3-b.module.css - one
+   class, one dark rule, one light override, nothing fighting it here.
+   This block only owns what that class can't reach: the iOS safe-area
+   strip above the header lives on <body>, outside the header element, so
+   it needs its own matching solid color or a different body color shows
+   through behind the (transparent, see layout.tsx) status bar and reads
+   as a seam/haze between the two. */
 html body:has(.driver-v3-root),
-html body[data-driver-app='v3'],
-html body:has(.driver-v3-root) .driver-v3-root,
-html body[data-driver-app='v3'] .driver-v3-root {
+html body[data-driver-app='v3'] {
   background: #0f1d35 !important;
   background-image: none !important;
 }
 html[data-theme='light'] body:has(.driver-v3-root),
-html[data-theme='light'] body[data-driver-app='v3'],
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root,
-html[data-theme='light'] body[data-driver-app='v3'] .driver-v3-root {
+html[data-theme='light'] body[data-driver-app='v3'] {
   background: #fff !important;
   background-image: none !important;
 }

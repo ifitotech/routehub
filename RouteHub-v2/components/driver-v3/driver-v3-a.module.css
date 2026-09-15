@@ -1,6 +1,5 @@
 /* Driver V3 shell — single scroll region (content only). Nav never scrolls away. */
 .shell{
-  --driver-header-bg:#0f1d35;
   --navy:#0f1d35;
   --blue:#1667f2;
   --muted:#667892;
@@ -124,7 +123,7 @@ html[data-theme='light'] .driver-v3-root .nav{
   .rotatePortrait strong{font-size:22px;line-height:27px;font-weight:800;letter-spacing:-.02em}
   .rotatePortrait span{max-width:290px;color:#a9bdd9;font-size:14px;line-height:20px;font-weight:600}
 }
-:global(html[data-theme='light']) .shell{--driver-header-bg:#fff;background:#fff}
+:global(html[data-theme='light']) .shell{background:#fff}
 
 /* Every screen swap re-mounts .content (each tab is its own route) - this
    plays a short settle-in instead of the content just popping into place. */
