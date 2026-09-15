@@ -220,6 +220,8 @@
 .appHeader.headerToday{
   background:var(--today-header,#0f1d35)!important;
   box-shadow:none!important;
+  border:0!important;
+  background-image:none!important;
 }
 .appHeader *{
   filter:none !important;
@@ -283,6 +285,8 @@
 :global(html[data-theme='light']) :global(.driver-v3-root) .appHeader.headerToday{
   background:var(--today-header,#fff)!important;
   box-shadow:none!important;
+  border:0!important;
+  background-image:none!important;
 }
 :global(html[data-theme='light'] .driver-v3-root > main > header) .headerIcon,
 :global(html[data-theme='light'] .driver-v3-root > main > header) .headerIcon svg{
