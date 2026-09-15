@@ -1416,3 +1416,4 @@ same functions as before (`startRoute`, `markArrived`, `completePickupWithEviden
 - Use a Google Static Maps preview exclusively in Driver Today when the browser-restricted key is configured, with route-specific styling, markers, geometry, and a MapLibre fallback for environments without that key.
 - Remove that route-specific Driver map-preview cache as soon as its pickup, delivery, or return is completed.
 - Add expanded static-map viewport anchors so the complete route stays visible above Today’s details and fade.
+- Give the Today preview more vertical canvas so the decorative map reads larger without moving or covering the operational controls.
