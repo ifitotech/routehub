@@ -434,11 +434,16 @@ body:has(.driver-v3-root) .driver-v3-root > main > header {
 }
 
 /* Keep every Driver screen header as one crisp, solid bar. In particular,
-   Settings/stack screens must not inherit glass effects from older chrome. */
+   Settings/stack screens must not inherit glass effects from older chrome.
+   The fallback here matters: the app's own default theme (see layout.tsx's
+   themeBootstrap) is dark, not light, so a stale/unset --driver-header-bg
+   must fall back to the dark navy, not white - a white flash under
+   dark-mode-colored icons is what made icons vanish/read as blank on
+   reload. */
 html body .driver-v3-root > main > header,
 html body .driver-v3-root > main > header::before,
 html body .driver-v3-root > main > header::after {
-  background-color: var(--driver-header-bg, #fff) !important;
+  background-color: var(--driver-header-bg, #0f1d35) !important;
   background-image: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
