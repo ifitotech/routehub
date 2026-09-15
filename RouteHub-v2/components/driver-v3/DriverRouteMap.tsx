@@ -248,7 +248,7 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
       // The reference keeps the complete route crisp, then dissolves into
       // the information surface as soon as the badge/title begins.
-      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 120
+      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top - 8 : detailsStart + 120
       wrapper.style.setProperty('--map-header-edge', `${headerEdge}px`)
       wrapper.style.setProperty('--map-details-start', `${detailsStart}px`)
       wrapper.style.setProperty('--map-fade-start', `${fadeStart}px`)
@@ -371,10 +371,10 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
       if (!rect.width || !estimate) return
       const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
-      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 120
+      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top - 8 : detailsStart + 120
       // The previous percentage height ended above the contact card. Measure
       // the actual metrics instead; an absolute layer cannot move those metrics.
-      const height = Math.ceil((cta || estimate).getBoundingClientRect().bottom - rect.top + 24)
+      const height = Math.ceil(estimate.getBoundingClientRect().bottom - rect.top + 10)
       wrapper.style.height = `${height}px`
       const scale = 640 / Math.max(rect.width, height)
       setImageSize(`${Math.round(rect.width * scale)}x${Math.round(height * scale)}`)
