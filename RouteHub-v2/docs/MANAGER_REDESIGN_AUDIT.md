@@ -1,5 +1,17 @@
 # RouteHub Manager — Auditoría y plan de rediseño
 
+> **SUPERADO (14 sept 2026).** Verificado contra el código actual: la gran mayoría de los
+> P0/P1 de este documento ya están resueltos por trabajo posterior al 10 de sept — tokens
+> unificados (`app/manager/manager-theme.css`), dark-premium por defecto, Inter cargado como
+> webfont real, `history.module.css`/`reports.module.css` con CSS propio (ya no vacíos), la
+> segunda `<nav>` de Today y la capa de parches por hash de `final-polish.css` retiradas,
+> Team + Invitations fusionados en una sola pantalla con panel inline (`/manager/invitations`
+> es ahora un redirect), More fusionado dentro de Settings (`/manager/more` es un redirect), y
+> Routes/Add Route reconstruidos por completo con una arquitectura de calendario/dispatch
+> nueva (ver `docs/DISPATCH_LAYOUT_REDESIGN.md`) que no se parece al modal descrito aquí.
+> Se conserva como historial, no como plan vigente — no usar como checklist sin verificar cada
+> punto contra el código real primero.
+
 **Fecha:** 2026-09-10
 **Alcance:** Solo Manager (Today, Routes, Add Route, Contacts, Team, Invitations, History, Reports, Settings, More).
 **Fuera de alcance:** Driver (`app/driver/**`, `app/driver-v3/**`, `components/driver-v3/**`, `lib/driver/**`, `lib/driver-v3/**`) — su flujo y estructura no se tocan. Solo se anotan defectos menores de responsive/contraste/textos.
