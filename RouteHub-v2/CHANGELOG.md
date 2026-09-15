@@ -1,5 +1,28 @@
 # Changelog
 
+## Stage 93 — 2026-09-14
+- Trim confirmed-dead CSS from `app/final-polish.css` (543 → 502 lines): removed rules for
+  `.report-pagination`, `.metric-card`/`.metric-link`, `.live-page-title`/`.live-page-intro`,
+  `.profile-editor`/`.profile-avatar`/`.photo-picker`, `.profile-summary`/`.branch-summary`,
+  `.settings-edit-panel`, `.edit-button`, `.global-avatar`, and the old `.settings-page`
+  block (a stale Driver-settings pattern superseded by
+  `app/driver-v3/driver-preferences.module.css`) — every one of these selectors returned
+  zero matches across `app/` and `components/` (Driver excluded from the search, out of
+  scope now that Claude works Manager and ChatGPT works Driver per the user's split).
+  First step of retiring `docs/MANAGER_REDESIGN_AUDIT.md`'s P0 "remove the patch layer"
+  item now that most of the audit's other P0s (unified tokens, dark-premium default, Inter
+  webfont, a real `history.module.css`, single nav) turned out to already be done by later
+  work. What's *not* removed and why: `.global-chrome`/`.nav`/`.notification-bell` and
+  friends are still actively rendered for `/operations`, `/sales`, `/counter`, and `/admin`
+  (confirmed in `app/global-chrome.tsx` — it explicitly returns `null` for every
+  ManagerShell route, so none of that chrome reaches Manager screens, but it's real,
+  load-bearing CSS for those other roles); `.route-plan-*`/`.live-route-*`/
+  `.driver-navigation-*` (lines ~410 on) are Driver's, confirmed by the file's own
+  comments, and untouched.
+- `npm run typecheck`, `npm run build`, `npm test` (149/149), `npm run lint` (one pre-existing
+  new-looking warning traced to Driver's own `DriverRouteMap.tsx` `<img>` tag - not
+  introduced by this change, not touched, out of scope) all clean.
+
 ### Stage 46 — Extend the Today map into stop details
 
 Expanded the existing MapLibre preview downward behind the Today stop details,

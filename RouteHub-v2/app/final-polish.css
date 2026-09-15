@@ -1,8 +1,5 @@
 .compact-form { position: relative; }
 .request-assign { width: max-content; margin-top: 12px; gap: 7px; }
-.report-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; }
-.report-pagination button { width: 48px; padding: 0; }
-.report-pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .spin { animation: spin .72s linear infinite; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -24,11 +21,6 @@
 .global-chrome.is-scrolled .global-logo { width: 0; opacity: 0; transform: translateY(-8px); pointer-events: none; }
 .settings-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .settings-card-heading h2 { margin: 0; }
-.edit-button { min-height: 40px; padding: 8px 13px; font-size: 13px; }
-.profile-summary, .branch-summary { display: flex; align-items: center; gap: 14px; margin: 14px 0; }
-.branch-summary { display: block; }
-.branch-summary p { margin: 6px 0 0; }
-.settings-edit-panel { display: grid; gap: 2px; margin-top: 12px; padding-top: 4px; }
 
 @media (max-width: 640px) {
   .global-chrome { left: 12px; }
@@ -45,21 +37,8 @@
   .spin { animation: none; }
 }
 
-.metric-card { color: var(--rh-text); text-decoration: none; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.metric-card:hover { transform: translateY(-3px); border-color: #9bbcf0; box-shadow: 0 16px 34px rgb(15 23 42 / 12%); }
-.metric-link { margin-top: auto; color: var(--rh-primary); font-size: 12px; font-weight: 800; }
-html[data-theme="dark"] .metric-card { color: var(--rh-text); }
-html[data-theme="dark"] .metric-card:hover { border-color: #5f83b4; }
 html[data-theme="dark"] .global-logo { background: #ffffff; border-radius: 14px; box-shadow: 0 8px 22px rgb(0 0 0 / 28%); }
 .global-logo { overflow: hidden; }
-.live-page-title{display:inline-flex;align-items:center;gap:7px;color:var(--rh-text);font-weight:800;font-size:14px}
-.live-page-intro{max-width:1180px;margin:8px auto 20px;padding:0 4px}.live-page-intro .eyebrow{margin:0 0 6px;color:var(--rh-primary);font-size:11px;font-weight:850;letter-spacing:.15em}.live-page-intro h1{margin:0;color:var(--rh-text);font-size:clamp(30px,4vw,42px);letter-spacing:-.045em}.live-page-intro>p:last-child{margin:8px 0 0;color:var(--rh-text-secondary);font-size:14px}
-@media(max-width:640px){.live-page-intro{margin-top:4px;padding:0}.live-page-intro>p:last-child{font-size:13px}}
-.profile-editor { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
-.profile-avatar { width: 64px; height: 64px; overflow: hidden; display: grid; place-items: center; border-radius: 50%; background: var(--rh-primary-soft); color: var(--rh-primary); font-size: 20px; font-weight: 850; }
-.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.photo-picker { width: max-content; gap: 7px; cursor: pointer; }
-.photo-picker input { display: none; }
 .settings-card h2 { display: flex; align-items: center; gap: 8px; }
 .settings-card .primary, .settings-card .secondary { display: inline-flex; align-items: center; gap: 7px; }
 
@@ -141,21 +120,6 @@ html[data-theme="light"] .app .muted{color:#64748b}
   font-size: 21px !important;
   letter-spacing: -.04em;
 }
-.global-avatar {
-  margin-left: auto;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 50%;
-  background: var(--rh-primary);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 850;
-  pointer-events: auto;
-  box-shadow: 0 8px 18px rgb(37 99 235 / 24%);
-}
 .global-chrome > .notification-bell { margin-left: auto; }
 .global-chrome.is-scrolled .global-logo {
   width: auto !important;
@@ -230,7 +194,6 @@ html[data-theme="light"] .app .muted{color:#64748b}
   .global-chrome .global-back { width: 40px; height: 40px; margin-right: 10px; }
   .global-chrome .global-logo img { width: 34px !important; height: 34px !important; }
   .global-chrome .global-logo span { font-size: 19px !important; }
-  .global-avatar { width: 38px; height: 38px; }
   .global-chrome~main,
   .global-chrome~main.app { padding-top: calc(82px + env(safe-area-inset-top)) !important; }
   .app:not(.driver-dashboard) > .topbar { min-height: 52px; margin-bottom: 20px; padding-bottom: 10px; }
@@ -489,10 +452,6 @@ html[data-theme='light'] .notification-bell__panel { box-shadow: 0 18px 46px rgb
  .install-steps{display:grid;gap:12px;margin:18px 0 24px}.install-steps>div{display:flex;align-items:center;gap:13px;padding:13px 14px;border:1px solid var(--rh-border);border-radius:14px;background:color-mix(in srgb,var(--rh-primary) 6%,var(--rh-surface))}.install-steps b{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:50%;background:var(--rh-primary);color:#fff}.install-steps span{display:grid;gap:3px}.install-steps strong{font-size:14px}.install-steps small{color:var(--rh-text-secondary);line-height:1.35}
  .install-visual{display:flex;align-items:center;justify-content:center;gap:8px;margin:18px 0 6px;color:var(--rh-primary)}.install-visual>div{display:grid;justify-items:center;gap:6px;min-width:72px;padding:12px 8px;border:2px solid color-mix(in srgb,var(--rh-primary) 25%,var(--rh-border));border-radius:16px;background:color-mix(in srgb,var(--rh-primary) 7%,var(--rh-surface))}.install-visual b{font-size:11px}.install-visual>span{font-size:22px;font-weight:800}
 @media (min-width:901px){.live-route-canvas{height:360px}}
-/* Driver profile follows the approved card hierarchy while keeping real settings only. */
-.settings-page{background:#f7f9fc!important;min-height:100dvh;padding:20px 20px 112px!important;color:#0f1d35}
-.settings-page .topbar{border:0!important;margin-bottom:18px!important}.settings-page h1{font-size:28px!important;letter-spacing:-.04em!important;margin:6px 0 20px!important}.settings-page .eyebrow{color:#1667f2!important;font-size:11px!important;letter-spacing:.14em!important}
-.settings-page .settings-card,.settings-page .device-notifications,.settings-page .install-app-card{border:1px solid #dde5ee!important;border-radius:18px!important;background:#fff!important;box-shadow:0 5px 18px #14213d0b!important;padding:18px!important;margin-bottom:12px!important}.settings-page .settings-card h2{color:#0f1d35!important;font-size:17px!important;margin:0 0 14px!important}.settings-page .profile-email{color:#667892!important;margin:8px 0!important}.settings-page label{color:#263752!important;font-weight:750!important}.settings-page input,.settings-page select{border:1px solid #ccd8e6!important;border-radius:12px!important;min-height:46px!important;background:#fff!important}.settings-page .danger-outline{border-radius:12px!important;min-height:46px!important;margin-top:12px!important}.settings-page .driverNav{left:0!important;right:0!important;bottom:0!important;width:100%!important;transform:none!important}
 
 .route-plan-bottom .route-plan-sheet-handle{width:92px;height:28px;min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;color:inherit;box-shadow:none}
 
