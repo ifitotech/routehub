@@ -322,6 +322,42 @@
   .mapPreview{height:196px;min-height:196px;max-height:196px;flex-basis:196px}
 }
 
+/* Today V3 visual pass: one continuous light surface with the map as the
+   hero.  The map owns the upper half of the viewport; its existing fade
+   dissolves into the information below instead of ending at a card edge. */
+.hero{padding:16px 18px 14px;gap:0;overflow:visible}
+.routeGlyphHost,.routeGlyphHostCompact{--map-underlap:150px;--map-extra:0px;width:calc(100% + 36px);height:calc(50vh + var(--map-bleed,130px));min-height:calc(300px + var(--map-bleed,130px));max-height:calc(560px + var(--map-bleed,130px));margin:calc(-16px - var(--map-bleed,130px)) -18px 0;border-radius:0;overflow:visible}
+.routeGlyphHost>div{height:calc(100% + var(--map-underlap));overflow:hidden}
+.routeGlyphHostCompact{height:calc(50vh + var(--map-bleed,130px));min-height:calc(300px + var(--map-bleed,130px));max-height:calc(560px + var(--map-bleed,130px));margin:calc(-16px - var(--map-bleed,130px)) -18px 0}
+.heroTop{margin-top:0;min-height:26px}
+.typeBadge{height:28px;padding:0 11px;font-size:11px;line-height:28px}
+.stopMetaRow{margin-top:8px}
+.stopLabel{font-size:14px}
+.identityBlock{margin-top:6px}
+.identityBlock h1{min-height:0;font-size:clamp(30px,8vw,38px);line-height:1.04;-webkit-line-clamp:2}
+.addressLine{margin-top:5px;font-size:16px;line-height:1.3}
+.contactBlock{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px 12px;margin:10px 0 0;padding:9px 12px;border-radius:14px;background:rgba(255,255,255,.42);border:1px solid rgba(54,116,190,.18);box-shadow:0 4px 14px rgba(38,82,132,.06)}
+.contactLabel{color:#637895;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.contactRow{min-width:0;font-size:14px;color:#0b1f3a;white-space:nowrap}
+.contactRow strong{overflow:hidden;text-overflow:ellipsis}
+.contactRow svg{color:#1677ff}
+.primary{margin-top:14px;min-height:58px;height:58px;border-radius:18px}
+.secondaryRow{margin-top:14px;gap:10px}
+.secondaryActionIcon{width:64px;height:64px}
+:global(html[data-theme='light']) .hero{color:#0b1f3a}
+:global(html[data-theme='light']) .identityBlock h1{color:#0b1f3a}
+:global(html[data-theme='light']) .stopLabel{color:#5d718e}
+:global(html[data-theme='light']) .addressLine{color:#5d718e}
+:global(html[data-theme='light']) .contactBlock{background:rgba(255,255,255,.5)}
+@media(max-width:380px){
+  .hero{padding-inline:14px}
+  .routeGlyphHost,.routeGlyphHostCompact{width:calc(100% + 28px);margin-inline:-14px}
+  .contactBlock{grid-template-columns:auto minmax(0,1fr);gap:6px 9px}
+  .contactRow:last-child{grid-column:2}
+  .identityBlock h1{font-size:29px}
+  .secondaryActionIcon{width:58px;height:58px}
+}
+
 /* .hero, .pickup/.delivery/.return, .divider, .feedback/.feedbackError and
    .stateCard now read their colors from the token system in
    driver-theme-tokens.css (dark by default, swapped under

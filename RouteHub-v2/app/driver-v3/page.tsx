@@ -29,7 +29,7 @@ import dynamic from 'next/dynamic'
 // prerendering/SSR - load it client-only, same pattern used by every other
 // map consumer in this app (driver-route-navigation, compact-map, etc.)
 const DriverRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
-import {MapPin, Phone, StickyNote, TriangleAlert, UserRound} from 'lucide-react'
+import {MapPin, Phone, TriangleAlert, UserRound} from 'lucide-react'
 
 // Driver Today owns only temporary presentation data. A completed route must
 // not leave its route geometry behind on this device (nor affect another
@@ -44,6 +44,26 @@ function clearRouteMapPreview(routeId: string) {
   } catch {
     // Private browsing can deny storage access; there is nothing to clean.
   }
+}
+
+function shortDestination(value: unknown) {
+  const text = String(value || '').trim()
+  if (!text) return ''
+  return text.split(',')[0]?.trim() || text
+}
+
+function compactAddress(value: unknown) {
+  const parts = String(value || '').split(',').map(part => part.trim()).filter(Boolean)
+  if (parts.length <= 2) return parts.join(' · ')
+  return `${parts.slice(0, 2).join(', ')} · ${parts.at(-1)}`
+}
+
+function formatPhone(value: unknown) {
+  const raw = String(value || '').trim()
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+  if (digits.length === 11 && digits.startsWith('1')) return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
+  return raw
 }
 
 export default function DriverV3Page() {
@@ -430,16 +450,16 @@ export default function DriverV3Page() {
             <span className={styles.stopDots} aria-hidden="true">{stopDots.map((state,index)=><i key={index} className={styles[state]}/>)}</span>
           </div>
           <button type="button" className={styles.identityBlock} onClick={()=>setSheet('info')}>
-            <h1>{route.destination_name||route.destination_address||t.drvCurrentStopName}</h1>
-            {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{route.destination_address}</span></p>}
-            {started&&(route.destination_contact_name||route.destination_phone||route.driver_note)&&(
-              <div className={styles.contactBlock}>
-                {route.destination_contact_name&&<span className={styles.contactRow}><UserRound size={15}/>{route.destination_contact_name}</span>}
-                {route.destination_phone&&<span className={styles.contactRow}><Phone size={15}/>{route.destination_phone}</span>}
-                {route.driver_note&&<span className={`${styles.contactRow} ${styles.contactRowNote}`}><StickyNote size={15}/><span>{route.driver_note}</span></span>}
-              </div>
-            )}
+            <h1>{shortDestination(route.destination_name||route.destination_address)||t.drvCurrentStopName}</h1>
+            {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{compactAddress(route.destination_address)}</span></p>}
           </button>
+          {started&&(route.destination_contact_name||route.destination_phone)&&(
+            <div className={styles.contactBlock}>
+              <span className={styles.contactLabel}>{locale==='es'?'CONTACTO':'CONTACT'}</span>
+              {route.destination_contact_name&&<span className={styles.contactRow}><UserRound size={15}/><strong>{route.destination_contact_name}</strong></span>}
+              {route.destination_phone&&<span className={styles.contactRow}><Phone size={15}/><strong>{formatPhone(route.destination_phone)}</strong></span>}
+            </div>
+          )}
           <DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null}/>
           <button type="button" className={styles.primary} disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
             {busy?t.drvBusy:action.label}

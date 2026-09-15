@@ -66,19 +66,19 @@ export default function DriverRouteEstimate({route, locale = 'en', poNumber}: {r
            and time never shift position depending on whether this stop
            happens to have a PO. A stable row that occasionally looks a
            little sparse beats one that visibly jumps stop to stop. */}
-        <span className={styles.metric} style={poNumber ? undefined : {visibility: 'hidden'}} aria-hidden={poNumber ? undefined : true}>
+        <span className={styles.metric} style={poNumber ? undefined : {display: 'none'}} aria-hidden={poNumber ? undefined : true}>
           <span className={`${styles.icon} ${styles.iconPo}`}><FileText size={15}/></span>
           <span className={styles.value}>PO {poNumber || '—'}</span>
         </span>
-        <span className={styles.divider} aria-hidden="true" style={poNumber ? undefined : {visibility: 'hidden'}} />
+        <span className={styles.divider} aria-hidden="true" style={poNumber ? undefined : {display: 'none'}} />
         <span className={styles.metric}>
           <span className={`${styles.icon} ${styles.iconDistance}`}><Navigation size={15}/></span>
-          <span className={styles.value}>{hasEstimate ? formatDistance(estimate!.distanceMeters!, locale) : '—'}</span>
+          <span className={styles.metricCopy}><span className={styles.value}>{hasEstimate ? formatDistance(estimate!.distanceMeters!, locale) : '—'}</span><small className={styles.metricLabel}>{locale === 'es' ? 'DISTANCIA' : 'DISTANCE'}</small></span>
         </span>
         <span className={styles.divider} aria-hidden="true" />
         <span className={styles.metric}>
           <span className={`${styles.icon} ${styles.iconTime}`}><Clock3 size={15}/></span>
-          <span className={styles.value}>{hasEstimate ? formatDuration(estimate!.durationSeconds!, locale) : '—'}</span>
+          <span className={styles.metricCopy}><span className={styles.value}>{hasEstimate ? formatDuration(estimate!.durationSeconds!, locale) : '—'}</span><small className={styles.metricLabel}>{locale === 'es' ? 'ESTIMADO' : 'ESTIMATED'}</small></span>
         </span>
       </div>
       <span className={styles.caption}>{loading ? (locale === 'es' ? 'Calculando ruta…' : 'Calculating route…') : (locale === 'es' ? 'Referencia de la ruta · abre Mapas para navegar' : 'Route reference · open Maps to navigate')}</span>
