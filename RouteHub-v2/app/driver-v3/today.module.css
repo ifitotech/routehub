@@ -328,7 +328,7 @@
 .hero{padding:16px 18px 14px;gap:0;overflow:visible}
 .routeGlyphHost,.routeGlyphHostCompact{--map-underlap:150px;--map-extra:0px;width:calc(100% + 36px);height:calc(50vh + var(--map-bleed,130px));min-height:calc(300px + var(--map-bleed,130px));max-height:calc(560px + var(--map-bleed,130px));margin:calc(-16px - var(--map-bleed,130px)) -18px 0;border-radius:0;overflow:visible}
 .routeGlyphHost>div{height:calc(100% + var(--map-underlap));overflow:hidden}
-.routeGlyphHostCompact{height:calc(50vh + var(--map-bleed,130px));min-height:calc(300px + var(--map-bleed,130px));max-height:calc(560px + var(--map-bleed,130px));margin:calc(-16px - var(--map-bleed,130px)) -18px 0}
+.routeGlyphHostCompact{--map-underlap:110px;height:calc(29vh + var(--map-bleed,130px));min-height:calc(185px + var(--map-bleed,130px));max-height:calc(330px + var(--map-bleed,130px));margin:calc(-16px - var(--map-bleed,130px)) -18px 0}
 .heroTop{margin-top:0;min-height:26px}
 .typeBadge{height:28px;padding:0 11px;font-size:11px;line-height:28px}
 .stopMetaRow{margin-top:8px}
