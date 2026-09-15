@@ -92,8 +92,11 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
   // than cropping the north/south endpoints on tall Today layouts.
   if (lngSpan < latSpan * aspect) lngSpan = latSpan * aspect
   if (latSpan < lngSpan / aspect) latSpan = lngSpan / aspect
-  const latMargin = Math.max((latSpan - (maxLat - minLat)) / 2 + latSpan * .12, .018)
-  const lngMargin = Math.max((lngSpan - (maxLng - minLng)) / 2 + lngSpan * .12, .018)
+  // The old fixed .018° minimum was useful for a cross-city route, but it
+  // made a nearby stop look needlessly far away. Keep a small safety border
+  // for a single/very short route, then scale the rest from its actual bounds.
+  const latMargin = Math.max((latSpan - (maxLat - minLat)) / 2 + latSpan * .12, .0022)
+  const lngMargin = Math.max((lngSpan - (maxLng - minLng)) / 2 + lngSpan * .12, .0022)
   const query = new URLSearchParams({
     size, scale: '2', format: 'png', maptype: 'roadmap', key,
     markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
@@ -104,6 +107,11 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
   query.append('style', 'feature:poi|element:labels|visibility:off')
   query.append('style', 'feature:transit|element:labels|visibility:off')
   query.append('style', 'feature:landscape.man_made|element:labels|visibility:off')
+  // Route shields (for example repeated 826/924 markers) make a compact
+  // driver preview noisy. Preserve the street geometry and key place names,
+  // while removing those repeated road badges and minor arterial labels.
+  query.append('style', 'feature:road|element:labels.icon|visibility:off')
+  query.append('style', 'feature:road.arterial|element:labels.text|visibility:off')
   query.append('visible', `${minLat - latMargin},${minLng - lngMargin}`)
   query.append('visible', `${maxLat + latMargin},${maxLng + lngMargin}`)
   // Do not invent a straight line while routing is unavailable. A static
