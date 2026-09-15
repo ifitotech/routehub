@@ -340,7 +340,7 @@ export default function DriverV3Page() {
     // between, so a mis-tap on the hero button would close the whole stop
     // with nothing to undo. A confirm step (same pattern as ending Driving
     // Day) covers that without adding a full second screen.
-    const openFlow=kind==='pickup'?async()=>setConfirmPickupOpen(true):kind==='return'?openReturn:openDelivery
+    const openFlow=kind==='pickup'?async()=>setSheet('pickup'):kind==='return'?openReturn:openDelivery
     // Before the driver has actually confirmed arrival, the hero button
     // reads "arrived at stop" rather than "complete X" - tapping it still
     // opens the exact same flow as before (the wording is presentation
