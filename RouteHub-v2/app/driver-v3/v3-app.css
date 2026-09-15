@@ -240,6 +240,8 @@ body:has(.driver-v3-root) .global-chrome {
   background-color: #0F1D35 !important;
   background-image: none !important;
   opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
 }
 
 /* Keep the shared Driver header fully opaque on every screen (including
@@ -250,10 +252,16 @@ body:has(.driver-v3-root) .global-chrome {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background: #0F1D35;
   opacity: 1;
   pointer-events: none;
+}
+.driver-v3-root > main > header > * {
+  position: relative;
+  z-index: 1;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 .driver-v3-root .card {
