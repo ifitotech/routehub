@@ -240,14 +240,17 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
     const shell = wrapper.closest('main')
     const header = shell?.querySelector('header')
     const details = shell?.querySelector('[data-map-details]')
+    const estimate = shell?.querySelector('[data-map-estimate]')
     const layout = () => {
       map.resize()
       const rect = host.getBoundingClientRect()
       if (!rect.width || !rect.height) return
       const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
+      const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 92
       wrapper.style.setProperty('--map-header-edge', `${headerEdge}px`)
       wrapper.style.setProperty('--map-details-start', `${detailsStart}px`)
+      wrapper.style.setProperty('--map-fade-start', `${fadeStart}px`)
       const points = [...(roadGeometry || []), ...(visualOrigin ? [visualOrigin] : []), ...(destination ? [destination] : [])]
       if (!points.length) return
       const bounds = new maplibregl.LngLatBounds()
@@ -266,6 +269,7 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
     observer.observe(host)
     if (header) observer.observe(header)
     if (details?.parentElement) observer.observe(details.parentElement)
+    if (estimate?.parentElement) observer.observe(estimate.parentElement)
     layout()
     return () => observer.disconnect()
   // eslint-disable-next-line react-hooks/exhaustive-deps

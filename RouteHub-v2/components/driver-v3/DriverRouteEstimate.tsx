@@ -59,7 +59,7 @@ export default function DriverRouteEstimate({route, locale = 'en', poNumber}: {r
 
   const hasEstimate = Boolean(estimate?.distanceMeters != null && estimate?.durationSeconds != null)
   return (
-    <section className={styles.estimate} aria-label={locale === 'es' ? 'Resumen de ruta' : 'Route summary'}>
+    <section className={styles.estimate} data-map-estimate aria-label={locale === 'es' ? 'Resumen de ruta' : 'Route summary'}>
       <div className={styles.row}>
         {/* Always in the DOM, at the same width, even for Delivery/Return
            (no PO at all) - kept invisible rather than removed, so distance

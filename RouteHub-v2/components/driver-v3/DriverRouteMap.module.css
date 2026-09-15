@@ -2,6 +2,7 @@
   position:relative;width:100%;height:100%;min-height:0;
   --map-header-edge:130px;
   --map-details-start:320px;
+  --map-fade-start:420px;
 }
 /* Tiles, road and dissolve share one coordinate space behind the header. */
 .host,.routeOverlay,.fadeOverlay {position:absolute;inset:0;width:100%;height:100%}
@@ -31,8 +32,8 @@
       transparent calc(var(--map-header-edge) + 54px)),
     linear-gradient(to bottom,
       transparent 0px,
-      transparent calc(var(--map-details-start) + 92px),
-      rgba(var(--today-surface-rgb,16,28,45),.34) calc(var(--map-details-start) + 250px),
+      transparent var(--map-fade-start),
+      rgba(var(--today-surface-rgb,16,28,45),.34) calc(var(--map-fade-start) + 145px),
       var(--today-surface,#101c2d) 100%);
 }
 .driverMarker,.destinationMarker {display:grid;place-items:center;pointer-events:none}
