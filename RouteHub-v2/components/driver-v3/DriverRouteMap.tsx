@@ -83,8 +83,17 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
   // Static Maps otherwise hugs the path too tightly. These four invisible
   // viewport anchors add a stable visual margin so the route remains visible
   // above the Today details instead of being hidden by the fade/card.
-  const latMargin = Math.max((maxLat - minLat) * .48, .055)
-  const lngMargin = Math.max((maxLng - minLng) * .48, .055)
+  const [pixelWidth, pixelHeight] = size.split('x').map(Number)
+  const aspect = pixelWidth > 0 && pixelHeight > 0 ? pixelWidth / pixelHeight : 1
+  let latSpan = maxLat - minLat
+  let lngSpan = maxLng - minLng
+  // Expand the narrower geographic axis to match the actual image ratio;
+  // Static Maps then chooses the zoom that contains the entire route rather
+  // than cropping the north/south endpoints on tall Today layouts.
+  if (lngSpan < latSpan * aspect) lngSpan = latSpan * aspect
+  if (latSpan < lngSpan / aspect) latSpan = lngSpan / aspect
+  const latMargin = Math.max((latSpan - (maxLat - minLat)) / 2 + latSpan * .12, .018)
+  const lngMargin = Math.max((lngSpan - (maxLng - minLng)) / 2 + lngSpan * .12, .018)
   const query = new URLSearchParams({
     size, scale: '2', format: 'png', maptype: 'roadmap', key,
     markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
@@ -268,7 +277,7 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
       const side = Math.min(48, rect.width * .1)
       map.fitBounds(bounds, {
         padding: {top, bottom: Math.max(24, rect.height - visibleBottom), left: side, right: side},
-        maxZoom: points.length === 1 ? 10 : 11, duration: 0,
+        duration: 0,
       })
     }
     const observer = new ResizeObserver(layout)
