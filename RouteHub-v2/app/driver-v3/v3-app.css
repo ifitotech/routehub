@@ -447,6 +447,17 @@ html body .driver-v3-root > main > header::after {
   mix-blend-mode: normal !important;
 }
 
+/* Avoid a stale compositor layer softening the chrome after navigation on
+   iOS/WebView when a parent retained a transform or animation. */
+html body .driver-v3-root,
+html body .driver-v3-root > main,
+html body .driver-v3-root > main > header,
+html body .driver-v3-root > main > header > * {
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
 /* A few older Driver screens (Truck, History) still use the app-wide
    generic .card/.row/.eyebrow/.muted classes from app/globals.css instead
    of a dedicated module - those already pick up dark/light COLORS
