@@ -349,7 +349,9 @@
 :global(html[data-theme='light']) .stopLabel{color:#5d718e}
 :global(html[data-theme='light']) .addressLine{color:#5d718e}
 :global(html[data-theme='light']) .contactBlock{background:rgba(255,255,255,.5)}
-.hero :global([data-map-estimate]){position:relative;z-index:2;padding:4px 0;background:rgba(247,249,252,.9)}
+.hero :global([data-map-estimate]){position:relative;z-index:2;padding:4px 0;background:transparent}
+:global(html[data-theme='light']) .hero :global([data-map-estimate]){background:rgba(247,249,252,.9)}
+:global(html[data-theme='dark']) .hero :global([data-map-estimate]){background:transparent;color:#f7faff}
 :global(html[data-theme='light']) .contactBlock{background:rgba(247,249,252,.94);box-shadow:0 3px 12px rgba(35,78,130,.07)}
 .hero>.secondaryRow{order:1}
 .hero>.primary{order:2}
