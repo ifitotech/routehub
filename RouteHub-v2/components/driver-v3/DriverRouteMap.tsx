@@ -72,7 +72,7 @@ function encodePolyline(points: MapPoint[]) {
   return output
 }
 
-function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geometry: MapPoint[], theme: 'light' | 'dark') {
+function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geometry: MapPoint[], theme: 'light' | 'dark', size: string) {
   const points = geometry.length > 2 ? geometry : [origin, destination]
   const latitudes = points.map(point => point.lat)
   const longitudes = points.map(point => point.lng)
@@ -86,7 +86,7 @@ function staticMapUrl(key: string, origin: MapPoint, destination: MapPoint, geom
   const latMargin = Math.max((maxLat - minLat) * .14, .018)
   const lngMargin = Math.max((maxLng - minLng) * .14, .018)
   const query = new URLSearchParams({
-    size: '640x640', scale: '2', format: 'png', maptype: 'roadmap', key,
+    size, scale: '2', format: 'png', maptype: 'roadmap', key,
     markers: `size:mid|color:0x1677ffff|${origin.lat},${origin.lng}`,
   })
   query.append('markers', `size:mid|color:0xffbd4aff|${destination.lat},${destination.lng}`)
@@ -318,6 +318,7 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
   route: Route; driverFix: MapPoint | null; locale?: string
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const [imageSize, setImageSize] = useState<string | null>(null)
   const [roadGeometry, setRoadGeometry] = useState<MapPoint[] | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   const knownDestination = useMemo(() => sanitizeCoordinate({lat: route.destination_lat, lng: route.destination_lng}), [route.destination_lat, route.destination_lng])
@@ -365,9 +366,16 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
     const estimate = shell?.querySelector('[data-map-estimate]')
     const layout = () => {
       const rect = wrapper.getBoundingClientRect()
+      if (!rect.width || !estimate) return
       const headerEdge = Math.max(0, (header?.getBoundingClientRect().bottom ?? rect.top) - rect.top)
       const detailsStart = details ? details.getBoundingClientRect().top - rect.top : rect.height * .62
       const fadeStart = estimate ? estimate.getBoundingClientRect().top - rect.top : detailsStart + 92
+      // The previous percentage height ended above the contact card. Measure
+      // the actual metrics instead; an absolute layer cannot move those metrics.
+      const height = Math.ceil(estimate.getBoundingClientRect().bottom - rect.top + 32)
+      wrapper.style.height = `${height}px`
+      const scale = 640 / Math.max(rect.width, height)
+      setImageSize(`${Math.round(rect.width * scale)}x${Math.round(height * scale)}`)
       wrapper.style.setProperty('--map-header-edge', `${headerEdge}px`)
       wrapper.style.setProperty('--map-details-start', `${detailsStart}px`)
       wrapper.style.setProperty('--map-fade-start', `${fadeStart}px`)
@@ -381,11 +389,11 @@ function StaticDriverRouteMap({route, driverFix, locale = 'en'}: {
     return () => observer.disconnect()
   }, [])
 
-  const imageUrl = STATIC_MAP_KEY && routingOrigin && destination && roadGeometry !== null
-    ? staticMapUrl(STATIC_MAP_KEY, routingOrigin, destination, roadGeometry || [], theme)
+  const imageUrl = STATIC_MAP_KEY && routingOrigin && destination && roadGeometry !== null && imageSize
+    ? staticMapUrl(STATIC_MAP_KEY, routingOrigin, destination, roadGeometry || [], theme, imageSize)
     : null
   const atDestinationText = AT_DESTINATION_COPY[locale as keyof typeof AT_DESTINATION_COPY] || AT_DESTINATION_COPY.en
-  return <div ref={wrapperRef} className={styles.wrap}>
+  return <div ref={wrapperRef} className={`${styles.wrap} ${styles.staticWrap}`}>
     {imageUrl ? <img className={styles.staticImage} src={imageUrl} alt="" aria-hidden="true"/> : <div className={styles.staticLoading} aria-hidden="true"/>}
     <div className={styles.fadeOverlay} aria-hidden="true"/>
     {atDestination && <span className={styles.atDestination} role="status">{atDestinationText}</span>}

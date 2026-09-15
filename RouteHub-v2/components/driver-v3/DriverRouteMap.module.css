@@ -10,6 +10,16 @@
 .staticImage,.staticLoading {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .staticImage {display:block;background:var(--today-header,#0f1d35)}
 .staticLoading {background:var(--today-header,#0f1d35)}
+/* Static imagery owns its measured height through the ETA row. The image and
+   fade occupy exactly the same box, regardless of the flex spacer above it. */
+.staticWrap {position:absolute;top:0;left:0;right:0;pointer-events:none}
+.staticWrap .staticImage {height:100%;max-height:none;object-fit:fill}
+.staticWrap .fadeOverlay {
+  bottom:20px;height:auto;
+  background:
+    linear-gradient(to bottom,var(--today-header,#0f1d35) var(--map-header-edge),transparent calc(var(--map-header-edge) + 54px)),
+    linear-gradient(to bottom,transparent var(--map-fade-start),var(--today-surface,#101c2d) 100%);
+}
 .host :global(.maplibregl-marker) {z-index:2}
 .host :global(.maplibregl-canvas) {
   filter:grayscale(1) invert(1) brightness(.85) contrast(.85) sepia(.35) hue-rotate(175deg) saturate(1.4);

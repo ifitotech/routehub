@@ -1,5 +1,12 @@
 # Changelog
 
+### Driver Today — measured static map extent
+
+Size the static image from its top through the actual ETA section plus 32px,
+and request Google imagery at that same aspect ratio. Start the lower dissolve
+at the measured metrics position. Browser layout checks at 360/390/430px confirm
+the image extends below the metrics; typecheck and production build pass.
+
 ## Stage 94 — 2026-09-14
 - Continue trimming confirmed-dead CSS from `app/final-polish.css`: removed `.live-route-
   navigation` (a turn list view with zero references anywhere in the codebase - the live
