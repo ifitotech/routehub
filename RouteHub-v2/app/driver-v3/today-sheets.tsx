@@ -90,8 +90,8 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
   onIssueNoteChange: (value: string) => void; onSavePickupNote: () => void; onConfirmPickup: () => void; onOpenIssue: () => void; onClose: () => void
 }) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
-      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()} onClick={onClose}>
+      <section className={styles.inlineDeliveryPanel} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvPickup} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || route.destination_address}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 8px', fontSize: 14}}>{route.destination_address}</p>}
@@ -118,8 +118,8 @@ export function PickupSheet({route, t, busy, message, issueOpen, issueNote, onIs
 
 export function ReturnSheet({route, t, busy, message, onComplete, onClose}: {route: any; t: any; busy: boolean; message: string; onComplete: () => void; onClose: () => void}) {
   return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
-      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
+    <div className={`${styles.completionOverlay} ${styles.todaySheetOverlay}`} style={{...overlay, background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: 0}} onTouchMove={e => e.preventDefault()} onClick={onClose}>
+      <section className={styles.inlineDeliveryPanel} onClick={e => e.stopPropagation()}>
         <SheetHeader label={t.drvReturn} onClose={onClose} t={t} />
         <h2 style={{margin: '0 0 5px', fontSize: 22, lineHeight: '26px'}}>{route.destination_name || route.destination_address || t.drvReturn}</h2>
         {route.destination_address && <p className="muted" style={{margin: '0 0 12px', fontSize: 14}}>{route.destination_address}</p>}
