@@ -54,7 +54,16 @@ export default function DriverV3Shell({
 
   return (
     <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
-      <header style={{zIndex: 300}} className={`${styles.header} ${styles.appHeader} ${active === 'today' ? styles.headerToday : ''}`}>
+      <header
+        style={{
+          zIndex: 300,
+          boxSizing: 'border-box',
+          height: 'calc(48px + env(safe-area-inset-top))',
+          minHeight: 'calc(48px + env(safe-area-inset-top))',
+          padding: 'env(safe-area-inset-top) 16px 0',
+        }}
+        className={`${styles.header} ${styles.appHeader} ${active === 'today' ? styles.headerToday : ''}`}
+      >
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
             <ChevronLeft size={22} strokeWidth={2.4} />
