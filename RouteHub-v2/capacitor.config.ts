@@ -4,10 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.routehub.driver',
   appName: 'RouteHub Driver',
   webDir: 'www',
-  // The sideloaded Android build must always point at the deployed web app.
-  // An environment override is still supported for local/staging builds.
+  // Production APKs must always load the deployed Driver web app. A local
+  // server URL makes a sideloaded phone fail with ERR_CONNECTION_REFUSED.
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || 'https://routehub-wisu.vercel.app',
+    url: 'https://routehub-wisu.vercel.app',
     cleartext: false,
   },
   android: {
