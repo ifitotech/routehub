@@ -95,7 +95,7 @@
   min-height:56px;
   background:transparent!important;
 }
-.nav svg{width:21px;height:21px;transition:transform .18s ease}
+.nav svg{width:23px;height:23px;transition:transform .18s ease}
 .nav a{transition:color .15s ease,opacity .15s ease,transform .12s ease}
 .nav a:active{transform:scale(.96)}
 .nav .active{color:var(--rh-nav-active,#2493FF)}
