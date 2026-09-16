@@ -220,18 +220,12 @@ body:has(.driver-v3-root) .global-chrome {
   background: transparent !important;
 }
 .driver-v3-root > main > header {
-  position: relative !important;
-  z-index: 300 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
   background: #0F1D35 !important;
   background-color: #0F1D35 !important;
   background-image: none !important;
-  opacity: 1 !important;
-}
-.driver-v3-root > main > header > * {
-  filter: none !important;
   opacity: 1 !important;
 }
 
@@ -396,6 +390,18 @@ html[data-theme='light'] body[data-driver-app='v3'] {
   background-image: none !important;
 }
 
+/* Light theme: the header follows the page instead of staying forced navy
+   in both themes - white header, navy wordmark. Same !important weight as
+   the dark-forcing rule above, which applies unconditionally. */
+html[data-theme='light'] .driver-v3-root > main > header {
+  background: #fff !important;
+  background-color: #fff !important;
+}
+html[data-theme='light'] .driver-v3-root > main > header button,
+html[data-theme='light'] .driver-v3-root > main > header a {
+  color: #0b1f3a !important;
+}
+
 /* A few older Driver screens (Truck, History) still use the app-wide
    generic .card/.row/.eyebrow/.muted classes from app/globals.css instead
    of a dedicated module - those already pick up dark/light COLORS
@@ -435,97 +441,15 @@ html[data-theme='light'] .driver-v3-root .muted {
   color: #667892;
 }
 
-/* Final chrome reset: the header and bottom navigation are flat app chrome,
-   never glass surfaces. Keep every descendant and pseudo-element on the same
-   paint layer so iOS cannot show the page through a translucent seam. */
-html body:has(.driver-v3-root) .driver-v3-root > main > header,
-html body:has(.driver-v3-root) .driver-v3-root > main > header::before,
-html body:has(.driver-v3-root) .driver-v3-root > main > header::after {
-  background: #0f1d35 !important;
-  background-color: #0f1d35 !important;
-  background-image: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
-  opacity: 1 !important;
-  box-shadow: none !important;
-  mix-blend-mode: normal !important;
-}
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::before,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::after {
-  background: #fff !important;
-  background-color: #fff !important;
-}
-
-/* The shell itself must not expose its old #f7f9fc surface through the
-   safe-area gap above the header. */
-html body:has(.driver-v3-root) .driver-v3-root > main {
-  background: #14243a !important;
-  background-image: none !important;
-}
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main {
-  background: #fff !important;
-  background-image: none !important;
-}
-
-/* Reference chrome: one solid navy surface from the iOS safe-area through
-   the centered brand header, with a separate solid bottom navigation bar. */
-html body:has(.driver-v3-root) .driver-v3-root > main > header {
-  min-height: calc(48px + env(safe-area-inset-top)) !important;
-  padding: env(safe-area-inset-top) 16px 0 !important;
-  background: #0f1d35 !important;
-  background-color: #0f1d35 !important;
-  color: #fff !important;
-  border: 0 !important;
-}
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header {
-  background: #fff !important;
-  background-color: #fff !important;
-  color: #0b1f3a !important;
-}
-
-/* iOS draws the status area from html/body, outside the header box. Match
-   that canvas to the header exactly so the two cannot read as separate bars. */
-html[data-theme='dark']:has(.driver-v3-root),
-html[data-theme='dark']:has(.driver-v3-root) body,
-html[data-theme='dark'] body:has(.driver-v3-root) {
-  background: #0f1d35 !important;
-  background-color: #0f1d35 !important;
-  background-image: none !important;
-}
-html[data-theme='light']:has(.driver-v3-root),
-html[data-theme='light']:has(.driver-v3-root) body,
-html[data-theme='light'] body:has(.driver-v3-root) {
-  background: #fff !important;
-  background-color: #fff !important;
-  background-image: none !important;
-}
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand span {
-  color: #0b1f3a !important;
-}
-html[data-theme='dark'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand,
-html[data-theme='dark'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand span {
-  color: #fff !important;
-}
-
-/* Prevent Settings/stack screens from counting the iOS safe-area twice
-   (once in min-height and again as content-box padding). */
-html body:has(.driver-v3-root) .driver-v3-root > main > header.appHeader {
-  box-sizing: border-box !important;
-  height: calc(48px + env(safe-area-inset-top)) !important;
-  min-height: calc(48px + env(safe-area-inset-top)) !important;
-  position: relative !important;
-  top: auto !important;
-  isolation: isolate !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-  will-change: auto !important;
-}
+/* No `body:has(...) main > header` rules here either, for the same reason
+   as the nav below: the header is owned by the .appHeader class in
+   driver-v3-b.module.css (one solid color per theme, no filters), plus
+   the single plain `.driver-v3-root > main > header` reset higher up in
+   this file. Today a second, parallel set of tag-based !important
+   overrides accumulated here - backgrounds on the element AND its
+   ::before/::after, its own min-height/padding/box-sizing/height, and an
+   `isolation: isolate` - each added to chase a blur that the duplication
+   itself kept re-creating. They are gone; the class is the whole story. */
 
 /* No rules for `main > nav` here on purpose. The bottom bar is styled
    entirely by the .nav class in driver-v3-a.module.css, where it is simply
