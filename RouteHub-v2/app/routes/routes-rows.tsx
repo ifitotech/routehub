@@ -5,7 +5,7 @@ import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './rou
 import type {RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
 
-export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, onViewDetails, busyRouteId, managing}: {
+export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, onViewDetails, onEdit, busyRouteId, managing}: {
   items: RouteRecord[]
   locale: string
   c: any
@@ -15,6 +15,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   onTogglePause?: (route: RouteRecord) => void
   onUnassign?: (route: RouteRecord) => void
   onViewDetails?: (routeId: string) => void
+  onEdit?: (route: RouteRecord) => void
   busyRouteId?: string
   managing?: boolean
 }) {
@@ -50,6 +51,8 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
             data-draggable={canUnassign ? 'true' : 'false'}
             draggable={canUnassign && !busy}
             title={canUnassign ? label.drag : undefined}
+            style={managing && onEdit ? {cursor: 'pointer'} : undefined}
+            onClick={managing && onEdit && !busy ? () => onEdit(route) : undefined}
             onDragStart={canUnassign ? event => {
               event.dataTransfer.setData('text/plain', route.id)
               event.dataTransfer.effectAllowed = 'move'

@@ -252,7 +252,7 @@ export default function Routes() {
               locale={locale}
             />
             <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
-            <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} onClick={() => { setManaging(on => !on); setPane('list') }}>
+            <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} style={{justifyContent: 'center', minWidth: '13ch'}} onClick={() => { setManaging(on => !on); setPane('list') }}>
               <RouteIcon size={18}/>{managing ? (locale==='es'?'Listo':locale==='fr'?'Terminé':'Done') : c.manage}
             </button>
             {open
@@ -383,6 +383,27 @@ export default function Routes() {
                       onTogglePause={toggleRoutePause}
                       onUnassign={unassignRoute}
                       onViewDetails={setViewingRouteId}
+                      onEdit={managing ? (route) => {
+                        const scheduled = route.scheduled_at ? new Date(route.scheduled_at) : null
+                        const time = scheduled ? scheduled.toISOString().slice(11, 16) : ''
+                        setForm({
+                          type: (route.mission_type === 'pickup' || route.mission_type === 'delivery' || route.mission_type === 'transfer' || route.mission_type === 'return' ? route.mission_type : 'delivery') as any,
+                          origin: route.origin_name || route.origin_address || '',
+                          destination: route.destination_name || route.destination_address || '',
+                          destination_label: route.destination_name || route.destination_address || '',
+                          destination_phone: route.destination_phone || '',
+                          stop_contact_name: route.destination_name || '',
+                          contact_id: '',
+                          priority: (route.priority === 'priority' || route.priority === 'urgent' ? route.priority : 'normal') as any,
+                          order_number: route.order_number || '',
+                          notes: route.notes || '',
+                          date: route.route_date || '',
+                          time,
+                          driver_id: route.driver_id || '',
+                          insert_before_id: '',
+                        })
+                        setOpen(true)
+                      } : undefined}
                       busyRouteId={busyRouteId}
                       managing={managing}
                     />
