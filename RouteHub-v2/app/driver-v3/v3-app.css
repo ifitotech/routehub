@@ -474,3 +474,31 @@ html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main {
   background: #fff !important;
   background-image: none !important;
 }
+
+/* Reference chrome: one solid navy surface from the iOS safe-area through
+   the centered brand header, with a separate solid bottom navigation bar. */
+html body:has(.driver-v3-root) .driver-v3-root > main > header {
+  min-height: calc(56px + env(safe-area-inset-top)) !important;
+  padding: env(safe-area-inset-top) 16px 0 !important;
+  background: #0f1d35 !important;
+  background-color: #0f1d35 !important;
+  color: #fff !important;
+  border: 0 !important;
+}
+html body:has(.driver-v3-root) .driver-v3-root > main > nav {
+  background: #14243a !important;
+  background-color: #14243a !important;
+  border-top: 0 !important;
+  min-height: calc(64px + env(safe-area-inset-bottom)) !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header {
+  background: #fff !important;
+  background-color: #fff !important;
+  color: #0b1f3a !important;
+}
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav {
+  background: #fff !important;
+  background-color: #fff !important;
+  border-top: 1px solid #dfe7f1 !important;
+}
