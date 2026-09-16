@@ -564,17 +564,6 @@ html body:has(.driver-v3-root) .driver-v3-root > main > nav {
   z-index: 300 !important;
 }
 
-html body:has(.driver-v3-root) .driver-v3-root > main > nav::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  height: max(0px, calc(100vh - 100dvh));
-  background: inherit;
-  pointer-events: none;
-}
-
 html body:has(.driver-v3-root) .driver-v3-root > main {
   padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
 }
