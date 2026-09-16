@@ -313,4 +313,4 @@
 :global(html[data-theme='dark']) .confirmSheet p{color:#b9c9dd}
 :global(html[data-theme='dark']) .sheetHandle{background:#60738c}
 :global(html[data-theme='dark']) .tag{background:#17345c;color:#9cc4ff}
-:global(html[data-theme='dark']) .stickyAction{background:linear-gradient(180deg,rgba(16,28,45,0) 0%,#101c2d 28%,#101c2d 100%)}
+:global(html[data-theme='dark']) .stickyAction{background:#101c2d}
