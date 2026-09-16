@@ -564,6 +564,10 @@ html body:has(.driver-v3-root) .driver-v3-root > main > nav {
   z-index: 300 !important;
 }
 
-html body:has(.driver-v3-root) .driver-v3-root > main {
-  padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
-}
+/* No padding-bottom here: .nav is a normal last row of this element's own
+   grid (grid-template-rows in driver-v3-a.module.css's .shell), not a
+   floating/fixed bar overlaying scrollable content. Padding the grid
+   container pushes that last row up by the same amount again - on top of
+   the safe-area space .nav already reserves for itself - leaving a
+   visible gap of empty space below the nav bar, the height it already
+   accounts for, doubled. */
