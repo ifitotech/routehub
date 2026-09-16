@@ -28,7 +28,7 @@
    a separate overlay. Both columns animate back to the resting three-column
    layout once the form closes. Form takes up 70% of space, map 30%. */
 .workspace[data-focus='true'] {
-  grid-template-columns: 0fr 2.3fr 0.7fr;
+  grid-template-columns: 0fr 2.4fr 0.6fr;
   gap: 8px 20px;
 }
 
