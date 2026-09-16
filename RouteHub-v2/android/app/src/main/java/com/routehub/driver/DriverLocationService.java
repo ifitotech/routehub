@@ -41,7 +41,7 @@ public class DriverLocationService extends Service implements LocationListener {
     private static final String TAG = "RouteHubLocation";
 
     private LocationManager locationManager;
-    private long intervalMillis = 20 * 60 * 1000L;
+    private long intervalMillis = 8 * 60 * 1000L;
     private long lastUploadAt = 0L;
     private String supabaseUrl, anonKey, accessToken, refreshToken, sessionId, driverId;
 
@@ -59,15 +59,17 @@ public class DriverLocationService extends Service implements LocationListener {
         getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(TRACKING, true).apply();
         requestUpdates();
         uploadLastKnownLocation();
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     private boolean readConfiguration(Intent intent) {
         supabaseUrl = intent.getStringExtra("supabaseUrl"); anonKey = intent.getStringExtra("supabaseAnonKey");
         accessToken = intent.getStringExtra("accessToken"); refreshToken = intent.getStringExtra("refreshToken");
         sessionId = intent.getStringExtra("sessionId"); driverId = intent.getStringExtra("driverId");
-        int minutes = intent.getIntExtra("intervalMinutes", 20);
-        intervalMillis = (minutes <= 5 ? 5L : 20L) * 60L * 1000L;
+        // Driver tracking is intentionally sampled every eight minutes. Keep
+        // this fixed so callers cannot accidentally fall back to the old
+        // 20-minute cadence.
+        intervalMillis = 8L * 60L * 1000L;
         return supabaseUrl != null && supabaseUrl.startsWith("https://") && nonEmpty(anonKey) && nonEmpty(accessToken)
             && nonEmpty(refreshToken) && nonEmpty(sessionId) && nonEmpty(driverId);
     }

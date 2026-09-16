@@ -10,7 +10,7 @@ function sections(locale: string) {
     return [
       ['Quién controla los datos', 'Tu empresa es dueña del espacio RouteHub. El administrador decide quién entra, qué rutas se asignan y cuánto tiempo se guardan. RouteHub opera el software.'],
       ['Cuenta', 'Guardamos nombre, correo, teléfono y foto de perfil si la subes, más rol y sucursal. Las cuentas @routehub.local las controla el administrador.'],
-      ['Ubicación', 'Se usa después de encender Driving Day y de que el teléfono conceda el permiso. Son dos interruptores distintos. Al apagar Driving Day se deja de enviar. Esta PWA no lee GPS con la app cerrada.'],
+      ['Ubicación', 'Cuando Driving Day está encendido y autorizas el permiso del teléfono, el APK Android comparte una posición aproximada cada 8 minutos para que tu empresa tenga una referencia operativa de la ruta. Se detiene al apagar Driving Day o retirar el permiso. La PWA no lee GPS con la app cerrada.'],
       ['Rutas y evidencia', 'Paradas: dirección, contacto, teléfono, PO en Pickup, notas, foto, nombre de quien recibe e Issue. Sube solo lo de esa parada.'],
       ['Notificaciones', 'Si las activas, el aparato guarda una suscripción push. Puedes dejarlas Off. Para silenciarlas del todo usa también Ajustes del teléfono.'],
       ['Mapas', 'Las direcciones van a geocodificación (Google, y si falla un fallback público) para dibujar el mapa. Reciben la dirección, no tu contraseña.'],
@@ -22,7 +22,7 @@ function sections(locale: string) {
     return [
       ['Qui contrôle les données', 'Votre entreprise possède l’espace. RouteHub fournit le logiciel.'],
       ['Compte', 'Nom, e-mail, téléphone, photo, rôle et succursale. Comptes @routehub.local : administrateur.'],
-      ['Position', 'Après Driving Day On et l’autorisation de l’appareil. Pas de GPS appli fermée.'],
+      ['Position', 'Quand Driving Day est activé et que vous autorisez la permission, l’application Android partage une position approximative toutes les 8 minutes pour le suivi opérationnel de la tournée. Le partage s’arrête en désactivant Driving Day ou la permission. La PWA ne lit pas le GPS fermée.'],
       ['Routes et preuves', 'Adresses, contacts, PO à la collecte, notes, photos, destinataire et incidents.'],
       ['Notifications', 'Abonnement push facultatif. Coupure complète aussi dans les Réglages du téléphone.'],
       ['Cartes', 'Adresses envoyées au géocodage. Pas de mot de passe.'],
@@ -33,7 +33,7 @@ function sections(locale: string) {
   return [
     ['Who controls the data', 'Your company owns the RouteHub workspace. Administrators decide who can sign in, which routes are assigned and how long records are kept. RouteHub provides the software.'],
     ['Account', 'We store the name, email, phone and profile photo you save, plus the role and branch the company assigned. Logins ending in @routehub.local are managed by the company administrator.'],
-    ['Location', 'Collected only after Driving Day is On and the device grants permission. Those are two different switches. Ending Driving Day stops sharing. This PWA cannot read GPS after you leave the app.'],
+    ['Location', 'When Driving Day is On and you grant device permission, the Android app shares an approximate location every 8 minutes so your company can coordinate routes. Sharing stops when Driving Day is turned Off or permission is revoked. The PWA cannot read GPS after you leave the app.'],
     ['Routes and proof', 'Stops may include address, contact, phone, pickup PO, notes, photos, recipient name and Issue reports. Upload only what that stop requires.'],
     ['Notifications', 'If alerts are On, the device stores a push subscription for new or changed routes. You can leave them Off. The phone Settings app is also required to silence them fully.'],
     ['Maps', 'Addresses may be sent to geocoding (Google first, then a public fallback) so the map can place stops. Providers receive the address, not your password.'],
