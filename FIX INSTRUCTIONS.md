@@ -1,5 +1,18 @@
 # FIX_INSTRUCTIONS.md — RouteHub
 
+> ## Revisión de Codex — 10 de septiembre de 2026
+>
+> Esta nota fue contrastada con la base de datos y el código actualmente desplegado. No aplicar sus ejemplos de migración literalmente: la numeración `042`/`043` está desactualizada y el ejemplo de la función de invitación está incompleto.
+>
+> - **Hallazgo 1 — RLS de `contacts` y `requests`: RESUELTO.** Las políticas actuales ya restringen las acciones por compañía y rol. No crear ni ejecutar la migración propuesta salvo que una futura verificación encuentre nuevamente las políticas permisivas antiguas.
+> - **Hallazgo 2 — Operations Manager invitando Branch Managers: RESUELTO.** La función activa permite invitar únicamente a `ceo` y `branch_manager`.
+> - **Hallazgo 3 — Cola offline: PENDIENTE VÁLIDO.** Existe una cola básica, pero no está conectada al flujo real de completar paradas ni a evidencias/fotos. La solución debe usar IndexedDB para los archivos, reintentos seguros e idempotencia; no guardar fotos en base64 dentro de `localStorage`.
+> - **Hallazgo 4 — Intentos del código de activación: PENDIENTE VÁLIDO.** Falta protección contra intentos repetidos. Implementar el contador/bloqueo del lado servidor, de forma atómica y sin revelar si una invitación existe.
+> - **Hallazgo 5 — `/test` y `/test/config`: PENDIENTE VÁLIDO.** `/test/config` no expone valores secretos, solo confirma presencia de configuración; aun así, ambas rutas son superficies públicas de desarrollo. Retirarlas o protegerlas antes de abrir la app a más usuarios.
+> - **Hallazgo 6 — Limpieza de código legado: REQUIERE AUDITORÍA.** No borrar rutas, páginas ni la carpeta raíz sin verificar primero el Root Directory de despliegue y todas las referencias activas. Hacerlo en una rama separada, después de confirmar que producción no depende de ellas.
+>
+> **Orden recomendado:** 1) proteger/eliminar rutas de prueba; 2) limitar activaciones; 3) integrar offline correctamente; 4) limpiar legado de forma controlada.
+
 Instrucciones para aplicar tú mismo (o delegar a Grok/ChatGPT con este archivo como spec). Sigue el orden — están numeradas por prioridad, no por número de hallazgo.
 
 ---

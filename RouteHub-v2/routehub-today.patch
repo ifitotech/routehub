@@ -1,0 +1,1716 @@
+From 141aed3b035718d464b0141a081bccf2650534da Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 31 Aug 2026 18:25:14 -0400
+Subject: [PATCH 1/6] Update RouteHub PWA logos
+
+---
+ RouteHub-v2/public/manifest-driver.json | 18 +++++++++---------
+ RouteHub-v2/public/manifest.json        |  6 +++---
+ 2 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/RouteHub-v2/public/manifest-driver.json b/RouteHub-v2/public/manifest-driver.json
+index ecf7cf8..b9fc282 100644
+--- a/RouteHub-v2/public/manifest-driver.json
++++ b/RouteHub-v2/public/manifest-driver.json
+@@ -21,9 +21,9 @@
+   ],
+   "icons": [
+     {
+-      "src": "/routehub-driver-app.jpg",
+-      "sizes": "1024x1024",
+-      "type": "image/jpeg",
++      "src": "/routehub-driver-icon.png",
++      "sizes": "512x512",
++      "type": "image/png",
+       "purpose": "any"
+     }
+   ],
+@@ -34,9 +34,9 @@
+       "url": "/driver",
+       "icons": [
+         {
+-          "src": "/routehub-driver-app.jpg",
+-          "sizes": "1024x1024",
+-          "type": "image/jpeg"
++          "src": "/routehub-driver-icon.png",
++          "sizes": "512x512",
++          "type": "image/png"
+         }
+       ]
+     },
+@@ -46,9 +46,9 @@
+       "url": "/driver/history",
+       "icons": [
+         {
+-          "src": "/routehub-driver-app.jpg",
+-          "sizes": "1024x1024",
+-          "type": "image/jpeg"
++          "src": "/routehub-driver-icon.png",
++          "sizes": "512x512",
++          "type": "image/png"
+         }
+       ]
+     }
+diff --git a/RouteHub-v2/public/manifest.json b/RouteHub-v2/public/manifest.json
+index 4d353ce..217aed7 100644
+--- a/RouteHub-v2/public/manifest.json
++++ b/RouteHub-v2/public/manifest.json
+@@ -13,10 +13,10 @@
+   "lang": "en",
+   "categories": ["business", "productivity", "navigation"],
+   "icons": [
+-    {"src": "/routehub-regular-new.jpg", "sizes": "1024x1024", "type": "image/jpeg", "purpose": "any maskable"}
++    {"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+   ],
+   "shortcuts": [
+-    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-app.jpg", "sizes": "1024x1024", "type": "image/jpeg"}]},
+-    {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-regular-new.jpg", "sizes": "1024x1024", "type": "image/jpeg"}]}
++    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-icon.png", "sizes": "512x512", "type": "image/png"}]},
++    {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-icon-512.png", "sizes": "512x512", "type": "image/png"}]}
+   ]
+ }
+-- 
+2.51.1
+
+
+From 1a7af0832b7d451af75243f7c48cc51f230437e4 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Tue, 1 Sep 2026 10:03:15 -0400
+Subject: [PATCH 2/6] Make RouteHub driver navigation and map stable
+
+---
+ RouteHub-v2/app/routes/page.tsx |  7 ++++---
+ RouteHub-v2/middleware.ts       | 12 ++----------
+ 2 files changed, 6 insertions(+), 13 deletions(-)
+
+diff --git a/RouteHub-v2/app/routes/page.tsx b/RouteHub-v2/app/routes/page.tsx
+index ed892cb..058d4d7 100644
+--- a/RouteHub-v2/app/routes/page.tsx
++++ b/RouteHub-v2/app/routes/page.tsx
+@@ -64,6 +64,7 @@ type Branch = {
+   location_external_id?: string | null
+ }
+ type OriginMode = 'branch' | 'previous' | 'contact' | 'custom'
++const driverCoordinate=(value:string|undefined)=>{const match=value?.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);if(!match)return null;const lat=Number(match[1]),lng=Number(match[2]);return Number.isFinite(lat)&&Number.isFinite(lng)?{lat,lng}:null}
+ type Driver = {
+   user_id: string
+   role?: string
+@@ -439,7 +440,7 @@ export default function Routes() {
+     if (mode === 'branch') setForm(current => ({...current, origin: defaultBranch?.address || defaultBranch?.name || ''}))
+     if (mode === 'previous') setForm(current => ({...current, origin: previousRoute?.destination_address || previousRoute?.destination_name || driverLocations[current.driver_id] || ''}))
+     if (mode === 'contact') setForm(current => ({...current, origin: contacts[0]?.address || ''}))
+-    if (mode === 'custom') setForm(current => ({...current, origin: ''}))
++    if (mode === 'custom') setForm(current => ({...current, origin: driverLocations[current.driver_id] || ''}))
+   }
+ 
+   const updateDestination = (value: string) => {
+@@ -630,8 +631,8 @@ export default function Routes() {
+         mission_type: form.type,
+         origin_name: originMode === 'branch' ? defaultBranch?.name || c.branch : originMode === 'previous' ? previousRoute?.destination_name || form.origin.trim() : contacts.find(contact => contact.address === form.origin)?.company_name || form.origin.trim(),
+         origin_address: form.origin.trim() || defaultBranch?.address || defaultBranch?.name || c.branch,
+-        origin_lat: originMode === 'branch' ? defaultBranch?.latitude || null : null,
+-        origin_lng: originMode === 'branch' ? defaultBranch?.longitude || null : null,
++        origin_lat: originMode === 'branch' ? defaultBranch?.latitude || null : originMode === 'custom' ? driverCoordinate(driverLocations[form.driver_id])?.lat || null : null,
++        origin_lng: originMode === 'branch' ? defaultBranch?.longitude || null : originMode === 'custom' ? driverCoordinate(driverLocations[form.driver_id])?.lng || null : null,
+         destination_name: destinationName,
+         destination_address: destinationAddress,
+         destination_lat: destinationLocation?.coordinate.lat || selected?.latitude || null,
+diff --git a/RouteHub-v2/middleware.ts b/RouteHub-v2/middleware.ts
+index e2e8ab7..3c2c2d3 100644
+--- a/RouteHub-v2/middleware.ts
++++ b/RouteHub-v2/middleware.ts
+@@ -1,16 +1,8 @@
+ import {NextResponse, type NextRequest} from 'next/server'
+ 
+ export function middleware(request: NextRequest) {
+-  // Official Driver URL is /driver. Serve the V3 app under that path.
+-  // Physical code remains in app/driver-v3; V2 files stay as non-routed fallback code only.
+-  if (request.nextUrl.pathname === '/driver' || request.nextUrl.pathname.startsWith('/driver/')) {
+-    // Do not rewrite /driver-v3 itself
+-    if (!request.nextUrl.pathname.startsWith('/driver-v3')) {
+-      const url = request.nextUrl.clone()
+-      url.pathname = request.nextUrl.pathname.replace(/^\/driver(?=\/|$)/, '/driver-v3')
+-      return NextResponse.rewrite(url)
+-    }
+-  }
++  // RouteHub's current Driver implementation is the official /driver route.
++  // Keep the legacy /driver-v3 tree available only for compatibility links.
+   const response = NextResponse.next()
+   response.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+   response.headers.set('X-Content-Type-Options', 'nosniff')
+-- 
+2.51.1
+
+
+From 219671ea3e869574396317fedc8acb3dc14259c2 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 7 Sep 2026 00:28:34 -0400
+Subject: [PATCH 3/6] Prepare RouteHub for tester operations
+
+---
+ RouteHub-v2/AGENT_LOG.md                      | 22 +++++++
+ RouteHub-v2/BACKUP_CHECKLIST.md               |  5 ++
+ RouteHub-v2/DEPLOY_READINESS.md               | 12 ++++
+ RouteHub-v2/MONITORING.md                     | 12 ++++
+ RouteHub-v2/app/driver-v3/consent/page.tsx    | 16 +++++
+ .../app/driver-v3/driver-consent-gate.tsx     | 35 ++++++++++
+ .../app/driver-v3/driver-session-gate.tsx     | 11 ++++
+ RouteHub-v2/app/driver-v3/layout.tsx          | 10 +--
+ .../app/driver-v3/offline-queue-sync.tsx      | 24 +++++++
+ RouteHub-v2/app/driver-v3/page.tsx            |  9 ++-
+ RouteHub-v2/app/driver/driver-bottom-nav.tsx  | 24 -------
+ RouteHub-v2/app/driver/driver-map.module.css  | 66 -------------------
+ .../app/driver/driver-session-gate.tsx        | 58 ----------------
+ .../app/driver/history/history.module.css     |  5 --
+ RouteHub-v2/app/driver/history/page.tsx       |  5 --
+ RouteHub-v2/app/driver/layout.tsx             | 13 ----
+ RouteHub-v2/app/driver/more/more.module.css   |  1 -
+ RouteHub-v2/app/driver/more/page.tsx          |  5 --
+ RouteHub-v2/app/driver/page.tsx               |  3 -
+ RouteHub-v2/app/driver/settings/page.tsx      |  5 --
+ RouteHub-v2/app/driver/signature/page.tsx     |  5 --
+ RouteHub-v2/app/error-monitor.tsx             | 13 ++++
+ RouteHub-v2/app/layout.tsx                    |  3 +-
+ RouteHub-v2/app/manager/manager-shell.tsx     |  1 +
+ RouteHub-v2/app/test/config/page.tsx          |  2 -
+ RouteHub-v2/app/test/page.tsx                 |  3 -
+ .../components/driver-v3/DriverV3Shell.tsx    |  1 +
+ RouteHub-v2/lib/driver/driver-actions.ts      | 24 ++++++-
+ RouteHub-v2/lib/error-reporting.ts            |  2 +
+ RouteHub-v2/lib/offline-queue.ts              | 18 +++--
+ RouteHub-v2/lib/sentry.ts                     | 17 +++++
+ .../supabase/functions/_shared/sentry.ts      | 10 +++
+ .../functions/send-manager-invite/index.ts    |  9 ++-
+ .../functions/send-route-push/index.ts        |  2 +
+ .../042_fix_legacy_permissive_policies.sql    | 19 ++++++
+ .../043_fix_invitation_role_escalation.sql    | 64 ++++++++++++++++++
+ .../044_activation_attempt_limit.sql          |  1 +
+ .../migrations/045_gps_consent_tracking.sql   | 31 +++++++++
+ RouteHub-v2/tests/maps-provider.test.mjs      |  4 +-
+ 39 files changed, 356 insertions(+), 214 deletions(-)
+ create mode 100644 RouteHub-v2/AGENT_LOG.md
+ create mode 100644 RouteHub-v2/BACKUP_CHECKLIST.md
+ create mode 100644 RouteHub-v2/DEPLOY_READINESS.md
+ create mode 100644 RouteHub-v2/MONITORING.md
+ create mode 100644 RouteHub-v2/app/driver-v3/consent/page.tsx
+ create mode 100644 RouteHub-v2/app/driver-v3/driver-consent-gate.tsx
+ create mode 100644 RouteHub-v2/app/driver-v3/driver-session-gate.tsx
+ create mode 100644 RouteHub-v2/app/driver-v3/offline-queue-sync.tsx
+ delete mode 100644 RouteHub-v2/app/driver/driver-bottom-nav.tsx
+ delete mode 100644 RouteHub-v2/app/driver/driver-map.module.css
+ delete mode 100644 RouteHub-v2/app/driver/driver-session-gate.tsx
+ delete mode 100644 RouteHub-v2/app/driver/history/history.module.css
+ delete mode 100644 RouteHub-v2/app/driver/history/page.tsx
+ delete mode 100644 RouteHub-v2/app/driver/layout.tsx
+ delete mode 100644 RouteHub-v2/app/driver/more/more.module.css
+ delete mode 100644 RouteHub-v2/app/driver/more/page.tsx
+ delete mode 100644 RouteHub-v2/app/driver/page.tsx
+ delete mode 100644 RouteHub-v2/app/driver/settings/page.tsx
+ delete mode 100644 RouteHub-v2/app/driver/signature/page.tsx
+ create mode 100644 RouteHub-v2/app/error-monitor.tsx
+ delete mode 100644 RouteHub-v2/app/test/config/page.tsx
+ delete mode 100644 RouteHub-v2/app/test/page.tsx
+ create mode 100644 RouteHub-v2/lib/sentry.ts
+ create mode 100644 RouteHub-v2/supabase/functions/_shared/sentry.ts
+ create mode 100644 RouteHub-v2/supabase/migrations/042_fix_legacy_permissive_policies.sql
+ create mode 100644 RouteHub-v2/supabase/migrations/043_fix_invitation_role_escalation.sql
+ create mode 100644 RouteHub-v2/supabase/migrations/044_activation_attempt_limit.sql
+ create mode 100644 RouteHub-v2/supabase/migrations/045_gps_consent_tracking.sql
+
+diff --git a/RouteHub-v2/AGENT_LOG.md b/RouteHub-v2/AGENT_LOG.md
+new file mode 100644
+index 0000000..a1d01d9
+--- /dev/null
++++ b/RouteHub-v2/AGENT_LOG.md
+@@ -0,0 +1,22 @@
++# RouteHub fix log
++
++| Punto | Estado | Resuelto por |
++|---|---|---|
++| RLS contacts/requests | Resuelto (migración 042 creada; aplicar en Supabase) | ChatGPT |
++| Escalación de invitaciones | Resuelto (migración 043 creada) | ChatGPT |
++| Cola offline | Resuelto en código (requiere prueba en teléfono) | ChatGPT |
++| Límite de activación | Resuelto (migración 044 y Edge Function) | ChatGPT |
++| Rutas de desarrollo | Resuelto | ChatGPT |
++| Limpieza de repo | Parcial: carpetas muertas de app eliminadas; raíz antigua no eliminada automáticamente | ChatGPT |
++| Consentimiento GPS | Resuelto en código (migración 045; prueba de usuario real pendiente) | ChatGPT |
++| Monitoreo de errores | Resuelto en código (DSN de Sentry pendiente de configurar) | ChatGPT |
++| Backups | Documentado; confirmar plan y realizar backup real manualmente | ChatGPT |
++| Canal de soporte | Resuelto (enlaces de soporte con placeholder pendiente de reemplazo) | ChatGPT |
++| Checklist de despliegue | Resuelto como checklist; ejecución en dashboards y teléfono queda pendiente | ChatGPT |
++
++## Historial de decisiones
++
++- La cola offline usa IndexedDB para soportar evidencia fotográfica y conserva un fallback pequeño en localStorage.
++- El mensaje de cola offline es: “Guardado — se enviará cuando vuelva la señal”.
++- La sincronización reintenta al volver `online` y al montar el layout del Driver.
++- El consentimiento GPS se guarda por membresía de empresa mediante RPC con privilegios mínimos; la pantalla usa español, inglés o francés según el idioma guardado.
+diff --git a/RouteHub-v2/BACKUP_CHECKLIST.md b/RouteHub-v2/BACKUP_CHECKLIST.md
+new file mode 100644
+index 0000000..8cb83a6
+--- /dev/null
++++ b/RouteHub-v2/BACKUP_CHECKLIST.md
+@@ -0,0 +1,5 @@
++# Supabase backup checklist
++
++1. In Supabase Dashboard, select the RouteHub project and open **Settings → Infrastructure** (or **Database → Backups**, depending on dashboard version). Confirm the plan’s **Point-in-Time Recovery / automatic backups** status and record the retention period. The free plan may not include PITR; do not assume it does.
++2. Before a risky migration, create a logical backup from a machine with the Supabase CLI authenticated: `supabase db dump --project-ref <PROJECT_REF> -f routehub-before-<date>.sql`. Store the file in an encrypted, access-controlled location and verify it is non-empty.
++3. For an emergency restore, create a new temporary Supabase project first, restore the dump there with `psql "$DATABASE_URL" -f routehub-before-<date>.sql`, validate RLS, Auth references and Edge Function secrets, then switch the application URL/keys only after a smoke test. For PITR, use Dashboard **Backups → Restore** to select the timestamp and follow the confirmation prompts; pause writes and re-check the restored schema before reopening traffic.
+diff --git a/RouteHub-v2/DEPLOY_READINESS.md b/RouteHub-v2/DEPLOY_READINESS.md
+new file mode 100644
+index 0000000..10be514
+--- /dev/null
++++ b/RouteHub-v2/DEPLOY_READINESS.md
+@@ -0,0 +1,12 @@
++# Deployment readiness
++
++- [ ] `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` configured in Vercel for the deployed environments.
++- [ ] `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` configured in Vercel; browser restrictions match the production HTTPS domain.
++- [ ] `GOOGLE_MAPS_SERVER_KEY` and required VAPID/Supabase Edge secrets configured in Supabase.
++- [ ] `NEXT_PUBLIC_SENTRY_DSN` configured in Vercel and `SENTRY_DSN` configured as a Supabase secret (optional but recommended).
++- [ ] Production domain configured with valid HTTPS.
++- [ ] Migrations 042, 043, 044 and 045 applied to the production Supabase project.
++- [ ] Driver first login routes to GPS consent; acceptance timestamp is visible in `company_users`.
++- [ ] Location permission and notifications tested on a real Android phone and iPhone if possible.
++- [ ] Offline completion and automatic retry tested with connectivity disabled and restored.
++- [ ] Manager assignment, driver completion, support link and error event verified after deployment.
+diff --git a/RouteHub-v2/MONITORING.md b/RouteHub-v2/MONITORING.md
+new file mode 100644
+index 0000000..10ef364
+--- /dev/null
++++ b/RouteHub-v2/MONITORING.md
+@@ -0,0 +1,12 @@
++# Production monitoring
++
++RouteHub uses optional, dependency-free Sentry HTTP reporting so the web app and Supabase Edge Functions can share one project without adding a runtime SDK to the PWA.
++
++## Variables
++
++- `NEXT_PUBLIC_SENTRY_DSN`: Sentry DSN exposed to the browser (Vercel Production, Preview and Development as appropriate).
++- `SENTRY_DSN`: Sentry DSN for Edge Functions (Supabase Edge Function secrets). Keep this value private.
++
++If the variables are absent, reporting is disabled and the app continues normally. Replace the placeholder support address in the UI with the real support mailbox.
++
++The client captures uncaught errors and unhandled promise rejections. `lib/error-reporting.ts` also forwards operational catches, and both current Edge Functions report their top-level failures. Do not include access tokens, service-role keys, photos or customer secrets in event context.
+diff --git a/RouteHub-v2/app/driver-v3/consent/page.tsx b/RouteHub-v2/app/driver-v3/consent/page.tsx
+new file mode 100644
+index 0000000..143caed
+--- /dev/null
++++ b/RouteHub-v2/app/driver-v3/consent/page.tsx
+@@ -0,0 +1,16 @@
++'use client'
++
++import {useEffect, useState} from 'react'
++import {useRouter} from 'next/navigation'
++import {getSupabase} from '../../../lib/supabase'
++import {useLocale} from '../../../lib/use-preferences'
++
++export default function DriverGpsConsentPage() {
++  const router = useRouter(); const {locale} = useLocale()
++  const [companyId, setCompanyId] = useState<string | null>(null)
++  const [checked, setChecked] = useState(false); const [saving, setSaving] = useState(false); const [error, setError] = useState('')
++  const english = locale === 'en'
++  useEffect(() => { void (async () => { const s=getSupabase(); const {data:{user}}=await s.auth.getUser(); if(!user){router.replace('/login');return}; const {data}=await s.from('company_users').select('company_id,gps_consent_accepted_at').eq('user_id',user.id).eq('role','driver').limit(1).maybeSingle(); if(data?.gps_consent_accepted_at) router.replace('/driver-v3'); else setCompanyId(data?.company_id ?? null) })() }, [router])
++  const accept = async () => { if(!checked || !companyId || saving)return; setSaving(true); setError(''); const {error:e}=await getSupabase().rpc('accept_gps_consent',{target_company_id:companyId}); if(e){setError(e.message);setSaving(false);return} router.replace('/driver-v3') }
++  return <main className="app" style={{maxWidth:640,margin:'0 auto',padding:'24px 16px'}}><section className="card"><h1>{english?'Location monitoring notice':'Aviso de monitoreo de ubicación'}</h1><p>{english?'RouteHub uses your device location during an active Driving Day to show your position and route progress to your company. Location sharing stops when the Driving Day ends.':'RouteHub usa la ubicación de tu dispositivo durante una jornada activa para mostrar tu posición y el progreso de la ruta a tu empresa. El uso de ubicación se detiene cuando termina la jornada.'}</p><p>{english?'You can stop sharing by ending the Driving Day or disabling location permission in your device settings.':'Puedes dejar de compartirla al terminar la jornada o desactivando el permiso de ubicación en los ajustes de tu dispositivo.'}</p><label style={{display:'flex',gap:12,alignItems:'flex-start',margin:'24px 0'}}><input type="checkbox" checked={checked} onChange={e=>setChecked(e.target.checked)} /> <span>{english?'I have read and understand this notice':'He leído y entiendo este aviso'}</span></label>{error&&<p role="alert" className="error">{error}</p>}<button className="primary" disabled={!checked||!companyId||saving} onClick={accept}>{saving?(english?'Saving…':'Guardando…'):(english?'Accept and continue':'Aceptar y continuar')}</button></section></main>
++}
+diff --git a/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx b/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx
+new file mode 100644
+index 0000000..e04934f
+--- /dev/null
++++ b/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx
+@@ -0,0 +1,35 @@
++'use client'
++
++import {useEffect, useState} from 'react'
++import {usePathname, useRouter} from 'next/navigation'
++import {getSupabase} from '../../lib/supabase'
++import {resolveAccess} from '../auth-access'
++
++export default function DriverConsentGate({children}: {children: React.ReactNode}) {
++  const pathname = usePathname()
++  const router = useRouter()
++  const [ready, setReady] = useState(false)
++
++  useEffect(() => {
++    let cancelled = false
++    const check = async () => {
++      if (pathname?.startsWith('/driver-v3/consent')) { setReady(true); return }
++      try {
++        const client = getSupabase()
++        const access = await resolveAccess(client)
++        if (access.role !== 'driver') { setReady(true); return }
++        const {data, error} = await client.from('company_users')
++          .select('company_id,gps_consent_accepted_at')
++          .eq('user_id', access.user.id).eq('role', 'driver').limit(1).maybeSingle()
++        if (error) throw error
++        if (!data?.gps_consent_accepted_at) { router.replace('/driver-v3/consent'); return }
++        if (!cancelled) setReady(true)
++      } catch { if (!cancelled) router.replace('/login') }
++    }
++    void check()
++    return () => { cancelled = true }
++  }, [pathname, router])
++
++  if (!ready) return <div className="driver-v3-splash" role="status" aria-live="polite"><strong>RouteHub Driver</strong><p>Opening your workspace…</p><div className="spin" aria-hidden="true" /></div>
++  return <>{children}</>
++}
+diff --git a/RouteHub-v2/app/driver-v3/driver-session-gate.tsx b/RouteHub-v2/app/driver-v3/driver-session-gate.tsx
+new file mode 100644
+index 0000000..80e4c21
+--- /dev/null
++++ b/RouteHub-v2/app/driver-v3/driver-session-gate.tsx
+@@ -0,0 +1,11 @@
++'use client'
++import {useEffect,useState} from 'react'
++import {usePathname,useRouter} from 'next/navigation'
++import {getSupabase} from '../../lib/supabase'
++
++export default function DriverSessionGate({children}:{children:React.ReactNode}){
++  const router=useRouter(); const pathname=usePathname(); const [ready,setReady]=useState(false)
++  useEffect(()=>{let cancelled=false;getSupabase().auth.getSession().then(({data})=>{if(cancelled)return;if(!data.session){router.replace('/login');return}setReady(true)}).catch(()=>{if(!cancelled)router.replace('/login')});return()=>{cancelled=true}},[router])
++  if(!ready)return <div className="driver-v3-splash" role="status" aria-live="polite"><img src="/routehub-driver-app.jpg" alt="" width={72} height={72}/><strong>RouteHub Driver</strong><p>Opening your workspace…</p><div className="spin" aria-hidden="true"/></div>
++  return <>{children}</>
++}
+diff --git a/RouteHub-v2/app/driver-v3/layout.tsx b/RouteHub-v2/app/driver-v3/layout.tsx
+index 1db83b2..007a266 100644
+--- a/RouteHub-v2/app/driver-v3/layout.tsx
++++ b/RouteHub-v2/app/driver-v3/layout.tsx
+@@ -1,9 +1,11 @@
+ import type {Metadata, Viewport} from 'next'
+-import DriverSessionGate from '../driver/driver-session-gate'
++import DriverSessionGate from './driver-session-gate'
+ import DriverV3AppMode from './app-mode'
+ import DriverLiveLocation from './driver-live-location'
+ import {DriverV3Provider} from '../../lib/driver-v3/use-driver-data'
+ import './v3-app.css'
++import OfflineQueueSync from './offline-queue-sync'
++import DriverConsentGate from './driver-consent-gate'
+ 
+ export const metadata: Metadata = {
+   title: 'RouteHub Driver',
+@@ -46,9 +48,9 @@ export const viewport: Viewport = {
+ export default function DriverV3Layout({children}: {children: React.ReactNode}) {
+   return (
+     <DriverSessionGate>
+-      <DriverV3Provider>
+-      <div className="driver-v3-root"><DriverV3AppMode /><DriverLiveLocation />{children}</div>
+-      </DriverV3Provider>
++      <DriverConsentGate><DriverV3Provider>
++      <div className="driver-v3-root"><DriverV3AppMode /><DriverLiveLocation /><OfflineQueueSync />{children}</div>
++      </DriverV3Provider></DriverConsentGate>
+     </DriverSessionGate>
+   )
+ }
+diff --git a/RouteHub-v2/app/driver-v3/offline-queue-sync.tsx b/RouteHub-v2/app/driver-v3/offline-queue-sync.tsx
+new file mode 100644
+index 0000000..f3013bf
+--- /dev/null
++++ b/RouteHub-v2/app/driver-v3/offline-queue-sync.tsx
+@@ -0,0 +1,24 @@
++'use client'
++import {useEffect} from 'react'
++import {syncQueue} from '../../lib/offline-queue'
++import {completeMission} from '../../lib/data'
++import {uploadMissionEvidence} from '../../lib/mission-evidence'
++
++export default function OfflineQueueSync(){
++  useEffect(()=>{
++    const flush=()=>void syncQueue(async action=>{
++      const p=action.payload as any
++      if(action.kind==='complete'){
++        const result=await completeMission(p.routeId,p.location||undefined,p.driverNote===null?undefined:{driverNote:p.driverNote})
++        if(!result)throw new Error('Unable to sync completion')
++      }else if(action.kind==='photo'){
++        const bytes=atob(String(p.data).split(',')[1]||'')
++        const file=new File([Uint8Array.from(bytes,c=>c.charCodeAt(0))],p.name||'evidence.jpg',{type:p.type||'image/jpeg'})
++        await uploadMissionEvidence(file,p.routeId)
++      }
++    })
++    window.addEventListener('online',flush); flush()
++    return()=>window.removeEventListener('online',flush)
++  },[])
++  return null
++}
+diff --git a/RouteHub-v2/app/driver-v3/page.tsx b/RouteHub-v2/app/driver-v3/page.tsx
+index 5feb322..ba11893 100644
+--- a/RouteHub-v2/app/driver-v3/page.tsx
++++ b/RouteHub-v2/app/driver-v3/page.tsx
+@@ -152,7 +152,8 @@ export default function DriverV3Page() {
+     setBusy(true)
+     setMessage('')
+     try{
+-      await completePickupWithEvidence(ctx())
++      const result=await completePickupWithEvidence(ctx())
++      if((result as any)?.queued)setMessage('Guardado — se enviará cuando vuelva la señal')
+       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+       setSheet(null)
+       await refresh()
+@@ -238,13 +239,15 @@ export default function DriverV3Page() {
+       }
+       let location
+       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
++      let result:any
+       if(withIssue){
+         await reportIssue(ctx(), issueNote.trim()||'Issue reported on delivery')
+       }else if(name){
+-        await completeDeliveryWithRecipient(ctx(), name, issueNote, location)
++        result=await completeDeliveryWithRecipient(ctx(), name, issueNote, location)
+       }else{
+-        await completeDelivery(ctx())
++        result=await completeDelivery(ctx())
+       }
++      if(result?.queued)setMessage('Guardado — se enviará cuando vuelva la señal')
+       try{window.sessionStorage.setItem('routehub:last-completed-id',route.id)}catch{}
+       setSheet(null)
+       setRecipient('')
+diff --git a/RouteHub-v2/app/driver/driver-bottom-nav.tsx b/RouteHub-v2/app/driver/driver-bottom-nav.tsx
+deleted file mode 100644
+index bfab940..0000000
+--- a/RouteHub-v2/app/driver/driver-bottom-nav.tsx
++++ /dev/null
+@@ -1,24 +0,0 @@
+-'use client'
+-
+-import Link from 'next/link'
+-
+-import {Home, List, MapPin, MoreHorizontal} from 'lucide-react'
+-import {usePathname,useSearchParams} from 'next/navigation'
+-import {useLocale} from '../../lib/use-preferences'
+-import styles from './driver.module.css'
+-
+-/** Shared navigation for every Driver workspace screen. */
+-export default function DriverBottomNav() {
+-  const pathname = usePathname()
+-  const searchParams = useSearchParams()
+-  const {t} = useLocale()
+-  const isHome = pathname === '/driver'
+-
+-  const view=searchParams.get('view')
+-  return <nav className={styles.driverNav} aria-label="Driver navigation">
+-    <Link href="/driver" aria-current={isHome&&!view ? 'page' : undefined}><Home size={18}/><span>Today</span></Link>
+-    <Link href="/driver?view=route" aria-current={pathname === '/driver'&&view==='route' ? 'page' : undefined}><List size={18}/><span>Route</span></Link>
+-    <Link href="/driver?view=map" aria-current={pathname === '/driver'&&view==='map' ? 'page' : undefined}><MapPin size={18}/><span>Map</span></Link>
+-    <Link href="/driver/more" aria-current={pathname === '/driver/more' ? 'page' : undefined}><MoreHorizontal size={18}/><span>More</span></Link>
+-  </nav>
+-}
+diff --git a/RouteHub-v2/app/driver/driver-map.module.css b/RouteHub-v2/app/driver/driver-map.module.css
+deleted file mode 100644
+index 6f7d3f1..0000000
+--- a/RouteHub-v2/app/driver/driver-map.module.css
++++ /dev/null
+@@ -1,66 +0,0 @@
+-.mapCell {
+-  display: block !important;
+-  position: relative;
+-  min-height: 78px;
+-  padding: 0 !important;
+-  overflow: hidden;
+-  background: #092552 !important;
+-}
+-
+-.mapCell > div {
+-  width: 100%;
+-  height: 100%;
+-  min-height: 78px;
+-  margin: 0 !important;
+-  border: 0 !important;
+-  border-radius: 0 !important;
+-  box-shadow: none !important;
+-}
+-
+-.mapCell iframe {
+-  display: block;
+-  width: 100%;
+-  height: 100%;
+-  min-height: 78px;
+-  border: 0;
+-  pointer-events: none;
+-}
+-
+-.mapCell svg {
+-  width: 18px;
+-  height: 18px;
+-}
+-
+-.mapCell span {
+-  font-size: 10px;
+-  color: #bfdbfe;
+-}
+-
+-.mapCellActive {
+-  grid-column: 1 / -1;
+-  height: 210px;
+-}
+-
+-.mapCellActive > div,
+-.mapCellActive iframe {
+-  min-height: 210px;
+-}
+-
+-@media (max-width: 560px) {
+-  .mapCell {
+-    grid-column: 1 / -1;
+-    height: 96px;
+-  }
+-
+-  .mapCell > div,
+-  .mapCell iframe {
+-    min-height: 96px;
+-  }
+-
+-  .mapCellActive,
+-  .mapCellActive > div,
+-  .mapCellActive iframe {
+-    height: 190px;
+-    min-height: 190px;
+-  }
+-}
+diff --git a/RouteHub-v2/app/driver/driver-session-gate.tsx b/RouteHub-v2/app/driver/driver-session-gate.tsx
+deleted file mode 100644
+index 20a2cb1..0000000
+--- a/RouteHub-v2/app/driver/driver-session-gate.tsx
++++ /dev/null
+@@ -1,58 +0,0 @@
+-'use client'
+-
+-import {useEffect, useState} from 'react'
+-import {usePathname, useRouter} from 'next/navigation'
+-import {getSupabase} from '../../lib/supabase'
+-
+-/**
+- * Auth gate for Driver workspaces (V2 /driver and V3 /driver-v3).
+- * Shows an app-style splash instead of a website card while session resolves.
+- */
+-export default function DriverSessionGate({children}: {children: React.ReactNode}) {
+-  const router = useRouter()
+-  const pathname = usePathname()
+-  const [ready, setReady] = useState(false)
+-  const isV3 = pathname?.startsWith('/driver-v3')
+-
+-  useEffect(() => {
+-    let cancelled = false
+-    getSupabase()
+-      .auth.getSession()
+-      .then(({data}) => {
+-        if (cancelled) return
+-        if (!data.session) {
+-          router.replace('/login')
+-          return
+-        }
+-        setReady(true)
+-      })
+-      .catch(() => {
+-        if (!cancelled) router.replace('/login')
+-      })
+-    return () => {
+-      cancelled = true
+-    }
+-  }, [router])
+-
+-  if (!ready) {
+-    if (isV3) {
+-      return (
+-        <div className="driver-v3-splash" role="status" aria-live="polite">
+-          <img src="/routehub-driver-app.jpg" alt="" width={72} height={72} />
+-          <strong>RouteHub Driver</strong>
+-          <p>Opening your workspace…</p>
+-          <div className="spin" aria-hidden="true" />
+-        </div>
+-      )
+-    }
+-    return (
+-      <main className="app">
+-        <div className="card">
+-          <p className="muted">Loading secure workspace...</p>
+-        </div>
+-      </main>
+-    )
+-  }
+-
+-  return <>{children}</>
+-}
+diff --git a/RouteHub-v2/app/driver/history/history.module.css b/RouteHub-v2/app/driver/history/history.module.css
+deleted file mode 100644
+index 4400058..0000000
+--- a/RouteHub-v2/app/driver/history/history.module.css
++++ /dev/null
+@@ -1,5 +0,0 @@
+-.page{max-width:760px}.header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px;padding-bottom:14px;border-bottom:1px solid var(--rh-border)}.brand{display:inline-flex;align-items:center;gap:10px;color:var(--rh-text);font-size:20px;font-weight:850;letter-spacing:-.03em;text-decoration:none}.brand img{width:42px;height:42px;object-fit:contain;border-radius:12px;background:var(--rh-surface)}.brand small{display:block;margin-top:2px;color:var(--rh-text-secondary);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.eyebrow{margin:0;color:var(--rh-primary);font-size:12px;font-weight:850;letter-spacing:.15em;text-transform:uppercase}.title{margin:7px 0 18px;font-size:clamp(30px,8vw,40px);letter-spacing:-.045em}.list{display:grid;gap:12px}.card{padding:17px 18px;border-left:4px solid var(--rh-warning);animation:enter .22s ease both}.completed{border-left-color:var(--rh-success)}.issue,.cancelled{border-left-color:var(--rh-danger)}.cardTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:850}.badge{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:var(--rh-primary-soft);color:var(--rh-primary);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.issue .badge,.cancelled .badge{background:var(--rh-danger-soft);color:var(--rh-danger)}.completed .badge{background:var(--rh-success-soft);color:var(--rh-success)}.destination{margin:12px 0 6px;font-size:21px;letter-spacing:-.025em}.meta,.note{display:flex;gap:8px;align-items:flex-start;margin:7px 0;color:var(--rh-text-secondary);font-size:14px;line-height:1.45}.note{color:var(--rh-text)}.editToggle{display:inline-flex;align-items:center;gap:7px;min-height:42px;margin-top:12px;padding:9px 12px;border:1px solid color-mix(in srgb,var(--rh-danger) 40%,var(--rh-border));border-radius:11px;background:var(--rh-surface);color:var(--rh-danger);font-weight:800}.editor{display:grid;gap:11px;margin-top:14px;padding:14px;border:1px solid var(--rh-border);border-radius:15px;background:var(--rh-bg)}.editor label{display:grid;gap:7px;color:var(--rh-text);font-size:13px;font-weight:800}.editor textarea{width:100%;min-height:92px;padding:11px 12px;resize:vertical}.photoInput{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}.photoButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 13px;border:1px solid var(--rh-border);border-radius:12px;background:var(--rh-surface);color:var(--rh-text);font-weight:800}.fileName{margin:0;color:var(--rh-text-secondary);font-size:12px;overflow-wrap:anywhere}.editorActions{display:grid;grid-template-columns:1fr 1.15fr;gap:10px}.save,.complete{min-height:48px;border:0;border-radius:12px;font-weight:850}.save{background:var(--rh-primary-soft);color:var(--rh-primary)}.complete{background:var(--rh-success);color:#fff}.save:disabled,.complete:disabled{opacity:.6;cursor:wait}.empty{padding:34px 20px;text-align:center}.empty svg{color:var(--rh-primary)}@keyframes enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@media(max-width:520px){.page{padding-left:16px;padding-right:16px}.header{margin-bottom:21px}.editorActions{grid-template-columns:1fr}.card{padding:16px}.destination{font-size:20px}}@media(prefers-reduced-motion:reduce){.card{animation:none}}
+-
+-.detailBackdrop{position:fixed;inset:0;z-index:100;background:#071429b8;display:grid;place-items:center;padding:20px}.detailModal{position:relative;width:min(100%,480px);padding:26px;background:var(--rh-surface);border-radius:24px;box-shadow:0 30px 80px #02081780}.detailModal p{display:flex;gap:8px;align-items:center;color:var(--rh-text-secondary)}.close{position:absolute;right:14px;top:14px;border:0;background:var(--rh-bg);border-radius:50%;width:38px;height:38px;font-size:24px}
+-
+-.page{max-width:760px;background:#f7f9fc;min-height:100dvh;padding:22px 20px 110px}.header{margin-bottom:22px;padding-bottom:0;border-bottom:0}.brand{font-size:18px;color:#0f1d35}.brand img{width:38px;height:38px;border-radius:12px}.eyebrow{font-size:11px;letter-spacing:.14em;color:#1667f2}.title{margin:6px 0 20px;font-size:28px;color:#0f1d35}.list{gap:12px}.card{border:1px solid #dde5ee;border-left:4px solid #16a866;border-radius:18px;background:#fff;box-shadow:0 5px 18px #14213d0b;padding:17px 16px}.issue,.cancelled{border-left-color:#e35b55}.destination{font-size:19px;color:#0f1d35}.meta{font-size:13px}.badge{background:#eaf2ff;color:#1667f2}.completed .badge{background:#e8f8ef;color:#168653}.issue .badge,.cancelled .badge{background:#fff0ef;color:#c6433d}.empty{border:1px dashed #cbd7e5;border-radius:18px;background:#fff}.detailBackdrop{padding:16px}.detailModal{border-radius:26px}@media(max-width:520px){.page{padding:18px 16px 106px}.title{font-size:26px}.card{border-radius:16px}}
+diff --git a/RouteHub-v2/app/driver/history/page.tsx b/RouteHub-v2/app/driver/history/page.tsx
+deleted file mode 100644
+index a711a4a..0000000
+--- a/RouteHub-v2/app/driver/history/page.tsx
++++ /dev/null
+@@ -1,5 +0,0 @@
+-import {redirect} from 'next/navigation'
+-
+-export default function DriverHistoryRedirect() {
+-  redirect('/driver-v3/history')
+-}
+diff --git a/RouteHub-v2/app/driver/layout.tsx b/RouteHub-v2/app/driver/layout.tsx
+deleted file mode 100644
+index aaf42bc..0000000
+--- a/RouteHub-v2/app/driver/layout.tsx
++++ /dev/null
+@@ -1,13 +0,0 @@
+-import type {Metadata} from 'next'
+-import DriverSessionGate from './driver-session-gate'
+-
+-export const metadata:Metadata={
+-  title:'RouteHub Driver',
+-  manifest:'/manifest-driver.json',
+-  appleWebApp:{capable:true,title:'RouteHub Driver',statusBarStyle:'default'},
+-  icons:{icon:'/routehub-driver-app.jpg',apple:'/routehub-driver-app.jpg'},
+-}
+-
+-export default function DriverLayout({children}:{children:React.ReactNode}){
+-  return <DriverSessionGate>{children}</DriverSessionGate>
+-}
+diff --git a/RouteHub-v2/app/driver/more/more.module.css b/RouteHub-v2/app/driver/more/more.module.css
+deleted file mode 100644
+index 43a1f03..0000000
+--- a/RouteHub-v2/app/driver/more/more.module.css
++++ /dev/null
+@@ -1 +0,0 @@
+-.page{min-height:100dvh;padding:calc(18px + env(safe-area-inset-top)) 18px calc(96px + env(safe-area-inset-bottom));background:#f7f9fc;color:#0f1d35}.header{display:flex;align-items:center;min-height:44px}.brand{display:inline-flex;align-items:center;gap:9px;color:#0f1d35;font-size:20px;font-weight:850;letter-spacing:-.03em;text-decoration:none}.brand img{width:38px;height:38px;border-radius:12px;object-fit:contain}.brand em{color:#1667f2;font-style:normal}.eyebrow{margin:24px 0 4px;color:#1667f2;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.page h1{margin:0 0 24px;font-size:32px;letter-spacing:-.04em}.section{display:grid;gap:10px;margin-bottom:24px}.sectionLabel{margin:0 4px 2px;color:#667892;font-size:11px;font-weight:850;letter-spacing:.12em}.row{min-height:74px;display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid #dde5ee;border-radius:17px;background:#fff;color:#0f1d35;text-decoration:none;box-shadow:0 6px 18px rgba(15,29,53,.05);transition:transform 140ms ease,background-color 140ms ease,border-color 140ms ease}.row:hover{border-color:#b8cdf3}.row:active{transform:scale(.99);background:#eaf2ff}.row>span:nth-child(2){display:grid;gap:4px;min-width:0;flex:1}.row strong{font-size:16px}.row small{color:#667892;font-size:12px}.icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#eaf2ff;color:#1667f2}.row>svg{color:#1667f2}@media(min-width:720px){.page{max-width:620px;margin:0 auto;padding-top:40px}}
+diff --git a/RouteHub-v2/app/driver/more/page.tsx b/RouteHub-v2/app/driver/more/page.tsx
+deleted file mode 100644
+index 9d7763f..0000000
+--- a/RouteHub-v2/app/driver/more/page.tsx
++++ /dev/null
+@@ -1,5 +0,0 @@
+-import {redirect} from 'next/navigation'
+-
+-export default function DriverMoreRedirect() {
+-  redirect('/driver-v3/more')
+-}
+diff --git a/RouteHub-v2/app/driver/page.tsx b/RouteHub-v2/app/driver/page.tsx
+deleted file mode 100644
+index 5f65841..0000000
+--- a/RouteHub-v2/app/driver/page.tsx
++++ /dev/null
+@@ -1,3 +0,0 @@
+-'use client'
+-
+-export {default} from '../driver-v3/page'
+diff --git a/RouteHub-v2/app/driver/settings/page.tsx b/RouteHub-v2/app/driver/settings/page.tsx
+deleted file mode 100644
+index 61ce980..0000000
+--- a/RouteHub-v2/app/driver/settings/page.tsx
++++ /dev/null
+@@ -1,5 +0,0 @@
+-import {redirect} from 'next/navigation'
+-
+-export default function DriverSettingsRedirect() {
+-  redirect('/driver-v3/settings')
+-}
+diff --git a/RouteHub-v2/app/driver/signature/page.tsx b/RouteHub-v2/app/driver/signature/page.tsx
+deleted file mode 100644
+index d84b574..0000000
+--- a/RouteHub-v2/app/driver/signature/page.tsx
++++ /dev/null
+@@ -1,5 +0,0 @@
+-import {redirect} from 'next/navigation'
+-
+-export default function DriverSignatureRedirect() {
+-  redirect('/driver-v3/pod')
+-}
+diff --git a/RouteHub-v2/app/error-monitor.tsx b/RouteHub-v2/app/error-monitor.tsx
+new file mode 100644
+index 0000000..ccdbab1
+--- /dev/null
++++ b/RouteHub-v2/app/error-monitor.tsx
+@@ -0,0 +1,13 @@
++'use client'
++import {useEffect} from 'react'
++import {captureSentryError} from '../lib/sentry'
++
++export default function ErrorMonitor() {
++  useEffect(() => {
++    const onError = (event: ErrorEvent) => captureSentryError({error: event.error || event.message, action: 'window_error', context: {source: window.location.pathname}})
++    const onRejection = (event: PromiseRejectionEvent) => captureSentryError({error: event.reason, action: 'unhandled_rejection', context: {source: window.location.pathname}})
++    window.addEventListener('error', onError); window.addEventListener('unhandledrejection', onRejection)
++    return () => { window.removeEventListener('error', onError); window.removeEventListener('unhandledrejection', onRejection) }
++  }, [])
++  return null
++}
+diff --git a/RouteHub-v2/app/layout.tsx b/RouteHub-v2/app/layout.tsx
+index 6074b78..1de451b 100644
+--- a/RouteHub-v2/app/layout.tsx
++++ b/RouteHub-v2/app/layout.tsx
+@@ -8,6 +8,7 @@ import AuthBoundary from './auth-boundary'
+ import AppBottomNav from './app-bottom-nav'
+ import OnboardingGate from './onboarding-gate'
+ import TermsGate from './terms-gate'
++import ErrorMonitor from './error-monitor'
+ 
+ export const metadata = {
+   title: {default: 'RouteHub — Simple Route Management for Your Team', template: '%s · RouteHub'},
+@@ -26,5 +27,5 @@ export const viewport = {
+ }
+ 
+ export default function Layout({children}: {children: React.ReactNode}) {
+-  return <html lang="en"><body><PwaRegister/><ThemeBoot/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
++  return <html lang="en"><body><PwaRegister/><ThemeBoot/><ErrorMonitor/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
+ }
+diff --git a/RouteHub-v2/app/manager/manager-shell.tsx b/RouteHub-v2/app/manager/manager-shell.tsx
+index 2940792..d85b4ca 100644
+--- a/RouteHub-v2/app/manager/manager-shell.tsx
++++ b/RouteHub-v2/app/manager/manager-shell.tsx
+@@ -48,6 +48,7 @@ export default function ManagerShell({children, active = 'today', branchName, di
+         {nav.map(({id, href, label, Icon}) => <Link href={href} key={id} data-active={active === id ? 'true' : 'false'} aria-current={active === id ? 'page' : undefined}><Icon size={20} /><span>{label}</span></Link>)}
+       </nav>
+       <div className={styles.workspaceMeta}><span>{copy.workspace}</span><strong>{branchName || t.mainBranch}</strong></div>
++      <a href="mailto:[EMAIL_DE_SOPORTE]?subject=RouteHub%20issue" style={{fontSize: 12, color: '#64748b', padding: '8px 0'}}>Report a problem</a>
+       <Link href="/manager/more" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
+     </aside>
+     <section className={styles.content}><div className={styles.workspace}>{children}</div></section>
+diff --git a/RouteHub-v2/app/test/config/page.tsx b/RouteHub-v2/app/test/config/page.tsx
+deleted file mode 100644
+index 779bebd..0000000
+--- a/RouteHub-v2/app/test/config/page.tsx
++++ /dev/null
+@@ -1,2 +0,0 @@
+-import Link from 'next/link'
+-export default function ConfigCheck(){const url=Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),key=Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);return <main className="app"><header className="topbar"><Link className="brand" href="/test">ROUTEHUB</Link></header><h1>Configuration check</h1><p className="muted">Only presence is checked. Secret values are never displayed.</p><section className="card"><p><strong>Supabase URL:</strong> {url?'Configured':'Missing'}</p><p><strong>Supabase anon key:</strong> {key?'Configured':'Missing'}</p>{url&&key?<p style={{color:'var(--success)'}}>Ready to connect Supabase.</p>:<p style={{color:'var(--danger)'}}>Add the missing variables to `.env.local` before testing real data.</p>}</section></main>}
+diff --git a/RouteHub-v2/app/test/page.tsx b/RouteHub-v2/app/test/page.tsx
+deleted file mode 100644
+index 1d35844..0000000
+--- a/RouteHub-v2/app/test/page.tsx
++++ /dev/null
+@@ -1,3 +0,0 @@
+-import Link from 'next/link'
+-const workspaces=[['/admin','CEO / Admin','Companies, audit and platform controls.'],['/manager','Branch Manager','Routes, team, branches and invitations.'],['/manager','Operations Manager','Dispatch and live route changes.'],['/counter','Counter Sales','Contacts and pickup/delivery requests.'],['/driver','Driver','Current mission, GPS, evidence and signature.']]
+-export default function Test(){return <main className="app"><header className="topbar"><Link className="brand" href="/">ROUTEHUB</Link></header><h1>Role test center</h1><p className="muted">Open each workspace independently before connecting production authentication.</p><section className="role-grid">{workspaces.map(([href,title,description])=><Link href={href} className="card" key={title}><h2>{title}</h2><p>{description}</p><span className="primary" style={{marginTop:16}}>Open workspace</span></Link>)}</section><section className="card" style={{marginTop:22}}><h2>Test checklist</h2><p className="muted">Create a contact, create a request, add a mission, reorder it, open Driver, test GPS, upload evidence, sign, report an issue and review Reports.</p></section></main>}
+diff --git a/RouteHub-v2/components/driver-v3/DriverV3Shell.tsx b/RouteHub-v2/components/driver-v3/DriverV3Shell.tsx
+index 4802f46..c0eb39e 100644
+--- a/RouteHub-v2/components/driver-v3/DriverV3Shell.tsx
++++ b/RouteHub-v2/components/driver-v3/DriverV3Shell.tsx
+@@ -58,6 +58,7 @@ export default function DriverV3Shell({
+       </header>
+ 
+       <section className={`${styles.content} ${flush ? styles.contentFlush : ''}`}>{children}</section>
++      <a href="mailto:[EMAIL_DE_SOPORTE]?subject=RouteHub%20issue" style={{position: 'fixed', right: 12, bottom: 76, zIndex: 20, fontSize: 11, color: '#64748b', background: '#fff', padding: '5px 8px', borderRadius: 8}}>Report a problem</a>
+ 
+       <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
+         <Link className={active === 'today' || active === 'route' ? styles.active : ''} href="/driver">
+diff --git a/RouteHub-v2/lib/driver/driver-actions.ts b/RouteHub-v2/lib/driver/driver-actions.ts
+index 50af95e..b8ecf73 100644
+--- a/RouteHub-v2/lib/driver/driver-actions.ts
++++ b/RouteHub-v2/lib/driver/driver-actions.ts
+@@ -19,6 +19,7 @@ import {uploadMissionEvidence} from '../mission-evidence'
+ import {saveCustomerSignature} from '../signature'
+ import {uploadTruckReceipt} from '../truck-receipts'
+ import {startDrivingDay as coreStartDrivingDay, endDrivingDay as coreEndDrivingDay} from '../driving-session'
++import {enqueue} from '../offline-queue'
+ 
+ export type DriverMutationContext = {routeId:string; driverId:string; companyId:string}
+ 
+@@ -83,7 +84,16 @@ export async function markArrived(ctx:DriverMutationContext) {
+ }
+ 
+ export async function completeStop(ctx:DriverMutationContext, options?:{driverNote?:string; location?:{lat:number;lng:number;accuracy:number}}) {
+-  return driverActions.run(`complete:${ctx.routeId}`, async()=>completeMission(ctx.routeId, options?.location, options?.driverNote===undefined?undefined:{driverNote:options.driverNote}))
++  return driverActions.run(`complete:${ctx.routeId}`, async()=>{
++    try{return await completeMission(ctx.routeId, options?.location, options?.driverNote===undefined?undefined:{driverNote:options.driverNote})}
++    catch(error){
++      if(typeof navigator!=='undefined'&&(!navigator.onLine||/fetch|network|offline|failed to fetch/i.test(error instanceof Error?error.message:String(error)))){
++        await enqueue({kind:'complete',payload:{...ctx,location:options?.location||null,driverNote:options?.driverNote||null}})
++        return {queued:true as const}
++      }
++      throw error
++    }
++  })
+ }
+ 
+ export const completePickup = completeStop
+@@ -109,7 +119,17 @@ export async function completeDeliveryWithRecipient(ctx:DriverMutationContext, r
+ }
+ 
+ export async function uploadStopPhoto(ctx:DriverMutationContext, file:File) {
+-  return driverActions.run(`photo:${ctx.routeId}`, async()=>uploadMissionEvidence(file,ctx.routeId))
++  return driverActions.run(`photo:${ctx.routeId}`, async()=>{
++    try{return await uploadMissionEvidence(file,ctx.routeId)}
++    catch(error){
++      if(typeof navigator!=='undefined'&&(!navigator.onLine||/fetch|network|offline|failed to fetch/i.test(error instanceof Error?error.message:String(error)))){
++        const data=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(reader.error);reader.readAsDataURL(file)})
++        await enqueue({kind:'photo',payload:{...ctx,data,name:file.name,type:file.type}})
++        return {queued:true as const}
++      }
++      throw error
++    }
++  })
+ }
+ 
+ export async function saveFuel(ctx:DriverMutationContext & {truckId:string;branchId:string;odometer:number;amount:number;photo?:File}) {
+diff --git a/RouteHub-v2/lib/error-reporting.ts b/RouteHub-v2/lib/error-reporting.ts
+index 26afb45..bca7ec8 100644
+--- a/RouteHub-v2/lib/error-reporting.ts
++++ b/RouteHub-v2/lib/error-reporting.ts
+@@ -1,5 +1,6 @@
+ import {currentMembership, currentUser} from './data'
+ import {getSupabase} from './supabase'
++import {captureSentryError} from './sentry'
+ 
+ type ReportInput={action:string;error:unknown;companyId?:string;branchId?:string|null;routeId?:string|null;context?:Record<string,unknown>}
+ const recent=new Map<string,number>()
+@@ -21,6 +22,7 @@ export function normalizeAppError(error:unknown){
+ export async function reportAppError(input:ReportInput){
+   try{
+     const message=normalizeAppError(input.error)
++    captureSentryError({error: input.error, action: input.action, context: input.context})
+     const key=`${input.action}:${input.routeId||''}:${message}`
+     const now=Date.now(); if(now-(recent.get(key)||0)<30000)return
+     recent.set(key,now)
+diff --git a/RouteHub-v2/lib/offline-queue.ts b/RouteHub-v2/lib/offline-queue.ts
+index 9ecff77..6158dbe 100644
+--- a/RouteHub-v2/lib/offline-queue.ts
++++ b/RouteHub-v2/lib/offline-queue.ts
+@@ -1,6 +1,12 @@
+-export type PendingAction={id:string;kind:'complete'|'issue';payload:Record<string,unknown>;createdAt:string}
+-const KEY='routehub-v2-offline-queue'
+-export function readQueue():PendingAction[]{if(typeof window==='undefined')return[];try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}}
+-export function enqueue(action:Omit<PendingAction,'id'|'createdAt'>){if(typeof window==='undefined')return;const next={...action,id:crypto.randomUUID(),createdAt:new Date().toISOString()};localStorage.setItem(KEY,JSON.stringify([...readQueue(),next]))}
+-export function removeQueued(id:string){if(typeof window==='undefined')return;localStorage.setItem(KEY,JSON.stringify(readQueue().filter(x=>x.id!==id)))}
+-export async function syncQueue(handler:(action:PendingAction)=>Promise<void>){for(const action of readQueue()){try{await handler(action);removeQueued(action.id)}catch{return}}}
++export type PendingAction={id:string;kind:'complete'|'issue'|'photo';payload:Record<string,unknown>;createdAt:string}
++const DB='routehub-offline', STORE='actions', FALLBACK='routehub-v2-offline-queue'
++const indexed=()=>typeof indexedDB!=='undefined'
++const openDb=():Promise<IDBDatabase>=>new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>req.result.createObjectStore(STORE,{keyPath:'id'});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})
++export async function readQueue():Promise<PendingAction[]>{
++  if(typeof window==='undefined')return[]
++  if(!indexed())try{return JSON.parse(localStorage.getItem(FALLBACK)||'[]')}catch{return[]}
++  try{const db=await openDb();return await new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();req.onsuccess=()=>resolve((req.result||[]) as PendingAction[]);req.onerror=()=>reject(req.error)})}catch{return[]}
++}
++export async function enqueue(action:Omit<PendingAction,'id'|'createdAt'>){if(typeof window==='undefined')return;const next={...action,id:crypto.randomUUID(),createdAt:new Date().toISOString()};if(!indexed()){localStorage.setItem(FALLBACK,JSON.stringify([...(await readQueue()),next]));return}const db=await openDb();await new Promise<void>((resolve,reject)=>{const req=db.transaction(STORE,'readwrite').objectStore(STORE).add(next);req.onsuccess=()=>resolve();req.onerror=()=>reject(req.error)})}
++export async function removeQueued(id:string){if(typeof window==='undefined')return;if(!indexed()){localStorage.setItem(FALLBACK,JSON.stringify((await readQueue()).filter(x=>x.id!==id)));return}const db=await openDb();await new Promise<void>((resolve,reject)=>{const req=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);req.onsuccess=()=>resolve();req.onerror=()=>reject(req.error)})}
++export async function syncQueue(handler:(action:PendingAction)=>Promise<void>){for(const action of await readQueue()){try{await handler(action);await removeQueued(action.id)}catch{return}}}
+diff --git a/RouteHub-v2/lib/sentry.ts b/RouteHub-v2/lib/sentry.ts
+new file mode 100644
+index 0000000..48c7643
+--- /dev/null
++++ b/RouteHub-v2/lib/sentry.ts
+@@ -0,0 +1,17 @@
++type SentryErrorInput = {error: unknown; action?: string; context?: Record<string, unknown>}
++
++function messageOf(error: unknown) { return error instanceof Error ? error.message : String(error || 'Unknown error') }
++
++/** Optional, dependency-free Sentry reporting. It is a no-op until a DSN is configured. */
++export function captureSentryError({error, action = 'unhandled_error', context = {}}: SentryErrorInput) {
++  const dsn = typeof window === 'undefined' ? process.env.SENTRY_DSN : process.env.NEXT_PUBLIC_SENTRY_DSN
++  if (!dsn || typeof fetch === 'undefined') return
++  try {
++    const parsed = new URL(dsn)
++    const projectId = parsed.pathname.replace(/^\//, '')
++    const publicKey = parsed.username
++    const endpoint = `${parsed.protocol}//${parsed.host}/api/${projectId}/store/`
++    const payload = {message: messageOf(error).slice(0, 500), level: 'error', platform: 'javascript', tags: {action}, extra: context}
++    void fetch(endpoint, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${publicKey}, sentry_client=routehub/1.0`}, body: JSON.stringify(payload), keepalive: true}).catch(() => undefined)
++  } catch { /* malformed or disabled DSN must never affect the app */ }
++}
+diff --git a/RouteHub-v2/supabase/functions/_shared/sentry.ts b/RouteHub-v2/supabase/functions/_shared/sentry.ts
+new file mode 100644
+index 0000000..2f0fca5
+--- /dev/null
++++ b/RouteHub-v2/supabase/functions/_shared/sentry.ts
+@@ -0,0 +1,10 @@
++export function captureSentryError(error: unknown, action: string, context: Record<string, unknown> = {}) {
++  const dsn = Deno.env.get('SENTRY_DSN')
++  if (!dsn) return
++  try {
++    const parsed = new URL(dsn); const project = parsed.pathname.replace(/^\//, ''); const key = parsed.username
++    const endpoint = `${parsed.protocol}//${parsed.host}/api/${project}/store/`
++    const message = error instanceof Error ? error.message : String(error || 'Unknown error')
++    void fetch(endpoint, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${key}, sentry_client=routehub-edge/1.0`}, body: JSON.stringify({message: message.slice(0, 500), level: 'error', platform: 'javascript', tags: {action}, extra: context})}).catch(() => undefined)
++  } catch { /* optional monitoring must never break an Edge Function */ }
++}
+diff --git a/RouteHub-v2/supabase/functions/send-manager-invite/index.ts b/RouteHub-v2/supabase/functions/send-manager-invite/index.ts
+index b15c4a4..afd7d98 100644
+--- a/RouteHub-v2/supabase/functions/send-manager-invite/index.ts
++++ b/RouteHub-v2/supabase/functions/send-manager-invite/index.ts
+@@ -1,4 +1,5 @@
+ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2'
++import {captureSentryError} from '../_shared/sentry.ts'
+ 
+ const cors = {
+   'Access-Control-Allow-Origin': '*',
+@@ -30,9 +31,14 @@ Deno.serve(async (request) => {
+       const password = String(payload.password || '')
+       if (!email || !/^\d{6}$/.test(code) || password.length < 8) return json({error: 'Enter a valid email, six-digit code and password.'}, 400)
+       const codeHash = await hashCode(code)
+-      const {data: invitation, error: invitationError} = await service.from('invitations').select('id,company_id,branch_id,role,email,status,activation_code_hash,activation_code_expires_at,activation_code_used_at').eq('email', email).eq('status', 'pending').eq('activation_code_hash', codeHash).is('activation_code_used_at', null).gt('activation_code_expires_at', new Date().toISOString()).order('created_at', {ascending: false}).limit(1).maybeSingle()
++      const {data: invitation, error: invitationError} = await service.from('invitations').select('id,company_id,branch_id,role,email,status,activation_code_hash,activation_code_expires_at,activation_code_used_at,activation_attempts').eq('email', email).eq('status', 'pending').is('activation_code_used_at', null).gt('activation_code_expires_at', new Date().toISOString()).order('created_at', {ascending: false}).limit(1).maybeSingle()
+       if (invitationError) throw invitationError
+       if (!invitation) return json({error: 'This activation code is invalid or expired.'}, 400)
++      if ((invitation.activation_attempts ?? 0) >= 5) return json({error: 'Too many attempts, request a new invitation.'}, 429)
++      if (invitation.activation_code_hash !== codeHash) {
++        await service.from('invitations').update({activation_attempts: (invitation.activation_attempts ?? 0) + 1}).eq('id', invitation.id)
++        return json({error: 'This activation code is invalid or expired.'}, 400)
++      }
+       const {data: users, error: usersError} = await service.auth.admin.listUsers({page: 1, perPage: 1000})
+       if (usersError) throw usersError
+       let account = users.users.find(user => user.email?.toLowerCase() === email)
+@@ -74,6 +80,7 @@ Deno.serve(async (request) => {
+     if (error && !error.message.toLowerCase().includes('already been registered')) throw error
+     return json({user_id: data.user?.id, activationCode: code, expiresAt})
+   } catch (error) {
++    captureSentryError(error, 'send-manager-invite')
+     const detail = error instanceof Error ? error.message : (error && typeof error === 'object' && 'message' in error ? String((error as {message?: unknown}).message) : '')
+     return json({error: detail || 'Unable to send invitation'}, 500)
+   }
+diff --git a/RouteHub-v2/supabase/functions/send-route-push/index.ts b/RouteHub-v2/supabase/functions/send-route-push/index.ts
+index bac87e2..c44563c 100644
+--- a/RouteHub-v2/supabase/functions/send-route-push/index.ts
++++ b/RouteHub-v2/supabase/functions/send-route-push/index.ts
+@@ -1,5 +1,6 @@
+ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2'
+ import webpush from 'npm:web-push@3.6.7'
++import {captureSentryError} from '../_shared/sentry.ts'
+ 
+ const cors = {
+   'Access-Control-Allow-Origin': '*',
+@@ -90,6 +91,7 @@ Deno.serve(async request => {
+     if (staleIds.length) await service.from('push_subscriptions').delete().in('id', staleIds)
+     return json({ok: true, delivered: results.filter(result => result.status === 'fulfilled').length, subscriptions: subscriptions?.length || 0})
+   } catch (error) {
++    captureSentryError(error, 'send-route-push')
+     const detail = error instanceof Error ? error.message : 'Unable to send route notification'
+     console.error(detail)
+     return json({error: detail}, 500)
+diff --git a/RouteHub-v2/supabase/migrations/042_fix_legacy_permissive_policies.sql b/RouteHub-v2/supabase/migrations/042_fix_legacy_permissive_policies.sql
+new file mode 100644
+index 0000000..eb7815a
+--- /dev/null
++++ b/RouteHub-v2/supabase/migrations/042_fix_legacy_permissive_policies.sql
+@@ -0,0 +1,19 @@
++-- Remove legacy policies that granted every company member unrestricted writes.
++drop policy if exists "members manage contacts" on public.contacts;
++drop policy if exists "members manage requests" on public.requests;
++
++drop policy if exists "read contacts by company" on public.contacts;
++create policy "read contacts by company" on public.contacts for select to authenticated
++using (exists (select 1 from public.company_users cu where cu.company_id=contacts.company_id and cu.user_id=auth.uid()));
++
++drop policy if exists "operate contacts by role" on public.contacts;
++create policy "operate contacts by role" on public.contacts for insert to authenticated
++with check (exists (select 1 from public.company_users cu where cu.company_id=contacts.company_id and cu.user_id=auth.uid() and cu.role in ('branch_manager','operations_manager','sales_representative','counter_sales')));
++
++drop policy if exists "read requests by company" on public.requests;
++create policy "read requests by company" on public.requests for select to authenticated
++using (exists (select 1 from public.company_users cu where cu.company_id=requests.company_id and cu.user_id=auth.uid()));
++
++drop policy if exists "create requests by role" on public.requests;
++create policy "create requests by role" on public.requests for insert to authenticated
++with check (exists (select 1 from public.company_users cu where cu.company_id=requests.company_id and cu.user_id=auth.uid() and cu.role in ('branch_manager','operations_manager','sales_representative','counter_sales')));
+diff --git a/RouteHub-v2/supabase/migrations/043_fix_invitation_role_escalation.sql b/RouteHub-v2/supabase/migrations/043_fix_invitation_role_escalation.sql
+new file mode 100644
+index 0000000..02e1ba5
+--- /dev/null
++++ b/RouteHub-v2/supabase/migrations/043_fix_invitation_role_escalation.sql
+@@ -0,0 +1,64 @@
++create or replace function public.create_team_invitation(invited_email text, invited_role text)
++returns uuid
++language plpgsql
++security definer
++set search_path = public, auth
++as $$
++declare
++  manager_membership public.company_users%rowtype;
++  invitation_id uuid;
++  existing_auth_user_id uuid;
++  normalized_email text := lower(trim(invited_email));
++begin
++  if auth.uid() is null then raise exception 'Authentication required'; end if;
++  if normalized_email = '' then raise exception 'Email is required'; end if;
++  if invited_role not in ('branch_manager','operations_manager','sales_representative','counter_sales','driver') then
++    raise exception 'Unsupported role';
++  end if;
++
++  select membership.* into manager_membership
++  from public.company_users membership
++  where membership.user_id = auth.uid()
++    and membership.role in ('ceo','branch_manager')
++  order by case when membership.role = 'ceo' then 0 else 1 end
++  limit 1;
++  if manager_membership.company_id is null then raise exception 'Manager access required'; end if;
++
++  select id into existing_auth_user_id from auth.users where lower(email) = normalized_email limit 1;
++  select invitation.id into invitation_id from public.invitations invitation
++  where invitation.company_id = manager_membership.company_id and lower(invitation.email) = normalized_email
++  order by invitation.created_at desc limit 1;
++
++  if invitation_id is null then
++    insert into public.invitations (company_id, branch_id, email, role, status, invited_by, created_by, token_hash, accepted_at, revoked_at)
++    values (manager_membership.company_id, manager_membership.branch_id, normalized_email, invited_role,
++      case when existing_auth_user_id is null then 'pending' else 'accepted' end,
++      auth.uid(), auth.uid(), md5(gen_random_uuid()::text || clock_timestamp()::text),
++      case when existing_auth_user_id is null then null else now() end, null)
++    returning id into invitation_id;
++  else
++    update public.invitations
++    set role = invited_role, branch_id = manager_membership.branch_id,
++        invited_by = coalesce(invited_by, auth.uid()), created_by = coalesce(created_by, auth.uid()),
++        token_hash = coalesce(token_hash, md5(gen_random_uuid()::text || clock_timestamp()::text)),
++        revoked_at = null,
++        status = case when existing_auth_user_id is null then 'pending' else 'accepted' end,
++        accepted_at = case when existing_auth_user_id is null then null else now() end
++    where id = invitation_id;
++  end if;
++
++  if existing_auth_user_id is not null then
++    insert into public.users(id, email, name)
++    values (existing_auth_user_id, normalized_email,
++      coalesce((select raw_user_meta_data ->> 'full_name' from auth.users where id = existing_auth_user_id), normalized_email))
++    on conflict (id) do update set email = excluded.email;
++    insert into public.company_users(company_id, user_id, branch_id, role)
++    values (manager_membership.company_id, existing_auth_user_id, manager_membership.branch_id, invited_role)
++    on conflict (company_id, user_id) do update set branch_id = excluded.branch_id, role = excluded.role;
++  end if;
++  return invitation_id;
++end;
++$$;
++
++revoke all on function public.create_team_invitation(text, text) from public;
++grant execute on function public.create_team_invitation(text, text) to authenticated;
+diff --git a/RouteHub-v2/supabase/migrations/044_activation_attempt_limit.sql b/RouteHub-v2/supabase/migrations/044_activation_attempt_limit.sql
+new file mode 100644
+index 0000000..bd96fca
+--- /dev/null
++++ b/RouteHub-v2/supabase/migrations/044_activation_attempt_limit.sql
+@@ -0,0 +1 @@
++alter table public.invitations add column if not exists activation_attempts integer not null default 0;
+diff --git a/RouteHub-v2/supabase/migrations/045_gps_consent_tracking.sql b/RouteHub-v2/supabase/migrations/045_gps_consent_tracking.sql
+new file mode 100644
+index 0000000..16f341b
+--- /dev/null
++++ b/RouteHub-v2/supabase/migrations/045_gps_consent_tracking.sql
+@@ -0,0 +1,31 @@
++alter table public.company_users
++  add column if not exists gps_consent_accepted_at timestamptz;
++
++comment on column public.company_users.gps_consent_accepted_at is
++  'Fecha/hora en que el usuario aceptó el aviso de rastreo GPS. Null = no ha aceptado.';
++
++-- Keep the write narrow and auditable: a driver can consent only for their
++-- own membership in the selected company.
++create or replace function public.accept_gps_consent(target_company_id uuid)
++returns timestamptz
++language plpgsql
++security definer
++set search_path = public
++as $$
++declare accepted_at timestamptz;
++begin
++  update public.company_users
++     set gps_consent_accepted_at = now()
++   where company_id = target_company_id
++     and user_id = auth.uid()
++     and role = 'driver'
++   returning gps_consent_accepted_at into accepted_at;
++  if accepted_at is null then
++    raise exception 'No driver membership found for this company';
++  end if;
++  return accepted_at;
++end;
++$$;
++
++revoke all on function public.accept_gps_consent(uuid) from public;
++grant execute on function public.accept_gps_consent(uuid) to authenticated;
+diff --git a/RouteHub-v2/tests/maps-provider.test.mjs b/RouteHub-v2/tests/maps-provider.test.mjs
+index a09c7a4..89f1653 100644
+--- a/RouteHub-v2/tests/maps-provider.test.mjs
++++ b/RouteHub-v2/tests/maps-provider.test.mjs
+@@ -12,9 +12,9 @@ test('navigation uses coordinates before a human-readable address',()=>{
+ })
+ 
+ test('Driver entry uses the V3 current operation and real navigation/map adapters',async()=>{
+-  const entry=await readFile(new URL('../app/driver/page.tsx',import.meta.url),'utf8')
++  const entry=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
+   const source=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
+-  assert.match(entry,/driver-v3\/page/)
++  assert.match(entry,/export default function DriverV3Page/)
+   assert.match(source,/snapshot\?\.currentOperation/)
+   assert.match(source,/LiveRouteMap/)
+   assert.match(source,/openNavigation\(/)
+-- 
+2.51.1
+
+
+From 1ec98d4000353b021b3389aed14acef2915e4fad Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 7 Sep 2026 09:39:28 -0400
+Subject: [PATCH 4/6] Harden driver consent and offline operations
+
+---
+ RouteHub-v2/AGENT_LOG.md                      |  3 ++
+ .../app/driver-v3/driver-consent-gate.tsx     |  6 +++-
+ RouteHub-v2/lib/driver-v3/use-driver-data.ts  | 14 +++-------
+ RouteHub-v2/lib/driver/driver-actions.ts      | 18 ++++++++----
+ RouteHub-v2/middleware.ts                     | 16 +++++++++--
+ .../functions/send-manager-invite/index.ts    |  8 ++++--
+ .../046_atomic_activation_attempts.sql        | 28 +++++++++++++++++++
+ 7 files changed, 73 insertions(+), 20 deletions(-)
+ create mode 100644 RouteHub-v2/supabase/migrations/046_atomic_activation_attempts.sql
+
+diff --git a/RouteHub-v2/AGENT_LOG.md b/RouteHub-v2/AGENT_LOG.md
+index a1d01d9..f7b83d0 100644
+--- a/RouteHub-v2/AGENT_LOG.md
++++ b/RouteHub-v2/AGENT_LOG.md
+@@ -13,6 +13,7 @@
+ | Backups | Documentado; confirmar plan y realizar backup real manualmente | ChatGPT |
+ | Canal de soporte | Resuelto (enlaces de soporte con placeholder pendiente de reemplazo) | ChatGPT |
+ | Checklist de despliegue | Resuelto como checklist; ejecución en dashboards y teléfono queda pendiente | ChatGPT |
++| Hardening operativo final | Resuelto en código (rewrite público `/driver`, consentimiento sin auto-inicio, pickup offline y límite atómico de activación en migración 046) | ChatGPT |
+ 
+ ## Historial de decisiones
+ 
+@@ -20,3 +21,5 @@
+ - El mensaje de cola offline es: “Guardado — se enviará cuando vuelva la señal”.
+ - La sincronización reintenta al volver `online` y al montar el layout del Driver.
+ - El consentimiento GPS se guarda por membresía de empresa mediante RPC con privilegios mínimos; la pantalla usa español, inglés o francés según el idioma guardado.
++- El inicio de la jornada del Driver es explícito: cargar la pantalla no activa GPS antes de aceptar el aviso y pulsar iniciar.
++- El contador de activación se consume mediante una función SQL atómica para que solicitudes concurrentes no puedan superar el límite de cinco intentos.
+diff --git a/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx b/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx
+index e04934f..2735ee0 100644
+--- a/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx
++++ b/RouteHub-v2/app/driver-v3/driver-consent-gate.tsx
+@@ -13,7 +13,11 @@ export default function DriverConsentGate({children}: {children: React.ReactNode
+   useEffect(() => {
+     let cancelled = false
+     const check = async () => {
+-      if (pathname?.startsWith('/driver-v3/consent')) { setReady(true); return }
++      // Middleware rewrites the public /driver URL to /driver-v3. Depending
++      // on the Next.js router phase, pathname can still contain /driver.
++      // Treat either form of the consent route as public to avoid a redirect
++      // loop while the notice is being accepted.
++      if (pathname?.endsWith('/consent')) { setReady(true); return }
+       try {
+         const client = getSupabase()
+         const access = await resolveAccess(client)
+diff --git a/RouteHub-v2/lib/driver-v3/use-driver-data.ts b/RouteHub-v2/lib/driver-v3/use-driver-data.ts
+index cf1ce73..a71407d 100644
+--- a/RouteHub-v2/lib/driver-v3/use-driver-data.ts
++++ b/RouteHub-v2/lib/driver-v3/use-driver-data.ts
+@@ -5,7 +5,7 @@ import {getSupabase} from '../supabase'
+ import {operationalDate} from '../driver-queue'
+ import {buildDriverSnapshot} from '../driver/driver-refresh'
+ import type {DriverV3Route} from './types'
+-import {getActiveDrivingSession, startDrivingDay, type DrivingSession} from '../driving-session'
++import {getActiveDrivingSession, type DrivingSession} from '../driving-session'
+ import {createRealtimeRefresh} from '../realtime-sync'
+ 
+ type DriverV3Data = {
+@@ -86,15 +86,9 @@ function useDriverDataInternal(): DriverV3Data {
+       // A driving-session/GPS problem must not hide an otherwise valid route.
+       // The route remains usable and the session can be recovered on the next
+       // focus/refresh once the protected session table is available.
+-      let session = await getActiveDrivingSession(user.id)
+-      if (!session.error && !session.data) {
+-        const started = await startDrivingDay({
+-          companyId: membership.company_id,
+-          branchId: membership.branch_id ?? null,
+-          driverId: user.id,
+-        })
+-        if (!started.error && started.data) session = started
+-      }
++      // A Driver must explicitly start the Driving Day after accepting the
++      // GPS notice. Loading Today must never silently activate tracking.
++      const session = await getActiveDrivingSession(user.id)
+       setDrivingSession(session.data)
+       if (session.data?.last_lat != null && session.data?.last_lng != null) {
+         setLiveFix({
+diff --git a/RouteHub-v2/lib/driver/driver-actions.ts b/RouteHub-v2/lib/driver/driver-actions.ts
+index b8ecf73..3b30c5c 100644
+--- a/RouteHub-v2/lib/driver/driver-actions.ts
++++ b/RouteHub-v2/lib/driver/driver-actions.ts
+@@ -102,11 +102,19 @@ export const completeReturn = completeStop
+ 
+ export async function completePickupWithEvidence(ctx:DriverMutationContext, photo?:File) {
+   return driverActions.run(`pickup:${ctx.routeId}`, async()=>{
+-    if(photo) await uploadMissionEvidence(photo,ctx.routeId,{kind:'photo',attachAsCompletionPhoto:false})
+-    const arrival=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).is('arrived_at',null).select('id').maybeSingle()
+-    if(arrival.error) throw arrival.error
+-    // Arrived may already exist from the normal Start → Arrived → Complete flow.
+-    return completeMission(ctx.routeId)
++    try {
++      if(photo) await uploadMissionEvidence(photo,ctx.routeId,{kind:'photo',attachAsCompletionPhoto:false})
++      const arrival=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).is('arrived_at',null).select('id').maybeSingle()
++      if(arrival.error) throw arrival.error
++      // Arrived may already exist from the normal Start → Arrived → Complete flow.
++      return completeMission(ctx.routeId)
++    } catch(error) {
++      if(typeof navigator!=='undefined'&&(!navigator.onLine||/fetch|network|offline|failed to fetch/i.test(error instanceof Error?error.message:String(error)))) {
++        await enqueue({kind:'complete',payload:{...ctx,location:null,driverNote:null}})
++        return {queued:true as const}
++      }
++      throw error
++    }
+   })
+ }
+ 
+diff --git a/RouteHub-v2/middleware.ts b/RouteHub-v2/middleware.ts
+index 3c2c2d3..4edec0e 100644
+--- a/RouteHub-v2/middleware.ts
++++ b/RouteHub-v2/middleware.ts
+@@ -1,8 +1,20 @@
+ import {NextResponse, type NextRequest} from 'next/server'
+ 
+ export function middleware(request: NextRequest) {
+-  // RouteHub's current Driver implementation is the official /driver route.
+-  // Keep the legacy /driver-v3 tree available only for compatibility links.
++  // The public Driver URL is /driver; the maintained implementation lives in
++  // driver-v3. Keep this rewrite here so deleting the legacy tree cannot turn
++  // the official Driver entry point into a 404.
++  if (request.nextUrl.pathname === '/driver' || request.nextUrl.pathname.startsWith('/driver/')) {
++    const url = request.nextUrl.clone()
++    url.pathname = request.nextUrl.pathname.replace(/^\/driver(?=\/|$)/, '/driver-v3')
++    const response = NextResponse.rewrite(url)
++    response.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
++    response.headers.set('X-Content-Type-Options', 'nosniff')
++    response.headers.set('X-Frame-Options', 'DENY')
++    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
++    response.headers.set('Permissions-Policy', 'camera=(self), geolocation=(self), microphone=()')
++    return response
++  }
+   const response = NextResponse.next()
+   response.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+   response.headers.set('X-Content-Type-Options', 'nosniff')
+diff --git a/RouteHub-v2/supabase/functions/send-manager-invite/index.ts b/RouteHub-v2/supabase/functions/send-manager-invite/index.ts
+index afd7d98..3e981ac 100644
+--- a/RouteHub-v2/supabase/functions/send-manager-invite/index.ts
++++ b/RouteHub-v2/supabase/functions/send-manager-invite/index.ts
+@@ -35,8 +35,12 @@ Deno.serve(async (request) => {
+       if (invitationError) throw invitationError
+       if (!invitation) return json({error: 'This activation code is invalid or expired.'}, 400)
+       if ((invitation.activation_attempts ?? 0) >= 5) return json({error: 'Too many attempts, request a new invitation.'}, 429)
+-      if (invitation.activation_code_hash !== codeHash) {
+-        await service.from('invitations').update({activation_attempts: (invitation.activation_attempts ?? 0) + 1}).eq('id', invitation.id)
++      const {data: codeMatches, error: attemptError} = await service.rpc('consume_activation_attempt', {
++        p_invitation_id: invitation.id,
++        p_code_hash: codeHash,
++      })
++      if (attemptError) throw attemptError
++      if (!codeMatches) {
+         return json({error: 'This activation code is invalid or expired.'}, 400)
+       }
+       const {data: users, error: usersError} = await service.auth.admin.listUsers({page: 1, perPage: 1000})
+diff --git a/RouteHub-v2/supabase/migrations/046_atomic_activation_attempts.sql b/RouteHub-v2/supabase/migrations/046_atomic_activation_attempts.sql
+new file mode 100644
+index 0000000..ed442e6
+--- /dev/null
++++ b/RouteHub-v2/supabase/migrations/046_atomic_activation_attempts.sql
+@@ -0,0 +1,28 @@
++-- Atomically consume an activation attempt so concurrent requests cannot
++-- bypass the five-attempt limit by reading the same counter.
++create or replace function public.consume_activation_attempt(
++  p_invitation_id uuid,
++  p_code_hash text
++)
++returns boolean
++language plpgsql
++security definer
++set search_path = public
++as $$
++declare
++  matched boolean;
++begin
++  update public.invitations
++     set activation_attempts = activation_attempts + 1
++   where id = p_invitation_id
++     and status = 'pending'
++     and activation_code_used_at is null
++     and activation_attempts < 5
++  returning activation_code_hash = p_code_hash into matched;
++
++  return coalesce(matched, false);
++end;
++$$;
++
++revoke all on function public.consume_activation_attempt(uuid, text) from public;
++grant execute on function public.consume_activation_attempt(uuid, text) to service_role;
+-- 
+2.51.1
+
+
+From 825679e1f6637ff1a74be8c6d2f990eca0211f82 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 7 Sep 2026 10:00:35 -0400
+Subject: [PATCH 5/6] Polish driver next stop and manager delivery status
+
+---
+ RouteHub-v2/app/driver-v3/page.tsx            | 71 +++++++++----------
+ RouteHub-v2/app/driver-v3/today.module.css    |  2 +-
+ .../app/manager/manager-today.module.css      |  1 +
+ RouteHub-v2/app/manager/page.tsx              | 27 +++----
+ 4 files changed, 46 insertions(+), 55 deletions(-)
+
+diff --git a/RouteHub-v2/app/driver-v3/page.tsx b/RouteHub-v2/app/driver-v3/page.tsx
+index ba11893..0fc1595 100644
+--- a/RouteHub-v2/app/driver-v3/page.tsx
++++ b/RouteHub-v2/app/driver-v3/page.tsx
+@@ -4,14 +4,14 @@ import Link from 'next/link'
+ import {useRouter, useSearchParams} from 'next/navigation'
+ import dynamic from 'next/dynamic'
+ import {Camera, ChevronRight, Map, MapPin, Package, PenLine, Phone, TriangleAlert, X} from 'lucide-react'
+-import {useEffect, useMemo, useRef, useState} from 'react'
++import {useEffect, useRef, useState} from 'react'
+ import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
+ import {operationalDate} from '../../lib/driver-queue'
+ import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, reportIssue, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
+ import {startTemporaryRouteSession} from '../../lib/driving-session'
+ import {useDriverData} from '../../lib/driver-v3/use-driver-data'
+ import {openNavigation} from '../../lib/maps/external-navigation'
+-import {distanceMeters, getCurrentLocation} from '../../lib/location'
++import {getCurrentLocation} from '../../lib/location'
+ import {updateDrivingLocation} from '../../lib/driving-session'
+ import {driverOperationPhase} from '../../lib/driver/driver-state'
+ import {useLocale} from '../../lib/use-preferences'
+@@ -23,8 +23,8 @@ const LiveRouteMap = dynamic(() => import('../live-route-map'), {ssr: false})
+ export default function DriverV3Page() {
+   const router=useRouter()
+   const searchParams=useSearchParams()
+-  const {t}=useLocale()
+-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,routes}=useDriverData()
++  const {t,locale}=useLocale()
++  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
+   const [busy,setBusy]=useState(false)
+   const [message,setMessage]=useState('')
+   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info'>(null)
+@@ -57,31 +57,19 @@ export default function DriverV3Page() {
+   const started=phase==='started'||phase==='arrived'
+   const arrived=phase==='arrived'
+   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
+-  const todaySummary=useMemo(()=>{
+-    const day=operationalDate()
+-    const today=routes.filter(r=>String(r.route_date||'').slice(0,10)===day&&String(r.status||'')!=='cancelled')
+-    const done=today.filter(r=>r.status==='completed')
+-    let meters=0
+-    const points=today
+-      .map(r=>r.destination_lat!=null&&r.destination_lng!=null?{lat:Number(r.destination_lat),lng:Number(r.destination_lng)}:null)
+-      .filter((p):p is {lat:number;lng:number}=>Boolean(p))
+-    for(let i=1;i<points.length;i++) meters+=distanceMeters(points[i-1],points[i])
+-    let seconds=0
+-    for(const r of done){
+-      const start=r.route_started_at
+-      const end=r.completed_at||r.route_completed_at
+-      if(start&&end){
+-        const ms=new Date(end).getTime()-new Date(start).getTime()
+-        if(Number.isFinite(ms)&&ms>0) seconds+=Math.floor(ms/1000)
+-      }
+-    }
+-    return {
+-      total:today.length,
+-      done:done.length,
+-      miles:points.length>=2?Math.round((meters/1609.34)*10)/10:null,
+-      minutes:seconds?Math.round(seconds/60):null,
+-    }
+-  },[routes])
++  const nextRoute = snapshot?.queue.upcoming[0] as any | undefined
++  const nextKind = String(nextRoute?.mission_type || '').toLowerCase() === 'pickup'
++    ? 'pickup'
++    : ['return', 'branch'].includes(String(nextRoute?.mission_type || '').toLowerCase())
++      ? 'return'
++      : 'delivery'
++  const nextLabel = locale === 'es' ? 'Siguiente parada' : locale === 'fr' ? 'Prochain arrêt' : 'Next stop'
++  const finalStopLabel = locale === 'es' ? 'Última parada del día' : locale === 'fr' ? 'Dernier arrêt de la journée' : 'Last stop of the day'
++  const nextTypeLabel = nextKind === 'pickup'
++    ? (t.drvPickup || 'Pickup')
++    : nextKind === 'return'
++      ? (t.drvReturn || 'Return to branch')
++      : (t.drvDelivery || 'Delivery')
+ 
+   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
+ 
+@@ -359,15 +347,22 @@ export default function DriverV3Page() {
+           </div>
+           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
+         </section>
+-        <section className={styles.summary}>
+-          <p className="eyebrow">{t.drvTodaySummary}</p>
+-          <div className={styles.summaryGrid}>
+-            <div><strong>{todaySummary.done}/{todaySummary.total}</strong><span>{t.drvStops}</span></div>
+-            <div><strong>{todaySummary.miles==null?'—':String(todaySummary.miles)}</strong><span>{t.drvMiles}</span></div>
+-            <div><strong>{todaySummary.minutes==null?'—':`${todaySummary.minutes}m`}</strong><span>{t.drvTimeLogged}</span></div>
+-            <div><strong>{todaySummary.done}</strong><span>{t.drvCompletedTag}</span></div>
+-          </div>
+-        </section>
++        {nextRoute ? (
++          <button type="button" className={styles.nextCard} onClick={()=>router.push('/driver/map')} aria-label={`${nextLabel}: ${nextRoute.destination_name || nextRoute.destination_address || nextTypeLabel}`}>
++            <span className={`${styles.nextType} ${styles[nextKind]}`}>{nextTypeLabel}</span>
++            <div>
++              <span>{nextLabel}</span>
++              <strong>{nextRoute.destination_name || nextRoute.destination_address || nextTypeLabel}</strong>
++              <p>{nextKind === 'pickup' && nextRoute.order_number ? `PO ${nextRoute.order_number}` : nextRoute.destination_address || nextRoute.order_number || ''}</p>
++            </div>
++            <i aria-hidden="true"><ChevronRight/></i>
++          </button>
++        ) : (
++          <section className={styles.finalStop}>
++            <span>{finalStopLabel}</span>
++            <strong>{locale === 'es' ? 'Completa esta parada para cerrar tu ruta.' : locale === 'fr' ? 'Terminez cet arrêt pour clôturer votre itinéraire.' : 'Complete this stop to finish your route.'}</strong>
++          </section>
++        )}
+       </>:<section className={styles.stateCard}><Package/><h1>{t.drvNoStops}</h1><p>{t.drvAssignedWork}</p></section>}
+ 
+       {sheet==='info'&&route&&(
+diff --git a/RouteHub-v2/app/driver-v3/today.module.css b/RouteHub-v2/app/driver-v3/today.module.css
+index 6f63d67..82e65c8 100644
+--- a/RouteHub-v2/app/driver-v3/today.module.css
++++ b/RouteHub-v2/app/driver-v3/today.module.css
+@@ -10,7 +10,7 @@
+ .feedbackError{background:#fff1f0;color:#b42318}
+ .progressCard{display:grid;grid-template-columns:58px minmax(0,1fr) 58px;align-items:center;gap:10px;width:100%;min-height:64px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.05);box-sizing:border-box}.progressCard>div:first-child,.progressCard>div:last-child{display:flex;flex-direction:column;align-items:center}.progressCard strong{color:#0f1d35;font-size:18px;line-height:20px;font-weight:800}.progressCard>div:first-child strong{color:#16b96b}.progressCard span{color:#667280;font-size:10px;line-height:14px;font-weight:700}.progressTrack{position:relative;height:16px}.progressTrack:before{content:"";position:absolute;left:4px;right:4px;top:7px;height:2px;background:#d8dee7}.progressTrack span{position:absolute;left:4px;top:7px;height:2px;max-width:calc(100% - 8px);background:#16b96b}.progressTrack i{position:absolute;top:2px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#1667f2;box-shadow:0 0 0 2px #1667f2;transform:translateX(-50%)}
+ .progressDots{position:relative;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between;height:16px}.progressDots:before{content:"";position:absolute;left:7px;right:7px;top:7px;height:2px;background:#d8dee7}.progressDots i{position:relative;z-index:1;width:10px;height:10px;border:2px solid #cbd3df;border-radius:50%;background:#fff}.progressDots .done{border-color:#16b96b;background:#16b96b;box-shadow:0 0 0 2px #fff}.progressDots .current{border-color:#fff;background:#1667f2;box-shadow:0 0 0 2px #1667f2}.progressDots .upcoming{background:#fff}
+-.nextCard{display:grid;grid-template-columns:minmax(0,1fr) 40px;align-items:center;gap:12px;width:100%;min-height:88px;padding:14px 14px 14px 16px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.05);color:#0f172a;text-decoration:none;box-sizing:border-box}.nextCard>div{min-width:0}.nextCard span{display:block;margin-bottom:4px;color:#667280;font-size:11px;line-height:14px;font-weight:800;letter-spacing:.08em}.nextCard strong{display:block;font-size:17px;line-height:21px;font-weight:750;overflow-wrap:anywhere}.nextCard p{margin:3px 0 0;color:#667280;font-size:13px;line-height:17px;font-weight:500;overflow-wrap:anywhere}.nextCard i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#eef6ff;color:#1667f2}.nextCard i svg{width:20px;height:20px}
++.nextCard{display:grid;grid-template-columns:auto minmax(0,1fr) 40px;align-items:center;gap:11px;width:100%;min-height:78px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.05);color:#0f172a;text-align:left;box-sizing:border-box;cursor:pointer}.nextCard>div{min-width:0}.nextCard>div>span{display:block;margin-bottom:2px;color:#667280;font-size:10px;line-height:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.nextCard strong{display:block;overflow:hidden;font-size:16px;line-height:20px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.nextCard p{margin:2px 0 0;overflow:hidden;color:#667280;font-size:12px;line-height:16px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.nextCard i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#eef6ff;color:#1667f2}.nextCard i svg{width:20px;height:20px}.nextCard:active{transform:scale(.99)}.nextCard:focus-visible{outline:2px solid #1667f2;outline-offset:2px}.nextType{display:inline-flex;align-items:center;align-self:start;min-height:22px;padding:0 7px;border-radius:999px;font-size:10px!important;line-height:22px!important;font-weight:850!important;letter-spacing:.04em!important;text-transform:uppercase}.nextType.delivery{background:#f2ecff;color:#7c3aed}.nextType.pickup{background:#e8fafc;color:#0a8797}.nextType.return{background:#eaf2ff;color:#1667f2}.finalStop{display:grid;gap:3px;flex-shrink:0;padding:13px 15px;border:1px solid #dbe8df;border-radius:16px;background:#f2fbf5}.finalStop span{color:#147a4a;font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}.finalStop strong{color:#0f5132;font-size:13px;line-height:18px}
+ .stateCard{display:grid;justify-items:center;gap:10px;width:100%;padding:36px 20px;border:1px solid #e5e7eb;border-radius:18px;background:#fff;text-align:center;box-sizing:border-box}.stateCard>svg{width:36px;height:36px;color:#8a97a8}.stateCard h1{margin:0;font-size:22px;line-height:27px}.stateCard p{margin:0;color:#667280;font-size:15px;line-height:20px}.stateCard button{width:100%;height:52px;margin-top:6px;border:0;border-radius:12px;background:#1667f2;color:#fff;font:inherit;font-size:15px;font-weight:800}
+ .loading{display:flex;flex-direction:column;gap:12px}.loadingHero,.loadingProgress,.loadingNext{border:1px solid #e5e7eb;border-radius:18px;background:linear-gradient(90deg,#fff 20%,#f2f5f9 50%,#fff 80%);background-size:220% 100%;animation:shimmer 1.4s infinite}.loadingHero{height:286px}.loadingProgress{height:64px}.loadingNext{height:88px}@keyframes shimmer{to{background-position:-220% 0}}
+ @media(max-width:374px){.page{gap:10px}.hero{padding:14px}.destination{grid-template-columns:minmax(0,1fr) 54px}.operationIcon{width:52px;height:52px}.secondaryActions{gap:8px}.progressCard{grid-template-columns:52px minmax(0,1fr) 52px;padding-inline:8px}}
+diff --git a/RouteHub-v2/app/manager/manager-today.module.css b/RouteHub-v2/app/manager/manager-today.module.css
+index afbe979..4c4b5e1 100644
+--- a/RouteHub-v2/app/manager/manager-today.module.css
++++ b/RouteHub-v2/app/manager/manager-today.module.css
+@@ -74,6 +74,7 @@
+   font-size: 13px;
+   font-weight: 750;
+ }
++.deliveryStatus{display:grid;gap:9px;padding:12px 16px;border:1px solid #dde5ee;border-top:0;border-radius:0 0 18px 18px;background:#fff}.deliveryStatusTitle{color:#667892;font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}.deliveryStatus>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.deliveryStatus a{display:grid;gap:2px;min-width:0;padding-left:10px;border-left:3px solid #dbe5f1;color:#0f1d35;text-decoration:none}.deliveryStatus a:hover strong{color:#1667f2}.deliveryStatus strong{font-size:18px;line-height:20px;letter-spacing:-.03em}.deliveryStatus span:not(.deliveryStatusTitle){overflow:hidden;color:#667892;font-size:10px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.deliveryStatusActive{border-left-color:#1667f2!important}.deliveryStatusPending{border-left-color:#f59e0b!important}.deliveryStatusCompleted{border-left-color:#16b96b!important}
+ @media (min-width: 1024px) {
+   .opsMap { min-height:420px;--operations-map-height:420px }
+ }
+diff --git a/RouteHub-v2/app/manager/page.tsx b/RouteHub-v2/app/manager/page.tsx
+index 71e4e16..3bb868e 100644
+--- a/RouteHub-v2/app/manager/page.tsx
++++ b/RouteHub-v2/app/manager/page.tsx
+@@ -28,7 +28,7 @@ export default function Manager() {
+     newRoute: 'Nueva ruta', reorder: 'Reordenar rutas', addContact: 'Agregar contacto', noPending: 'No hay rutas hoy.',
+     assignment: 'Asignado', waiting: 'Sin asignar', issue: 'incidencia abierta', review: 'Revisa los reportes de ruta.',
+     branchManager: 'Manager de sucursal', currentBranch: 'Sucursal actual', updated: 'Actualizado',
+-    lastSeen: 'Última ubicación', noFix: 'El Driver no está compartiendo ubicación (app cerrada).', ago: 'hace', seeMore: 'Ver más',
++    lastSeen: 'Última ubicación', noFix: 'El Driver no está compartiendo ubicación (app cerrada).', ago: 'hace', seeMore: 'Ver más', deliveryStatus: 'Estado de entregas',
+   } : locale === 'fr' ? {
+     today: 'Aujourd’hui', todayOverview: 'Opérations du jour', liveOperations: 'En cours', active: 'Actifs', pending: 'En attente', completed: 'Terminés', issues: 'Incidents',
+     liveDescription: 'Arrêt en cours chez le chauffeur.', quickActions: 'Actions',
+@@ -36,7 +36,7 @@ export default function Manager() {
+     newRoute: 'Nouvel itinéraire', reorder: 'Réordonner', addContact: 'Ajouter un contact', noPending: 'Aucun itinéraire aujourd’hui.',
+     assignment: 'Assigné', waiting: 'Non assigné', issue: 'incident ouvert', review: 'Consultez les rapports.',
+     branchManager: 'Manager de succursale', currentBranch: 'Succursale actuelle', updated: 'Mis à jour',
+-    lastSeen: 'Dernière position', noFix: 'Le chauffeur ne partage pas sa position (app fermée).', ago: 'il y a', seeMore: 'Voir plus',
++    lastSeen: 'Dernière position', noFix: 'Le chauffeur ne partage pas sa position (app fermée).', ago: 'il y a', seeMore: 'Voir plus', deliveryStatus: 'État des livraisons',
+   } : {
+     today: 'Today', todayOverview: 'Today’s operations', liveOperations: 'In progress', active: 'Active', pending: 'Pending', completed: 'Completed', issues: 'Issues',
+     liveDescription: 'The stop the driver is running now.', quickActions: 'Actions',
+@@ -44,7 +44,7 @@ export default function Manager() {
+     newRoute: 'New route', reorder: 'Reorder routes', addContact: 'Add contact', noPending: 'No routes today.',
+     assignment: 'Assigned', waiting: 'Unassigned', issue: 'open issue', review: 'Review route reports.',
+     branchManager: 'Branch Manager', currentBranch: 'Current branch', updated: 'Updated',
+-    lastSeen: 'Last location', noFix: 'Driver is not sharing location (app closed).', ago: 'ago', seeMore: 'See more',
++    lastSeen: 'Last location', noFix: 'Driver is not sharing location (app closed).', ago: 'ago', seeMore: 'See more', deliveryStatus: 'Delivery status',
+   }
+   const [summary, setSummary] = useState<DashboardSummary>(emptySummary)
+   const [todayRoutes, setTodayRoutes] = useState<DashboardRoute[]>([])
+@@ -56,7 +56,6 @@ export default function Manager() {
+   const [loading, setLoading] = useState(true)
+   const [error, setError] = useState('')
+   const [liveFix, setLiveFix] = useState<LiveFix | null>(null)
+-  const [mapSummary, setMapSummary] = useState<{count:number;distanceMeters?:number;durationSeconds?:number} | null>(null)
+ 
+   useEffect(() => {
+     let cancelled = false
+@@ -185,7 +184,6 @@ export default function Manager() {
+         <div className={todayStyles.opsMap}>
+           <OperationsMap
+             hideFooter
+-            onSummary={setMapSummary}
+             routes={todayRoutes.filter(route => String(route.status || '') !== 'cancelled').map(route => ({
+               id: route.id,
+               mission_type: route.mission_type,
+@@ -214,17 +212,14 @@ export default function Manager() {
+             locale={locale}
+           />
+         </div>
+-        <p className={todayStyles.mapStrip}>
+-          {(() => {
+-            const open = todayRoutes.filter(route => !['completed', 'cancelled'].includes(String(route.status || ''))).length
+-            const count = mapSummary?.count ?? open
+-            const base = locale === 'es' ? `${count} rutas abiertas` : locale === 'fr' ? `${count} itinéraires ouverts` : `${count} open routes`
+-            if (!mapSummary?.durationSeconds || !mapSummary?.distanceMeters) return base
+-            const minutes = Math.max(1, Math.round(mapSummary.durationSeconds / 60))
+-            const miles = Math.max(1, Math.round(mapSummary.distanceMeters / 1609.34))
+-            return `${base} · ${minutes} min · ${miles} mi`
+-          })()}
+-        </p>
++        <section className={todayStyles.deliveryStatus} aria-label={copy.deliveryStatus}>
++          <span className={todayStyles.deliveryStatusTitle}>{copy.deliveryStatus}</span>
++          <div>
++            <Link href="/routes" className={todayStyles.deliveryStatusActive}><strong>{loading ? '—' : summary.activeRoutes}</strong><span>{copy.active}</span></Link>
++            <Link href="/routes" className={todayStyles.deliveryStatusPending}><strong>{loading ? '—' : summary.pendingRoutes}</strong><span>{copy.pending}</span></Link>
++            <Link href="/manager/history" className={todayStyles.deliveryStatusCompleted}><strong>{loading ? '—' : summary.completedRoutes}</strong><span>{copy.completed}</span></Link>
++          </div>
++        </section>
+       </main>
+       <aside className={todayStyles.todaySide}>
+         <section className={todayStyles.sideCard} aria-label={copy.upcoming}>
+-- 
+2.51.1
+
+
+From ddcef803aa41d9cecdaa064bb111ddd4a342d62a Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 7 Sep 2026 10:42:52 -0400
+Subject: [PATCH 6/6] Refine new route workspace
+
+---
+ RouteHub-v2/app/routes/page.tsx          | 48 ++++++++++--------------
+ RouteHub-v2/app/routes/routes.module.css | 30 +++++++++++++++
+ 2 files changed, 50 insertions(+), 28 deletions(-)
+
+diff --git a/RouteHub-v2/app/routes/page.tsx b/RouteHub-v2/app/routes/page.tsx
+index 058d4d7..5a2e2bc 100644
+--- a/RouteHub-v2/app/routes/page.tsx
++++ b/RouteHub-v2/app/routes/page.tsx
+@@ -722,8 +722,6 @@ export default function Routes() {
+   })
+ 
+   const priorityRoutes = routes.filter(route => route.driver_id === form.driver_id && route.route_date === form.date && ['draft','pending','published','paused'].includes(route.status || '')).sort(routeSort)
+-  const selectedDriver = drivers.find(driver => driver.user_id === form.driver_id)
+-  const selectedDriverName = selectedDriver ? driverDetails(selectedDriver, c.teamDriver).name : c.chooseDriver
+ 
+   return <ManagerShell active="routes" branchName={defaultBranch?.name} roleLabel={t.managerRole}>
+     <div className={styles.page}>
+@@ -780,7 +778,7 @@ export default function Routes() {
+     {open && <div className={styles.backdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setOpen(false) }}>
+       <section className={styles.builder} role="dialog" aria-modal="true" aria-labelledby="new-route-title">
+         <div className={`${styles.builderHeader} ${contrast.header}`}>
+-          <div><p className={styles.eyebrow}>{c.newAssignment.toUpperCase()}</p><h2 id="new-route-title">{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itinéraire' : 'New route'}</h2><p className={styles.builderSubtitle}>{locale==='es' ? 'Crea una recogida o entrega en pocos pasos.' : locale==='fr' ? 'Créez une collecte ou une livraison en quelques étapes.' : 'Create a pickup or delivery in a few steps.'}</p></div>
++          <div className={styles.builderTitle}><span className={styles.builderTitleIcon}><RouteIcon size={23}/></span><div><div className={styles.builderTitleLine}><h2 id="new-route-title">{locale==='es' ? 'Nueva ruta' : locale==='fr' ? 'Nouvel itinéraire' : 'New Route'}</h2><p className={styles.assignmentBadge}>{c.newAssignment}</p></div><p className={styles.builderSubtitle}>{locale==='es' ? 'Crea y asigna una nueva ruta.' : locale==='fr' ? 'Créez et attribuez un nouvel itinéraire.' : 'Create and assign a new route.'}</p></div></div>
+           <button className={styles.closeButton} type="button" aria-label={c.close} disabled={saving} onClick={() => setOpen(false)}><X size={22}/></button>
+         </div>
+ 
+@@ -797,28 +795,28 @@ export default function Routes() {
+           <div className={`${styles.mapColumn} ${previewOpen ? styles.mapColumnOpen : ''}`}>
+             <section className={styles.previewCard} aria-label={locale==='es' ? 'Vista previa de la ruta' : locale==='fr' ? 'Aperçu de l’itinéraire' : 'Route preview'}>
+               <div className={styles.previewCardHeader}>
+-                <div><span className={styles.previewEyebrow}>{locale==='es' ? 'VISTA PREVIA' : locale==='fr' ? 'APERÇU' : 'ROUTE PREVIEW'}</span><h3>{locale==='es' ? 'Confirma las ubicaciones' : locale==='fr' ? 'Confirmez les emplacements' : 'Confirm locations'}</h3></div>
++                <div><span className={styles.previewEyebrow}>{locale==='es' ? 'VISTA PREVIA DE RUTA' : locale==='fr' ? 'APERÇU DE L’ITINÉRAIRE' : 'ROUTE PREVIEW'}</span><h3>{locale==='es' ? 'Ruta en preparación' : locale==='fr' ? 'Itinéraire en préparation' : 'Route in progress'}</h3></div>
+                 <MapPin size={19}/>
+               </div>
+               <OperationsMap routes={planningMapRoutes} locale={locale} interactive/>
+               <div className={styles.previewSummary}><span><i>S</i>{planningMapRoutes[0]?.origin_address || defaultBranch?.address || c.branch}</span><span><i>1</i>{planningMapRoutes.length ? `${planningMapRoutes.length} ${locale==='es'?'rutas configuradas':locale==='fr'?'itinéraires configurés':'configured routes'}` : (locale==='es' ? 'Sin rutas configuradas' : locale==='fr' ? 'Aucun itinéraire configuré' : 'No configured routes')}</span></div>
+             </section>
+-            <section className={styles.assignmentSummary} aria-label={locale==='es' ? 'Resumen de asignación' : locale==='fr' ? 'Résumé de l’affectation' : 'Assignment summary'}>
+-              <div className={styles.summaryHeader}><h3>{locale==='es' ? 'Resumen de asignación' : locale==='fr' ? 'Résumé de l’affectation' : 'Assignment summary'}</h3><RouteIcon size={18}/></div>
+-              <dl className={styles.summaryGrid}>
+-                <div><dt>{c.routeType}</dt><dd>{typeLabel(form.type,c)}</dd></div>
+-                <div><dt>{c.driver}</dt><dd>{selectedDriverName}</dd></div>
+-                <div><dt>{locale==='es' ? 'Posición' : locale==='fr' ? 'Position' : 'Position'}</dt><dd>{insertBeforeId ? (locale==='es' ? 'Antes de una parada' : locale==='fr' ? 'Avant un arrêt' : 'Before a stop') : (locale==='es' ? 'Al final' : locale==='fr' ? 'À la fin' : 'At the end')}</dd></div>
+-                <div><dt>{c.date} · {c.time}</dt><dd>{form.date || '—'}{form.time ? ` · ${form.time}` : ''}</dd></div>
+-              </dl>
+-              <div className={styles.summaryLocations}><div><span>{locale==='es' ? 'INICIO' : locale==='fr' ? 'DÉPART' : 'START'}</span><strong>{form.origin || defaultBranch?.address || c.branch}</strong></div><div><span>{locale==='es' ? 'OPERACIÓN' : locale==='fr' ? 'OPÉRATION' : 'OPERATION'}</span><strong>{form.destination_label || form.destination || (form.type==='return' ? c.branch : c.destinationPending)}</strong></div></div>
++            <section className={styles.routeStatusPanel} aria-label={locale==='es' ? 'Estado de rutas' : locale==='fr' ? 'État des itinéraires' : 'Route status'}>
++              <span className={styles.previewEyebrow}>{locale==='es' ? 'ESTADO DE RUTAS' : locale==='fr' ? 'ÉTAT DES ITINÉRAIRES' : 'ROUTE STATUS'}</span>
++              <div className={styles.routeStatusGrid}>
++                <div><i className={styles.statusActive}/><strong>{routes.filter(route => ['active','published'].includes(route.status || '')).length}</strong><span>{locale==='es' ? 'En curso' : locale==='fr' ? 'En cours' : 'In progress'}</span></div>
++                <div><i className={styles.statusPending}/><strong>{routes.filter(route => ['draft','pending','paused'].includes(route.status || '')).length}</strong><span>{locale==='es' ? 'Pendientes' : locale==='fr' ? 'En attente' : 'Pending'}</span></div>
++                <div><i className={styles.statusCompleted}/><strong>{routes.filter(route => route.status === 'completed').length}</strong><span>{locale==='es' ? 'Completadas' : locale==='fr' ? 'Terminés' : 'Completed'}</span></div>
++                <div><i className={styles.statusIssue}/><strong>{routes.filter(route => route.status === 'issue').length}</strong><span>{locale==='es' ? 'Incidencias' : locale==='fr' ? 'Incidents' : 'Issues'}</span></div>
++              </div>
++              <div className={styles.stopPreview}><div><h3>{locale==='es' ? 'Paradas de esta ruta' : locale==='fr' ? 'Étapes de cet itinéraire' : 'Stops in this route'}</h3><span>{planningMapRoutes.length} {locale==='es' ? 'parada' : locale==='fr' ? 'étape' : 'stop'}{planningMapRoutes.length === 1 ? '' : 's'}</span></div><p>{form.destination.trim() ? (form.destination_label || form.destination) : (locale==='es' ? 'Agrega un destino para construir la ruta.' : locale==='fr' ? 'Ajoutez une destination pour créer cet itinéraire.' : 'Add a destination to build this route.')}</p></div>
+             </section>
+           </div>
+ 
+           <div className={`${styles.formColumn} ${contrast.form}`}>
+-            <section className={styles.builderSection}>
+-            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{locale==='es' ? 'Asignación' : locale==='fr' ? 'Affectation' : 'Assignment'}</h3><p>{locale==='es' ? 'Elige el tipo de operación y el conductor.' : locale==='fr' ? 'Choisissez le type d’opération et le conducteur.' : 'Choose the operation type and driver.'}</p></div></div>
+-            <fieldset className={`${styles.fieldset} ${styles.primaryRouteTypes}`}>
++            <section className={`${styles.builderSection} ${styles.assignmentSection}`}>
++            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>1</span><div><h3>{c.routeType}</h3></div></div>
++            <div className={styles.assignmentGrid}><fieldset className={`${styles.fieldset} ${styles.primaryRouteTypes}`}>
+               <legend>{c.routeType}</legend>
+               <div className={styles.segmented}>{routeTypes.map(type => <button className={form.type === type.value ? styles.segmentActive : ''} type="button" key={type.value} aria-pressed={form.type === type.value} onClick={() => setForm(current => type.value === 'return' ? {...current, type:'return', destination:defaultBranch?.address || defaultBranch?.name || '', destination_label:defaultBranch?.name||'', destination_phone:'', contact_id:''} : {...current, type:type.value})}>{typeLabel(type.value,c)}</button>)}</div>
+             </fieldset>
+@@ -829,23 +827,17 @@ export default function Routes() {
+               <button type="button" className={styles.selectedContactChange} onClick={() => setForm(current => ({...current, contact_id:'', destination:'', destination_label:'', destination_phone:''}))}>{locale==='es' ? 'Cambiar' : locale==='fr' ? 'Modifier' : 'Change'}</button>
+             </section>}
+ 
+-            <label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}`}</option> })}</select></div></label>
++            <div className={styles.driverStack}><label className={`${styles.field} ${styles.driverField}`}><span>{c.driver}</span><div className={styles.inputWrap}><UserRound size={18}/><select value={form.driver_id} onChange={event => setForm(current => ({...current, driver_id: event.target.value}))}><option value="">{c.chooseDriver}</option>{drivers.map((driver,index) => { const fallback=`${c.driver} ${index+1}`; const details = driverDetails(driver,driver.role==='driver'?c.teamDriver:fallback); const isPrimary=driver.user_id===defaultBranch?.primary_driver_id; const roleName=isPrimary?(locale==='es'?'Conductor principal':locale==='fr'?'Conducteur principal':'Primary Driver'):(driver.role||c.teamDriver).replaceAll('_',' '); return <option key={driver.user_id} value={driver.user_id}>{`${isPrimary?'★ ':''}${details.name||fallback} — ${roleName}`}</option> })}</select></div></label><span className={styles.driverAvailability}><i/> {form.driver_id ? (locale==='es' ? 'Conductor disponible' : locale==='fr' ? 'Conducteur disponible' : 'Driver is available') : (locale==='es' ? 'Selecciona un conductor' : locale==='fr' ? 'Sélectionnez un conducteur' : 'Select a driver')}</span></div></div>
+ 
+             {form.driver_id && form.date === todayValue && priorityRoutes.length > 0 && <label className={styles.field}><span>{locale==='es' ? 'Posición en la ruta' : locale==='fr' ? 'Position dans l’itinéraire' : 'Position in route'} <em>{c.optional}</em></span><div className={styles.inputWrap}><RouteIcon size={18}/><select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}><option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>{priorityRoutes.map(route => <option key={route.id} value={route.id}>{locale==='es' ? `Antes de ${route.destination_name || route.destination_address || 'la próxima parada'}` : locale==='fr' ? `Avant ${route.destination_name || route.destination_address || 'la prochaine étape'}` : `Before ${route.destination_name || route.destination_address || 'next stop'}`}</option>)}</select></div></label>}
+ 
+-            </section>
+-
+-            <section className={styles.builderSection}>
+-            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>2</span><div><h3>{locale==='es' ? 'Programación' : locale==='fr' ? 'Planification' : 'Schedule'}</h3><p>{locale==='es' ? 'Elige cuándo ocurrirá esta asignación.' : locale==='fr' ? 'Choisissez quand cette affectation aura lieu.' : 'Choose when this assignment should happen.'}</p></div></div>
+-            <div className={styles.splitFields}>
++            <div className={styles.compactSchedule}><span>{locale==='es' ? 'Programación' : locale==='fr' ? 'Planification' : 'Schedule'}</span><div className={styles.splitFields}>
+               <label className={styles.field}><span>{c.date}</span><div className={styles.inputWrap}><CalendarDays size={18}/><input type="date" value={form.date} onChange={event => setForm(current => ({...current, date: event.target.value}))}/></div></label>
+               <label className={styles.field}><span>{c.time}</span><div className={styles.inputWrap}><Clock3 size={18}/><input type="time" value={form.time} onChange={event => setForm(current => ({...current, time: event.target.value}))}/></div></label>
+-            </div>
+-
+-            </section>
++            </div></div></section>
+ 
+             <section className={styles.builderSection}>
+-            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>3</span><div><h3>{locale==='es' ? 'Ubicaciones' : locale==='fr' ? 'Emplacements' : 'Locations'}</h3><p>{locale==='es' ? 'Define el inicio y el destino.' : locale==='fr' ? 'Définissez le départ et la destination.' : 'Set the starting point and destination.'}</p></div></div>
++            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>2</span><div><h3>{locale==='es' ? 'Ubicaciones' : locale==='fr' ? 'Emplacements' : 'Locations'}</h3></div></div>
+             <fieldset className={styles.fieldset}>
+               <legend>{c.startingPoint}</legend>
+               <div className={styles.segmented}>{(['branch','previous','custom'] as OriginMode[]).map(mode => <button className={originMode === mode ? styles.segmentActive : ''} type="button" key={mode} aria-pressed={originMode === mode} onClick={() => setOriginSource(mode)}>{oc[mode]}</button>)}</div>
+@@ -879,8 +871,8 @@ export default function Routes() {
+             </>}
+             </section>
+ 
+-            <section className={styles.builderSection}>
+-            <div className={styles.builderSectionHeader}><span className={styles.sectionNumber}>4</span><div><h3>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</h3><p>{locale==='es' ? 'Información opcional para el conductor.' : locale==='fr' ? 'Informations facultatives pour le conducteur.' : 'Optional information for the driver.'}</p></div></div>
++            <section className={`${styles.builderSection} ${styles.moreDetailsSection}`}>
++            <div className={styles.builderSectionHeader}><SlidersHorizontal size={18}/><div><h3>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</h3></div></div>
+             {form.type==='return'&&<label className={styles.field}><span>{c.notes} <em>{c.optional}</em></span><textarea rows={2} value={form.notes} placeholder={locale==='es'?'Ejemplo: Recoger material para la próxima entrega':locale==='fr'?'Exemple : récupérer le matériel pour la prochaine livraison':'Example: Pick up material for next delivery'} onChange={event => setForm(current => ({...current, notes:event.target.value}))}/></label>}
+ 
+             {form.type!=='return'&&<button className={styles.detailsToggle} type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(value => !value)}><SlidersHorizontal size={17}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}<ChevronRight size={16} className={detailsOpen ? styles.detailsChevronOpen : ''}/></button>}
+diff --git a/RouteHub-v2/app/routes/routes.module.css b/RouteHub-v2/app/routes/routes.module.css
+index a7684ff..d5adf83 100644
+--- a/RouteHub-v2/app/routes/routes.module.css
++++ b/RouteHub-v2/app/routes/routes.module.css
+@@ -338,3 +338,33 @@
+ /* Route status is communicated through a restrained accent rather than a
+    fully tinted card, so the list stays readable while remaining scannable. */
+ .routeToneActive:before{background:#1667f2}.routeTonePending:before{background:#f59e0b}.routeToneCompleted:before{background:#16b96b}.routeToneIssue:before{background:#ef5350}.routeToneCancelled:before{background:#94a3b8}.routeToneCompleted .routeNumber{background:#eaf9f1;color:#168653}.routeTonePending .routeNumber{background:#fff7e6;color:#b76b00}.routeToneIssue .routeNumber{background:#fff0f0;color:#c43d3d}.routeToneCancelled .routeNumber{background:#f1f4f8;color:#718198}.routeTypeLabel{display:inline-block;color:#1667f2}.routeType_pickup{color:#168653}.routeType_delivery{color:#1667f2}.routeType_return{color:#6650ae}.status_completed{background:#eaf9f1;color:#168653}.status_cancelled{background:#f1f4f8;color:#718198}.routeToneCompleted .statusBadge{background:#eaf9f1;color:#168653}.routeTonePending .statusBadge{background:#fff7e6;color:#a56500}.routeToneCancelled .statusBadge{background:#f1f4f8;color:#718198}
++
++/* Approved New Route workspace. The whole dispatch flow belongs in one
++   self-contained window: form controls stay on the left and the operational
++   preview never covers them on the right. */
++.builderTitle{display:flex;align-items:center;gap:14px}.builderTitleIcon{display:grid;place-items:center;flex:0 0 auto;width:46px;height:46px;border:1px solid #dfe7f3;border-radius:13px;background:#f7faff;color:#315eea}.builderTitleLine{display:flex;align-items:center;gap:10px}.builderTitleLine h2{margin:0}.assignmentBadge{margin:0;padding:5px 8px;border-radius:6px;background:#edf0ff;color:#315eea;font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}.assignmentGrid{display:grid;grid-template-columns:minmax(0,1.36fr) minmax(230px,.94fr);gap:16px;align-items:end}.driverStack{display:grid;gap:8px}.driverAvailability{display:inline-flex;align-items:center;gap:7px;width:max-content;max-width:100%;padding:6px 10px;border-radius:999px;background:#effbf4;color:#168653;font-size:11px;font-weight:750}.driverAvailability i{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px #d8f7e5}.compactSchedule{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center;padding-top:14px;border-top:1px solid #e8eef4;color:#63748d;font-size:12px;font-weight:800}.compactSchedule>.splitFields{gap:10px}.compactSchedule .field>span{font-size:10px}.compactSchedule .field input{min-height:44px}.moreDetailsSection{padding-bottom:8px}.moreDetailsSection .builderSectionHeader{align-items:center}.moreDetailsSection .builderSectionHeader>svg{color:#315eea}.routeStatusPanel{margin-top:14px;padding:17px 18px;border:1px solid #e2e9f2;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgb(33 56 90 / 6%)}.routeStatusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:13px}.routeStatusGrid>div{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;min-width:0;padding:11px 8px;border:1px solid #e6ecf3;border-radius:12px}.routeStatusGrid i{grid-row:1;width:9px;height:9px;border-radius:50%}.routeStatusGrid strong{font-size:17px;line-height:1;color:#14233b}.routeStatusGrid span{grid-column:1/-1;overflow:hidden;margin-top:6px;color:#667892;font-size:9px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.statusActive{background:#315eea}.statusPending{background:#f6aa34}.statusCompleted{background:#20b76a}.statusIssue{background:#e74444}.stopPreview{margin-top:18px;padding-top:15px;border-top:1px solid #e8eef4}.stopPreview>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.stopPreview h3{margin:0;color:#14233b;font-size:14px}.stopPreview span{padding:5px 8px;border-radius:999px;background:#f1f5fb;color:#64748b;font-size:10px;font-weight:800;white-space:nowrap}.stopPreview p{overflow:hidden;margin:10px 0 0;color:#667892;font-size:12px;line-height:1.4;text-overflow:ellipsis;white-space:nowrap}
++
++@media (min-width:1024px){
++  .backdrop{padding:20px}
++  .builder{width:min(1500px,calc(100vw - 40px));height:min(900px,calc(100dvh - 40px));max-height:calc(100dvh - 40px);display:flex;flex-direction:column;border-radius:24px}
++  .builderHeader{flex:0 0 auto;padding:20px 28px}
++  .builderHeader h2{font-size:28px}
++  .builderBody{min-height:0;flex:1;grid-template-columns:minmax(520px,1.14fr) minmax(390px,.86fr);gap:22px;padding:18px 24px 20px;overflow:hidden}
++  .formColumn{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 22px 18px;background:#fff;border-radius:18px;scrollbar-gutter:stable}
++  .mapColumn{position:sticky;top:0;align-self:start}
++  .builderSection{gap:12px;padding:16px 0}
++  .builderSectionHeader h3{font-size:16px}
++  .builderSectionHeader p{display:none}
++  .sectionNumber{width:26px;height:26px}
++  .field input,.field select,.field textarea,.fieldset .inputWrap input,.fieldset .inputWrap select{min-height:46px}
++  .segmented button{min-height:44px}
++  .previewCard .route-plan-canvas{height:min(39dvh,350px)}
++  .previewCardHeader{padding:15px 17px 12px}.previewCardHeader h3{font-size:16px}
++  .previewCard .previewSummary{padding:10px 14px}
++  .routeStatusPanel{margin-top:12px;padding:14px 15px}
++  .builderFooter{bottom:-18px;margin:0 -22px -18px;padding:12px 22px 16px}
++  .builderFooter .secondaryButton,.builderFooter .publishButton{min-height:48px}
++}
++@media (max-width:900px){.assignmentGrid{grid-template-columns:1fr}.compactSchedule{grid-template-columns:1fr}.compactSchedule>.splitFields{grid-template-columns:1fr 1fr}}
++@media (max-width:640px){.builderTitleIcon{width:38px;height:38px;border-radius:11px}.builderTitleLine{gap:6px}.builderTitleLine h2{font-size:19px}.assignmentBadge{font-size:8px}.routeStatusGrid{gap:5px}.routeStatusGrid>div{padding:9px 6px}.routeStatusGrid strong{font-size:15px}.routeStatusGrid span{font-size:8px}.compactSchedule>.splitFields{grid-template-columns:1fr}.stopPreview p{white-space:normal}.routeStatusPanel{margin-top:10px}}
++:global(html[data-theme="dark"]) .builderTitleIcon,:global(html[data-theme="dark"]) .routeStatusPanel{border-color:var(--rh-border);background:var(--rh-surface)}:global(html[data-theme="dark"]) .routeStatusGrid>div{border-color:var(--rh-border)}:global(html[data-theme="dark"]) .routeStatusGrid strong,:global(html[data-theme="dark"]) .stopPreview h3{color:var(--rh-text)}:global(html[data-theme="dark"]) .compactSchedule,:global(html[data-theme="dark"]) .stopPreview p,:global(html[data-theme="dark"]) .routeStatusGrid span{color:var(--rh-text-secondary)}:global(html[data-theme="dark"]) .compactSchedule,:global(html[data-theme="dark"]) .stopPreview{border-color:var(--rh-border)}
+-- 
+2.51.1
+
