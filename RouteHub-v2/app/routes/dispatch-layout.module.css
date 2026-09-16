@@ -26,7 +26,7 @@
    0 and that space (plus a share of the map's) goes to the form column, so
    creating a route gets a roomier two-field-per-row layout without opening
    a separate overlay. Both columns animate back to the resting three-column
-   layout once the form closes. */
+   layout once the form closes. Optimized for compact fit. */
 .workspace[data-focus='true'] {
   grid-template-columns: 0fr 1.8fr 1.2fr;
   gap: 8px 20px;
