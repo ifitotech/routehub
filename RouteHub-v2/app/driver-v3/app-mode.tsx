@@ -10,10 +10,21 @@ export default function DriverV3AppMode() {
     // Keep the visual viewport from bouncing the browser chrome on iOS
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const syncViewport = () => {
+      document.documentElement.style.setProperty('--driver-viewport-height', `${window.innerHeight}px`)
+      document.documentElement.style.setProperty('--driver-viewport-width', `${window.innerWidth}px`)
+    }
+    syncViewport()
+    window.addEventListener('resize', syncViewport, {passive: true})
+    window.addEventListener('orientationchange', syncViewport, {passive: true})
     return () => {
       delete document.documentElement.dataset.driverApp
       delete document.body.dataset.driverApp
       document.body.style.overflow = prevOverflow
+      window.removeEventListener('resize', syncViewport)
+      window.removeEventListener('orientationchange', syncViewport)
+      document.documentElement.style.removeProperty('--driver-viewport-height')
+      document.documentElement.style.removeProperty('--driver-viewport-width')
     }
   }, [])
   return null

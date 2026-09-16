@@ -4,10 +4,10 @@
   --blue:#1667f2;
   --muted:#667892;
   --border:#dde5ee;
-  height:100svh;
-  height:100dvh;
-  max-height:100svh;
-  max-height:100dvh;
+  height:var(--driver-viewport-height,100dvh);
+  max-height:var(--driver-viewport-height,100dvh);
+  min-height:0;
+  -webkit-text-size-adjust:100%;
   background:#f7f9fc;
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
