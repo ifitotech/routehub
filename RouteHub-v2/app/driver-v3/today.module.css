@@ -143,7 +143,7 @@
    secondary row that centering used to split evenly above and below,
    reading as a stray gap floating over the nav bar instead of the row
    sitting right against it. */
-.pageStarted{justify-content:flex-end;
+.pageStarted{justify-content:flex-start;
   /* The Today page lives in the grid row immediately above the fixed
      Driver nav, but its map underlap makes the visual content taller than
      that row. Reserve the nav's touch area when actions are visible so the
