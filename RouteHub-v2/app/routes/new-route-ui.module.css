@@ -145,8 +145,8 @@
    height past the panel's available space and force a scrollbar. */
 .formFooter{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap;padding:4px 0 0;margin-top:auto;border-top:none;flex-shrink:0}
 .footerNotice{display:none}
-.footerActions{display:flex;gap:4px;width:100%}
-.footerActions .secondaryButton,.footerActions .publishButton{flex:1;margin:0;min-height:32px;padding:0 8px;font-size:11px;border-radius:10px}
+.footerActions{display:flex;gap:3px;width:100%}
+.footerActions .secondaryButton,.footerActions .publishButton{flex:1;margin:0;min-height:28px;padding:0 6px;font-size:10px;border-radius:8px;line-height:1;gap:4px}
 
 /* Tablet only, layered on top of the base rules above rather than editing
    them - desktop (mouse/trackpad, any window width) never matches this,
