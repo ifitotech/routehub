@@ -10,12 +10,11 @@ import {driverDetails} from './routes-model'
 // their own grey surface so "who and when" reads apart from "where"
 // instead of every field competing in one long column. Cancel/Assign live
 // in the left column below Route details instead (see new-route-panel.tsx)
-// so they always sit at the true bottom of the form. More details is always
-// expanded here - the panel comfortably fits this screen, so hiding it
-// behind a toggle only added a click with nothing gained.
+// so they always sit at the true bottom of the form.
 export default function NewRouteAssignment(p: any) {
   const {locale, c, form, setForm, defaultBranch, todayValue, drivers, insertBeforeId, setInsertBeforeId, priorityRoutes} = p
   const [driverMenuOpen, setDriverMenuOpen] = useState(false)
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(false)
   const [dateMode, setDateMode] = useState<'today' | 'custom'>(form.date === todayValue ? 'today' : 'custom')
   // form.date can change from outside this component (tapping a different
   // day in the calendar strip above while the form is open) - keep the
@@ -111,11 +110,14 @@ export default function NewRouteAssignment(p: any) {
       </div>
 
       <div>
-        <h3><SlidersHorizontal size={15}/>{locale==='es' ? 'Más detalles' : locale==='fr' ? 'Plus de détails' : 'More details'}</h3>
-        <div id="route-more-details" className={ui.moreDetailsPanel}>
-          {form.type!=='pickup'&&form.type!=='delivery'&&<label className={`${ui.field} ${ui.fieldSpaced}`}><span>{c.po} <em className={ui.optionalLabel}>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
+        <button type="button" className={styles.detailsToggle} onClick={() => setMoreDetailsOpen(v => !v)} aria-expanded={moreDetailsOpen} style={{width:’100%’}}>
+          <span className={ui.detailsToggleLeft}><SlidersHorizontal size={14}/>{locale===’es’ ? ‘Más detalles’ : locale===’fr’ ? ‘Plus de détails’ : ‘More details’}</span>
+          <svg className={`${moreDetailsOpen ? styles.detailsChevronOpen : ‘’}`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        {moreDetailsOpen && <div id="route-more-details" className={ui.moreDetailsPanel}>
+          {form.type!==’pickup’&&form.type!==’delivery’&&<label className={`${ui.field} ${ui.fieldSpaced}`}><span>{c.po} <em className={ui.optionalLabel}>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
           <label className={`${ui.field} ${ui.fieldSpaced}`}>
-            <span>{locale==='es'?'Prioridad':locale==='fr'?'Priorité':'Priority'}</span>
+            <span>{locale===’es’?’Prioridad’:locale===’fr’?’Priorité’:’Priority’}</span>
             <select value={form.priority} onChange={event => setForm((current: any) => ({...current, priority: event.target.value}))}>
               <option value="normal">{c.normal}</option>
               <option value="priority">{c.priorityName}</option>
@@ -123,10 +125,10 @@ export default function NewRouteAssignment(p: any) {
             </select>
           </label>
           <label className={`${ui.field} ${ui.fieldSpaced}`}>
-            <span>{locale==='es'?'Nota para el conductor':locale==='fr'?'Note pour le conducteur':'Driver note'} <em className={ui.optionalLabel}>{c.optional}</em></span>
-            <textarea value={form.notes} placeholder={locale==='es'?'Código de acceso, estacionamiento o instrucciones…':locale==='fr'?'Code d’accès, stationnement ou instructions…':'Gate code, parking or instructions…'} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/>
+            <span>{locale===’es’?’Nota para el conductor’:locale===’fr’?’Note pour le conducteur’:’Driver note’} <em className={ui.optionalLabel}>{c.optional}</em></span>
+            <textarea value={form.notes} placeholder={locale===’es’?’Código de acceso, estacionamiento o instrucciones…’:locale===’fr’?’Code d’accès, stationnement ou instructions…’:’Gate code, parking or instructions…’} onChange={event => setForm((current: any) => ({...current, notes: event.target.value}))}/>
           </label>
-        </div>
+        </div>}
       </div>
     </div>
   )

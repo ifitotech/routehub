@@ -10,8 +10,8 @@
 
 /* Read-only stand-in for a select control that has nothing else to pick -
    a single branch, for example. Same info, a fraction of the height. */
-.compactValue{display:flex;align-items:center;gap:8px;min-height:28px;color:var(--rh-ink);font-size:13px;font-weight:600}
-.compactValue svg{flex:none;color:var(--rh-ink-soft)}
+.compactValue{display:flex;align-items:center;gap:6px;min-height:24px;color:var(--rh-ink);font-size:12px;font-weight:600}
+.compactValue svg{flex:none;color:var(--rh-ink-soft);width:13px;height:13px}
 
 /* Saved-contact tag sits inside the address TEXT FIELD itself, in the
    blank space to the right of the typed address - not over the separate
@@ -30,9 +30,9 @@
    together down the left column, Assignment fills the right column on its
    own timeline. This is what stops Route details from ever having to wait
    on Assignment's height - each column just flows independently. */
-.mainGrid{display:grid;gap:8px;align-items:start}
-@media(min-width:640px){.mainGrid{grid-template-columns:minmax(0,1fr) 240px}}
-.mainLeftCol{display:grid;gap:10px;min-width:0}
+.mainGrid{display:grid;gap:7px;align-items:start}
+@media(min-width:640px){.mainGrid{grid-template-columns:minmax(0,1fr) 230px}}
+.mainLeftCol{display:grid;gap:8px;min-width:0}
 .driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--rh-success-soft);color:#18A566;font-size:11px;font-weight:650}
 .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:8px}
 .statusCard{padding:7px;border:1px solid var(--rh-line);border-radius:9px;background:#fff}
@@ -55,12 +55,12 @@
    column (in focus mode) instead of a separate modal/drawer, so it shares
    that column's padding, background and scroll behaviour. */
 .inlinePanel{display:flex;flex-direction:column;height:100%;min-height:0;margin:-16px;}
-.inlinePanelHeader{padding:8px 16px 3px}
+.inlinePanelHeader{padding:6px 14px 2px}
 .inlinePanelHeader .titleRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .compactTitle{display:flex;align-items:baseline;gap:7px;min-width:0}
 .compactTitle h2{margin:0;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
 .compactTitle span{overflow:hidden;color:#64748B;font-size:12px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.inlinePanelBody{display:grid;gap:8px;padding:8px 16px 10px;overflow-y:auto;width:100%}
+.inlinePanelBody{display:grid;gap:7px;padding:6px 14px 8px;overflow-y:auto;width:100%}
 
 .sectionHeading{margin:0 0 5px;color:var(--rh-ink);font-size:13px;font-weight:800}
 
@@ -99,8 +99,9 @@
 .contactBlock{padding-top:4px;border-top:1px dashed #dbe3ed;display:grid;gap:3px}
 .contactBlockLabel{display:flex;align-items:center;gap:5px;margin:0;font-size:9px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--rh-ink-soft)}
 
-.assignmentPanel{padding:10px;border-radius:13px;background:var(--rh-surface-2);border:1px solid #e7edf4;display:grid;gap:9px;align-content:start;min-width:0}
+.assignmentPanel{padding:10px;border-radius:13px;background:var(--rh-surface-2);border:1px solid #e7edf4;display:grid;gap:7px;align-content:start;min-width:0}
 .assignmentPanel h3{margin:0 0 3px;font-size:10px;font-weight:800;color:var(--rh-ink);text-transform:uppercase;letter-spacing:.04em}
+.assignmentPanel .detailsToggleLeft{display:inline-flex;align-items:center;gap:5px;font-size:12px}
 
 .driverCard{display:flex;align-items:center;gap:7px;width:100%;padding:7px 9px;border-radius:10px;border:1px solid var(--rh-line);background:var(--rh-card);cursor:pointer;text-align:left;color:inherit;font-size:12px}
 .driverCard:hover{border-color:#b7cdf1}
