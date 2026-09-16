@@ -157,8 +157,8 @@
   top:0;
   background:#0F1D35;
   color:#fff;
-  height:calc(56px + env(safe-area-inset-top));
-  min-height:calc(56px + env(safe-area-inset-top));
+  height:calc(48px + env(safe-area-inset-top));
+  min-height:calc(48px + env(safe-area-inset-top));
   padding:env(safe-area-inset-top) 16px 0;
   box-sizing:border-box;
   backdrop-filter:none !important;
