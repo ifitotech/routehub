@@ -467,7 +467,7 @@ html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav:
 /* The shell itself must not expose its old #f7f9fc surface through the
    safe-area gap above the header. */
 html body:has(.driver-v3-root) .driver-v3-root > main {
-  background: #0f1d35 !important;
+  background: #14243a !important;
   background-image: none !important;
 }
 html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main {
@@ -541,6 +541,8 @@ html body:has(.driver-v3-root) .driver-v3-root > main > header.appHeader {
   -webkit-backdrop-filter: none !important;
   filter: none !important;
   opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
 }
 
 /* Driver owns its navigation geometry. The app-wide .nav rule is a floating
