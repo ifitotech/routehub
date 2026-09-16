@@ -116,9 +116,9 @@
    all the way up to .page's own, now-higher, top edge - the real top of
    the header) - height grows by --map-bleed too so the map's BOTTOM edge
    stays exactly where it was; only the top extends further up. */
-.routeGlyphHost{--map-extra:clamp(280px,38vh,390px);--map-underlap:280px;position:relative;z-index:0;width:calc(100% + 36px);height:calc(47vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(210px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(400px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-18px - var(--map-bleed, 130px)) -18px calc(14px - var(--map-extra));border-radius:0;overflow:visible;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1),margin .4s ease}
+.routeGlyphHost{--map-extra:0px;--map-underlap:0px;position:relative;z-index:0;width:calc(100% + 36px);height:47vh;min-height:210px;max-height:400px;margin:0 -18px 14px;border-radius:0;overflow:hidden;transition:height .4s cubic-bezier(.4,0,.2,1),max-height .4s cubic-bezier(.4,0,.2,1)}
 .routeGlyphHost>div{position:absolute;top:0;right:0;left:0;height:calc(100% + var(--map-underlap));overflow:hidden}
-.routeGlyphHostCompact{--map-extra:clamp(190px,26vh,280px);height:calc(19vh + var(--map-bleed, 130px) + var(--map-extra));min-height:calc(92px + var(--map-bleed, 130px) + var(--map-extra));max-height:calc(155px + var(--map-bleed, 130px) + var(--map-extra));margin:calc(-18px - var(--map-bleed, 130px)) -18px calc(10px - var(--map-extra))}
+.routeGlyphHostCompact{--map-extra:0px;height:19vh;min-height:92px;max-height:155px;margin:0 -18px 10px}
 .hero> :not(.routeGlyphHost){position:relative;z-index:1}
 
 .phoneLine{margin:5px 0 0;color:var(--rh-text-muted,#9FB2D0);font-size:13px;font-weight:650}
