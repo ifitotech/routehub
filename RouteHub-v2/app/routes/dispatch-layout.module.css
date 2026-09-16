@@ -167,3 +167,12 @@
     min-height: 260px;
   }
 }
+
+/* Dark mode styles for center column */
+:global(html[data-theme='dark']) .center {
+  background: #0f172a;
+}
+
+:global(html[data-theme='dark']) .workspace {
+  --board-height: calc(100dvh - 250px);
+}
