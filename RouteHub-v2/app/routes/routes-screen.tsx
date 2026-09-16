@@ -253,7 +253,7 @@ export default function Routes() {
             />
             <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
             <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} onClick={() => { setManaging(on => !on); setPane('list') }}>
-              <RouteIcon size={18}/>{c.manage}
+              <RouteIcon size={18}/>{managing ? (locale==='es'?'Listo':locale==='fr'?'Terminé':'Done') : c.manage}
             </button>
             {open
               ? <button className={styles.secondaryButton} type="button" onClick={() => setOpen(false)}><X size={18}/>{locale==='es'?'Cancelar':locale==='fr'?'Annuler':'Cancel'}</button>
