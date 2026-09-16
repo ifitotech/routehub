@@ -193,7 +193,7 @@ function routeLineSegments(sequence:ResolvedSequence):RouteLineSegment[]{
   if(!route.destination)continue
   const endAt=nearestLinePoint(sequence.line,route.destination,startAt)
   if(endAt<=startAt)continue
-  const color=isRemaining(route.status)?sequence.color:null
+  const color=isRemaining(route.status)?routeColor(route.status):null
   if(color){
    const points=sequence.line.slice(startAt,endAt+1)
    const previous=segments[segments.length-1]
@@ -329,14 +329,6 @@ export default function OperationsMap({routes,driverLocations=[],fitDriverLocati
      {routeLineSegments(sequence).map(segment=><Polyline key={segment.key} positions={segment.points.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:segment.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>)}
       {sequence.start&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
-    {resolved.filter(route=>isDrawableOperationsRoute(route.status)&&route.origin&&route.destination).map(route=>(
-     <Fragment key={`route-visual-${route.id}`}>
-      <Polyline
-       positions={[[route.origin!.lat,route.origin!.lng],[route.destination!.lat,route.destination!.lng]]}
-       pathOptions={{color:routeColor(route.status),weight:3,opacity:0.6,lineCap:'round'}}
-      />
-     </Fragment>
-    ))}
     {resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>{
      const driverLocation=visibleDriverLocations.find(d=>d.driver_id===route.driver_id)?.location
      const eta=driverLocation&&route.destination?haversineDistance(driverLocation.lat,driverLocation.lng,route.destination.lat,route.destination.lng)/20*60:null
