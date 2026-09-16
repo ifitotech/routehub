@@ -85,6 +85,23 @@ function statusLabel(status:string|undefined|null,locale:string){
  return status==='issue'?'Issue':status==='completed'?'Completed':status==='active'||status==='paused'?'In progress':'Pending'
 }
 
+function haversineDistance(lat1:number,lon1:number,lat2:number,lon2:number):number{
+ const R=6371 // Earth radius in km
+ const dLat=(lat2-lat1)*Math.PI/180
+ const dLon=(lon2-lon1)*Math.PI/180
+ const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2)
+ const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+ return R*c
+}
+
+function formatETA(minutes:number,locale:string):string{
+ if(minutes<1)return locale==='es'?'Ahora':locale==='fr'?'Maintenant':'Now'
+ if(minutes<60)return `${Math.round(minutes)}${locale==='es'?'m':locale==='fr'?'m':'m'}`
+ const hours=Math.floor(minutes/60)
+ const mins=Math.round(minutes%60)
+ return `${hours}${locale==='es'?'h':locale==='fr'?'h':'h'} ${mins}${locale==='es'?'m':locale==='fr'?'m':'m'}`
+}
+
 function routeMarker(number:number,color:string,completed=false){
  return L.divIcon({
   className:'operations-route-marker-wrap',
@@ -311,9 +328,14 @@ export default function OperationsMap({routes,driverLocations=[],fitDriverLocati
      {routeLineSegments(sequence).map(segment=><Polyline key={segment.key} positions={segment.points.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:segment.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>)}
       {sequence.start&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
-    {resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='active'||route.status==='paused'?500:300}>
-     <Tooltip direction="top" offset={[0,-20]}>{`${route.number}. ${routeTypeLabel(route.mission_type,locale)} · ${route.destination_name||route.destination_address||copy.driver} · ${statusLabel(route.status,locale)}`}</Tooltip>
-    </Marker>)}
+    {resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>{
+     const driverLocation=visibleDriverLocations.find(d=>d.driver_id===route.driver_id)?.location
+     const eta=driverLocation&&route.destination?haversineDistance(driverLocation.lat,driverLocation.lng,route.destination.lat,route.destination.lng)/20*60:null
+     const tooltipText=`${route.number}. ${routeTypeLabel(route.mission_type,locale)}\n${route.destination_name||route.destination_address||copy.driver}\n${statusLabel(route.status,locale)}${eta!=null?`\nETA: ${formatETA(eta,locale)}`:''}`
+     return route.destination&&<Marker key={`route-${route.id}`} position={[route.destination.lat,route.destination.lng]} icon={routeMarker(route.number,routeColor(route.status),route.status==='completed')} zIndexOffset={route.status==='active'||route.status==='paused'?500:300}>
+      <Tooltip direction="top" offset={[0,-20]}>{tooltipText}</Tooltip>
+     </Marker>
+    })}
     {visibleDriverLocations.map(driver=><Marker key={`driver-${driver.id}`} position={[driver.location.lat,driver.location.lng]} icon={driverMarker(driver)} zIndexOffset={700}>
       <Tooltip direction="top" offset={[0,-24]}>{driver.label||driver.nextStop||copy.driver}</Tooltip>
     </Marker>)}
