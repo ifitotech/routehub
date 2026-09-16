@@ -68,9 +68,10 @@ const sequenceColors=['#1667F2','#7c3aed','#0891b2','#ea580c','#16a34a']
 
 function routeColor(status?:string|null){
  if(status==='issue')return '#E11D48'
- if(status==='completed')return '#94a3b8'
- if(status==='active'||status==='paused')return '#1667F2'
- return '#1667F2'
+ if(status==='completed')return '#10b981'
+ if(status==='active'||status==='paused')return '#3b82f6'
+ if(status==='draft'||status==='pending'||status==='published')return '#f97316'
+ return '#9ca3af'
 }
 
 function routeTypeLabel(type:string|null|undefined,locale:string){
@@ -328,6 +329,14 @@ export default function OperationsMap({routes,driverLocations=[],fitDriverLocati
      {routeLineSegments(sequence).map(segment=><Polyline key={segment.key} positions={segment.points.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:segment.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>)}
       {sequence.start&&<Marker position={[sequence.start.lat,sequence.start.lng]} icon={originMarker(sequence.color)}><Tooltip direction="top" offset={[0,-14]}>{copy.start}</Tooltip></Marker>}
     </Fragment>)}
+    {resolved.filter(route=>isDrawableOperationsRoute(route.status)&&route.origin&&route.destination).map(route=>(
+     <Fragment key={`route-visual-${route.id}`}>
+      <Polyline
+       positions={[[route.origin!.lat,route.origin!.lng],[route.destination!.lat,route.destination!.lng]]}
+       pathOptions={{color:routeColor(route.status),weight:3,opacity:0.6,lineCap:'round'}}
+      />
+     </Fragment>
+    ))}
     {resolved.filter(route=>isDrawableOperationsRoute(route.status)).map(route=>{
      const driverLocation=visibleDriverLocations.find(d=>d.driver_id===route.driver_id)?.location
      const eta=driverLocation&&route.destination?haversineDistance(driverLocation.lat,driverLocation.lng,route.destination.lat,route.destination.lng)/20*60:null
