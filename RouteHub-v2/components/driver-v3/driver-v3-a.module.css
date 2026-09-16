@@ -65,9 +65,7 @@
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:4px;
-  background:var(--rh-nav-bg,rgba(4,16,35,.82));
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
+  background:var(--rh-nav-bg,#0a1023);
   border-top:1px solid var(--rh-nav-border,rgba(124,173,255,.13));
   box-shadow:none;
   box-sizing:border-box;
@@ -105,7 +103,7 @@
   background:linear-gradient(90deg,#17D9D2,#1677FF);
 }
 html[data-theme='light'] .driver-v3-root .nav{
-  --rh-nav-bg:rgba(255,255,255,.86);
+  --rh-nav-bg:#fff;
   --rh-nav-border:rgba(11,31,58,.08);
   --rh-nav-inactive:#7B91AC;
   --rh-nav-active:#0A5FE8;
