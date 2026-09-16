@@ -547,12 +547,20 @@ html body:has(.driver-v3-root) .driver-v3-root > main > header.appHeader {
 }
 
 /* Driver owns its navigation geometry. The app-wide .nav rule is a floating
-   desktop bar and its safe-area offset leaves a gap below the mobile bar. */
+   desktop bar and its safe-area offset leaves a gap below the mobile bar.
+   position:absolute against .driver-v3-root (position:relative, its own
+   box already guaranteed identical to the real screen), not fixed: <body>
+   is already position:fixed;inset:0 whenever .driver-v3-root is present,
+   and a position:fixed element nested inside another fixed one is a real,
+   reproducible WebKit inconsistency in installed/standalone PWAs - it can
+   compute against a stale or offset box instead of the true screen edge,
+   which is exactly the gap under this bar that kept surviving every
+   change to the class-based .nav rule, because THIS !important rule (not
+   that one) was the one actually winning the whole time. */
 html body:has(.driver-v3-root) .driver-v3-root > main > nav {
-  position: fixed !important;
+  position: absolute !important;
   inset: auto 0 0 0 !important;
   transform: none !important;
-  left: auto !important;
   width: 100% !important;
   max-width: none !important;
   border-radius: 0 !important;
