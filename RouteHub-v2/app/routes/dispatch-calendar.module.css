@@ -3,12 +3,12 @@
 .calendar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 2px 6px;
+  border-radius: 10px;
   background: var(--rh-card, #fff);
-  box-shadow: 0 2px 8px rgba(15, 29, 53, 0.05);
+  box-shadow: 0 1px 4px rgba(15, 29, 53, 0.03);
   min-height: 0;
 }
 
@@ -16,16 +16,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   flex: none;
   border: 1px solid var(--rh-border, #dde5ee);
-  border-radius: 8px;
+  border-radius: 7px;
   background: transparent;
   color: var(--rh-text, #0f1d35);
   cursor: pointer;
   transition: all 140ms ease;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .navButton:hover {
@@ -53,18 +53,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 1 112px;
+  flex: 0 1 100px;
   min-width: 0;
-  min-height: 36px;
-  padding: 4px 6px;
+  min-height: 32px;
+  padding: 2px 5px;
   border: 1px solid var(--rh-border, #dde5ee);
-  border-radius: 9px;
+  border-radius: 8px;
   background:var(--rh-card);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.01);
   color: var(--rh-text, #0f1d35);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   cursor: pointer;
   transition: all 120ms ease;
   position: relative;
@@ -97,18 +97,18 @@
 }
 
 .dayName {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .day.selected .dayName {
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 .dayNum {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1;
   color: var(--rh-text, #0f1d35);
