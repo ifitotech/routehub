@@ -1,6 +1,7 @@
 /* Driver V3 installed-app surface */
 
 .driver-v3-root {
+  position: relative;
   height: 100%;
   width: 100%;
   min-height: 100%;

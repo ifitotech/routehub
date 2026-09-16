@@ -62,12 +62,17 @@
   box-sizing:border-box;
 }
 
-/* Fixed to the real viewport edge, not a row in .shell's own grid: no
-   parent height/padding math (dvh quirks, padding added elsewhere,
-   anything) can ever leave this short of the true bottom edge again -
-   its position doesn't depend on any of that anymore. */
+/* Anchored to .driver-v3-root (position:relative, v3-app.css), not the
+   viewport directly: a position:fixed element nested inside another
+   position:fixed one (<body> is fixed;inset:0 whenever .driver-v3-root
+   is present) is a known WebKit inconsistency in installed/standalone
+   PWAs specifically - it can compute against a stale or offset box
+   instead of the true screen edge, leaving a gap under the bar that
+   never shows up in a plain Safari tab. position:absolute against a
+   plain position:relative ancestor doesn't nest fixed contexts at all,
+   so there's nothing left for WebKit to get wrong here. */
 .nav{
-  position:fixed;
+  position:absolute;
   left:0;
   right:0;
   bottom:0;
