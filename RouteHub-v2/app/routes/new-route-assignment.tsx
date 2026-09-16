@@ -61,7 +61,7 @@ export default function NewRouteAssignment(p: any) {
   }
 
   return (
-    <div className={ui.assignmentPanel}>
+    <div className={ui.assignmentPanel} data-testid="assignment-panel">
       <div>
         <h3>{c.driver}</h3>
         <button type="button" className={ui.driverCard} onClick={() => setDriverMenuOpen(value => !value)} aria-expanded={driverMenuOpen}>
