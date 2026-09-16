@@ -30,9 +30,9 @@
    together down the left column, Assignment fills the right column on its
    own timeline. This is what stops Route details from ever having to wait
    on Assignment's height - each column just flows independently. */
-.mainGrid{display:flex;gap:7px;min-height:0;width:100%}
+.mainGrid{display:flex;gap:4px;min-height:0;width:100%}
 @media(min-width:640px){.mainGrid{flex-direction:row}}
-.mainLeftCol{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;min-height:0;width:100%}
+.mainLeftCol{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;min-height:0;width:100%}
 .driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--rh-success-soft);color:#18A566;font-size:11px;font-weight:650}
 .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:8px}
 .statusCard{padding:7px;border:1px solid var(--rh-line);border-radius:9px;background:#fff}
@@ -55,12 +55,12 @@
    column (in focus mode) instead of a separate modal/drawer, so it shares
    that column's padding, background and scroll behaviour. */
 .inlinePanel{display:flex;flex-direction:column;height:100%;min-height:0;margin:0;}
-.inlinePanelHeader{padding:6px 14px 2px}
-.inlinePanelHeader .titleRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.compactTitle{display:flex;align-items:baseline;gap:7px;min-width:0}
-.compactTitle h2{margin:0;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
-.compactTitle span{overflow:hidden;color:#64748B;font-size:12px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.inlinePanelBody{display:flex;flex-direction:column;gap:0;padding:6px 14px 0;overflow-y:auto;width:100%;min-height:0}
+.inlinePanelHeader{padding:3px 10px 1px}
+.inlinePanelHeader .titleRow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.compactTitle{display:flex;align-items:baseline;gap:5px;min-width:0}
+.compactTitle h2{margin:0;font-size:15px;letter-spacing:-.02em;white-space:nowrap}
+.compactTitle span{overflow:hidden;color:#64748B;font-size:10px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.inlinePanelBody{display:flex;flex-direction:column;gap:0;padding:3px 10px 0;overflow-y:auto;width:100%;min-height:0}
 
 .sectionHeading{margin:0 0 3px;color:var(--rh-ink);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 
