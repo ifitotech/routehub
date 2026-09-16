@@ -110,9 +110,9 @@ export default function NewRouteAssignment(p: any) {
       </div>
 
       <div>
-        <button type="button" className={styles.detailsToggle} onClick={() => setMoreDetailsOpen(v => !v)} aria-expanded={moreDetailsOpen} style={{width: ‘100%’}}>
-          <span className={ui.detailsToggleLeft}><SlidersHorizontal size={14} />{locale===’es’ ? ‘Más detalles’ : locale===’fr’ ? ‘Plus de détails’ : ‘More details’}</span>
-          <ChevronRight size={14} className={moreDetailsOpen ? styles.detailsChevronOpen : ‘’} />
+        <button type="button" onClick={() => setMoreDetailsOpen(v => !v)} aria-expanded={moreDetailsOpen} style={{width: ‘100%’, display: ‘flex’, alignItems: ‘center’, justifyContent: ‘space-between’, gap: ‘8px’, padding: ‘4px 0’, border: ‘none’, background: ‘transparent’, cursor: ‘pointer’, fontSize: ‘12px’, fontWeight: 700, color: ‘inherit’}}>
+          <span style={{display: ‘flex’, alignItems: ‘center’, gap: ‘4px’}}><SlidersHorizontal size={14} />{locale===’es’ ? ‘Más detalles’ : locale===’fr’ ? ‘Plus de détails’ : ‘More details’}</span>
+          <ChevronRight size={14} style={{transform: moreDetailsOpen ? ‘rotate(90deg)’ : ‘rotate(0deg)’, transition: ‘transform 0.15s ease’}} />
         </button>
         {moreDetailsOpen && <div id="route-more-details" className={ui.moreDetailsPanel}>
           {form.type!==’pickup’&&form.type!==’delivery’&&<label className={`${ui.field} ${ui.fieldSpaced}`}><span>{c.po} <em className={ui.optionalLabel}>{c.optional}</em></span><input value={form.order_number} onChange={event => setForm((current: any) => ({...current, order_number: event.target.value}))}/></label>}
