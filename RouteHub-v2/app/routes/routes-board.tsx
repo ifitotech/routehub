@@ -1,6 +1,7 @@
 'use client'
 
 import {useEffect, useState} from 'react'
+import {MapIcon, X} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
 import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
@@ -9,6 +10,7 @@ import styles from './routes-board.module.css'
 
 export default function RoutesBoard({routes, locale}: {routes: OperationsRoute[]; locale: string}) {
   const [drivers, setDrivers] = useState<OperationsDriverLocation[]>([])
+  const [detailsOpen, setDetailsOpen] = useState(false)
   useEffect(() => {
     let disposed = false
     const load = async () => {
@@ -45,15 +47,65 @@ export default function RoutesBoard({routes, locale}: {routes: OperationsRoute[]
       ? {expand: 'Agrandir la carte', collapse: 'Réduire la carte'}
       : {expand: 'Expand map', collapse: 'Collapse map'}
   return (
-    <div className={styles.mapPane}>
-      <CompactMap
-        routes={routes}
-        driverLocations={drivers}
-        locale={locale}
-        hideFooter
-        expandLabel={copy.expand}
-        collapseLabel={copy.collapse}
-      />
-    </div>
+    <>
+      <div className={styles.mapPane}>
+        <CompactMap
+          routes={routes}
+          driverLocations={drivers}
+          locale={locale}
+          hideFooter
+          expandLabel={copy.expand}
+          collapseLabel={copy.collapse}
+        />
+        <button className={styles.detailsButton} onClick={() => setDetailsOpen(true)} title="Open detailed map">
+          <MapIcon size={18} />
+          {locale === 'es' ? 'Detalle' : locale === 'fr' ? 'Détail' : 'Details'}
+        </button>
+      </div>
+
+      {detailsOpen && (
+        <div className={styles.detailsModal}>
+          <div className={styles.detailsOverlay} onClick={() => setDetailsOpen(false)} />
+          <div className={styles.detailsContent}>
+            <div className={styles.detailsHeader}>
+              <h2>{locale === 'es' ? 'Mapa operativo' : locale === 'fr' ? 'Carte opérationnelle' : 'Operations map'}</h2>
+              <button className={styles.closeButton} onClick={() => setDetailsOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.detailsBody}>
+              <CompactMap
+                routes={routes}
+                driverLocations={drivers}
+                locale={locale}
+                hideFooter={false}
+                expandLabel={copy.expand}
+                collapseLabel={copy.collapse}
+              />
+            </div>
+            <div className={styles.detailsInfo}>
+              <div className={styles.infoPanel}>
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>{locale === 'es' ? 'Total de rutas' : locale === 'fr' ? 'Nombre total d\'itinéraires' : 'Total routes'}</span>
+                  <span className={styles.value}>{routes.length}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>{locale === 'es' ? 'En progreso' : locale === 'fr' ? 'En cours' : 'In progress'}</span>
+                  <span className={styles.value}>{routes.filter(r => r.status === 'active' || r.status === 'paused').length}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>{locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminé' : 'Completed'}</span>
+                  <span className={styles.value}>{routes.filter(r => r.status === 'completed').length}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>{locale === 'es' ? 'Pendientes' : locale === 'fr' ? 'En attente' : 'Pending'}</span>
+                  <span className={styles.value}>{routes.filter(r => r.status === 'pending' || r.status === 'draft').length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
