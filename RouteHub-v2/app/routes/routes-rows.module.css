@@ -21,6 +21,7 @@
   padding:4px 0;
   background:var(--rh-soft-blue);color:var(--rh-blue);font-size:11px;font-weight:900;
 }
+.row[data-status='completed'] .num{background:#dcf4e8;color:#334155}
 .body{min-width:0;display:grid;gap:4px}
 .topline{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
 .topline small{color:var(--rh-ink-soft);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
