@@ -143,10 +143,10 @@
    details, however tall it grows once "More details" is open) instead of
    in a separate row under the whole two-column layout - that used to add
    height past the panel's available space and force a scrollbar. */
-.formFooter{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;padding:6px 0 0;margin-top:auto;border-top:none;flex-shrink:0}
+.formFooter{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap;padding:4px 0 0;margin-top:auto;border-top:none;flex-shrink:0}
 .footerNotice{display:none}
-.footerActions{display:flex;gap:5px;width:100%}
-.footerActions .secondaryButton,.footerActions .publishButton{flex:1;margin:0;min-height:36px;padding:0 10px;font-size:12px}
+.footerActions{display:flex;gap:4px;width:100%}
+.footerActions .secondaryButton,.footerActions .publishButton{flex:1;margin:0;min-height:32px;padding:0 8px;font-size:11px;border-radius:10px}
 
 /* Tablet only, layered on top of the base rules above rather than editing
    them - desktop (mouse/trackpad, any window width) never matches this,
