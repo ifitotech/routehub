@@ -548,11 +548,10 @@ html body:has(.driver-v3-root) .driver-v3-root > main > header.appHeader {
 /* Driver owns its navigation geometry. The app-wide .nav rule is a floating
    desktop bar and its safe-area offset leaves a gap below the mobile bar. */
 html body:has(.driver-v3-root) .driver-v3-root > main > nav {
-  position: relative !important;
-  inset: auto !important;
+  position: fixed !important;
+  inset: auto 0 0 0 !important;
   transform: none !important;
   left: auto !important;
-  bottom: auto !important;
   width: 100% !important;
   max-width: none !important;
   border-radius: 0 !important;
@@ -562,4 +561,9 @@ html body:has(.driver-v3-root) .driver-v3-root > main > nav {
   box-shadow: none !important;
   opacity: 1 !important;
   box-sizing: border-box !important;
+  z-index: 300 !important;
+}
+
+html body:has(.driver-v3-root) .driver-v3-root > main {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
 }
