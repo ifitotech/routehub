@@ -153,9 +153,10 @@
   display:grid;
   grid-template-columns:44px minmax(0,1fr) 44px;
   align-items:center;
-  position:sticky;
+  position:relative;
   top:0;
   background:#0F1D35;
+  background-color:#0F1D35;
   color:#fff;
   height:calc(48px + env(safe-area-inset-top));
   min-height:calc(48px + env(safe-area-inset-top));
@@ -166,6 +167,10 @@
   filter:none !important;
   text-shadow:none !important;
   -webkit-font-smoothing:antialiased;
+  isolation:isolate;
+  contain:paint;
+  transform:none;
+  will-change:auto;
 }
 /* The header itself stays the plain flat bar every Driver screen uses -
    an earlier attempt (Stage 30/33) extended the map's own gradient up into
@@ -275,6 +280,7 @@
    regardless of theme and would otherwise keep winning here. */
 :global(html[data-theme='light']) :global(.driver-v3-root) .appHeader{
   background:#fff !important;
+  background-color:#fff !important;
   color:#0B1F3A !important;
   box-shadow:0 1px 0 rgba(11,31,58,.08);
 }
