@@ -510,3 +510,11 @@ html[data-theme='dark'] body:has(.driver-v3-root) .driver-v3-root > main > heade
 html[data-theme='dark'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand span {
   color: #fff !important;
 }
+
+/* Prevent Settings/stack screens from counting the iOS safe-area twice
+   (once in min-height and again as content-box padding). */
+html body:has(.driver-v3-root) .driver-v3-root > main > header.appHeader {
+  box-sizing: border-box !important;
+  height: calc(56px + env(safe-area-inset-top)) !important;
+  min-height: calc(56px + env(safe-area-inset-top)) !important;
+}
