@@ -502,6 +502,23 @@ html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav 
   background-color: #fff !important;
   border-top: 1px solid #dfe7f1 !important;
 }
+
+/* iOS draws the status area from html/body, outside the header box. Match
+   that canvas to the header exactly so the two cannot read as separate bars. */
+html[data-theme='dark']:has(.driver-v3-root),
+html[data-theme='dark']:has(.driver-v3-root) body,
+html[data-theme='dark'] body:has(.driver-v3-root) {
+  background: #0f1d35 !important;
+  background-color: #0f1d35 !important;
+  background-image: none !important;
+}
+html[data-theme='light']:has(.driver-v3-root),
+html[data-theme='light']:has(.driver-v3-root) body,
+html[data-theme='light'] body:has(.driver-v3-root) {
+  background: #fff !important;
+  background-color: #fff !important;
+  background-image: none !important;
+}
 html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand,
 html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand span {
   color: #0b1f3a !important;
