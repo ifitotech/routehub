@@ -2,8 +2,7 @@
    Today surface.  The screen marker comes from DriverV3Shell, keeping the
    refresh scoped to Driver rather than affecting Manager/Admin UI. */
 .driver-v3-root [data-driver-screen='history'],
-.driver-v3-root [data-driver-screen='truck'],
-.driver-v3-root [data-driver-screen='more'] {
+.driver-v3-root [data-driver-screen='truck'] {
   background:
     radial-gradient(circle at 88% 4%, rgba(71,151,255,.12), transparent 31%),
     var(--rh-page-bg, #f7f9fc);
@@ -56,11 +55,6 @@
   background:linear-gradient(145deg,rgba(59,142,255,.13),var(--rh-card-bg,#fff));
 }
 
-.driver-v3-root [data-driver-screen='more'] {
-  /* More/Profile begins at the same edge as Today, Route and Truck. */
-  padding-top:0;
-}
-
 .driver-v3-root [data-driver-screen='more'] [class*='profileHero'],
 .driver-v3-root [data-driver-screen='more'] [class*='profileSection'] {
   border-color:var(--rh-border,rgba(101,162,255,.2));
@@ -69,8 +63,7 @@
 }
 
 html:not([data-theme='light']) .driver-v3-root [data-driver-screen='history'],
-html:not([data-theme='light']) .driver-v3-root [data-driver-screen='truck'],
-html:not([data-theme='light']) .driver-v3-root [data-driver-screen='more'] {
+html:not([data-theme='light']) .driver-v3-root [data-driver-screen='truck'] {
   background:radial-gradient(circle at 88% 4%,rgba(41,124,255,.16),transparent 31%),var(--rh-page-bg,#0b1728);
 }
 

@@ -62,7 +62,7 @@ export default function DriverV3Shell({
           minHeight: 'calc(48px + env(safe-area-inset-top))',
           padding: 'env(safe-area-inset-top) 16px 0',
         }}
-        className={`${styles.header} ${styles.appHeader} ${active === 'today' ? styles.headerToday : ''}`}
+        className={`${styles.header} ${styles.appHeader}`}
       >
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
