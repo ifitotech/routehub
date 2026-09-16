@@ -7,9 +7,15 @@
   height:100svh;
   height:100dvh;
   height:calc(var(--app-1vh, 1dvh) * 100);
+  /* The authoritative one: <body> is pinned position:fixed;inset:0 to the
+     real viewport edges whenever .driver-v3-root is present (v3-app.css),
+     so it has a definite box - 100% of that box can't disagree with the
+     screen the way 100dvh sometimes does after a route change. */
+  height:100%;
   max-height:100svh;
   max-height:100dvh;
   max-height:calc(var(--app-1vh, 1dvh) * 100);
+  max-height:100%;
   background:#f7f9fc;
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
