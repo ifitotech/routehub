@@ -411,17 +411,3 @@
 :global(html[data-theme='dark']) .mapPreview :global(.openstreet-route-empty),:global(html[data-theme='dark']) .mapEmpty{background:#102036;color:#b9c9dd}
 :global(html[data-theme='dark']) .loadingHero,:global(html[data-theme='dark']) .loadingProgress,:global(html[data-theme='dark']) .loadingNext{border-color:#31445f;background:linear-gradient(90deg,#18263b 20%,#21334b 50%,#18263b 80%)}
 
-/* Keep this reservation after the compact-phone media rules above; those
-   rules use the .page shorthand and must not put the started CTA back under
-   the fixed navigation. */
-.page.pageStarted{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
-
-/* The hero can still be taller than the shell's grid row because the map
-   intentionally underlaps the content. Keep the started CTA in the visible
-   action zone above the fixed nav instead of allowing that overflow to be
-   painted over by the nav surface. This is visual-only; its layout box and
-   click target remain unchanged. */
-.page.pageStarted .hero{position:relative;z-index:3;transform:translateY(-40px)}
-/* Give the map a little more visual headroom in the started state without
-   moving the action row or CTA that the driver needs to reach. */
-.page.pageStarted .hero>.routeGlyphHostCompact{transform:translateY(-30px)}
