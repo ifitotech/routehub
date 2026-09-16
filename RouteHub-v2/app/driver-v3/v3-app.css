@@ -1,7 +1,6 @@
 /* Driver V3 installed-app surface */
 
 .driver-v3-root {
-  position: relative;
   height: 100%;
   width: 100%;
   min-height: 100%;
@@ -441,10 +440,7 @@ html[data-theme='light'] .driver-v3-root .muted {
    paint layer so iOS cannot show the page through a translucent seam. */
 html body:has(.driver-v3-root) .driver-v3-root > main > header,
 html body:has(.driver-v3-root) .driver-v3-root > main > header::before,
-html body:has(.driver-v3-root) .driver-v3-root > main > header::after,
-html body:has(.driver-v3-root) .driver-v3-root > main > nav,
-html body:has(.driver-v3-root) .driver-v3-root > main > nav::before,
-html body:has(.driver-v3-root) .driver-v3-root > main > nav::after {
+html body:has(.driver-v3-root) .driver-v3-root > main > header::after {
   background: #0f1d35 !important;
   background-color: #0f1d35 !important;
   background-image: none !important;
@@ -457,10 +453,7 @@ html body:has(.driver-v3-root) .driver-v3-root > main > nav::after {
 }
 html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header,
 html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::before,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::after,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav::before,
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav::after {
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header::after {
   background: #fff !important;
   background-color: #fff !important;
 }
@@ -486,22 +479,10 @@ html body:has(.driver-v3-root) .driver-v3-root > main > header {
   color: #fff !important;
   border: 0 !important;
 }
-html body:has(.driver-v3-root) .driver-v3-root > main > nav {
-  background: #14243a !important;
-  background-color: #14243a !important;
-  border-top: 0 !important;
-  min-height: calc(64px + env(safe-area-inset-bottom)) !important;
-  padding-bottom: env(safe-area-inset-bottom) !important;
-}
 html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header {
   background: #fff !important;
   background-color: #fff !important;
   color: #0b1f3a !important;
-}
-html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav {
-  background: #fff !important;
-  background-color: #fff !important;
-  border-top: 1px solid #dfe7f1 !important;
 }
 
 /* iOS draws the status area from html/body, outside the header box. Match
@@ -546,32 +527,13 @@ html body:has(.driver-v3-root) .driver-v3-root > main > header.appHeader {
   will-change: auto !important;
 }
 
-/* Driver owns its navigation geometry. The app-wide .nav rule is a floating
-   desktop bar and its safe-area offset leaves a gap below the mobile bar.
-   position:absolute against .driver-v3-root (position:relative, its own
-   box already guaranteed identical to the real screen), not fixed: <body>
-   is already position:fixed;inset:0 whenever .driver-v3-root is present,
-   and a position:fixed element nested inside another fixed one is a real,
-   reproducible WebKit inconsistency in installed/standalone PWAs - it can
-   compute against a stale or offset box instead of the true screen edge,
-   which is exactly the gap under this bar that kept surviving every
-   change to the class-based .nav rule, because THIS !important rule (not
-   that one) was the one actually winning the whole time. */
-html body:has(.driver-v3-root) .driver-v3-root > main > nav {
-  position: absolute !important;
-  inset: auto 0 0 0 !important;
-  transform: none !important;
-  width: 100% !important;
-  max-width: none !important;
-  border-radius: 0 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
-  box-shadow: none !important;
-  opacity: 1 !important;
-  box-sizing: border-box !important;
-  z-index: 300 !important;
-}
+/* No rules for `main > nav` here on purpose. The bottom bar is styled
+   entirely by the .nav class in driver-v3-a.module.css, where it is simply
+   the last row of .shell's grid. This file had none of these until today,
+   when a parallel set of tag-based !important overrides (position, inset,
+   min-height, padding-bottom, background) was added on top of that class -
+   they fought it for the rest of the day and are what lifted the bar off
+   the bottom edge. The class alone is the whole story again. */
 
 /* No padding-bottom here: .nav is a normal last row of this element's own
    grid (grid-template-rows in driver-v3-a.module.css's .shell), not a

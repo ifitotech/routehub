@@ -6,21 +6,13 @@
   --border:#dde5ee;
   height:100svh;
   height:100dvh;
-  height:calc(var(--app-1vh, 1dvh) * 100);
-  /* The authoritative one: <body> is pinned position:fixed;inset:0 to the
-     real viewport edges whenever .driver-v3-root is present (v3-app.css),
-     so it has a definite box - 100% of that box can't disagree with the
-     screen the way 100dvh sometimes does after a route change. */
-  height:100%;
   max-height:100svh;
   max-height:100dvh;
-  max-height:calc(var(--app-1vh, 1dvh) * 100);
-  max-height:100%;
   background:#f7f9fc;
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
   display:grid;
-  grid-template-rows:auto minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) auto;
   overflow:hidden;
   box-sizing:border-box;
   overscroll-behavior:none;
@@ -56,27 +48,22 @@
   max-width:680px;
   width:100%;
   margin:0 auto;
-  padding:16px 18px calc(28px + 64px + env(safe-area-inset-bottom));
+  padding:16px 18px 28px;
   padding-left:max(16px,env(safe-area-inset-left));
   padding-right:max(16px,env(safe-area-inset-right));
   box-sizing:border-box;
 }
 
-/* Anchored to .driver-v3-root (position:relative, v3-app.css), not the
-   viewport directly: a position:fixed element nested inside another
-   position:fixed one (<body> is fixed;inset:0 whenever .driver-v3-root
-   is present) is a known WebKit inconsistency in installed/standalone
-   PWAs specifically - it can compute against a stale or offset box
-   instead of the true screen edge, leaving a gap under the bar that
-   never shows up in a plain Safari tab. position:absolute against a
-   plain position:relative ancestor doesn't nest fixed contexts at all,
-   so there's nothing left for WebKit to get wrong here. */
+/* Plain last row of .shell's grid - no fixed/absolute positioning at all.
+   This is what shipped Monday, when the bar sat flush on the real screen
+   edge. Every later attempt to "anchor" it (fixed, then absolute, plus
+   assorted height math) was solving a problem that positioning itself
+   had introduced: the grid's own last row already ends exactly where
+   .shell ends, and .shell ends at the bottom of the screen. */
 .nav{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  z-index:300;
+  position:relative;
+  z-index:20;
+  flex-shrink:0;
   height:calc(64px + env(safe-area-inset-bottom));
   padding:4px 8px env(safe-area-inset-bottom);
   padding-left:max(8px,env(safe-area-inset-left));
