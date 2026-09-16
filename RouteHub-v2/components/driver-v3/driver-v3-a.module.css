@@ -20,7 +20,7 @@
   color:var(--navy);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
   display:grid;
-  grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-rows:auto minmax(0,1fr);
   overflow:hidden;
   box-sizing:border-box;
   overscroll-behavior:none;
@@ -56,16 +56,22 @@
   max-width:680px;
   width:100%;
   margin:0 auto;
-  padding:16px 18px 28px;
+  padding:16px 18px calc(28px + 64px + env(safe-area-inset-bottom));
   padding-left:max(16px,env(safe-area-inset-left));
   padding-right:max(16px,env(safe-area-inset-right));
   box-sizing:border-box;
 }
 
+/* Fixed to the real viewport edge, not a row in .shell's own grid: no
+   parent height/padding math (dvh quirks, padding added elsewhere,
+   anything) can ever leave this short of the true bottom edge again -
+   its position doesn't depend on any of that anymore. */
 .nav{
-  position:relative;
-  z-index:20;
-  flex-shrink:0;
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:300;
   height:calc(64px + env(safe-area-inset-bottom));
   padding:4px 8px env(safe-area-inset-bottom);
   padding-left:max(8px,env(safe-area-inset-left));
