@@ -71,7 +71,10 @@
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:4px;
-  background:var(--rh-nav-bg,#0a1023);
+  background:var(--rh-nav-bg,#14243a);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  filter:none;
   border-top:1px solid var(--rh-nav-border,rgba(124,173,255,.13));
   box-shadow:none;
   box-sizing:border-box;
