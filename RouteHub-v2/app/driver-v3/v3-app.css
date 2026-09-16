@@ -502,3 +502,11 @@ html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > nav 
   background-color: #fff !important;
   border-top: 1px solid #dfe7f1 !important;
 }
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand,
+html[data-theme='light'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand span {
+  color: #0b1f3a !important;
+}
+html[data-theme='dark'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand,
+html[data-theme='dark'] body:has(.driver-v3-root) .driver-v3-root > main > header .headerBrand span {
+  color: #fff !important;
+}
