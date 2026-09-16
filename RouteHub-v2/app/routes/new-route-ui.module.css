@@ -30,9 +30,9 @@
    together down the left column, Assignment fills the right column on its
    own timeline. This is what stops Route details from ever having to wait
    on Assignment's height - each column just flows independently. */
-.mainGrid{display:flex;gap:7px;min-height:0}
+.mainGrid{display:flex;gap:7px;min-height:0;width:100%}
 @media(min-width:640px){.mainGrid{flex-direction:row}}
-.mainLeftCol{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;min-height:0}
+.mainLeftCol{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;min-height:0;width:100%}
 .driverAvail{display:inline-flex;align-items:center;gap:6px;margin-top:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--rh-success-soft);color:#18A566;font-size:11px;font-weight:650}
 .statusGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:8px}
 .statusCard{padding:7px;border:1px solid var(--rh-line);border-radius:9px;background:#fff}
