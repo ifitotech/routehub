@@ -31,7 +31,7 @@
   background:var(--rh-soft-blue);color:var(--rh-blue);
   font-size:10px;font-weight:800;text-transform:uppercase;white-space:nowrap;
 }
-.status[data-status='completed']{background:var(--rh-success-soft);color:var(--rh-success)}
+.status[data-status='completed']{background:var(--rh-success-soft);color:#334155}
 .status[data-status='issue']{background:var(--rh-danger-soft);color:var(--rh-danger)}
 .status[data-status='paused'],.status[data-status='active']{background:var(--rh-soft-blue);color:var(--rh-blue-700)}
 .status[data-status='cancelled']{background:var(--rh-surface-2);color:var(--rh-ink-soft)}
