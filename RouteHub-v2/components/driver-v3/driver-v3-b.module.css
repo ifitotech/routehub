@@ -157,8 +157,10 @@
   top:0;
   background:#0F1D35;
   color:#fff;
-  min-height:calc(48px + env(safe-area-inset-top));
-  padding:env(safe-area-inset-top) 8px 0;
+  height:calc(56px + env(safe-area-inset-top));
+  min-height:calc(56px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 16px 0;
+  box-sizing:border-box;
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
   filter:none !important;
@@ -277,10 +279,10 @@
    wordmark) instead of forcing the dark bar in both themes. Needs the
    same !important weight as the rules above, since those apply
    regardless of theme and would otherwise keep winning here. */
-:global(html[data-theme='light']) .driver-v3-root .appHeader{
-  background:var(--rh-navy,#fff) !important;
-  color:var(--rh-text,#0B1F3A) !important;
-  box-shadow:0 1px 0 var(--rh-border,rgba(11,31,58,.08));
+:global(html[data-theme='light']) :global(.driver-v3-root) .appHeader{
+  background:#fff !important;
+  color:#0B1F3A !important;
+  box-shadow:0 1px 0 rgba(11,31,58,.08);
 }
 :global(html[data-theme='light']) :global(.driver-v3-root) .appHeader.headerToday{
   background:var(--today-header,#fff)!important;
@@ -293,12 +295,13 @@
   color:#0B1F3A!important;
   stroke:#0B1F3A!important;
 }
-:global(html[data-theme='light']) .driver-v3-root .headerBrand{color:var(--rh-text,#0B1F3A) !important}
-:global(html[data-theme='light']) .driver-v3-root .headerIcon,
-:global(html[data-theme='light']) .driver-v3-root .appHeader button.headerIcon,
-:global(html[data-theme='light']) .driver-v3-root .appHeader a.headerIcon{color:var(--rh-text,#0B1F3A) !important}
-:global(html[data-theme='light']) .driver-v3-root .appHeader button.headerIcon svg,
-:global(html[data-theme='light']) .driver-v3-root .headerIcon svg{color:var(--rh-text,#0B1F3A) !important;stroke:var(--rh-text,#0B1F3A) !important}
+:global(html[data-theme='light']) :global(.driver-v3-root) .headerBrand,
+:global(html[data-theme='light']) :global(.driver-v3-root) .headerBrand span{color:#0B1F3A !important}
+:global(html[data-theme='light']) :global(.driver-v3-root) .headerIcon,
+:global(html[data-theme='light']) :global(.driver-v3-root) .appHeader button.headerIcon,
+:global(html[data-theme='light']) :global(.driver-v3-root) .appHeader a.headerIcon{color:#0B1F3A !important}
+:global(html[data-theme='light']) :global(.driver-v3-root) .appHeader button.headerIcon svg,
+:global(html[data-theme='light']) :global(.driver-v3-root) .headerIcon svg{color:#0B1F3A !important;stroke:#0B1F3A !important}
 
 
 /* .content itself lives in driver-v3-a.module.css - it is the class that
