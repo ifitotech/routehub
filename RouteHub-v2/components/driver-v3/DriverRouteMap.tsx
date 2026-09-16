@@ -293,6 +293,9 @@ function LiveDriverRouteMap({route, driverFix, locale = 'en'}: {
         padding: {top, bottom: Math.max(72, rect.height - visibleBottom), left: side, right: side},
         duration: 0,
       })
+      // Show one additional zoom level of surrounding context while keeping
+      // the route endpoints inside the responsive padded viewport.
+      map.setZoom(Math.max(1, map.getZoom() - 1))
     }
     const observer = new ResizeObserver(layout)
     observer.observe(host)
