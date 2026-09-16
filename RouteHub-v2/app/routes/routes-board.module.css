@@ -9,27 +9,29 @@
 
 .detailsButton {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
-  z-index: 100;
+  bottom: 16px;
+  right: 16px;
+  z-index: 999;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-  color: #334155;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 140ms ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+  pointer-events: auto;
 }
 
 .detailsButton:hover {
-  background: #f5f5f5;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
 }
 
 .detailsModal {
