@@ -454,6 +454,9 @@ export default function DriverNavigationMap({
             :navState==='near'
               ?{big:labels.near,street:null,secondary:arrivalSummary}
               :{big:instructionDistance||labels.now,street:guidingStreetLine,secondary:guidingActionLine}
+  const gpsMeta=deviceLocation&&Number.isFinite(deviceLocation.accuracy)
+    ?`${locale==='es'?'GPS ±':'GPS ±'}${Math.round(deviceLocation.accuracy)} m · ${Math.max(0,Math.round((Date.now()-deviceLocation.updatedAt)/1000))}${locale==='es'?' s':'s'}`
+    :null
   const destinationLabel=validStops[0]?.label||validStops[0]?.address||labels.destination
   const destinationAddress=validStops[0]?.address||''
   const shortAddress=(destinationAddress||destinationLabel).split(',')[0]?.trim()||destinationLabel
@@ -488,6 +491,7 @@ export default function DriverNavigationMap({
           <strong className={styles.bigLine}>{stateCopy.big}</strong>
           {stateCopy.street&&<span className={styles.streetLine}>{stateCopy.street}</span>}
           {stateCopy.secondary&&<span className={styles.actionLine}>{stateCopy.secondary}</span>}
+          {gpsMeta&&<span className={styles.gpsMeta}>{gpsMeta}</span>}
         </div>
         <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={20}/>:<VolumeX size={20}/>}</button>
         {afterManeuver&&afterLabel&&(
