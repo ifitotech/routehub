@@ -3,7 +3,7 @@ import type {Metadata, Viewport} from 'next'
 export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
-    title: 'RouteHub',
+    title: 'RouteHub Driver',
     statusBarStyle: 'default',
   },
 }

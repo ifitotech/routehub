@@ -34,7 +34,7 @@ export default function PwaRegister() {
     // Version the script URL as well as the cache name. Some iOS PWA
     // installations keep the old registration when only the script body
     // changes, so the query forces a fresh worker check.
-    navigator.serviceWorker.register('/sw.js?v=27', {updateViaCache: 'none'}).then(value => {
+    navigator.serviceWorker.register('/sw.js?v=28', {updateViaCache: 'none'}).then(value => {
       if (!active) return
       registration = value
       void value.update()

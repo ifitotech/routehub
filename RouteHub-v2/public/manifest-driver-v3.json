@@ -1,7 +1,7 @@
 {
   "id": "/driver",
   "name": "RouteHub Driver",
-  "short_name": "RouteHub",
+  "short_name": "RouteHub Driver",
   "description": "Driver routes, proof of delivery and truck tools.",
   "start_url": "/driver?source=pwa",
   "scope": "/",
@@ -18,22 +18,10 @@
   ],
   "icons": [
     {
-      "src": "/routehub-driver-new.jpg?v=20",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/routehub-driver-new.jpg?v=20",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/routehub-driver-new.jpg?v=19",
+      "src": "/routehub-driver-new.jpg?v=21",
       "sizes": "1254x1254",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "shortcuts": [
@@ -43,9 +31,9 @@
       "url": "/driver",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg?v=20",
-          "sizes": "1024x1024",
-          "type": "image/png"
+          "src": "/routehub-driver-new.jpg?v=21",
+          "sizes": "1254x1254",
+          "type": "image/jpeg"
         }
       ]
     },
@@ -55,9 +43,9 @@
       "url": "/driver/map",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg?v=20",
-          "sizes": "1024x1024",
-          "type": "image/png"
+          "src": "/routehub-driver-new.jpg?v=21",
+          "sizes": "1254x1254",
+          "type": "image/jpeg"
         }
       ]
     },
@@ -67,9 +55,9 @@
       "url": "/driver/route",
       "icons": [
         {
-          "src": "/routehub-driver-new.jpg?v=20",
-          "sizes": "1024x1024",
-          "type": "image/png"
+          "src": "/routehub-driver-new.jpg?v=21",
+          "sizes": "1254x1254",
+          "type": "image/jpeg"
         }
       ]
     }

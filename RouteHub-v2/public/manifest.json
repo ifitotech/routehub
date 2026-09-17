@@ -1,22 +1,22 @@
 {
-  "id": "/",
-  "name": "RouteHub",
-  "short_name": "RouteHub",
-  "description": "Smarter routes. Better deliveries.",
+  "id": "/driver",
+  "name": "RouteHub Driver",
+  "short_name": "RouteHub Driver",
+  "description": "Driver routes, navigation and proof of delivery.",
   "start_url": "/login?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#f8fafc",
-  "theme_color": "#2563eb",
+  "background_color": "#0F1D35",
+  "theme_color": "#0F1D35",
   "lang": "en",
   "categories": ["business", "productivity", "navigation"],
   "icons": [
-    {"src": "/routehub-regular-new.jpg", "sizes": "1024x1024", "type": "image/jpeg", "purpose": "any maskable"}
+    {"src": "/routehub-driver-new.jpg?v=21", "sizes": "1254x1254", "type": "image/jpeg", "purpose": "any"}
   ],
   "shortcuts": [
-    {"name": "My routes", "short_name": "Routes", "url": "/driver", "icons": [{"src": "/routehub-driver-new.jpg?v=19", "sizes": "1254x1254", "type": "image/jpeg"}]},
-    {"name": "Dispatch", "short_name": "Dispatch", "url": "/manager", "icons": [{"src": "/routehub-regular-new.jpg", "sizes": "1024x1024", "type": "image/jpeg"}]}
+    {"name": "Today", "short_name": "Today", "url": "/driver", "icons": [{"src": "/routehub-driver-new.jpg?v=21", "sizes": "1254x1254", "type": "image/jpeg"}]},
+    {"name": "Routes", "short_name": "Routes", "url": "/driver/route", "icons": [{"src": "/routehub-driver-new.jpg?v=21", "sizes": "1254x1254", "type": "image/jpeg"}]}
   ]
 }

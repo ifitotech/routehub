@@ -1,7 +1,7 @@
 // Bump this whenever the worker's caching contract changes. Old caches are
 // removed during activate so an installed PWA cannot keep stale shell assets.
-const STATIC_CACHE = 'routehub-static-v27'
-const STATIC_ASSETS = ['/manifest.json', '/manifest-driver.json', '/manifest-driver-v3.json', '/routehub-regular-new.jpg', '/routehub-driver-new.jpg?v=20']
+const STATIC_CACHE = 'routehub-static-v28'
+const STATIC_ASSETS = ['/manifest.json?v=21', '/manifest-driver.json?v=21', '/manifest-driver-v3.json', '/routehub-driver-new.jpg?v=21']
 
 self.addEventListener('install', event => {
   self.skipWaiting()
@@ -31,8 +31,8 @@ self.addEventListener('push', event => {
   const title = data.title || 'RouteHub'
   const options = {
     body: data.body || 'You have a new route update.',
-    icon: '/routehub-driver-new.jpg?v=20',
-    badge: '/routehub-driver-new.jpg?v=20',
+    icon: '/routehub-driver-new.jpg?v=21',
+    badge: '/routehub-driver-new.jpg?v=21',
     tag: data.tag || 'routehub-update',
     renotify: true,
     data: {href: data.href || '/driver'},

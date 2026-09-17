@@ -14,3 +14,15 @@ test('installed RouteHub opens the login session gate instead of forcing the pub
   assert.match(login, /Opening your workspace…/)
   assert.match(login, /workspaceForStrictRole\(access\.role\)/)
 })
+
+test('the install identity is RouteHub Driver before authentication', () => {
+  const manifest = JSON.parse(read('../public/manifest.json'))
+  const rootLayout = read('../app/layout.tsx')
+
+  assert.equal(manifest.id, '/driver')
+  assert.equal(manifest.name, 'RouteHub Driver')
+  assert.equal(manifest.icons[0].src, '/routehub-driver-new.jpg?v=21')
+  assert.equal(manifest.icons[0].type, 'image/jpeg')
+  assert.match(rootLayout, /applicationName: 'RouteHub Driver'/)
+  assert.match(rootLayout, /routehub-driver-new\.jpg\?v=21/)
+})

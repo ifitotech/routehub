@@ -12,12 +12,15 @@ import TermsGate from './terms-gate'
 import AppErrorListener from './app-error-listener'
 
 export const metadata = {
-  title: {default: 'RouteHub — Simple Route Management for Your Team', template: '%s · RouteHub'},
-  description: 'Create routes, assign drivers, track progress and keep every stop updated with RouteHub.',
-  applicationName: 'RouteHub',
-  manifest: '/manifest.json',
-  appleWebApp: {capable: true, title: 'RouteHub', statusBarStyle: 'default' as const},
-  icons: {icon: '/routehub-regular-new.jpg', apple: '/routehub-regular-new.jpg'},
+  title: {default: 'RouteHub Driver — Routes and navigation', template: '%s · RouteHub Driver'},
+  description: 'RouteHub Driver routes, navigation and proof of delivery.',
+  // This layout also serves /login.  A PWA gets its name and home-screen icon
+  // when it is installed, not after authentication, so the driver identity
+  // must be present before a driver signs in.
+  applicationName: 'RouteHub Driver',
+  manifest: '/manifest.json?v=21',
+  appleWebApp: {capable: true, title: 'RouteHub Driver', statusBarStyle: 'default' as const},
+  icons: {icon: '/routehub-driver-new.jpg?v=21', apple: '/routehub-driver-new.jpg?v=21'},
 }
 
 export const viewport = {

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   applicationName: 'RouteHub Driver',
   // Version the manifest URL so installed PWAs re-read orientation/theme
   // metadata instead of retaining the browser's previous manifest snapshot.
-  manifest: '/manifest-driver.json?v=2',
+  manifest: '/manifest-driver.json?v=21',
   // Keep the system/status area opaque. Translucent status bars let iOS tint
   // the header and produce the haze/colour veil visible in the PWA capture.
   appleWebApp: {
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
   },
   icons: {
-    icon: '/routehub-driver-new.jpg?v=20',
-    apple: '/routehub-driver-new.jpg?v=20',
+    icon: '/routehub-driver-new.jpg?v=21',
+    apple: '/routehub-driver-new.jpg?v=21',
   },
   formatDetection: {
     telephone: true,
