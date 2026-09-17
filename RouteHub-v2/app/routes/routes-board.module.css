@@ -7,34 +7,6 @@
   position: relative;
 }
 
-.detailsButton {
-  position: fixed;
-  bottom: 120px;
-  right: 20px;
-  z-index: 999;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 18px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 140ms ease;
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-  pointer-events: auto;
-  white-space: nowrap;
-}
-
-.detailsButton:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
-  transform: translateY(-3px);
-}
-
 .detailsModal {
   position: fixed;
   inset: 0;
@@ -99,39 +71,270 @@
 .detailsBody {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  display: flex;
+  overflow: hidden;
 }
 
-.detailsInfo {
-  padding: 16px 20px;
-  border-top: 1px solid #e5e7eb;
+.detailsMap {
+  flex: 1.4;
+  min-width: 0;
+  position: relative;
+}
+
+.detailsMap > div {
+  height: 100%;
+}
+
+/* The list is the point of this modal - a fixed side column that scrolls on
+   its own, so a long route list never pushes the map out of view or forces
+   the whole modal to grow past the viewport. */
+.detailsList {
+  flex: 1;
+  min-width: 280px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-left: 1px solid #e5e7eb;
   background: #f9fafb;
+  overflow-y: auto;
 }
 
 .infoPanel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  flex: none;
 }
 
 .infoItem {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
 }
 
 .infoItem .label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .infoItem .value {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   color: #0f1d35;
+}
+
+.listHeading {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.listEmpty {
+  margin: 0;
+  padding: 16px 0;
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+}
+
+.routeList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.routeItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.routeIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--rh-soft-blue, #e9f1fe);
+  color: var(--rh-blue, #1660f0);
+}
+
+.routeMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.routeTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.routeType {
+  font-size: 13px;
+  color: #0f1d35;
+}
+
+.statusBadge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--rh-soft-blue, #e9f1fe);
+  color: var(--rh-blue, #1660f0);
+}
+
+.statusBadge[data-status='active'] { background: #ecfdf5; color: #059669; }
+.statusBadge[data-status='paused'] { background: #fffbeb; color: #c27600; }
+.statusBadge[data-status='completed'] { background: #ecfdf5; color: #059669; }
+.statusBadge[data-status='issue'] { background: #fef2f2; color: #d6455d; }
+.statusBadge[data-status='draft'] { background: #f1f5f9; color: #64748b; }
+
+.routePath {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #334155;
+  font-size: 12px;
+}
+
+.routePath span:not(.routeArrow) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routeArrow {
+  flex: none;
+  color: #94a3b8;
+}
+
+.routeMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.priorityFlag {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.priorityFlag[data-priority='urgent'] { color: #d6455d; }
+.priorityFlag[data-priority='priority'] { color: #c27600; }
+
+.routeNotes {
+  margin: 2px 0 0;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .detailsBody {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .detailsMap {
+    flex: none;
+    height: 260px;
+  }
+
+  .detailsList {
+    max-width: none;
+    border-left: 0;
+    border-top: 1px solid #e5e7eb;
+    overflow-y: visible;
+  }
+}
+
+:global(html[data-theme='dark']) .detailsContent {
+  background: #0f172a;
+}
+
+:global(html[data-theme='dark']) .detailsHeader {
+  border-bottom-color: var(--rh-border, #30445f);
+}
+
+:global(html[data-theme='dark']) .detailsHeader h2 {
+  color: var(--rh-text, #f8fafc);
+}
+
+:global(html[data-theme='dark']) .closeButton {
+  color: var(--rh-text-secondary, #b7c5d9);
+}
+
+:global(html[data-theme='dark']) .closeButton:hover {
+  background: #1d3150;
+  color: var(--rh-text, #f8fafc);
+}
+
+:global(html[data-theme='dark']) .detailsList {
+  background: #142238;
+  border-left-color: var(--rh-border, #30445f);
+}
+
+:global(html[data-theme='dark']) .infoItem,
+:global(html[data-theme='dark']) .routeItem {
+  background: #18263b;
+  border-color: var(--rh-border, #30445f);
+}
+
+:global(html[data-theme='dark']) .infoItem .label,
+:global(html[data-theme='dark']) .listHeading,
+:global(html[data-theme='dark']) .listEmpty,
+:global(html[data-theme='dark']) .routeMeta,
+:global(html[data-theme='dark']) .routeArrow {
+  color: var(--rh-text-secondary, #b7c5d9);
+}
+
+:global(html[data-theme='dark']) .infoItem .value,
+:global(html[data-theme='dark']) .routeType,
+:global(html[data-theme='dark']) .routePath {
+  color: var(--rh-text, #f8fafc);
+}
+
+:global(html[data-theme='dark']) .routeNotes {
+  color: var(--rh-text-secondary, #b7c5d9);
+  border-top-color: var(--rh-border, #30445f);
+}
+
+@media (max-width: 760px) {
+  :global(html[data-theme='dark']) .detailsList {
+    border-top-color: var(--rh-border, #30445f);
+  }
 }
 
 /* CompactMap is deliberately fixed-height (190-210px) because on Add Route

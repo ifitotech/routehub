@@ -26,6 +26,10 @@ import {routeDateValue} from './routes-model'
 export default function Routes() {
   const w = useRoutesWorkspace()
   const [pane, setPane] = useState<'list' | 'map'>('list')
+  // Named mapDetailsOpen (not detailsOpen) - that name is already taken by
+  // the Add Route form's own "More details" toggle, an unrelated piece of
+  // state from useRoutesWorkspace() destructured further down.
+  const [mapDetailsOpen, setMapDetailsOpen] = useState(false)
   const [managing, setManaging] = useState(false)
   const [selectedDate, setSelectedDate] = useState(() => w.todayValue)
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
@@ -211,6 +215,7 @@ export default function Routes() {
     ]
     return allRoutesForDay.map((route: any) => ({
       id: route.id,
+      mission_type: route.mission_type,
       origin_address: route.origin_address,
       destination_address: route.destination_address,
       destination_name: route.destination_name,
@@ -221,6 +226,10 @@ export default function Routes() {
       status: route.status,
       driver_id: route.driver_id,
       position: route.position,
+      order_number: route.order_number,
+      notes: route.notes,
+      priority: route.priority,
+      scheduled_at: route.scheduled_at,
     }))
   }, [scopedRoutes])
 
@@ -288,7 +297,7 @@ export default function Routes() {
             routeCounts={routeCounts}
             pendingCounts={pendingCounts}
           />
-          <button type="button" className={styles.mapShortcut} onClick={() => setPane('map')} aria-label={locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}>
+          <button type="button" className={styles.mapShortcut} onClick={() => setMapDetailsOpen(true)} aria-label={locale==='es'?'Ver mapa':locale==='fr'?'Voir la carte':'View map'}>
             <Map size={16}/>
           </button>
         </div>
@@ -421,7 +430,7 @@ export default function Routes() {
               </div>
             )
           }
-          map={<RoutesBoard routes={open ? (planningMapRoutes || []) : mapRoutes} locale={locale} />}
+          map={<RoutesBoard routes={open ? (planningMapRoutes || []) : mapRoutes} locale={locale} c={c} driverIndex={driverIndex} detailsOpen={mapDetailsOpen} setDetailsOpen={setMapDetailsOpen} />}
           pane={pane}
           focus={open || Boolean(viewingRoute)}
         />

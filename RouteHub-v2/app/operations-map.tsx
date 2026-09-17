@@ -25,6 +25,10 @@ export type OperationsRoute={
  status?:string|null
  driver_id?:string|null
  position?:number|null
+ order_number?:string|null
+ notes?:string|null
+ priority?:string|null
+ scheduled_at?:string|null
 }
 
 export type OperationsDriverLocation={

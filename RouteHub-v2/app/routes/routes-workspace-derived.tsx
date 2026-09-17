@@ -163,7 +163,7 @@ export function useRoutesDerived() {
         const operational = ['published', 'pending', 'active', 'paused', 'issue', 'draft'].includes(route.status || '')
         return today && branch && operational
       })
-      .map(route => ({id: route.id, mission_type: route.mission_type, origin_address: route.origin_address, origin_lat: route.origin_lat, origin_lng: route.origin_lng, destination_address: route.destination_address, destination_name: route.destination_name, destination_lat: route.destination_lat, destination_lng: route.destination_lng, status: route.status, driver_id: route.driver_id, position: route.position}))
+      .map(route => ({id: route.id, mission_type: route.mission_type, origin_address: route.origin_address, origin_lat: route.origin_lat, origin_lng: route.origin_lng, destination_address: route.destination_address, destination_name: route.destination_name, destination_lat: route.destination_lat, destination_lng: route.destination_lng, status: route.status, driver_id: route.driver_id, position: route.position, order_number: route.order_number, notes: route.notes, priority: route.priority, scheduled_at: route.scheduled_at}))
     if (form.destination.trim()) {
       const origin = originMode === 'branch' ? originBranchCoordinate : originMode === 'previous' ? previousDestinationCoordinate : originMode === 'contact' ? originContactCoordinate : originMode === 'custom' ? selectedDriverGps : null
       const destination = form.type === 'return' ? returnBranchCoordinate : sanitizeCoordinate(selectedDestinationLocation?.coordinate || {lat: selectedContact?.latitude, lng: selectedContact?.longitude})
@@ -180,6 +180,10 @@ export function useRoutesDerived() {
         status: 'pending',
         driver_id: form.driver_id || null,
         position: configured.length + 1,
+        order_number: form.order_number || null,
+        notes: form.notes || null,
+        priority: form.priority,
+        scheduled_at: null,
       })
     }
     return configured
