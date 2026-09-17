@@ -252,21 +252,21 @@ export default function DriverV3Settings() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2>{locale === 'es' ? 'Navegación' : locale === 'fr' ? 'Navigation' : 'Navigation'}</h2>
-            <p>{locale === 'es' ? 'Elige dónde se abre la guía al iniciar una parada.' : locale === 'fr' ? 'Choisissez où le guidage s’ouvre au début d’un arrêt.' : 'Choose where guidance opens when starting a stop.'}</p>
+            <p>{locale === 'es' ? 'Simple abre la app de mapas del teléfono. RouteHub muestra la guía completa dentro de la app.' : locale === 'fr' ? 'Simple ouvre l’app de cartes du téléphone. RouteHub affiche le guidage complet dans l’app.' : 'Simple opens the phone maps app. RouteHub keeps full guidance inside the app.'}</p>
           </div>
           <div className={styles.row}>
             <span className={styles.rowIcon}><Navigation size={18} /></span>
             <span className={styles.rowCopy}>
-              <strong>{locale === 'es' ? 'Navegación dentro de RouteHub' : locale === 'fr' ? 'Navigation dans RouteHub' : 'RouteHub in-app navigation'}</strong>
-              <small>{locale === 'es' ? 'Apágala para abrir directamente Mapas en el teléfono.' : locale === 'fr' ? 'Désactivez-la pour ouvrir directement Maps sur le téléphone.' : 'Turn it off to open the phone’s maps app directly.'}</small>
+              <strong>{locale === 'es' ? 'Modo de navegación' : locale === 'fr' ? 'Mode de navigation' : 'Navigation mode'}</strong>
+              <small>{locale === 'es' ? 'El modo Simple es ideal para un flujo de un toque: abrir Mapas, regresar y completar la parada.' : locale === 'fr' ? 'Le mode Simple est idéal pour un flux en un geste : ouvrir Maps, revenir et terminer l’arrêt.' : 'Simple mode is ideal for a one-tap flow: open Maps, return, and complete the stop.'}</small>
             </span>
           </div>
           <div className={`${styles.choices} ${styles.twoChoices}`}>
             <button type="button" className={`${styles.choice} ${navigationPreference === 'external' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('external')}>
-              {copy.off}
+              {locale === 'es' ? 'Simple' : locale === 'fr' ? 'Simple' : 'Simple'}
             </button>
             <button type="button" className={`${styles.choice} ${navigationPreference === 'internal' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('internal')}>
-              {copy.on}
+              {locale === 'es' ? 'RouteHub' : locale === 'fr' ? 'RouteHub' : 'RouteHub'}
             </button>
           </div>
         </section>

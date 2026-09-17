@@ -33,20 +33,37 @@ function formatDuration(seconds: number, locale: string) {
     number, it joins this same row (its own circle + value, first in line)
     instead of sitting on its own separate line above/below, matching the
     reference's single "PO · distance · time" row. */
-export default function DriverRouteEstimate({route, locale = 'en', poNumber}: {route: any; locale?: string; poNumber?: string | null}) {
+const ESTIMATE_CACHE_TTL = 20 * 60 * 1000
+function estimateCacheKey(route: any, locale: string) {
+  return `routehub:route-estimate:v1:${route?.id || 'draft'}:${locale}:${route?.origin_lat || route?.origin_address || ''}:${route?.destination_lat || route?.destination_address || route?.destination_name || ''}`
+}
+function readEstimate(key: string): RouteEstimate | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || 'null')
+    return value && Date.now() - Number(value.savedAt) < ESTIMATE_CACHE_TTL ? value.estimate as RouteEstimate : null
+  } catch { return null }
+}
+function writeEstimate(key: string, estimate: RouteEstimate) {
+  try { localStorage.setItem(key, JSON.stringify({savedAt: Date.now(), estimate})) } catch { /* storage is optional */ }
+}
+
+export default function DriverRouteEstimate({route, locale = 'en', poNumber, simpleNavigation = false}: {route: any; locale?: string; poNumber?: string | null; simpleNavigation?: boolean}) {
   const [estimate, setEstimate] = useState<RouteEstimate | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
     const run = async () => {
+      const cacheKey = estimateCacheKey(route, locale)
+      const cached = readEstimate(cacheKey)
+      if (cached) { setEstimate(cached); setLoading(false); return }
       setLoading(true)
       try {
         const origin = point({lat: route?.origin_lat, lng: route?.origin_lng}) || (await geocodeAddress(String(route?.origin_address || ''), controller.signal))?.coordinate || null
         const destination = point({lat: route?.destination_lat, lng: route?.destination_lng}) || (await geocodeAddress(String(route?.destination_address || route?.destination_name || ''), controller.signal))?.coordinate || null
         if (!origin || !destination) return
         const result = await calculateOperationsRoute([origin, destination], controller.signal, locale)
-        if (!controller.signal.aborted) setEstimate(result)
+        if (!controller.signal.aborted) { setEstimate(result); writeEstimate(cacheKey, result) }
       } catch {
         if (!controller.signal.aborted) setEstimate(null)
       } finally {
@@ -81,7 +98,7 @@ export default function DriverRouteEstimate({route, locale = 'en', poNumber}: {r
           <span className={styles.metricCopy}><span className={styles.value}>{hasEstimate ? formatDuration(estimate!.durationSeconds!, locale) : '—'}</span><small className={styles.metricLabel}>{locale === 'es' ? 'ESTIMADO' : 'ESTIMATED'}</small></span>
         </span>
       </div>
-      <span className={styles.caption}>{loading ? (locale === 'es' ? 'Calculando ruta…' : 'Calculating route…') : (locale === 'es' ? 'Referencia de la ruta · abre Mapas para navegar' : 'Route reference · open Maps to navigate')}</span>
+      <span className={styles.caption}>{loading ? (locale === 'es' ? 'Calculando ruta…' : 'Calculating route…') : simpleNavigation ? (locale === 'es' ? 'Modo simple · abre la navegación del teléfono' : 'Simple mode · open phone navigation') : (locale === 'es' ? 'Referencia de la ruta · abre Mapas para navegar' : 'Route reference · open Maps to navigate')}</span>
     </section>
   )
 }
