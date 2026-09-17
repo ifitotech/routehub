@@ -85,7 +85,7 @@ export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
                       className={active ? `${styles.typeCard} ${styles.typeCardActive}` : styles.typeCard}
                       onClick={() => setForm((current: any) => ({...current, type: entry.value}))}
                     >
-                      <span className={styles.typeCardIcon}><Icon size={20}/></span>
+                      <span className={styles.typeCardIcon}><Icon size={15}/></span>
                       <span className={styles.typeCardLabel}>{typeLabel(entry.value, c)}</span>
                       <span className={styles.typeRadio}/>
                     </button>

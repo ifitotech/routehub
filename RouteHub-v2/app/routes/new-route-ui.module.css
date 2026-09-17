@@ -10,8 +10,8 @@
 
 /* Read-only stand-in for a select control that has nothing else to pick -
    a single branch, for example. Same info, a fraction of the height. */
-.compactValue{display:flex;align-items:center;gap:8px;min-height:30px;color:var(--rh-ink);font-size:13px;font-weight:600}
-.compactValue svg{flex:none;color:var(--rh-ink-soft);width:15px;height:15px}
+.compactValue{display:flex;align-items:center;gap:6px;min-height:24px;color:var(--rh-ink);font-size:12px;font-weight:600}
+.compactValue svg{flex:none;color:var(--rh-ink-soft);width:13px;height:13px}
 
 /* Saved-contact tag sits inside the address TEXT FIELD itself, in the
    blank space to the right of the typed address - not over the separate
@@ -66,18 +66,18 @@
 .compactTitle span{overflow:hidden;color:#64748B;font-size:10px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
 .inlinePanelBody{display:flex;flex-direction:column;gap:0;padding:3px 10px 0;overflow-y:auto;width:100%;min-height:0}
 
-.sectionHeading{margin:0 0 clamp(3px,0.8vh,6px);color:var(--rh-ink);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.sectionHeading{margin:0 0 clamp(2px,0.4vh,4px);color:var(--rh-ink);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 
 /* A small vertical timeline (hollow dot -> dashed line -> filled pin) ties
    the starting point visually to the destination, the way a route actually
    reads top to bottom, instead of two identical-looking blocks stacked
    with no visual relationship. */
-.timelineRow{display:grid;grid-template-columns:14px minmax(0,1fr);gap:clamp(6px,1vh,8px)}
+.timelineRow{display:grid;grid-template-columns:12px minmax(0,1fr);gap:clamp(4px,0.6vh,6px)}
 .timelineTrack{display:flex;flex-direction:column;align-items:center;padding-top:2px}
 .timelineDotEmpty{width:9px;height:9px;flex:none;border:1.5px solid #94a3b8;border-radius:50%;background:#fff}
 .timelineDotFilled{width:11px;height:11px;flex:none;border-radius:50%;background:var(--rh-blue);box-shadow:0 0 0 2px rgba(22,96,240,.14)}
 .timelineLine{flex:1;width:0;min-height:8px;border-left:1.5px dashed #cbd5e1;margin:1px 0}
-.timelineContent{display:grid;gap:clamp(5px,0.9vh,7px);min-width:0}
+.timelineContent{display:grid;gap:clamp(3px,0.5vh,5px);min-width:0}
 
 /* Explicit Origin/Destination tags next to each point on the timeline -
    the dot shape alone (hollow vs filled) hinted at direction but needed
@@ -89,18 +89,18 @@
    instead of three chips competing equally, when "here" (the branch) is
    the common case. Choosing "Otro punto" reveals Last route/Custom as
    sub-options instead of sharing the same row. */
-.originToggle{display:flex;border:1px solid var(--rh-line);border-radius:11px;padding:3px;background:var(--rh-card);margin-bottom:clamp(5px,0.9vh,7px)}
-.originToggle button{flex:1;min-height:clamp(30px,4vh,34px);border:0;border-radius:8px;background:transparent;color:var(--rh-ink);font-size:13px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.originToggle{display:flex;border:1px solid var(--rh-line);border-radius:9px;padding:2px;background:var(--rh-card);margin-bottom:clamp(3px,0.5vh,5px)}
+.originToggle button{flex:1;min-height:clamp(24px,3vh,27px);border:0;border-radius:7px;background:transparent;color:var(--rh-ink);font-size:11px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
 .originToggleActive{background:#1660f0!important;color:#fff!important}
-.originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(4px,0.8vh,6px);margin-bottom:clamp(5px,0.9vh,7px)}
-.originSubChip{min-height:clamp(28px,3.8vh,32px);border:1px solid var(--rh-line);border-radius:9px;background:var(--rh-surface-2);color:var(--rh-ink-soft);font-size:12px;font-weight:700;cursor:pointer}
+.originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(3px,0.5vh,4px);margin-bottom:clamp(3px,0.5vh,5px)}
+.originSubChip{min-height:clamp(22px,2.8vh,25px);border:1px solid var(--rh-line);border-radius:7px;background:var(--rh-surface-2);color:var(--rh-ink-soft);font-size:11px;font-weight:700;cursor:pointer}
 .originSubChipActive{background:#eaf2ff!important;color:var(--rh-blue)!important;border-color:#b9cdf4!important}
 
 /* Groups the destination address with who receives it there, instead of
    Contact name/phone sitting as two loose fields after the address with
    no visual link back to it. */
-.destCard{border:1px solid var(--rh-line);border-radius:12px;padding:clamp(7px,1.2vh,10px);background:var(--rh-surface-2);display:grid;gap:clamp(5px,0.9vh,7px)}
-.contactBlock{padding-top:clamp(6px,1vh,9px);border-top:1px dashed #dbe3ed;display:grid;gap:clamp(4px,0.8vh,6px);margin-top:4px}
+.destCard{border:1px solid var(--rh-line);border-radius:10px;padding:clamp(5px,0.8vh,7px);background:var(--rh-surface-2);display:grid;gap:clamp(3px,0.5vh,5px)}
+.contactBlock{padding-top:clamp(4px,0.6vh,6px);border-top:1px dashed #dbe3ed;display:grid;gap:clamp(3px,0.5vh,4px);margin-top:2px}
 .contactBlockLabel{display:flex;align-items:center;gap:5px;margin:0;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--rh-ink-soft)}
 
 .assignmentPanel{padding:8px;border-radius:11px;background:var(--rh-surface-2);border:1px solid #e7edf4;display:grid;gap:5px;align-content:space-between;min-width:0;min-height:0}
