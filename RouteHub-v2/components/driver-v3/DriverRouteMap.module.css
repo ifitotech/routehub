@@ -75,8 +75,8 @@
   /* Keep the status chip in the map's lower margin, above the route details.
      Anchoring it to the map bottom made it overlap the address on short
      mobile screens. The measured details start is updated by the map layout. */
-  top:max(12px,calc(var(--map-details-start) - 42px));
-  transform:translateX(-50%);
+  top:max(12px,calc(var(--map-details-start) + 34px));
+  left:auto;right:18px;transform:none;
   padding:5px 11px;border-radius:999px;background:var(--today-surface,#101c2d);
   color:var(--rh-text,#f7faff);font-size:11px;font-weight:800;
 }
