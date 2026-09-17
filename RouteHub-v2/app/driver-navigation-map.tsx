@@ -87,6 +87,17 @@ export default function DriverNavigationMap({
   const [destinations,setDestinations]=useState<Array<Coordinate|null>>([])
   const [gpsMessage,setGpsMessage]=useState('')
   const [foregroundGps,setForegroundGps]=useState(false)
+  // Google Maps does not inherit CSS colors. Keep the real map palette in
+  // sync with the resolved RouteHub/system theme instead of only darkening
+  // the controls that sit on top of it.
+  const [mapTheme,setMapTheme]=useState<'light'|'dark'>('dark')
+
+  useEffect(()=>{
+    const syncTheme=()=>setMapTheme(document.documentElement.dataset.theme==='light'?'light':'dark')
+    syncTheme()
+    window.addEventListener('routehub:theme-change',syncTheme)
+    return()=>window.removeEventListener('routehub:theme-change',syncTheme)
+  },[])
 
   const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label||stop.coordinate)),[stops])
   const safeOrigin=sanitizeCoordinate(originCoordinate)
@@ -378,7 +389,7 @@ export default function DriverNavigationMap({
         <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={22}/>:<VolumeX size={22}/>}</button>
       </aside>
       <div className={styles.mapArea}>
-        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
+        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
           canGuide && nextManeuver
             ? nextManeuver.distanceToManeuverMeters < 90
               ? 18.5

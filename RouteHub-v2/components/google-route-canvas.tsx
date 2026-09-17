@@ -63,8 +63,24 @@ type Props={
   navigationProgress?:NavigationProgress|null
   navigationHeading?:number|null
   navigationZoom?:number
+  theme?:'light'|'dark'
   onMapClick?:(coordinate:MapCoordinate)=>void
   onMarkerDrag?:(id:string,coordinate:MapCoordinate)=>void
+}
+
+function navigationMapStyles(theme:'light'|'dark'){
+  const clean=[{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'off'}]}]
+  if(theme==='light')return clean
+  return [
+    ...clean,
+    {elementType:'geometry',stylers:[{color:'#10233d'}]},
+    {elementType:'labels.text.fill',stylers:[{color:'#b8cbe3'}]},
+    {elementType:'labels.text.stroke',stylers:[{color:'#10233d'}]},
+    {featureType:'road',elementType:'geometry',stylers:[{color:'#294563'}]},
+    {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#3b5f85'}]},
+    {featureType:'water',elementType:'geometry',stylers:[{color:'#07182e'}]},
+    {featureType:'landscape',elementType:'geometry',stylers:[{color:'#10233d'}]},
+  ]
 }
 
 const defaultCenter={lat:25.7617,lng:-80.1918}
@@ -108,7 +124,7 @@ function nearestPathIndex(path:MapCoordinate[],position:MapCoordinate){
 
 /** Shared Google Maps canvas. RouteHub keeps routing data in its own services;
  * this component only renders the real coordinates it receives. */
-export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,navigation=false,cameraMode='follow',onCameraModeChange,navigationProgress=null,navigationHeading=null,navigationZoom=17.5,onMapClick,onMarkerDrag}:Props){
+export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,navigation=false,cameraMode='follow',onCameraModeChange,navigationProgress=null,navigationHeading=null,navigationZoom=17.5,theme='light',onMapClick,onMarkerDrag}:Props){
   const containerRef=useRef<HTMLDivElement>(null)
   const mapRef=useRef<GoogleMap|null>(null)
   const objectsRef=useRef<MapObject[]>([])
@@ -161,7 +177,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           renderingType:maps.RenderingType?.VECTOR||'VECTOR',
           disableDefaultUI:true,clickableIcons:false,isFractionalZoomEnabled:true,
           headingInteractionEnabled:true,tiltInteractionEnabled:true,
-          styles:[{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'off'}]}],
+          styles:navigationMapStyles(theme),
         }:{}),
       }))
       objectsRef.current.forEach(object=>object.setMap(null))
@@ -257,7 +273,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       setError('')
     }).catch(reason=>{if(!cancelled)setError(reason instanceof Error?reason.message:'Google Maps is unavailable.')})
     return()=>{cancelled=true}
-  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag,followDevice,navigation])
+  },[renderKey,interactive,showTraffic,onMapClick,onMarkerDrag,followDevice,navigation,theme])
 
   useEffect(()=>{
     const element=containerRef.current
