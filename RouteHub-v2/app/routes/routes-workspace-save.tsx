@@ -21,7 +21,16 @@ export function useRoutesSave(w: any) {
   } = w
   const save = async () => {
     if (saving) return
-    if (!form.destination.trim() || !form.driver_id) {
+    // "Return to branch" never fills form.destination - the field just
+    // displays the branch address as read-only text (new-route-details.tsx)
+    // instead of writing it into the form, since the branch is implied by
+    // the route type, not typed by the manager. Requiring form.destination
+    // here blocked every return-to-branch route with "enter a destination"
+    // even though a real destination (the branch) was already set.
+    const hasDestination = form.type === 'return'
+      ? Boolean(returnBranch?.address || returnBranch?.name || defaultBranch?.address || defaultBranch?.name)
+      : Boolean(form.destination.trim())
+    if (!hasDestination || !form.driver_id) {
       setMessage(c.chooseRequired)
       return
     }
