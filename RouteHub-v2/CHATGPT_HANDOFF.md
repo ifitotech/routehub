@@ -1,9 +1,23 @@
 # RouteHub — handoff for ChatGPT / Grok
-Updated: 12 Sep 2026 (Claude Sonnet 5). Founder: Fito.
+Updated: 17 Sep 2026 (Claude Sonnet 5). Founder: Fito.
 
-**Do not undo Grok work. Do not invent ETA/fake GPS. Do not redesign Add Route again — it's approved (see 12 Sep section for what changed since). Driver v3 was touched on 12 Sep with explicit founder approval (see "Driver v3 cleanup" below) — the old blanket "do not touch Driver" is lifted, but treat it as sensitive: Driver is daily-use by real drivers, verify before changing, and never touch `app/driver/` (frozen V2 fallback, physically unreachable — middleware rewrites every `/driver/*` request to `/driver-v3/*`).**
+**Do not undo Grok work. Do not invent ETA/fake GPS. Add Route was redesigned again 16–17 Sep with founder approval (two-column panel, mobile full-screen takeover — see "17 Sep 2026" section below) — that supersedes the old "it's approved, don't touch it" line; the current shape is in `app/routes/new-route-responsive.tsx` + `.module.css`, not the retired `new-route-panel.tsx`. Driver v3 was touched on 12 Sep with explicit founder approval (see "Driver v3 cleanup" below) — the old blanket "do not touch Driver" is lifted, but treat it as sensitive: Driver is daily-use by real drivers, verify before changing, and never touch `app/driver/` (frozen V2 fallback, physically unreachable — middleware rewrites every `/driver/*` request to `/driver-v3/*`).**
 
 Live: https://routehub-wisu.vercel.app · repo ifitotech/routehub main · app RouteHub-v2/
+
+## 17 Sep 2026 — three-way area split + git sync rules (read this first)
+
+Founder now runs three agents on this repo at once, each in its **own local clone**, all pushing to the same `origin/main`: **Claude → Manager** (`app/manager/**`, `app/routes/**`, `app/contacts/**`, `app/settings/**`, `app/reports/**`), **ChatGPT → Driver** (`app/driver-v3/**`, `components/driver-v3/**`, `app/driver-navigation.module.css`, `app/driver-route-navigation.tsx`, `app/driver-navigation-map.tsx`), **Grok → Settings**. Don't edit outside your area, even to fix something obviously broken there — say what you see and leave it. A shared/global file (`app/globals.css`, `app/final-polish.css`, `app/layout.tsx`, `public/sw.js`) belongs to everyone — flag it to the founder instead of editing it silently.
+
+This split didn't come from nowhere: two separate incidents forced it, and each one has a concrete rule attached.
+
+1. **Before the split**, both agents spent a full day fixing the same Driver header/nav bug without knowing about each other — a CSS-module class rule and a global `!important` override fought each other, so every fix looked like it did nothing, and ~40 commits went by before anyone realized two agents were undoing each other in real time. **Rule:** if a CSS change seems to have no visible effect, check for a competing high-specificity rule (especially `html body:has(...)` selectors in a global stylesheet) before changing your approach.
+
+2. **On 16 Sep**, ChatGPT's clone had a `git pull --rebase` stuck mid-conflict on `app/routes/new-route-ui.module.css` for over a day while Claude kept pushing to the same file — by the time it got resolved, the rebase's own "onto" commit was 753 commits stale, so finishing it the naive way would have replayed a fix against code that no longer existed. Worse: `git rebase --abort` (used to escape that stale rebase) discarded three Driver CSS edits that had been made *while the rebase sat paused* — those survived only because the resolving agent had already printed their full diff earlier in the session and could reconstruct them byte-for-byte (verified by matching git blob hashes). **Rules that would have prevented this:**
+   - **Sync before you start work, not just before you push.** `git pull --rebase origin main` at the start of a session, every session. A rebase against a same-day base is a five-line conflict; against a week-old base it's a rewrite.
+   - **Push small and often.** The longer a branch goes unsynced, the bigger and more tangled the eventual conflict.
+   - **Never run `git rebase --abort` (or any `reset --hard`-equivalent) without `git status` first.** If there are uncommitted changes beyond what the paused rebase itself is tracking, stash them explicitly (`git stash push -m "..." -- <paths>`) before aborting — `--abort` only restores the *original* autostash from before the rebase started, not edits made during the pause.
+   - **The area owner resolves conflicts in their own files.** When a rebase conflicts inside `app/routes/**`, Claude resolves it (has the context to know which side is stale); same for Driver files and ChatGPT, Settings files and Grok. Don't guess at someone else's recent redesign from the outside.
 
 ⚠️ There is an OLD/unrelated deployment at `routehub-seven.vercel.app` — it is a stale first base, not connected to current work. Never use it as a reference or deploy target.
 
