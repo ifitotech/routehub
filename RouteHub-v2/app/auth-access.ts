@@ -9,11 +9,6 @@ export async function resolveAccess(client: SupabaseClient): Promise<ResolvedAcc
   const {data: userData, error: userError} = await client.auth.getUser()
   if (userError || !userData.user) throw new Error('AUTH_REQUIRED')
   const user = userData.user
-  // Existing beta accounts can join a manager's workspace through a pending
-  // invitation. The RPC validates the authenticated email server-side.
-  // The function is security-definer and matches the session email on the
-  // server. Existing members continue normally when the migration is not yet
-  // installed; invited users will be linked as soon as it is applied.
   await client.rpc('claim_my_pending_invitation')
   const [{data: admin}, {data: memberships, error: membershipError}] = await Promise.all([
     client.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
@@ -46,6 +41,7 @@ export function workspaceForStrictRole(role: Role) {
 
 function hasSharedAccess(role: Role, pathname: string) {
   if (pathname.startsWith('/settings')) return true
+  if (pathname === '/privacy' || pathname.startsWith('/privacy') || pathname === '/terms' || pathname.startsWith('/terms') || pathname === '/guide.html') return true
   if (pathname.startsWith('/contacts') || pathname.startsWith('/requests')) return ['branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'].includes(role)
   if (pathname.startsWith('/routes') || pathname.startsWith('/reports')) return ['branch_manager', 'operations_manager', 'sales_representative'].includes(role)
   return false
@@ -53,12 +49,9 @@ function hasSharedAccess(role: Role, pathname: string) {
 
 export function canOpenPath(role: Role, pathname: string) {
   if (pathname === '/') return true
+  if (pathname === '/privacy' || pathname.startsWith('/privacy') || pathname === '/terms' || pathname.startsWith('/terms') || pathname === '/guide.html') return true
   if (role === 'ceo') return pathname.startsWith('/admin') || pathname.startsWith('/settings')
-  if (role === 'driver') return pathname.startsWith('/driver')
-  // Authorized team roles may open the existing Driver execution surface for
-  // a route explicitly assigned to their own user id. The Driver queries and
-  // RLS still expose only routes where routes.driver_id = auth.uid(). Their
-  // normal workspace redirect remains unchanged.
+  if (role === 'driver') return pathname.startsWith('/driver') || pathname.startsWith('/settings')
   if (pathname === '/driver' && ['branch_manager','operations_manager','sales_representative','counter_sales'].includes(role)) return true
   if (role === 'branch_manager' && pathname.startsWith('/manager')) return true
   if (role === 'operations_manager' && pathname.startsWith('/operations')) return true
