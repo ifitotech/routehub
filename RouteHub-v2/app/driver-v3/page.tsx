@@ -136,7 +136,14 @@ export default function DriverV3Page() {
   const phase=route?driverOperationPhase(route):'pending'
   const started=phase==='started'||phase==='arrived'
   const simpleMode=getDriverModePreference()==='simple'
-  const internalNavigationEnabled=started&&getNavigationPreference()==='internal'
+  // Simple mode intentionally preserves the original A→B workflow. Internal
+  // turn-by-turn guidance and its persistent layer belong to Pro only.
+  const internalNavigationEnabled=started&&!simpleMode&&getNavigationPreference()==='internal'
+  useEffect(()=>{
+    if(internalNavigationEnabled)setNavigationVisible(true)
+  },[internalNavigationEnabled,route?.id])
+  const arrived=phase==='arrived'
+
   // Settings promises guidance "opens when starting a stop" while the
   // in-app navigator is on, but navigationVisible is plain component state -
   // it used to only turn on from the explicit call inside startCurrent, so a
@@ -147,10 +154,13 @@ export default function DriverV3Page() {
   // so the same open animation (grow out of the map) plays here too instead
   // of popping straight into the open state.
   useEffect(()=>{
-    if(!internalNavigationEnabled)return
+    if(!started||!route?.id)return
+    if(simpleMode||getNavigationPreference()!=='internal')return
+    if(autoNavigationRouteRef.current===route.id)return
+    autoNavigationRouteRef.current=route.id
     captureNavOrigin()
     setNavigationVisible(true)
-  },[internalNavigationEnabled,route?.id])
+  },[started,route?.id,simpleMode])
   const arrived=phase==='arrived'
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
@@ -181,7 +191,7 @@ export default function DriverV3Page() {
   const openMaps=()=>openMapsForRoute(route)
 
   const openPreferredNavigation=()=>{
-    if(getNavigationPreference()==='internal'){
+    if(!simpleMode&&getNavigationPreference()==='internal'){
       captureNavOrigin()
       setNavigationVisible(true)
     }else openMapsForRoute(route)
@@ -456,28 +466,14 @@ export default function DriverV3Page() {
     event.stopPropagation()
     if(start!==null&&end!==undefined&&start-end>28)openDelivery()
   }
-  // navAvailable: a stop is started with the in-app preference on, so
-  // navigation CAN be opened (drives the hero map's tap-to-navigate hint).
-  // navOpen: it is currently the foreground view.
-  // navMounted: <DriverRouteNavigation> actually exists in the DOM. This is
-  // intentionally NOT the same as navAvailable/navOpen - it stays true for
-  // one closing-animation's worth of time after navOpen goes false, then
-  // unmounts. Keeping the live navigator (Google Maps, a WebGL map) mounted
-  // for the entire stop - the first version of this - left it running
-  // permanently alongside Today's own WebGL map (DriverRouteMap/MapLibre)
-  // any time navigation was "peeked" closed, and mobile browsers cap
-  // simultaneous WebGL contexts: Today's map was losing that race and
-  // rendering blank. Unmounting for real once the close animation finishes
-  // frees that context; GPS/voice/wake lock do restart on the next open,
-  // same as before this session's navigation work.
-  const navAvailable=Boolean(started&&route&&getNavigationPreference()==='internal')
-  const navOpen=Boolean(navigationVisible&&navAvailable)
-  const [navMounted,setNavMounted]=useState(false)
-  useEffect(()=>{
-    if(navOpen){setNavMounted(true);return}
-    const timer=window.setTimeout(()=>setNavMounted(false),480)
-    return ()=>window.clearTimeout(timer)
-  },[navOpen])
+  // showNavLayer mounts the navigator once a stop is started with the
+  // in-app preference on - it then stays mounted (GPS watch, voice, wake
+  // lock all keep running) for the rest of that stop, so closing back to
+  // Today never restarts navigation state, only hides it. navOpen is purely
+  // which layer is on top; the animation between them grows out of / shrinks
+  // back into the hero's own route preview map (see captureNavOrigin).
+  const showNavLayer=Boolean(started&&route&&!simpleMode&&getNavigationPreference()==='internal')
+  const navOpen=Boolean(navigationVisible&&showNavLayer)
   const navigationStops=route?[route,...(snapshot?.queue.upcoming||[])]:[]
 
   // A CSS transition only animates a value that CHANGES after mount - since
@@ -576,7 +572,7 @@ export default function DriverV3Page() {
               <div className={`${styles.secondaryRow} ${simpleMode?styles.secondaryRowSimple:''}`}>
                 <button type="button" className={styles.secondaryAction} onClick={openPreferredNavigation}>
                   <span className={styles.secondaryActionIcon}><MapPin size={22}/></span>
-                  <span>{getNavigationPreference()==='internal'?(locale==='es'?'Continuar navegación':locale==='fr'?'Reprendre la navigation':'Resume navigation'):(locale==='es'?'Abrir navegación del teléfono':locale==='fr'?'Ouvrir la navigation du téléphone':'Open phone navigation')}</span>
+                  <span>{(!simpleMode&&getNavigationPreference()==='internal')?(locale==='es'?'Continuar navegación':locale==='fr'?'Reprendre la navigation':'Resume navigation'):(locale==='es'?'Abrir navegación del teléfono':locale==='fr'?'Ouvrir la navigation du téléphone':'Open phone navigation')}</span>
                 </button>
                 {!simpleMode&&<button type="button" className={styles.secondaryAction} onClick={()=>setSheet('info')}>
                   <span className={styles.secondaryActionIcon}><Info size={22}/></span>
