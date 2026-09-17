@@ -18,6 +18,7 @@ type DriverV3Data = {
   setLiveFix: (fix: {lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null) => void
   loading: boolean
   error: string
+  offline: boolean
   refresh: () => Promise<void>
   snapshot: ReturnType<typeof buildDriverSnapshot> | null
 }
@@ -47,6 +48,7 @@ function useDriverDataInternal(): DriverV3Data {
   const [liveFix, setLiveFix] = useState<{lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [offline, setOffline] = useState(false)
 
   const load = useCallback(async (quiet=false) => {
     if(!quiet) setLoading(true)
@@ -98,6 +100,7 @@ function useDriverDataInternal(): DriverV3Data {
       if (loadError) throw loadError
       routesRef.current = (rows || []) as DriverV3Route[]
       setRoutes(routesRef.current)
+      setOffline(false)
       writeCachedRoutes(user.id, membership.company_id, routesRef.current)
       // A driving-session/GPS problem must not hide an otherwise valid route.
       // The route remains usable and the session can be recovered on the next
@@ -132,10 +135,12 @@ function useDriverDataInternal(): DriverV3Data {
           })
           setRoutes(routesRef.current)
           setError('')
+          setOffline(true)
         } catch {
           routesRef.current = cached
           setRoutes(cached)
           setError('')
+          setOffline(true)
         }
       } else {
         setError(message)
@@ -200,7 +205,15 @@ function useDriverDataInternal(): DriverV3Data {
     [routes, driverId],
   )
 
-  return {routes, driverId, companyId, branchId, drivingSession, liveFix, setLiveFix, loading, error, refresh: () => load(), snapshot}
+  useEffect(() => {
+    const update = () => setOffline(!navigator.onLine)
+    update()
+    window.addEventListener('online', update)
+    window.addEventListener('offline', update)
+    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update) }
+  }, [])
+
+  return {routes, driverId, companyId, branchId, drivingSession, liveFix, setLiveFix, loading, error, offline, refresh: () => load(), snapshot}
 }
 
 export function DriverV3Provider({children}: {children: ReactNode}) {

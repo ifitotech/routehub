@@ -64,7 +64,7 @@ function compactAddress(value: unknown) {
 export default function DriverV3Page() {
   const searchParams=useSearchParams()
   const {t,locale}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,offline}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
@@ -507,6 +507,8 @@ export default function DriverV3Page() {
     hideNav={Boolean(navOpen||(sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
     flush
   >
+    <>
+    {offline&&<div className={styles.offlineNotice} role="status">{locale==='es'?'Sin conexión · usando la última ruta guardada':'Offline · using the last saved route'}</div>}
     {/* .page and the confirm dialog are siblings, not parent/child, on
         purpose - .pageShrink puts a `transform` on .page while the dialog
         is open, and `transform` on an ancestor turns its `position:fixed`
