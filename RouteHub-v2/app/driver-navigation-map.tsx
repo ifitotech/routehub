@@ -17,6 +17,59 @@ type GpsFix=Coordinate&{accuracy:number;updatedAt:number;heading:number|null}
 type SharedGpsFix=Coordinate&{accuracy?:number;heading?:number|null;at?:string}
 export type PlannedStop={id:string;address?:string|null;label?:string|null;kind?:'pickup'|'delivery'|'branch';orderNumber?:string|null;notes?:string|null;position?:number;pastDue?:boolean;pending?:boolean;coordinate?:Coordinate|null}
 
+// Google's Routes API returns one combined sentence ("Turn right onto NW
+// 151st Terrace") with no separate street-name field. The approved design
+// splits distance / street / action onto three lines, so this heuristically
+// lifts the street name out of the sentence for display only - it never
+// changes what is spoken by voice guidance or what reaches routing logic.
+// When no pattern matches, callers fall back to the untouched sentence
+// instead of guessing, so nothing shown is invented.
+const STREET_SPLIT_PATTERNS:Record<string,RegExp[]>={
+  es:[/\b(?:hacia|por|en)\s+(.+)$/i],
+  fr:[/\b(?:sur|vers)\s+(.+)$/i],
+  en:[/\bonto\s+(.+)$/i,/\btoward\s+(.+)$/i,/\bon\s+(.+)$/i],
+}
+function splitStreetName(instruction:string|null|undefined,locale:string):string|null{
+  if(!instruction)return null
+  for(const pattern of STREET_SPLIT_PATTERNS[locale]||STREET_SPLIT_PATTERNS.en){
+    const match=instruction.match(pattern)
+    if(match?.[1])return match[1].trim().replace(/[.\s]+$/,'')
+  }
+  return null
+}
+
+// Localizes Google's maneuver type code (e.g. "TURN_RIGHT") into a short
+// verb phrase for the card's action line. Returns null for an unrecognized
+// or missing type rather than guessing, so the caller can fall back to the
+// full instruction sentence instead of showing a made-up action.
+function maneuverActionLabel(type:string|null|undefined,locale:string):string|null{
+  if(!type)return null
+  const t=type.toUpperCase()
+  const pick=(en:string,es:string,fr:string)=>locale==='es'?es:locale==='fr'?fr:en
+  if(t.includes('UTURN'))return pick('Make a U-turn','Haz un cambio de sentido','Faites demi-tour')
+  if(t.includes('SHARP_LEFT'))return pick('Sharp left','Giro cerrado a la izquierda','Virage serré à gauche')
+  if(t.includes('SHARP_RIGHT'))return pick('Sharp right','Giro cerrado a la derecha','Virage serré à droite')
+  if(t.includes('SLIGHT_LEFT'))return pick('Slight left','Leve a la izquierda','Légèrement à gauche')
+  if(t.includes('SLIGHT_RIGHT'))return pick('Slight right','Leve a la derecha','Légèrement à droite')
+  if(t.includes('LEFT'))return pick('Turn left','Gira a la izquierda','Tournez à gauche')
+  if(t.includes('RIGHT'))return pick('Turn right','Gira a la derecha','Tournez à droite')
+  if(t.includes('ROUNDABOUT'))return pick('Take the roundabout','Toma la rotonda','Prenez le rond-point')
+  if(t.includes('MERGE'))return pick('Merge','Incorpórate','Insérez-vous')
+  if(t.includes('FORK'))return pick('Keep at the fork','Mantente en la bifurcación','Restez à la bifurcation')
+  if(t.includes('RAMP'))return pick('Take the ramp','Toma la rampa','Prenez la bretelle')
+  if(t.includes('FERRY'))return pick('Take the ferry','Toma el ferry','Prenez le ferry')
+  if(t.includes('STRAIGHT')||t.includes('DEPART')||t.includes('CONTINUE'))return pick('Continue straight','Sigue derecho','Continuez tout droit')
+  return null
+}
+
+function maneuverIconFor(type:string|null|undefined){
+  const t=(type||'').toUpperCase()
+  if(t.includes('UTURN'))return RotateCcw
+  if(t.includes('LEFT'))return CornerUpLeft
+  if(t.includes('RIGHT'))return CornerUpRight
+  return ArrowUp
+}
+
 type Props={
   originAddress?:string|null
   originCoordinate?:Coordinate|null
@@ -87,6 +140,9 @@ export default function DriverNavigationMap({
   const [destinations,setDestinations]=useState<Array<Coordinate|null>>([])
   const [gpsMessage,setGpsMessage]=useState('')
   const [foregroundGps,setForegroundGps]=useState(false)
+  // Bottom sheet expand/collapse - purely visual, does not affect routing,
+  // GPS tracking or the map's own camera/fit logic below.
+  const [sheetExpanded,setSheetExpanded]=useState(false)
   // Google Maps does not inherit CSS colors. Keep the real map palette in
   // sync with the resolved RouteHub/system theme instead of only darkening
   // the controls that sit on top of it.
@@ -300,10 +356,10 @@ export default function DriverNavigationMap({
       :''
   const remainingDistance=guidanceReady?formatDistance(currentProgress?.remainingMeters):''
   const copy=locale==='es'
-    ?{loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',exit:'Salir',arrived:'Llegué',recenter:'Recentrar',eta:'Llegada estimada',traffic:'Tráfico',voiceOn:'Silenciar voz',voiceOff:'Activar voz'}
+    ?{loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',exit:'Salir',arrived:'Llegué',recenter:'Recentrar',eta:'Llegada estimada',traffic:'Tráfico',voiceOn:'Silenciar voz',voiceOff:'Activar voz',routeActive:'Ruta activa',after:'Después',openMaps:'Abrir Mapas',po:'PO',notes:'Notas',upcoming:'Próximas paradas',expand:'Ver más detalles',collapse:'Ver menos detalles'}
     :locale==='fr'
-      ?{loading:'Préparation du trajet…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',exit:'Quitter',arrived:'Arrivé',recenter:'Recentrer',eta:'Arrivée estimée',traffic:'Trafic sur l’itinéraire',voiceOn:'Voix active',voiceOff:'Activer la voix'}
-      :{loading:'Preparing route…',unavailable:'We could not locate these stops yet.',exit:'Exit',arrived:'Arrived',recenter:'Re-center',eta:'Estimated arrival',traffic:'Traffic on route',voiceOn:'Voice on',voiceOff:'Turn on voice'}
+      ?{loading:'Préparation du trajet…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',exit:'Quitter',arrived:'Arrivé',recenter:'Recentrer',eta:'Arrivée estimée',traffic:'Trafic sur l’itinéraire',voiceOn:'Voix active',voiceOff:'Activer la voix',routeActive:'Itinéraire actif',after:'Ensuite',openMaps:'Ouvrir Plans',po:'PO',notes:'Notes',upcoming:'Arrêts suivants',expand:'Plus de détails',collapse:'Moins de détails'}
+      :{loading:'Preparing route…',unavailable:'We could not locate these stops yet.',exit:'Exit',arrived:'Arrived',recenter:'Re-center',eta:'Estimated arrival',traffic:'Traffic on route',voiceOn:'Voice on',voiceOff:'Turn on voice',routeActive:'Route active',after:'Then',openMaps:'Open Maps',po:'PO',notes:'Notes',upcoming:'Upcoming stops',expand:'More details',collapse:'Fewer details'}
   const displayLocation=matched&&currentProgress?currentProgress.coordinate:deviceLocation
   const heading=matched&&currentProgress?currentProgress.heading:deviceLocation?.heading??null
   const markers=useMemo(()=>[
@@ -346,28 +402,73 @@ export default function DriverNavigationMap({
   },[voiceEnabled,nextManeuver,guidanceReady,routing,locale,routeKey,formatDistance])
 
   const labels=locale==='es'?{
-    gps:'Buscando GPS preciso',permission:'Permite la ubicación precisa en los ajustes del navegador.',gpsHint:'La guía se pausó hasta recuperar una ubicación fiable.',enable:'Activar GPS',retry:'Reintentar',route:'Vista completa',follow:'Seguir',approx:'ETA aproximado',offRoute:'Comprobando el recorrido',noRoute:'Recorrido por calles no disponible',near:'Cerca del destino',destination:'Destino',now:'Ahora',distance:'Restante',arrival:'Llegada',paused:'Guía pausada',gpsAction:'Reintentar GPS',
+    gps:'Buscando GPS preciso',permission:'Permite la ubicación precisa en los ajustes del navegador.',gpsHint:'La guía se pausó hasta recuperar una ubicación fiable.',enable:'Activar GPS',retry:'Reintentar',route:'Vista completa',follow:'Seguir',approx:'ETA aproximado',offRoute:'Comprobando el recorrido',noRoute:'Recorrido por calles no disponible',near:'Cerca del destino',destination:'Destino',now:'Ahora',distance:'Restante',arrival:'Llegada',paused:'Guía pausada',gpsAction:'Reintentar GPS',recalculating:'Recalculando ruta',
   }:locale==='fr'?{
-    gps:'Recherche GPS précis',permission:'Autorisez la position précise dans les réglages du navigateur.',gpsHint:'Guidage en pause jusqu’au retour d’une position fiable.',enable:'Activer GPS',retry:'Réessayer',route:'Vue du trajet',follow:'Suivre',approx:'ETA approximatif',offRoute:'Vérification du trajet',noRoute:'Trajet routier indisponible',near:'Destination proche',destination:'Destination',now:'Maintenant',distance:'Restant',arrival:'Arrivée',paused:'Guidage en pause',gpsAction:'Réessayer GPS',
+    gps:'Recherche GPS précis',permission:'Autorisez la position précise dans les réglages du navigateur.',gpsHint:'Guidage en pause jusqu’au retour d’une position fiable.',enable:'Activer GPS',retry:'Réessayer',route:'Vue du trajet',follow:'Suivre',approx:'ETA approximatif',offRoute:'Vérification du trajet',noRoute:'Trajet routier indisponible',near:'Destination proche',destination:'Destination',now:'Maintenant',distance:'Restant',arrival:'Arrivée',paused:'Guidage en pause',gpsAction:'Réessayer GPS',recalculating:'Recalcul de l’itinéraire',
   }:{
-    gps:'Acquiring accurate GPS',permission:'Allow precise location in your browser settings.',gpsHint:'Guidance is paused until a reliable location returns.',enable:'Enable GPS',retry:'Retry',route:'Route overview',follow:'Follow',approx:'Approximate ETA',offRoute:'Checking route',noRoute:'Street route unavailable',near:'Near destination',destination:'Destination',now:'Now',distance:'Remaining',arrival:'Arrival',paused:'Guidance paused',gpsAction:'Retry GPS',
+    gps:'Acquiring accurate GPS',permission:'Allow precise location in your browser settings.',gpsHint:'Guidance is paused until a reliable location returns.',enable:'Enable GPS',retry:'Retry',route:'Route overview',follow:'Follow',approx:'Approximate ETA',offRoute:'Checking route',noRoute:'Street route unavailable',near:'Near destination',destination:'Destination',now:'Now',distance:'Remaining',arrival:'Arrival',paused:'Guidance paused',gpsAction:'Retry GPS',recalculating:'Recalculating route',
   }
-  const ManeuverIcon=near&&guidanceReady?Flag:nextManeuver?.type?.includes('UTURN')?RotateCcw:nextManeuver?.type?.includes('LEFT')?CornerUpLeft:nextManeuver?.type?.includes('RIGHT')?CornerUpRight:ArrowUp
   const canGuide=guidanceReady&&!routing
-  const instruction=!gpsReady?labels.gps:routing?copy.loading:estimate?.source!=='google'?labels.noRoute:!onRoad?labels.offRoute:near?labels.near:nextManeuver?.instruction||'Continue straight'
+  // A stable state machine instead of a chain of ternaries on `instruction` -
+  // each state owns its own big/street/secondary line, so a status message
+  // (e.g. "Recalculating route") never gets mistaken for a real maneuver, and
+  // there is no default "Continue straight" fallback invented for missing data.
+  const navState:'gps-wait'|'preparing'|'recalculating'|'no-route'|'off-route'|'near'|'guiding'=
+    !gpsReady?'gps-wait'
+    :routing&&!estimate?'preparing'
+    :routing&&estimate?'recalculating'
+    :estimate?.source!=='google'?'no-route'
+    :!onRoad?'off-route'
+    :near?'near'
+    :'guiding'
+  const ManeuverIcon=navState==='near'?Flag:maneuverIconFor(nextManeuver?.type)
+  const streetName=canGuide&&nextManeuver?nextManeuver.streetName||splitStreetName(nextManeuver.instruction,locale):null
+  const mappedAction=canGuide&&nextManeuver?maneuverActionLabel(nextManeuver.type,locale):null
+  const guidingStreetLine=streetName||nextManeuver?.instruction||''
+  const guidingActionLine=mappedAction||''
   const instructionDistance=canGuide&&nextManeuver
     ?nextManeuver.distanceToManeuverMeters<15?labels.now:formatDistance(nextManeuver.distanceToManeuverMeters)
-    :remainingDistance||'GPS LIVE'
-  const destinationLabel=validStops[0]?.label||validStops[0]?.address||labels.destination
-  const destinationAddress=validStops[0]?.address||''
-  const stopKind=validStops[0]?.kind||'delivery'
-  const typeLabel=stopKind==='pickup'?'PICKUP':stopKind==='branch'?'RETURN':'DELIVERY'
-  const actionLabel=locale==='es'?'LLEGUÉ A LA PARADA':locale==='fr'?'ARRIVÉ À L’ARRÊT':'ARRIVED AT STOP'
-  const backLabel=locale==='es'?'Volver a Hoy':locale==='fr'?'Retour à Aujourd’hui':'Back to Today'
-  const liveLabel=locale==='es'?'GPS EN VIVO':locale==='fr'?'GPS EN DIRECT':'GPS LIVE'
+    :remainingDistance
+  // The next-next maneuver only shows once the current one is close and
+  // confirmed by real route data - never a guess at what comes after.
+  const afterManeuver=canGuide&&nextManeuver&&nextManeuver.distanceToManeuverMeters<400
+    ?estimate?.maneuvers?.[nextManeuver.index+1]
+    :undefined
+  const AfterIcon=maneuverIconFor(afterManeuver?.type)
+  const afterLabel=afterManeuver
+    ?(maneuverActionLabel(afterManeuver.type,locale)||afterManeuver.streetName||splitStreetName(afterManeuver.instruction,locale)||afterManeuver.instruction)
+    :null
   const arrivalSummary=arrivalTime&&eta!=null
     ?`${locale==='es'?'Llegada':locale==='fr'?'Arrivée':'Arrive'} ${arrivalTime} · ${eta} min`
     :remainingDistance||copy.loading
+  const stateCopy=navState==='gps-wait'
+    ?{big:labels.gps,street:null,secondary:gpsMessage==='permission'?labels.permission:labels.gpsHint}
+    :navState==='preparing'
+      ?{big:copy.loading,street:null,secondary:''}
+      :navState==='recalculating'
+        ?{big:labels.recalculating,street:null,secondary:''}
+        :navState==='no-route'
+          ?{big:labels.noRoute,street:null,secondary:''}
+          :navState==='off-route'
+            ?{big:labels.offRoute,street:null,secondary:''}
+            :navState==='near'
+              ?{big:labels.near,street:null,secondary:arrivalSummary}
+              :{big:instructionDistance||labels.now,street:guidingStreetLine,secondary:guidingActionLine}
+  const destinationLabel=validStops[0]?.label||validStops[0]?.address||labels.destination
+  const destinationAddress=validStops[0]?.address||''
+  const shortAddress=(destinationAddress||destinationLabel).split(',')[0]?.trim()||destinationLabel
+  const stopKind=validStops[0]?.kind||'delivery'
+  const typeLabel=stopKind==='pickup'?'PICKUP':stopKind==='branch'?'RETURN':'DELIVERY'
+  const backLabel=locale==='es'?'Volver a Today':locale==='fr'?'Retour à Today':'Back to Today'
+  const upcomingStops=validStops.slice(1,4)
+  // No contact-name field reaches this component (PlannedStop only carries
+  // address/label/kind/orderNumber/notes) - the expanded panel shows the PO
+  // for pickups and any stop notes instead of fabricating a delivery contact.
+  const poOrNotes=validStops[0]?.orderNumber
+    ?{label:copy.po,value:validStops[0].orderNumber}
+    :validStops[0]?.notes
+      ?{label:copy.notes,value:validStops[0].notes}
+      :null
   const retryGps=()=>{
     setGpsMessage('')
     // Request permission only from an explicit tap. This foreground watch is
@@ -381,14 +482,20 @@ export default function DriverNavigationMap({
 
   return (
     <section className={styles.navigation} aria-label="Driver Map">
-      <aside className={styles.guidance} aria-live="polite">
-        <div className={styles.maneuver}><ManeuverIcon size={42}/></div>
-        <div className={styles.instruction}>
-          <span className={styles.liveLine}>{gpsReady?(instructionDistance==='GPS LIVE'?liveLabel:`${liveLabel} · ${instructionDistance}`):labels.gps}</span>
-          <strong>{instruction}</strong>
-          <span className={styles.arrivalLine}>{gpsReady?arrivalSummary:(gpsMessage==='permission'?labels.permission:labels.gpsHint)}</span>
+      <aside className={styles.guidance} data-state={navState}>
+        <div className={styles.maneuver}><ManeuverIcon size={38}/></div>
+        <div className={styles.instruction} aria-live="polite">
+          <strong className={styles.bigLine}>{stateCopy.big}</strong>
+          {stateCopy.street&&<span className={styles.streetLine}>{stateCopy.street}</span>}
+          {stateCopy.secondary&&<span className={styles.actionLine}>{stateCopy.secondary}</span>}
         </div>
-        <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={22}/>:<VolumeX size={22}/>}</button>
+        <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={20}/>:<VolumeX size={20}/>}</button>
+        {afterManeuver&&afterLabel&&(
+          <div className={styles.afterChip}>
+            <span>{copy.after}</span>
+            <AfterIcon size={14}/>
+          </div>
+        )}
       </aside>
       <div className={styles.mapArea}>
         <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
@@ -404,27 +511,45 @@ export default function DriverNavigationMap({
         {!loading&&!gpsReady&&<button className={styles.notice} type="button" onClick={retryGps}><LocateFixed size={18}/>{foregroundGps?labels.gpsAction:labels.enable}</button>}
         {gpsReady&&!routing&&estimate?.source!=='google'&&<button className={styles.notice} type="button" onClick={()=>setRerouteToken(value=>value+1)}>{labels.retry}</button>}
         <div className={styles.controls}>
-          <button type="button" aria-label={copy.recenter} aria-pressed={cameraMode==='follow'} onClick={()=>{setCameraMode('follow');setFollowToken(value=>value+1)}}><LocateFixed size={23}/></button>
+          <button type="button" aria-label={copy.recenter} aria-pressed={cameraMode==='follow'} onClick={()=>{setCameraMode('follow');setFollowToken(value=>value+1)}}><LocateFixed size={22}/></button>
         </div>
       </div>
-      <footer className={styles.bottom}>
-        <span className={styles.sheetHandle} aria-hidden="true"/>
+      <footer className={styles.bottom} data-expanded={sheetExpanded?'true':'false'}>
+        <button type="button" className={styles.sheetHandleButton} aria-expanded={sheetExpanded} aria-label={sheetExpanded?copy.collapse:copy.expand} onClick={()=>setSheetExpanded(value=>!value)}>
+          <span className={styles.sheetHandle} aria-hidden="true"/>
+        </button>
         <div className={styles.stopSummary}>
-          <span className={`${styles.typeBadge} ${styles[stopKind]||styles.delivery}`}>{stopKind==='pickup'?<Box size={15}/>:stopKind==='branch'?<Navigation size={15}/>:<PackageCheck size={15}/>} {typeLabel}</span>
-          <span>{`STOP ${stopNumber||1} OF ${stopTotal||Math.max(1,validStops.length)}`}</span>
+          <span className={`${styles.typeBadge} ${styles[stopKind]||styles.delivery}`}>{stopKind==='pickup'?<Box size={12}/>:stopKind==='branch'?<Navigation size={12}/>:<PackageCheck size={12}/>} {typeLabel}</span>
+          <span className={styles.shortAddress}>{shortAddress}</span>
         </div>
-        <div className={styles.destination}><strong>{destinationLabel}</strong>{destinationAddress&&destinationAddress!==destinationLabel&&<span><MapPin size={15}/>{destinationAddress}</span>}</div>
-        <div className={styles.metrics} aria-label={labels.approx}>
-          <div><Navigation size={22}/><strong>{remainingDistance||'—'}</strong><small>{labels.distance}</small></div>
-          <div><Flag size={22}/><strong>{eta!=null?`${eta} min`:'—'}</strong><small>{copy.eta}</small></div>
-        </div>
-        <div className={styles.actions}>
-          <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={19}/>{actionLabel}</button>
-          <div className={styles.secondaryActions}>
-            <button type="button" onClick={openMaps}><MapPin size={18}/>{locale==='es'?'Abrir Mapas':'Open Maps'}</button>
-            <button type="button" onClick={()=>{(onExitNavigation||onReturnToday)?.()}}><ArrowUp size={18}/><span>{backLabel}</span><small>{locale==='es'?'La ruta sigue activa':'Route stays active'}</small></button>
+        <div className={styles.primaryRow}>
+          <div className={styles.timeBlock}>
+            <strong>{eta!=null?`${eta} min`:'—'}</strong>
+            <span>{[remainingDistance,arrivalTime].filter(Boolean).join(' · ')||'—'}</span>
           </div>
+          <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={16}/>{copy.arrived}</button>
         </div>
+        <div className={styles.footerRow}>
+          <button type="button" className={styles.backLink} onClick={()=>{(onExitNavigation||onReturnToday)?.()}}><ArrowUp size={15}/>{backLabel}</button>
+          <span className={styles.activeDot}><i/>{copy.routeActive}</span>
+        </div>
+        {sheetExpanded&&(
+          <div className={styles.expandedPanel}>
+            {destinationAddress&&<div className={styles.expandedRow}><MapPin size={15}/><span>{destinationAddress}</span></div>}
+            {poOrNotes&&<div className={styles.expandedRow}><span className={styles.expandedLabel}>{poOrNotes.label}</span><span>{poOrNotes.value}</span></div>}
+            {upcomingStops.length>0&&(
+              <div className={styles.upcomingBlock}>
+                <span className={styles.expandedLabel}>{copy.upcoming} · {`${stopNumber||1}/${stopTotal||Math.max(1,validStops.length)}`}</span>
+                <ul>
+                  {upcomingStops.map(stop=>(
+                    <li key={stop.id}>{stop.kind==='pickup'?<Box size={13}/>:stop.kind==='branch'?<Navigation size={13}/>:<PackageCheck size={13}/>}<span>{stop.label||stop.address}</span></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <button type="button" className={styles.openMapsButton} onClick={openMaps}><MapPin size={16}/>{copy.openMaps}</button>
+          </div>
+        )}
       </footer>
     </section>
   )
