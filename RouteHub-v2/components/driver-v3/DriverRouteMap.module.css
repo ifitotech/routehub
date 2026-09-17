@@ -71,8 +71,13 @@
   box-shadow:0 0 0 4px rgba(255,189,74,.17),0 0 14px rgba(255,189,74,.3);
 }
 .atDestination {
-  position:absolute;z-index:3;left:50%;bottom:12px;transform:translateX(-50%);
-  padding:4px 10px;border-radius:999px;background:var(--today-surface,#101c2d);
+  position:absolute;z-index:3;left:50%;
+  /* Keep the status chip in the map's lower margin, above the route details.
+     Anchoring it to the map bottom made it overlap the address on short
+     mobile screens. The measured details start is updated by the map layout. */
+  top:max(12px,calc(var(--map-details-start) - 42px));
+  transform:translateX(-50%);
+  padding:5px 11px;border-radius:999px;background:var(--today-surface,#101c2d);
   color:var(--rh-text,#f7faff);font-size:11px;font-weight:800;
 }
 .attribution {
