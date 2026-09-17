@@ -64,8 +64,10 @@
   position:relative;
   z-index:20;
   flex-shrink:0;
-  height:calc(78px + var(--android-safe-bottom, 0px));
-  padding:4px 8px var(--android-safe-bottom, 0px);
+  /* Keep the bar flush to the device edge while giving the controls a small
+     extra lift from the gesture/navigation area on iPhone and Android. */
+  height:calc(82px + var(--android-safe-bottom, 0px));
+  padding:4px 8px calc(4px + var(--android-safe-bottom, 0px));
   padding-left:max(8px,env(safe-area-inset-left));
   padding-right:max(8px,env(safe-area-inset-right));
   display:grid;
@@ -94,10 +96,11 @@
   letter-spacing:-.01em;
   min-height:56px;
   background:transparent!important;
+  transform:translateY(-3px);
 }
 .nav svg{width:23px;height:23px;transition:transform .18s ease}
 .nav a{transition:color .15s ease,opacity .15s ease,transform .12s ease}
-.nav a:active{transform:scale(.96)}
+.nav a:active{transform:translateY(-3px) scale(.96)}
 .nav .active{color:var(--rh-nav-active,#2493FF)}
 .nav .active svg{transform:scale(1.1)}
 .nav .active::before{
