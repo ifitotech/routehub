@@ -1,7 +1,8 @@
 'use client'
 
-import {Package, Truck, Undo2, X} from 'lucide-react'
+import {CheckCircle2, Package, Plus, Truck, Undo2, X} from 'lucide-react'
 import styles from './new-route-responsive.module.css'
+import rstyles from './routes.module.css'
 import NewRouteDetails from './new-route-details'
 import NewRouteAssignment from './new-route-assignment'
 import {routeTypes, typeLabel} from './routes-model'
@@ -33,7 +34,7 @@ const typeIcons: Record<string, typeof Truck> = {
 const typeOrder = ['delivery', 'pickup', 'return']
 
 export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
-  const {saving, setOpen, justCreated, locale, c, form, setForm, defaultBranch, save} = p
+  const {saving, setOpen, justCreated, locale, c, form, setForm, defaultBranch, save, openBuilder} = p
 
   const assignLabel = form.type === 'pickup'
     ? (locale === 'es' ? 'Asignar recogida' : locale === 'fr' ? 'Attribuer la collecte' : 'Assign pickup')
@@ -64,8 +65,18 @@ export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
       </div>
 
       {justCreated ? (
-        <div className={styles.successPanel}>
-          {locale === 'es' ? 'Ruta creada' : locale === 'fr' ? 'Itinéraire créé' : 'Route created'}
+        <div className={`${rstyles.successPanel} ${styles.successSpan}`}>
+          <div className={rstyles.successIcon}><CheckCircle2 size={34}/></div>
+          <h3>{c.published}</h3>
+          <p>{locale === 'es' ? 'La ruta ya aparece para el conductor asignado.' : 'The route is now available to the assigned driver.'}</p>
+          <div className={rstyles.successActions}>
+            <button className={rstyles.secondaryButton} type="button" onClick={() => setOpen(false)}>
+              {locale === 'es' ? 'Listo' : 'Done'}
+            </button>
+            <button className={rstyles.primaryButton} type="button" onClick={() => openBuilder()}>
+              <Plus size={18}/>{locale === 'es' ? 'Añadir otra' : 'Add another'}
+            </button>
+          </div>
         </div>
       ) : (
         <>

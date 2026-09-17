@@ -381,13 +381,12 @@
   cursor: not-allowed;
 }
 
-.successPanel {
+/* routes.module.css's .successPanel (imported as rstyles) supplies the icon,
+   copy and button styling; it doesn't set grid-column since it was written
+   for a plain block layout, not this panel's 2-column grid, so it needs to
+   span both columns here or it renders squeezed into column 1. */
+.successSpan {
   grid-column: 1 / -1;
-  padding: 24px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: #18a566;
 }
 
 /* One column once the two no longer fit side by side - the divider becomes
