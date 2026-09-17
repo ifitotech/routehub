@@ -7,7 +7,7 @@ import {canOpenPath, resolveAccess, workspaceForStrictRole} from './auth-access'
 
 // Invitation activation must be public: a manager has no session yet when
 // opening the email link for the first time.
-const publicPaths = ['/login', '/auth/callback', '/activate-invitation', '/product', '/how-it-works', '/for-drivers', '/terms']
+const publicPaths = ['/login', '/auth/callback', '/activate-invitation', '/product', '/how-it-works', '/for-drivers', '/terms', '/privacy', '/guide.html']
 
 function isDriverWorkspace(path: string) {
   return path === '/driver' || path.startsWith('/driver/') || path === '/driver-v3' || path.startsWith('/driver-v3/')
@@ -16,7 +16,6 @@ function isDriverWorkspace(path: string) {
 function sameWorkspace(a: string | null, b: string) {
   if (!a) return false
   if (isDriverWorkspace(a) && isDriverWorkspace(b)) return true
-  // Stay mounted across sibling pages in the same role area
   const root = (p: string) => p.split('/').slice(0, 2).join('/') || '/'
   return root(a) === root(b)
 }
@@ -67,9 +66,6 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
 
   const isPublic = pathname === '/' || publicPaths.some(path => pathname.startsWith(path))
 
-  // First load / hard navigation still waits for auth.
-  // Soft navigations inside the same workspace keep the current tree mounted
-  // so Driver V3 does not flash a website-style "Opening…" card between tabs.
   if (!isPublic && verifiedPath !== pathname) {
     if (verifiedRoleOk && sameWorkspace(verifiedPath, pathname)) {
       return <>{children}</>
