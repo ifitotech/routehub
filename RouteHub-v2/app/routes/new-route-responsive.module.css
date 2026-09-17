@@ -12,12 +12,16 @@
   background: var(--rh-card, #fff);
   border-radius: 16px;
   /* Fluid rather than stepped: the panel lives in the dispatch board's centre
-     column, so its width tracks the window continuously and a breakpoint jump
-     reads as the layout snapping. Breakpoints below only handle the changes
-     clamp cannot express - stacking the columns, wrapping the type cards. */
+     column, whose own height is capped by the viewport (dispatch-layout.module.css's
+     --board-height), so a shorter monitor - a 21" work display next to a 24"
+     one at home, same window maximized - hands this panel noticeably less
+     room even at an identical browser width. Every size below that eats
+     vertical space is a clamp() against vh (not vw), so the whole panel
+     keeps shrinking as height drops instead of only reacting to width and
+     forcing .center's own scrollbar. */
   column-gap: clamp(18px, 2.2vw, 32px);
-  row-gap: clamp(14px, 1.6vw, 20px);
-  padding: clamp(16px, 1.8vw, 26px) clamp(16px, 2.2vw, 32px);
+  row-gap: clamp(10px, 2vh, 20px);
+  padding: clamp(12px, 2.4vh, 26px) clamp(16px, 2.2vw, 32px);
   min-height: 0;
 }
 
@@ -81,7 +85,7 @@
   grid-column: 1;
   display: flex;
   flex-direction: column;
-  gap: clamp(13px, 1.5vw, 18px);
+  gap: clamp(8px, 1.8vh, 18px);
   min-width: 0;
   min-height: 0;
 }
@@ -90,7 +94,7 @@
   grid-column: 2;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.3vw, 16px);
+  gap: clamp(8px, 1.6vh, 16px);
   min-width: 0;
   min-height: 0;
   padding-left: clamp(18px, 2.2vw, 32px);
@@ -100,7 +104,7 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: clamp(6px, 1.2vh, 11px);
   min-width: 0;
 }
 
@@ -111,6 +115,15 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* Height-shrink routes.module.css's shared .field input/select (min-height
+   41px there, fixed) for fields living in this panel's left column only -
+   Contact name, PO, Who-receives Name/Phone. Scoped under .content so the
+   old Add Route builder modal, which shares that same class, is untouched. */
+.content [class*='field'] input,
+.content [class*='field'] select {
+  min-height: clamp(34px, 5vh, 41px);
 }
 
 /* Route type - one row, icon then label then the radio that confirms it,
@@ -125,8 +138,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 72px;
-  padding: 10px 13px;
+  min-height: clamp(52px, 8vh, 72px);
+  padding: clamp(6px, 1.2vh, 10px) 13px;
   border: 1.5px solid var(--rh-line, #e7edf4);
   border-radius: 12px;
   background: var(--rh-card, #fff);
@@ -205,13 +218,13 @@
   border: 0;
   background: transparent;
   display: grid;
-  gap: clamp(12px, 1.5vw, 17px);
+  gap: clamp(8px, 1.8vh, 17px);
   align-content: start;
 }
 
 .assignFields > div > div {
   display: grid;
-  gap: 9px;
+  gap: clamp(5px, 1vh, 9px);
   align-content: start;
 }
 
@@ -236,8 +249,8 @@
 .assignFields div input,
 .assignFields div textarea {
   width: 100%;
-  min-height: 46px;
-  padding: 11px 13px;
+  min-height: clamp(38px, 5.5vh, 46px);
+  padding: clamp(7px, 1.3vh, 11px) 13px;
   border: 1px solid var(--rh-line, #e7edf4);
   border-radius: 11px;
   background: var(--rh-card, #fff);
@@ -251,7 +264,7 @@
    what decides whether Cancel/Assign land inside the panel or push it into a
    scroll. Drag it taller when a long note is actually needed. */
 .assignFields div textarea {
-  min-height: 54px;
+  min-height: clamp(34px, 5vh, 54px);
   resize: vertical;
   font-family: inherit;
 }
@@ -269,8 +282,8 @@
 }
 
 .assignFields div button[class*='driverCard'] {
-  min-height: 50px;
-  padding: 7px 13px;
+  min-height: clamp(40px, 6vh, 50px);
+  padding: clamp(5px, 1vh, 7px) 13px;
   border-radius: 11px;
   font-size: 14px;
 }
@@ -280,7 +293,7 @@
 }
 
 .assignFields div [class*='scheduleToggle'] button {
-  min-height: 38px;
+  min-height: clamp(32px, 4.5vh, 38px);
   font-size: 13px;
 }
 
@@ -290,7 +303,7 @@
 
 .assignFields div [class*='moreDetailsPanel'] {
   display: grid;
-  gap: 15px;
+  gap: clamp(8px, 1.5vh, 15px);
   padding-top: 0;
 }
 
@@ -301,12 +314,12 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: auto;
-  padding-top: 8px;
+  padding-top: clamp(4px, 1vh, 8px);
 }
 
 .btnCancel,
 .btnSubmit {
-  min-height: 48px;
+  min-height: clamp(38px, 5.5vh, 48px);
   padding: 0 24px;
   border-radius: 11px;
   font-size: 15px;
@@ -375,24 +388,6 @@
    there is less of it the note gives way first - it is the one field that is
    optional, resizable, and tall enough to matter. Keeps Cancel/Assign in view
    instead of handing the whole panel a scrollbar. */
-@media (max-height: 860px) {
-  .assignFields div textarea {
-    min-height: 44px;
-  }
-}
-
-@media (max-height: 760px) {
-  .assignFields div textarea {
-    min-height: 38px;
-  }
-
-  .assignFields div select,
-  .assignFields div input,
-  .assignFields div [class*='driverCard'] {
-    min-height: 42px;
-  }
-}
-
 /* Phone: full-screen takeover, same reasoning new-route-ui.module.css's
    .inlinePanel used to apply before this panel replaced it. The dispatch
    board underneath (calendar strip, list/map toggle, app nav) leaves only a
