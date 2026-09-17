@@ -80,6 +80,7 @@ export default function DriverV3Page() {
   const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
+  const autoNavigationRouteRef=useRef<string|null>(null)
   const refreshStartY=useRef<number|null>(null)
   const refreshDistance=useRef(0)
   const completionHandleStartY=useRef<number|null>(null)
@@ -117,6 +118,23 @@ export default function DriverV3Page() {
   const phase=route?driverOperationPhase(route):'pending'
   const started=phase==='started'||phase==='arrived'
   const arrived=phase==='arrived'
+
+  // Settings promises guidance "opens when starting a stop" while the
+  // in-app navigator is on, but navigationVisible is plain component state -
+  // it used to only turn on from the explicit call inside startCurrent, so a
+  // driver who reopens the app mid-route (backgrounded tab, PWA relaunch)
+  // landed back on the static route preview instead of resuming live
+  // navigation. This restores it once per route per mount whenever the
+  // route is already started and the preference is internal. The ref guard
+  // means "Volver a Today" (setNavigationVisible(false)) still holds for the
+  // rest of that mount instead of snapping back open on the next render.
+  useEffect(()=>{
+    if(!started||!route?.id)return
+    if(getNavigationPreference()!=='internal')return
+    if(autoNavigationRouteRef.current===route.id)return
+    autoNavigationRouteRef.current=route.id
+    setNavigationVisible(true)
+  },[started,route?.id])
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
