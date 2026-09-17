@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import {useState} from 'react'
 import {Maximize2, Minimize2} from 'lucide-react'
-import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
+import type {OperationsDriverLocation, OperationsRoute, OperationsSummary} from '../operations-map'
 import styles from './compact-map.module.css'
 
 const OperationsMap = dynamic(() => import('../operations-map'), {ssr: false, loading: () => <div className={styles.loading} aria-hidden />})
@@ -17,6 +17,7 @@ type CompactMapProps = {
   expandLabel?: string
   collapseLabel?: string
   className?: string
+  onSummary?: (summary: OperationsSummary | null) => void
 }
 
 /**
@@ -26,7 +27,7 @@ type CompactMapProps = {
  * one implementation means the map behaves and looks identical everywhere
  * instead of each screen inventing its own compact/zoom mechanism.
  */
-export default function CompactMap({routes, driverLocations, locale, interactive, hideFooter = true, expandLabel = 'Expand map', collapseLabel = 'Collapse map', className}: CompactMapProps) {
+export default function CompactMap({routes, driverLocations, locale, interactive, hideFooter = true, expandLabel = 'Expand map', collapseLabel = 'Collapse map', className, onSummary}: CompactMapProps) {
   const [expanded, setExpanded] = useState(false)
   return (
     <div className={`${styles.wrap} ${className || ''}`} data-expanded={expanded ? 'true' : 'false'}>
@@ -34,7 +35,7 @@ export default function CompactMap({routes, driverLocations, locale, interactive
         {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         {expanded ? collapseLabel : expandLabel}
       </button>
-      <OperationsMap routes={routes} driverLocations={driverLocations} locale={locale} interactive={interactive ?? expanded} hideFooter={hideFooter} />
+      <OperationsMap routes={routes} driverLocations={driverLocations} locale={locale} interactive={interactive ?? expanded} hideFooter={hideFooter} onSummary={onSummary} />
     </div>
   )
 }

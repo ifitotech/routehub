@@ -4,7 +4,82 @@
 .mapPane {
   min-width: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Total ETA/distance/route-count strip above the dashboard map, sourced
+   from CompactMap's onSummary - the same routing calculation the map
+   already runs to draw driver lines, so this is free instead of a second
+   query. Fixed height (flex:none) so the map wrapper below gets the rest
+   of the column via flex:1. */
+.dashboardStats {
+  flex: none;
+  display: flex;
+  gap: 8px;
+}
+
+.statChip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--rh-blue, #1660f0);
+}
+
+.statChip span {
+  flex: 1;
+  min-width: 0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statChip strong {
+  flex: none;
+  color: #0f1d35;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mapWrap {
+  flex: 1;
+  min-height: 0;
   position: relative;
+}
+
+:global(html[data-theme='dark']) .statChip {
+  background: #18263b;
+  border-color: var(--rh-border, #30445f);
+  color: #6fb3ff;
+}
+
+:global(html[data-theme='dark']) .statChip span {
+  color: var(--rh-text-secondary, #b7c5d9);
+}
+
+:global(html[data-theme='dark']) .statChip strong {
+  color: var(--rh-text, #f8fafc);
+}
+
+@media (max-width: 420px) {
+  .dashboardStats {
+    gap: 6px;
+  }
+  .statChip span {
+    display: none;
+  }
 }
 
 .detailsModal {
@@ -345,7 +420,7 @@
    Scoped to the 3-column breakpoint: while the layout is still stacked the
    map is back to being a compact panel and its own expand button matters. */
 @media (min-width: 1201px) {
-  .mapPane > div {
+  .mapWrap > div {
     height: 100%;
     min-height: 0;
     --operations-map-height: 100%;
@@ -355,14 +430,14 @@
      height:100% would resolve against an auto height and collapse. Give the
      section the full height too, completing the chain from the column's
      explicit height down to the Leaflet container. */
-  .mapPane > div > section {
+  .mapWrap > div > section {
     height: 100%;
   }
 
   /* The map already fills its column here, so CompactMap's expand/collapse
      button has nothing left to do - hide it rather than leave a control that
      does nothing when clicked. */
-  .mapPane > div > button {
+  .mapWrap > div > button {
     display: none;
   }
 }

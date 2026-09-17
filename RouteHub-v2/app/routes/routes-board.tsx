@@ -1,10 +1,10 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import {Package, Truck, Undo2, X} from 'lucide-react'
+import {Clock, MapPin, Package, Route as RouteIcon, Truck, Undo2, X} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
-import type {OperationsDriverLocation, OperationsRoute} from '../operations-map'
+import type {OperationsDriverLocation, OperationsRoute, OperationsSummary} from '../operations-map'
 import {driverDetails, statusLabel, typeLabel} from './routes-model'
 import type {Driver, RouteCopy} from './routes-model'
 import CompactMap from '../manager/compact-map'
@@ -23,6 +23,24 @@ function routeTimeLabel(scheduledAt: string | null | undefined, locale: string, 
   return new Intl.DateTimeFormat(locale, {hour: 'numeric', minute: '2-digit'}).format(date)
 }
 
+// The dashboard's compact map already has to draw driver routing lines to
+// render at all - onSummary hands back the total distance/duration it
+// computed for that, for free. Surfacing it here means the total ETA is
+// readable without opening the (much bigger) Details modal just to see it.
+function formatTotalEta(durationSeconds: number | undefined, locale: string, dash: string) {
+  if (!durationSeconds || !Number.isFinite(durationSeconds)) return dash
+  const minutes = durationSeconds / 60
+  if (minutes < 60) return `${Math.round(minutes)} min`
+  const hours = Math.floor(minutes / 60)
+  const mins = Math.round(minutes % 60)
+  return locale === 'es' || locale === 'fr' ? `${hours} h ${mins} min` : `${hours}h ${mins}m`
+}
+
+function formatTotalDistance(distanceMeters: number | undefined, dash: string) {
+  if (!distanceMeters || !Number.isFinite(distanceMeters)) return dash
+  return `${(distanceMeters / 1609.34).toFixed(1)} mi`
+}
+
 export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen, setDetailsOpen}: {
   routes: OperationsRoute[]
   locale: string
@@ -32,6 +50,7 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
   setDetailsOpen: (open: boolean) => void
 }) {
   const [drivers, setDrivers] = useState<OperationsDriverLocation[]>([])
+  const [summary, setSummary] = useState<OperationsSummary | null>(null)
   useEffect(() => {
     let disposed = false
     const load = async () => {
@@ -63,22 +82,44 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
     return () => { disposed = true; window.clearInterval(timer) }
   }, [])
   const copy = locale === 'es'
-    ? {expand: 'Ampliar mapa', collapse: 'Reducir mapa', title: 'Mapa operativo', list: 'Rutas de hoy', empty: 'No hay rutas para hoy.', noTime: 'Sin hora', po: 'PO', notes: 'Notas', driver: 'Conductor'}
+    ? {expand: 'Ampliar mapa', collapse: 'Reducir mapa', title: 'Mapa operativo', list: 'Rutas de hoy', empty: 'No hay rutas para hoy.', noTime: 'Sin hora', po: 'PO', notes: 'Notas', driver: 'Conductor', totalRoutes: 'Rutas', totalEta: 'ETA total', totalDistance: 'Distancia'}
     : locale === 'fr'
-      ? {expand: 'Agrandir la carte', collapse: 'Réduire la carte', title: 'Carte opérationnelle', list: 'Itinéraires du jour', empty: 'Aucun itinéraire aujourd’hui.', noTime: 'Aucune heure', po: 'PO', notes: 'Notes', driver: 'Conducteur'}
-      : {expand: 'Expand map', collapse: 'Collapse map', title: 'Operations map', list: "Today's routes", empty: 'No routes for today.', noTime: 'No time set', po: 'PO', notes: 'Notes', driver: 'Driver'}
+      ? {expand: 'Agrandir la carte', collapse: 'Réduire la carte', title: 'Carte opérationnelle', list: 'Itinéraires du jour', empty: 'Aucun itinéraire aujourd’hui.', noTime: 'Aucune heure', po: 'PO', notes: 'Notes', driver: 'Conducteur', totalRoutes: 'Itinéraires', totalEta: 'ETA totale', totalDistance: 'Distance'}
+      : {expand: 'Expand map', collapse: 'Collapse map', title: 'Operations map', list: "Today's routes", empty: 'No routes for today.', noTime: 'No time set', po: 'PO', notes: 'Notes', driver: 'Driver', totalRoutes: 'Routes', totalEta: 'Total ETA', totalDistance: 'Distance'}
+  const dash = '—'
   const sortedRoutes = routes.filter(route => route.id !== 'draft-preview').slice().sort((a, b) => Number(a.position || 0) - Number(b.position || 0))
+  const activeRouteCount = routes.filter(route => route.id !== 'draft-preview' && route.status !== 'completed' && route.status !== 'cancelled').length
   return (
     <>
       <div className={styles.mapPane}>
-        <CompactMap
-          routes={routes}
-          driverLocations={drivers}
-          locale={locale}
-          hideFooter
-          expandLabel={copy.expand}
-          collapseLabel={copy.collapse}
-        />
+        <div className={styles.dashboardStats}>
+          <div className={styles.statChip}>
+            <RouteIcon size={13} />
+            <span>{copy.totalRoutes}</span>
+            <strong>{summary?.count ?? activeRouteCount}</strong>
+          </div>
+          <div className={styles.statChip}>
+            <Clock size={13} />
+            <span>{copy.totalEta}</span>
+            <strong>{formatTotalEta(summary?.durationSeconds, locale, dash)}</strong>
+          </div>
+          <div className={styles.statChip}>
+            <MapPin size={13} />
+            <span>{copy.totalDistance}</span>
+            <strong>{formatTotalDistance(summary?.distanceMeters, dash)}</strong>
+          </div>
+        </div>
+        <div className={styles.mapWrap}>
+          <CompactMap
+            routes={routes}
+            driverLocations={drivers}
+            locale={locale}
+            hideFooter
+            expandLabel={copy.expand}
+            collapseLabel={copy.collapse}
+            onSummary={setSummary}
+          />
+        </div>
       </div>
 
       {detailsOpen && (

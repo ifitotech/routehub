@@ -54,7 +54,8 @@ type ResolvedSequence={
  distanceMeters?:number
  durationSeconds?:number
 }
-type Summary={count:number;distanceMeters?:number;durationSeconds?:number}
+export type OperationsSummary={count:number;distanceMeters?:number;durationSeconds?:number}
+type Summary=OperationsSummary
 type Props={
  routes:OperationsRoute[]
  driverLocations?:OperationsDriverLocation[]
