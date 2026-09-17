@@ -9,6 +9,7 @@ import {interpolateHeading,splitNavigationPath,type NavigationProgress} from '..
 type MapObject={setMap:(map:GoogleMap|null)=>void;setPosition?:(position:MapCoordinate)=>void;setPath?:(path:MapCoordinate[])=>void;setIcon?:(icon:Record<string,unknown>)=>void}
 type Listener={remove?:()=>void}
 type GoogleMap={
+  setOptions:(options:Record<string,unknown>)=>void
   addListener?:(event:string,handler:()=>void)=>Listener
   fitBounds:(bounds:unknown,padding?:number)=>void
   panTo:(point:MapCoordinate)=>void
@@ -99,19 +100,6 @@ function distanceKm(a:MapCoordinate,b:MapCoordinate){
   return radius*2*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
 }
 
-// Put the vehicle in the lower third of the viewport so the driver can see
-// more of the road ahead, matching the follow-camera behavior of dedicated
-// navigation apps. The offset scales with zoom and uses the current heading
-// when available; without a reliable heading we keep the camera centered.
-function cameraTargetAhead(position:MapCoordinate,heading:number|null|undefined,zoom:number){
-  if(!Number.isFinite(heading))return position
-  const distanceMeters=zoom>=18.3?70:zoom>=17.5?105:145
-  const radians=Number(heading)*Math.PI/180
-  const latOffset=(Math.cos(radians)*distanceMeters)/111_320
-  const lngScale=Math.max(.2,Math.cos(position.lat*Math.PI/180))
-  const lngOffset=(Math.sin(radians)*distanceMeters)/(111_320*lngScale)
-  return {lat:position.lat+latOffset,lng:position.lng+lngOffset}
-}
 
 function nearestPathIndex(path:MapCoordinate[],position:MapCoordinate){
   let index=0,best=Number.POSITIVE_INFINITY
@@ -180,6 +168,8 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           styles:navigationMapStyles(theme),
         }:{}),
       }))
+      // An existing Google Map retains its initial options across React renders.
+      if(navigation)map.setOptions({styles:navigationMapStyles(theme)})
       objectsRef.current.forEach(object=>object.setMap(null))
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
       objectsRef.current=[]
@@ -316,7 +306,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
     const marker=driverMarkerRef.current
     const previous=lastDriverPositionRef.current
     // Parent clocks/ETA renders must not restart the camera animation at rest.
-    const sample=`${position.lat}:${position.lng}:${navigationHeading}:${cameraMode}:${followToken}:${ready}`
+    const sample=`${position.lat}:${position.lng}:${navigationHeading}:${navigationZoom}:${cameraMode}:${followToken}:${ready}`
     if(navigation&&lastNavigationSample.current===sample)return
     lastNavigationSample.current=sample
     if(animationFrameRef.current!==null){cancelAnimationFrame(animationFrameRef.current);animationFrameRef.current=null}
@@ -342,8 +332,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       cameraHeading.current=heading
       if(navigationRef.current.cameraMode==='follow'&&!exploringRef.current){
         const zoom=navigationRef.current.navigationZoom
-        const target=cameraTargetAhead(point,heading,zoom)
-        if(map?.moveCamera)map.moveCamera({center:target,heading,tilt:45,zoom})
+        if(map?.moveCamera)map.moveCamera({center:point,heading,tilt:45,zoom})
         else map?.panTo(point)
       }
       marker?.setIcon?.({path:'M 0,-16 L 12,13 L 0,7 L -12,13 Z',scale:1,fillColor:'#1667F2',fillOpacity:1,strokeColor:'#fff',strokeWeight:3,rotation:heading-(map?.getHeading?.()||0)})
@@ -384,7 +373,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       mapRef.current?.panTo(position)
       if(recenter)mapRef.current?.setZoom(followDevice?17:16)
     }
-  },[followDevice,followToken,followPosition,driverMarker,safePath,navigation,navigationHeading,navigationProgress,cameraMode,ready])
+  },[followDevice,followToken,followPosition,driverMarker,safePath,navigation,navigationHeading,navigationZoom,navigationProgress,cameraMode,ready])
 
   useEffect(()=>()=>{
     if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)

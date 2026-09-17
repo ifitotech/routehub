@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Send, Shield, UserRound} from 'lucide-react'
+import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Navigation, Send, Shield, UserRound} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
@@ -17,6 +17,7 @@ import {submitSupportRequest} from '../../../lib/support'
 import {USER_GUIDE_URL} from '../../../lib/user-guide'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {getSupabase} from '../../../lib/supabase'
+import {getNavigationPreference, setNavigationPreference, type NavigationPreference} from '../../../lib/navigation-preference'
 import styles from '../driver-preferences.module.css'
 // confirmBackdrop/confirmSheet/confirmActions live in driver-v3-b.module.css -
 // the combined driver-v3.module.css only @imports the split files, it
@@ -48,10 +49,18 @@ export default function DriverV3Settings() {
   const [supportSending, setSupportSending] = useState(false)
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [navigationPreference, setNavigationPreferenceState] = useState<NavigationPreference>('internal')
 
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') setNotify('on')
   }, [])
+
+  useEffect(() => { setNavigationPreferenceState(getNavigationPreference()) }, [])
+
+  const chooseNavigation = (value: NavigationPreference) => {
+    setNavigationPreference(value)
+    setNavigationPreferenceState(value)
+  }
 
   useEffect(() => {
     if (!companyId) return
@@ -237,6 +246,28 @@ export default function DriverV3Settings() {
             <span className={styles.status} data-state={dayOn ? 'active' : 'inactive'}>
               {dayOn ? t.drvActive : copy.off}
             </span>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>{locale === 'es' ? 'Navegación' : locale === 'fr' ? 'Navigation' : 'Navigation'}</h2>
+            <p>{locale === 'es' ? 'Elige dónde se abre la guía al iniciar una parada.' : locale === 'fr' ? 'Choisissez où le guidage s’ouvre au début d’un arrêt.' : 'Choose where guidance opens when starting a stop.'}</p>
+          </div>
+          <div className={styles.row}>
+            <span className={styles.rowIcon}><Navigation size={18} /></span>
+            <span className={styles.rowCopy}>
+              <strong>{locale === 'es' ? 'Navegación dentro de RouteHub' : locale === 'fr' ? 'Navigation dans RouteHub' : 'RouteHub in-app navigation'}</strong>
+              <small>{locale === 'es' ? 'Apágala para abrir directamente Mapas en el teléfono.' : locale === 'fr' ? 'Désactivez-la pour ouvrir directement Maps sur le téléphone.' : 'Turn it off to open the phone’s maps app directly.'}</small>
+            </span>
+          </div>
+          <div className={`${styles.choices} ${styles.twoChoices}`}>
+            <button type="button" className={`${styles.choice} ${navigationPreference === 'external' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('external')}>
+              {copy.off}
+            </button>
+            <button type="button" className={`${styles.choice} ${navigationPreference === 'internal' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('internal')}>
+              {copy.on}
+            </button>
           </div>
         </section>
 

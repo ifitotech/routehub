@@ -1,6 +1,18 @@
-.navigation{position:relative;width:100%;height:100%;min-height:0;overflow:hidden;background:#081a31;color:#fff;isolation:isolate}
+.navigation{position:relative;display:grid;grid-template-rows:auto minmax(120px,1fr) auto;width:100%;height:100%;min-height:0;overflow:auto;background:#081a31;color:#fff;isolation:isolate}
 .navigation button{font:inherit;font-weight:750;cursor:pointer;touch-action:manipulation}.navigation button:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.navigation button:disabled{opacity:.5;cursor:wait}
-.mapArea{position:absolute;inset:0;min-width:0;min-height:0;background:#d9e4ef}.canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+/* Reserve actual panel heights in layout so Maps centers on the visible area.
+   Specificity keeps compact-screen rules from restoring absolute offsets. */
+.navigation .guidance{position:relative;inset:auto;margin:8px 12px;grid-template-columns:42px minmax(0,1fr) 44px;padding:10px;gap:9px}
+.navigation .guidance button{width:44px;height:44px}
+.navigation .bottom{position:relative;inset:auto;gap:5px;padding-top:6px;max-height:42%;max-height:42dvh;overflow-y:auto;min-height:0}
+.navigation .controls{bottom:24px}
+.navigation .notice{top:8px}
+.navigation .destination strong{font-size:20px;white-space:normal;overflow-wrap:anywhere}
+.navigation .destination span{white-space:normal;overflow-wrap:anywhere}
+.navigation .actions{gap:3px}
+.navigation .actions .arrived{min-height:46px;font-size:16px}
+.navigation .secondaryActions button{min-height:44px}
+.mapArea{position:relative;min-width:0;min-height:120px;overflow:hidden;background:#d9e4ef}.canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .guidance{position:absolute;z-index:4;top:12px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:66px minmax(0,1fr) 50px;align-items:center;gap:12px;padding:14px;background:linear-gradient(135deg,#071B42 0%,#0D2E5F 55%,#123F78 100%);border:1px solid rgba(125,185,255,.42);border-radius:20px;color:#fff;box-shadow:0 12px 28px rgba(3,17,43,.32)}
 .maneuver{display:grid;place-items:center;color:#fff}.instruction{display:grid;gap:3px;min-width:0}.liveLine{color:#75aaff!important;font-size:11px!important;font-weight:850;letter-spacing:.08em;line-height:1.15;text-transform:uppercase}.instruction strong{font-size:clamp(18px,4.8vw,23px);line-height:1.12;font-weight:850;letter-spacing:-.025em;overflow-wrap:anywhere}.arrivalLine{color:#c8dcf5!important;font-size:12px!important;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guidance button{display:grid;place-items:center;width:50px;height:50px;padding:0;border:1px solid rgba(170,208,255,.62);border-radius:50%;background:rgba(5,27,66,.4);color:#fff}
 .controls{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(228px + env(safe-area-inset-bottom,0px));z-index:3}.controls button{display:grid;place-items:center;width:50px;height:50px;padding:0;border:1px solid rgba(15,29,53,.15);border-radius:50%;background:#fff;color:#1667f2;box-shadow:0 5px 15px rgba(15,29,53,.2)}.controls button[aria-pressed=true]{background:#eaf2ff;border-color:#1667f2}.notice{position:absolute;z-index:3;top:112px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:7px;max-width:calc(100% - 28px);min-height:38px;padding:7px 12px;border:1px solid #e9c571;border-radius:12px;background:#fff8e7;color:#744a08;font-size:12px;text-align:center;box-shadow:0 2px 8px #071b421a}

@@ -10,6 +10,7 @@ import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvide
 import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigationWithFallback} from '../../lib/maps/external-navigation'
+import {getNavigationPreference} from '../../lib/navigation-preference'
 import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
@@ -162,9 +163,10 @@ export default function DriverV3Page() {
         }catch{}
       }
       await refresh()
-      // Navigation stays in the driver's installed map app. RouteHub records
-      // the start first, then hands off the same authoritative destination.
-      openMapsForRoute(route)
+      // The driver controls this per device: RouteHub navigation stays inside
+      // the app, while the external choice invokes Apple Maps/Google Maps.
+      if (getNavigationPreference() === 'internal') router.push('/driver/map')
+      else openMapsForRoute(route)
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{

@@ -22,7 +22,7 @@ test('android external navigation keeps a native fallback chain while non-browse
   assert.match(openNavigation(destination,'iPhone OS 18_0'),/^maps:\/\//)
 })
 
-test('Driver entry uses the current operation preview and real external navigation',async()=>{
+test('Driver entry uses the current operation preview and honors the navigation preference',async()=>{
   // app/driver/page.tsx was removed - /driver now rewrites to /driver-v3 in
   // middleware.ts instead of a redirect page, so that's what proves the
   // official /driver URL actually serves the V3 app.
@@ -33,8 +33,9 @@ test('Driver entry uses the current operation preview and real external navigati
   assert.match(source,/<DriverRouteEstimate route=\{route\} locale=\{locale\}/)
   assert.doesNotMatch(source,/<OperationsMap/)
   assert.doesNotMatch(source,/router\.prefetch\('\/driver\/map'\)/)
-  assert.doesNotMatch(source,/router\.push\('\/driver\/map'\)/)
-  assert.match(source,/await refresh\(\)[\s\S]*openMapsForRoute\(route\)/)
+  assert.match(source,/getNavigationPreference\(\) === 'internal'/)
+  assert.match(source,/router\.push\('\/driver\/map'\)/)
+  assert.match(source,/await refresh\(\)[\s\S]*(router\.push\('\/driver\/map'\)|openMapsForRoute\(route\))/)
   assert.match(source,/openNavigationWithFallback\(/)
   // The "next stop" preview chip was removed from Today - that space must
   // read the same whether or not there's a route queued after this one,

@@ -95,8 +95,10 @@ export default function DriverNavigationMap({
   useEffect(()=>{
     const syncTheme=()=>setMapTheme(document.documentElement.dataset.theme==='light'?'light':'dark')
     syncTheme()
+    const observer=new MutationObserver(syncTheme)
+    observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})
     window.addEventListener('routehub:theme-change',syncTheme)
-    return()=>window.removeEventListener('routehub:theme-change',syncTheme)
+    return()=>{observer.disconnect();window.removeEventListener('routehub:theme-change',syncTheme)}
   },[])
 
   const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label||stop.coordinate)),[stops])
@@ -382,7 +384,7 @@ export default function DriverNavigationMap({
       <aside className={styles.guidance} aria-live="polite">
         <div className={styles.maneuver}><ManeuverIcon size={42}/></div>
         <div className={styles.instruction}>
-          <span className={styles.liveLine}>{gpsReady?`${liveLabel} · ${instructionDistance}`:labels.gps}</span>
+          <span className={styles.liveLine}>{gpsReady?(instructionDistance==='GPS LIVE'?liveLabel:`${liveLabel} · ${instructionDistance}`):labels.gps}</span>
           <strong>{instruction}</strong>
           <span className={styles.arrivalLine}>{gpsReady?arrivalSummary:(gpsMessage==='permission'?labels.permission:labels.gpsHint)}</span>
         </div>
