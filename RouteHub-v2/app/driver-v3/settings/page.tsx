@@ -18,6 +18,7 @@ import {USER_GUIDE_URL} from '../../../lib/user-guide'
 import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {getSupabase} from '../../../lib/supabase'
 import {getNavigationPreference, setNavigationPreference, type NavigationPreference} from '../../../lib/navigation-preference'
+import {getDriverModePreference, setDriverModePreference, type DriverMode} from '../../../lib/driver-mode-preference'
 import styles from '../driver-preferences.module.css'
 // confirmBackdrop/confirmSheet/confirmActions live in driver-v3-b.module.css -
 // the combined driver-v3.module.css only @imports the split files, it
@@ -50,16 +51,22 @@ export default function DriverV3Settings() {
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [navigationPreference, setNavigationPreferenceState] = useState<NavigationPreference>('internal')
+  const [driverMode, setDriverModeState] = useState<DriverMode>('pro')
 
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') setNotify('on')
   }, [])
 
   useEffect(() => { setNavigationPreferenceState(getNavigationPreference()) }, [])
+  useEffect(() => { setDriverModeState(getDriverModePreference()) }, [])
 
   const chooseNavigation = (value: NavigationPreference) => {
     setNavigationPreference(value)
     setNavigationPreferenceState(value)
+  }
+  const chooseDriverMode = (value: DriverMode) => {
+    setDriverModePreference(value)
+    setDriverModeState(value)
   }
 
   useEffect(() => {
@@ -198,6 +205,21 @@ export default function DriverV3Settings() {
     <DriverV3Shell active="more" title={t.drvSettings} hideNav={confirmEnd || confirmSignOut}>
       <div className={styles.page}>
         <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>{locale === 'es' ? 'Experiencia de Driver' : locale === 'fr' ? 'Expérience Driver' : 'Driver experience'}</h2>
+            <p>{locale === 'es' ? 'Simple muestra solo las acciones necesarias. Pro conserva el resumen completo de la parada.' : locale === 'fr' ? 'Simple affiche uniquement les actions nécessaires. Pro conserve le résumé complet de l’arrêt.' : 'Simple shows only the needed actions. Pro keeps the complete stop summary.'}</p>
+          </div>
+          <div className={`${styles.choices} ${styles.twoChoices}`}>
+            <button type="button" className={`${styles.choice} ${driverMode === 'simple' ? styles.choiceSelected : ''}`} onClick={() => chooseDriverMode('simple')}>
+              {locale === 'es' ? 'Simple' : 'Simple'}
+            </button>
+            <button type="button" className={`${styles.choice} ${driverMode === 'pro' ? styles.choiceSelected : ''}`} onClick={() => chooseDriverMode('pro')}>
+              Pro
+            </button>
+          </div>
+        </section>
+
+        <section className={styles.section}>
           <Link href="/driver/more" className={styles.row}>
             <span className={styles.rowIcon}><UserRound size={18} /></span>
             <span className={styles.rowCopy}>
@@ -252,7 +274,7 @@ export default function DriverV3Settings() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2>{locale === 'es' ? 'Navegación' : locale === 'fr' ? 'Navigation' : 'Navigation'}</h2>
-            <p>{locale === 'es' ? 'Simple abre la app de mapas del teléfono. RouteHub muestra la guía completa dentro de la app.' : locale === 'fr' ? 'Simple ouvre l’app de cartes du téléphone. RouteHub affiche le guidage complet dans l’app.' : 'Simple opens the phone maps app. RouteHub keeps full guidance inside the app.'}</p>
+            <p>{locale === 'es' ? 'Elige si la guía se abre dentro de RouteHub o directamente en la app de mapas del teléfono.' : locale === 'fr' ? 'Choisissez si le guidage s’ouvre dans RouteHub ou directement dans l’app de cartes du téléphone.' : 'Choose whether guidance opens inside RouteHub or directly in the phone maps app.'}</p>
           </div>
           <div className={styles.row}>
             <span className={styles.rowIcon}><Navigation size={18} /></span>
@@ -263,7 +285,7 @@ export default function DriverV3Settings() {
           </div>
           <div className={`${styles.choices} ${styles.twoChoices}`}>
             <button type="button" className={`${styles.choice} ${navigationPreference === 'external' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('external')}>
-              {locale === 'es' ? 'Simple' : locale === 'fr' ? 'Simple' : 'Simple'}
+              {locale === 'es' ? 'Teléfono' : locale === 'fr' ? 'Téléphone' : 'Phone'}
             </button>
             <button type="button" className={`${styles.choice} ${navigationPreference === 'internal' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('internal')}>
               {locale === 'es' ? 'RouteHub' : locale === 'fr' ? 'RouteHub' : 'RouteHub'}

@@ -11,6 +11,7 @@ import {startTemporaryRouteSession} from '../../lib/driving-session'
 import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigationWithFallback} from '../../lib/maps/external-navigation'
 import {getNavigationPreference} from '../../lib/navigation-preference'
+import {getDriverModePreference} from '../../lib/driver-mode-preference'
 import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
@@ -135,6 +136,11 @@ export default function DriverV3Page() {
   },[sheet])
   const phase=route?driverOperationPhase(route):'pending'
   const started=phase==='started'||phase==='arrived'
+  const simpleMode=getDriverModePreference()==='simple'
+  const internalNavigationEnabled=started&&getNavigationPreference()==='internal'
+  useEffect(()=>{
+    if(internalNavigationEnabled)setNavigationVisible(true)
+  },[internalNavigationEnabled,route?.id])
   const arrived=phase==='arrived'
 
   // Settings promises guidance "opens when starting a stop" while the
@@ -549,7 +555,7 @@ export default function DriverV3Page() {
             <h1>{shortDestination(route.destination_name||route.destination_address)||t.drvCurrentStopName}</h1>
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{compactAddress(route.destination_address)}</span></p>}
           </button>
-          <DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null} simpleNavigation={getNavigationPreference()==='external'}/>
+          {!simpleMode&&<DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null} simpleNavigation={getNavigationPreference()==='external'}/>} 
           <button type="button" className={styles.primary} data-map-cta disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
             {busy?t.drvBusy:action.label}
           </button>
@@ -559,19 +565,19 @@ export default function DriverV3Page() {
               of hiding behind a separate menu. */}
           {started&&(
             <>
-              <div className={styles.secondaryRow}>
+              <div className={`${styles.secondaryRow} ${simpleMode?styles.secondaryRowSimple:''}`}>
                 <button type="button" className={styles.secondaryAction} onClick={openPreferredNavigation}>
                   <span className={styles.secondaryActionIcon}><MapPin size={22}/></span>
                   <span>{getNavigationPreference()==='internal'?(locale==='es'?'Continuar navegación':locale==='fr'?'Reprendre la navigation':'Resume navigation'):(locale==='es'?'Abrir navegación del teléfono':locale==='fr'?'Ouvrir la navigation du téléphone':'Open phone navigation')}</span>
                 </button>
-                <button type="button" className={styles.secondaryAction} onClick={()=>setSheet('info')}>
+                {!simpleMode&&<button type="button" className={styles.secondaryAction} onClick={()=>setSheet('info')}>
                   <span className={styles.secondaryActionIcon}><Info size={22}/></span>
                   <span>{locale==='es'?'Info':locale==='fr'?'Infos':'Info'}</span>
-                </button>
-                <button type="button" className={`${styles.secondaryAction} ${styles.secondaryActionDanger}`} onClick={openIssueFromTools}>
+                </button>}
+                {!simpleMode&&<button type="button" className={`${styles.secondaryAction} ${styles.secondaryActionDanger}`} onClick={openIssueFromTools}>
                   <span className={styles.secondaryActionIcon}><TriangleAlert size={22}/></span>
                   <span>{t.drvIssue}</span>
-                </button>
+                </button>}
               </div>
               <span className={styles.startedHandle} role={kind==='delivery'?'button':undefined} aria-label={kind==='delivery'?'Swipe up to complete delivery':undefined} aria-hidden={kind==='delivery'?undefined:'true'} onTouchStart={completionHandleStart} onTouchMove={completionHandleMove} onTouchEnd={completionHandleEnd}/>
             </>
