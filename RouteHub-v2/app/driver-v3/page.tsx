@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useRouter, useSearchParams} from 'next/navigation'
+import {useSearchParams} from 'next/navigation'
 import {Package, PackageCheck, PackagePlus, RefreshCw, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
@@ -30,6 +30,7 @@ import dynamic from 'next/dynamic'
 // prerendering/SSR - load it client-only, same pattern used by every other
 // map consumer in this app (driver-route-navigation, compact-map, etc.)
 const DriverRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
+const DriverRouteNavigation = dynamic(() => import('../driver-route-navigation'), {ssr: false})
 import {Info, MapPin, TriangleAlert} from 'lucide-react'
 
 // Driver Today owns only temporary presentation data. A completed route must
@@ -60,7 +61,6 @@ function compactAddress(value: unknown) {
 }
 
 export default function DriverV3Page() {
-  const router=useRouter()
   const searchParams=useSearchParams()
   const {t,locale}=useLocale()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix}=useDriverData()
@@ -85,6 +85,7 @@ export default function DriverV3Page() {
   const completionHandleStartY=useRef<number|null>(null)
   const [refreshing,setRefreshing]=useState(false)
   const [pullDistance,setPullDistance]=useState(0)
+  const [navigationVisible,setNavigationVisible]=useState(false)
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
@@ -144,6 +145,11 @@ export default function DriverV3Page() {
 
   const openMaps=()=>openMapsForRoute(route)
 
+  const openPreferredNavigation=()=>{
+    if(getNavigationPreference()==='internal')setNavigationVisible(true)
+    else openMapsForRoute(route)
+  }
+
   const startCurrent=async()=>{
     if(!route||busy)return
     setBusy(true)
@@ -165,8 +171,7 @@ export default function DriverV3Page() {
       await refresh()
       // The driver controls this per device: RouteHub navigation stays inside
       // the app, while the external choice invokes Apple Maps/Google Maps.
-      if (getNavigationPreference() === 'internal') router.push('/driver/map')
-      else openMapsForRoute(route)
+      openPreferredNavigation()
     }catch(error){
       setMessage(error instanceof Error?error.message:t.drvOpFailed)
     }finally{
@@ -233,6 +238,26 @@ export default function DriverV3Page() {
   const openReturn=()=>{
     setMessage('')
     setSheet('return')
+  }
+
+  const arriveFromNavigation=async()=>{
+    if(!route||busy||!driverId)return
+    setBusy(true)
+    setMessage('')
+    try{
+      if(!route.arrived_at){
+        try{await markArrived(ctx())}catch(error){
+          if(!/already recorded/i.test(error instanceof Error?error.message:''))throw error
+        }
+      }
+      await refresh()
+      setNavigationVisible(false)
+      if(kind==='pickup'||kind==='delivery'||kind==='return')setSheet(kind)
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
   }
 
   const sign=(e: React.PointerEvent<HTMLCanvasElement>)=>{
@@ -393,6 +418,8 @@ export default function DriverV3Page() {
     event.stopPropagation()
     if(start!==null&&end!==undefined&&start-end>28)openDelivery()
   }
+  const internalNavigation=Boolean(navigationVisible&&started&&route&&getNavigationPreference()==='internal')
+  const navigationStops=route?[route,...(snapshot?.queue.upcoming||[])]:[]
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
   // flush (already used by the Map screen) removes .content's own
@@ -407,7 +434,7 @@ export default function DriverV3Page() {
   return <DriverV3Shell
     active="today"
     headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}
-    hideNav={Boolean((sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
+    hideNav={Boolean(internalNavigation||(sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
     flush
   >
     {/* .page and the confirm dialog are siblings, not parent/child, on
@@ -416,7 +443,19 @@ export default function DriverV3Page() {
         descendants into descendants confined to *that* box instead of the
         viewport, which would trap the backdrop inside the very element
         it's meant to shrink behind. */}
-    <div className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+    {internalNavigation?<div className={styles.inAppNavigation}>
+      <DriverRouteNavigation
+        stops={navigationStops}
+        activeStopId={route.id}
+        originAddress={route.origin_address}
+        originCoordinate={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null}
+        locale={locale}
+        sharedLocation={liveFix}
+        disabled={busy}
+        onArrive={()=>void arriveFromNavigation()}
+        onExit={()=>setNavigationVisible(false)}
+      />
+    </div>:<div className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
           <span className={styles.pullRoadLine}/>
@@ -455,9 +494,9 @@ export default function DriverV3Page() {
           {started&&(
             <>
               <div className={styles.secondaryRow}>
-                <button type="button" className={styles.secondaryAction} onClick={openMaps}>
+                <button type="button" className={styles.secondaryAction} onClick={openPreferredNavigation}>
                   <span className={styles.secondaryActionIcon}><MapPin size={22}/></span>
-                  <span>{t.drvOpenMaps}</span>
+                  <span>{getNavigationPreference()==='internal'?(locale==='es'?'Continuar navegación':locale==='fr'?'Reprendre la navigation':'Resume navigation'):t.drvOpenMaps}</span>
                 </button>
                 <button type="button" className={styles.secondaryAction} onClick={()=>setSheet('info')}>
                   <span className={styles.secondaryActionIcon}><Info size={22}/></span>
@@ -510,7 +549,7 @@ export default function DriverV3Page() {
         />
       )}
 
-    </div>
+    </div>}
     {confirmPickupOpen&&(
       <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
         <div className={confirmStyles.confirmSheet}>

@@ -33,9 +33,11 @@ test('Driver entry uses the current operation preview and honors the navigation 
   assert.match(source,/<DriverRouteEstimate route=\{route\} locale=\{locale\}/)
   assert.doesNotMatch(source,/<OperationsMap/)
   assert.doesNotMatch(source,/router\.prefetch\('\/driver\/map'\)/)
-  assert.match(source,/getNavigationPreference\(\) === 'internal'/)
-  assert.match(source,/router\.push\('\/driver\/map'\)/)
-  assert.match(source,/await refresh\(\)[\s\S]*(router\.push\('\/driver\/map'\)|openMapsForRoute\(route\))/)
+  assert.match(source,/getNavigationPreference\(\)===\'internal\'/)
+  assert.match(source,/setNavigationVisible\(true\)/)
+  assert.match(source,/await refresh\(\)[\s\S]*openPreferredNavigation\(\)/)
+  assert.match(source,/<DriverRouteNavigation/)
+  assert.match(source,/onExit=\{\(\)=>setNavigationVisible\(false\)\}/)
   assert.match(source,/openNavigationWithFallback\(/)
   // The "next stop" preview chip was removed from Today - that space must
   // read the same whether or not there's a route queued after this one,
