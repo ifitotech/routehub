@@ -97,6 +97,7 @@ export default function DriverRouteNavigation({
   const remaining=sorted.filter(stop=>!['completed','issue'].includes(String(stop.status||'')))
   const activeIndex=activeStopId?remaining.findIndex(stop=>stop.id===activeStopId):-1
   const navigationStops=activeIndex>=0?remaining.slice(activeIndex):remaining
+  const activePosition=activeStopId?sorted.findIndex(stop=>stop.id===activeStopId)+1:Math.max(1,sorted.findIndex(stop=>stop.id===navigationStops[0]?.id)+1)
   const planned:PlannedStop[]=navigationStops.map(stop=>({
     id:stop.id,
     address:stop.destination_address,
@@ -122,5 +123,5 @@ export default function DriverRouteNavigation({
   // Navigation is the correct moment to acquire a fresh foreground GPS fix.
   // A saved driving-session location is useful as an initial reference, but
   // must never leave turn guidance paused when it is stale or unavailable.
-  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice sharedLocation={liveLocation} arrivalDisabled={disabled} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
+  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice sharedLocation={liveLocation} arrivalDisabled={disabled} stopNumber={activePosition} stopTotal={sorted.length} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
 }

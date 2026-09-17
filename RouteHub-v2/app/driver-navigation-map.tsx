@@ -1,7 +1,7 @@
 'use client'
 
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import {ArrowUp,CornerUpLeft,CornerUpRight,Flag,LocateFixed,Route,RotateCcw,Volume2,VolumeX} from 'lucide-react'
+import {ArrowUp,Box,CornerUpLeft,CornerUpRight,Flag,LocateFixed,MapPin,Navigation,PackageCheck,RotateCcw,Volume2,VolumeX} from 'lucide-react'
 import GoogleRouteCanvas from '../components/google-route-canvas'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters} from '../lib/maps/routing'
@@ -9,6 +9,7 @@ import {clusterCoordinates,sanitizeCoordinate} from '../lib/maps/coordinates'
 import type {RouteEstimate} from '../lib/maps/types'
 import {distanceFromNavigationPath,usableNavigationFix,projectNavigationPosition,navigationManeuver,navigationRemainingSeconds,type NavigationProgress} from '../lib/maps/navigation-progress'
 import {reportAppError} from '../lib/error-reporting'
+import {openNavigationWithFallback} from '../lib/maps/external-navigation'
 import styles from './driver-navigation.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -30,6 +31,8 @@ type Props={
   trackDevice?:boolean
   sharedLocation?:SharedGpsFix|null
   arrivalDisabled?:boolean
+  stopNumber?:number
+  stopTotal?:number
 }
 
 export default function DriverNavigationMap({
@@ -45,6 +48,8 @@ export default function DriverNavigationMap({
   trackDevice=true,
   sharedLocation=null,
   arrivalDisabled=false,
+  stopNumber,
+  stopTotal,
 }:Props){
   const [points,setPoints]=useState<Coordinate[]>([])
   const [line,setLine]=useState<Coordinate[]>([])
@@ -279,7 +284,8 @@ export default function DriverNavigationMap({
   },[locale])
   const arrivalTime=Number.isFinite(etaSeconds)
     ?new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(new Date(Date.now()+Number(etaSeconds)*1000))
-    :''
+      :''
+  const remainingDistance=guidanceReady?formatDistance(currentProgress?.remainingMeters):''
   const copy=locale==='es'
     ?{loading:'Preparando el recorrido…',unavailable:'No pudimos ubicar las paradas todavía.',exit:'Salir',arrived:'Llegué',recenter:'Recentrar',eta:'Llegada estimada',traffic:'Tráfico',voiceOn:'Silenciar voz',voiceOff:'Activar voz'}
     :locale==='fr'
@@ -335,7 +341,20 @@ export default function DriverNavigationMap({
   }
   const ManeuverIcon=near&&guidanceReady?Flag:nextManeuver?.type?.includes('UTURN')?RotateCcw:nextManeuver?.type?.includes('LEFT')?CornerUpLeft:nextManeuver?.type?.includes('RIGHT')?CornerUpRight:ArrowUp
   const canGuide=guidanceReady&&!routing
-  const instruction=!gpsReady?labels.gps:routing?copy.loading:estimate?.source!=='google'?labels.noRoute:!onRoad?labels.offRoute:near?labels.near:nextManeuver?.instruction||labels.destination
+  const instruction=!gpsReady?labels.gps:routing?copy.loading:estimate?.source!=='google'?labels.noRoute:!onRoad?labels.offRoute:near?labels.near:nextManeuver?.instruction||'Continue straight'
+  const instructionDistance=canGuide&&nextManeuver
+    ?nextManeuver.distanceToManeuverMeters<15?labels.now:formatDistance(nextManeuver.distanceToManeuverMeters)
+    :remainingDistance||'GPS LIVE'
+  const destinationLabel=validStops[0]?.label||validStops[0]?.address||labels.destination
+  const destinationAddress=validStops[0]?.address||''
+  const stopKind=validStops[0]?.kind||'delivery'
+  const typeLabel=stopKind==='pickup'?'PICKUP':stopKind==='branch'?'RETURN':'DELIVERY'
+  const actionLabel=locale==='es'?'LLEGUÉ A LA PARADA':locale==='fr'?'ARRIVÉ À L’ARRÊT':'ARRIVED AT STOP'
+  const backLabel=locale==='es'?'Volver a Hoy':locale==='fr'?'Retour à Aujourd’hui':'Back to Today'
+  const liveLabel=locale==='es'?'GPS EN VIVO':locale==='fr'?'GPS EN DIRECT':'GPS LIVE'
+  const arrivalSummary=arrivalTime&&eta!=null
+    ?`${locale==='es'?'Llegada':locale==='fr'?'Arrivée':'Arrive'} ${arrivalTime} · ${eta} min`
+    :remainingDistance||copy.loading
   const retryGps=()=>{
     setGpsMessage('')
     // Request permission only from an explicit tap. This foreground watch is
@@ -343,12 +362,19 @@ export default function DriverNavigationMap({
     if(foregroundGps){setForegroundGps(false);window.setTimeout(()=>setForegroundGps(true),0)}
     else setForegroundGps(true)
   }
+  const openMaps=()=>{
+    openNavigationWithFallback({address:destinationAddress||destinationLabel,coordinate:destination?{lat:destination.lat,lng:destination.lng}:null,label:destinationLabel})
+  }
 
   return (
     <section className={styles.navigation} aria-label="Driver Map">
       <aside className={styles.guidance} aria-live="polite">
-        <div className={styles.maneuver}><ManeuverIcon size={30}/><b>{canGuide&&nextManeuver?(nextManeuver.distanceToManeuverMeters<15?labels.now:formatDistance(nextManeuver.distanceToManeuverMeters)):'GPS'}</b></div>
-        <div className={styles.instruction}><strong>{instruction}</strong><span>{!gpsReady?(gpsMessage==='permission'?labels.permission:labels.gpsHint):validStops[0]?.label||validStops[0]?.address}</span></div>
+        <div className={styles.maneuver}><ManeuverIcon size={42}/></div>
+        <div className={styles.instruction}>
+          <span className={styles.liveLine}>{gpsReady?`${liveLabel} · ${instructionDistance}`:labels.gps}</span>
+          <strong>{instruction}</strong>
+          <span className={styles.arrivalLine}>{gpsReady?arrivalSummary:(gpsMessage==='permission'?labels.permission:labels.gpsHint)}</span>
+        </div>
         <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={22}/>:<VolumeX size={22}/>}</button>
       </aside>
       <div className={styles.mapArea}>
@@ -365,19 +391,26 @@ export default function DriverNavigationMap({
         {!loading&&!gpsReady&&<button className={styles.notice} type="button" onClick={retryGps}><LocateFixed size={18}/>{foregroundGps?labels.gpsAction:labels.enable}</button>}
         {gpsReady&&!routing&&estimate?.source!=='google'&&<button className={styles.notice} type="button" onClick={()=>setRerouteToken(value=>value+1)}>{labels.retry}</button>}
         <div className={styles.controls}>
-          <button type="button" aria-label={labels.route} aria-pressed={cameraMode==='overview'} onClick={()=>setCameraMode('overview')}><Route size={22}/></button>
-          <button type="button" aria-label={copy.recenter} aria-pressed={cameraMode==='follow'} onClick={()=>{setCameraMode('follow');setFollowToken(value=>value+1)}}><LocateFixed size={22}/>{cameraMode!=='follow'&&<span>{labels.follow}</span>}</button>
+          <button type="button" aria-label={copy.recenter} aria-pressed={cameraMode==='follow'} onClick={()=>{setCameraMode('follow');setFollowToken(value=>value+1)}}><LocateFixed size={23}/></button>
         </div>
       </div>
       <footer className={styles.bottom}>
+        <span className={styles.sheetHandle} aria-hidden="true"/>
+        <div className={styles.stopSummary}>
+          <span className={`${styles.typeBadge} ${styles[stopKind]||styles.delivery}`}>{stopKind==='pickup'?<Box size={15}/>:stopKind==='branch'?<Navigation size={15}/>:<PackageCheck size={15}/>} {typeLabel}</span>
+          <span>{`STOP ${stopNumber||1} OF ${stopTotal||Math.max(1,validStops.length)}`}</span>
+        </div>
+        <div className={styles.destination}><strong>{destinationLabel}</strong>{destinationAddress&&destinationAddress!==destinationLabel&&<span><MapPin size={15}/>{destinationAddress}</span>}</div>
         <div className={styles.metrics} aria-label={labels.approx}>
-          <div><strong>{eta!=null?`${eta} min`:'—'}</strong><small>{guidanceReady?labels.approx:labels.paused}</small></div>
-          <div><b>{guidanceReady?formatDistance(currentProgress?.remainingMeters):'—'}</b><small>{labels.distance}</small></div>
-          <div><b>{arrivalTime||'—'}</b><small>{labels.arrival}</small></div>
+          <div><Navigation size={22}/><strong>{remainingDistance||'—'}</strong><small>{labels.distance}</small></div>
+          <div><Flag size={22}/><strong>{eta!=null?`${eta} min`:'—'}</strong><small>{copy.eta}</small></div>
         </div>
         <div className={styles.actions}>
-          <button type="button" onClick={()=>{(onExitNavigation||onReturnToday)?.()}}>{copy.exit}</button>
-          <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={19}/>{copy.arrived}</button>
+          <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={19}/>{actionLabel}</button>
+          <div className={styles.secondaryActions}>
+            <button type="button" onClick={openMaps}><MapPin size={18}/>{locale==='es'?'Abrir Mapas':'Open Maps'}</button>
+            <button type="button" onClick={()=>{(onExitNavigation||onReturnToday)?.()}}><ArrowUp size={18}/><span>{backLabel}</span><small>{locale==='es'?'La ruta sigue activa':'Route stays active'}</small></button>
+          </div>
         </div>
       </footer>
     </section>
