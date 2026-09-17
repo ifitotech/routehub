@@ -145,23 +145,23 @@
    so the three read as a single choice rather than three stacked tiles. */
 .typeCardGrid {
   display: grid;
-  /* A hard floor per card, not minmax(0, 1fr) - without one, a squeeze on
-     the content column (map taking more width, sidebar's own floor, a
-     narrower browser window) had nowhere to go but the label text, and
-     overflow-wrap: break-word breaks a word letter-by-letter once its
-     container is narrower than the word itself. Below this floor the row
-     overflows slightly instead - illegible text is worse than a soft
-     overflow. */
-  grid-template-columns: repeat(3, minmax(68px, 1fr));
+  /* 68px wasn't actually enough: "Delivery" alone (the longest single-word
+     label) needs ~55px at this font-size, and the icon+radio+gaps+padding
+     inside each card eat another ~55-60px before the label gets anything -
+     a card narrower than ~115-120px was always going to wrap "Delivery"
+     mid-word regardless of how much room the grid itself had. Sized this
+     floor against that arithmetic instead of guessing again; below it the
+     row overflows slightly rather than breaking the word apart. */
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
   gap: 6px;
 }
 
 .typeCard {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: clamp(34px, 4vh, 38px);
-  padding: clamp(2px, 0.5vh, 4px) 10px;
+  padding: clamp(2px, 0.5vh, 4px) 8px;
   border: 1.5px solid var(--rh-line, #e7edf4);
   border-radius: 10px;
   background: var(--rh-card, #fff);
@@ -198,8 +198,8 @@
 .typeRadio {
   display: grid;
   place-items: center;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   flex: none;
   border: 2px solid #cbd5e1;
   border-radius: 50%;
