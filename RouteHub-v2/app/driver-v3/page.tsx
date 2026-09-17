@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useSearchParams} from 'next/navigation'
-import {Package, PackageCheck, PackagePlus, RefreshCw, Truck, Warehouse} from 'lucide-react'
+import {Navigation, Package, PackageCheck, PackagePlus, RefreshCw, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
@@ -87,6 +87,24 @@ export default function DriverV3Page() {
   const [refreshing,setRefreshing]=useState(false)
   const [pullDistance,setPullDistance]=useState(0)
   const [navigationVisible,setNavigationVisible]=useState(false)
+  // The hero's own route preview map is the visual anchor for the open/close
+  // animation - navigation grows out of it instead of hard-swapping the
+  // whole screen. navOrigin holds the last measured transform (relative to
+  // the full-screen navigation layer) so the closed state can be styled
+  // inline without a re-render race against the animation.
+  const heroMapRef=useRef<HTMLDivElement|null>(null)
+  const navOriginRef=useRef({x:0,y:0,scaleX:1,scaleY:1})
+  const captureNavOrigin=()=>{
+    const rect=heroMapRef.current?.getBoundingClientRect()
+    if(!rect||typeof window==='undefined')return
+    const vw=window.innerWidth,vh=window.innerHeight
+    navOriginRef.current={
+      x:rect.left+rect.width/2-vw/2,
+      y:rect.top+rect.height/2-vh/2,
+      scaleX:Math.max(rect.width/vw,0.06),
+      scaleY:Math.max(rect.height/vh,0.06),
+    }
+  }
   const operation=snapshot?.currentOperation
   const route=operation?.route as any
   const kind=operation?.kind==='branch'?'return':operation?.kind
@@ -133,6 +151,7 @@ export default function DriverV3Page() {
     if(getNavigationPreference()!=='internal')return
     if(autoNavigationRouteRef.current===route.id)return
     autoNavigationRouteRef.current=route.id
+    captureNavOrigin()
     setNavigationVisible(true)
   },[started,route?.id])
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
@@ -164,8 +183,10 @@ export default function DriverV3Page() {
   const openMaps=()=>openMapsForRoute(route)
 
   const openPreferredNavigation=()=>{
-    if(getNavigationPreference()==='internal')setNavigationVisible(true)
-    else openMapsForRoute(route)
+    if(getNavigationPreference()==='internal'){
+      captureNavOrigin()
+      setNavigationVisible(true)
+    }else openMapsForRoute(route)
   }
 
   const startCurrent=async()=>{
@@ -269,6 +290,7 @@ export default function DriverV3Page() {
         }
       }
       await refresh()
+      captureNavOrigin()
       setNavigationVisible(false)
       if(kind==='pickup'||kind==='delivery'||kind==='return')setSheet(kind)
     }catch(error){
@@ -436,8 +458,32 @@ export default function DriverV3Page() {
     event.stopPropagation()
     if(start!==null&&end!==undefined&&start-end>28)openDelivery()
   }
-  const internalNavigation=Boolean(navigationVisible&&started&&route&&getNavigationPreference()==='internal')
+  // showNavLayer mounts the navigator once a stop is started with the
+  // in-app preference on - it then stays mounted (GPS watch, voice, wake
+  // lock all keep running) for the rest of that stop, so closing back to
+  // Today never restarts navigation state, only hides it. navOpen is purely
+  // which layer is on top; the animation between them grows out of / shrinks
+  // back into the hero's own route preview map (see captureNavOrigin).
+  const showNavLayer=Boolean(started&&route&&getNavigationPreference()==='internal')
+  const navOpen=Boolean(navigationVisible&&showNavLayer)
   const navigationStops=route?[route,...(snapshot?.queue.upcoming||[])]:[]
+
+  // A CSS transition only animates a value that CHANGES after mount - if
+  // navOpen is already true the instant .navLayer first mounts (the normal
+  // case: starting a stop opens navigation immediately), there is no prior
+  // "closed" frame for the browser to transition from, so it would just pop
+  // in already full-size. navEntering forces one closed paint right after
+  // mount, then clears on the next frame so the real navOpen value takes
+  // over and the grow-from-the-map transition actually plays.
+  const [navEntering,setNavEntering]=useState(false)
+  useEffect(()=>{
+    if(!showNavLayer)return
+    setNavEntering(true)
+    let raf2=0
+    const raf1=requestAnimationFrame(()=>{raf2=requestAnimationFrame(()=>setNavEntering(false))})
+    return ()=>{cancelAnimationFrame(raf1);cancelAnimationFrame(raf2)}
+  },[showNavLayer])
+  const navVisuallyOpen=navOpen&&!navEntering
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
   // flush (already used by the Map screen) removes .content's own
@@ -452,7 +498,7 @@ export default function DriverV3Page() {
   return <DriverV3Shell
     active="today"
     headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}
-    hideNav={Boolean(internalNavigation||(sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
+    hideNav={Boolean(navOpen||(sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
     flush
   >
     {/* .page and the confirm dialog are siblings, not parent/child, on
@@ -460,20 +506,12 @@ export default function DriverV3Page() {
         is open, and `transform` on an ancestor turns its `position:fixed`
         descendants into descendants confined to *that* box instead of the
         viewport, which would trap the backdrop inside the very element
-        it's meant to shrink behind. */}
-    {internalNavigation?<div className={styles.inAppNavigation}>
-      <DriverRouteNavigation
-        stops={navigationStops}
-        activeStopId={route.id}
-        originAddress={route.origin_address}
-        originCoordinate={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null}
-        locale={locale}
-        sharedLocation={liveFix}
-        disabled={busy}
-        onArrive={()=>void arriveFromNavigation()}
-        onExit={()=>setNavigationVisible(false)}
-      />
-    </div>:<div className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
+        it's meant to shrink behind. .todayStage only exists to give the
+        navigation layer below a positioning context to cover - it carries
+        no sizing or transform of its own that .pageShrink's ancestor-transform
+        concern would apply to. */}
+    <div className={styles.todayStage}>
+    <div className={`${styles.page} ${started ? styles.pageStarted : ''} ${(confirmPickupOpen || sheet === 'return' || sheet === 'pickup') ? styles.pageShrink : ''}`} onTouchStart={pullStart} onTouchMove={pullMove} onTouchEnd={pullEnd}>
       {pullDistance > 0 && <div className={`${styles.pullScene} ${pullDistance >= 24 ? styles.pullReady : ''}`} style={{opacity: Math.max(pullDistance / 24, 0.4)}}>
         <div className={styles.pullRoad}>
           <span className={styles.pullRoadLine}/>
@@ -487,8 +525,18 @@ export default function DriverV3Page() {
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>
         <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn}`}>
-          <div className={`${styles.routeGlyphHost} ${started?styles.routeGlyphHostCompact:''}`}>
+          <div
+            ref={heroMapRef}
+            className={`${styles.routeGlyphHost} ${started?styles.routeGlyphHostCompact:''}`}
+            role={showNavLayer?'button':undefined}
+            tabIndex={showNavLayer?0:undefined}
+            aria-label={showNavLayer?(locale==='es'?'Abrir navegación':locale==='fr'?'Ouvrir la navigation':'Open navigation'):undefined}
+            onClick={()=>{if(!showNavLayer||navOpen)return;captureNavOrigin();setNavigationVisible(true)}}
+          >
             <DriverRouteMap route={route} driverFix={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null} locale={locale}/>
+            {showNavLayer&&!navOpen&&(
+              <span className={styles.mapNavHint}><Navigation size={13}/>{locale==='es'?'Toca para navegar':locale==='fr'?'Touchez pour naviguer':'Tap to navigate'}</span>
+            )}
           </div>
           <div className={styles.heroTop} data-map-details>
             <span className={`${styles.typeBadge} ${styles[kind||'return']}`}><StopIcon/>{kind==='pickup'?t.drvPickup||'PICKUP':kind==='delivery'?t.drvDelivery||'DELIVERY':t.drvReturn||'RETURN'}</span>
@@ -567,7 +615,33 @@ export default function DriverV3Page() {
         />
       )}
 
-    </div>}
+    </div>
+    {/* Mounted for the whole started stop, not just while open - see
+        showNavLayer above. The inline transform on the closed state mirrors
+        the hero map's own rect (captureNavOrigin), so opening/closing reads
+        as the navigator growing out of / shrinking back into that map
+        instead of one screen replacing another. */}
+    {showNavLayer&&(
+      <div
+        className={styles.navLayer}
+        data-open={navVisuallyOpen?'true':'false'}
+        style={!navVisuallyOpen?{transform:`translate(${navOriginRef.current.x}px,${navOriginRef.current.y}px) scale(${navOriginRef.current.scaleX},${navOriginRef.current.scaleY})`}:undefined}
+        aria-hidden={!navOpen}
+      >
+        <DriverRouteNavigation
+          stops={navigationStops}
+          activeStopId={route.id}
+          originAddress={route.origin_address}
+          originCoordinate={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null}
+          locale={locale}
+          sharedLocation={liveFix}
+          disabled={busy}
+          onArrive={()=>void arriveFromNavigation()}
+          onExit={()=>{captureNavOrigin();setNavigationVisible(false)}}
+        />
+      </div>
+    )}
+    </div>
     {confirmPickupOpen&&(
       <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
         <div className={confirmStyles.confirmSheet}>
