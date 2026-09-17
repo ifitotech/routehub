@@ -131,6 +131,28 @@ function driverMarker(driver:OperationsDriverLocation){
  })
 }
 
+/* Leaflet caches its container's pixel size and only recomputes it when told.
+   FitBounds below invalidates on a POINT change, which misses the other way the
+   map resizes: its column getting wider or narrower. On the dispatch board that
+   happens whenever the Add Route form opens or closes - the grid animates
+   grid-template-columns over 420ms - and on any window resize, leaving tiles
+   drawn at the old width with blank space beside them. Observing the container
+   covers all three, including every intermediate frame of that transition. */
+function InvalidateOnResize(){
+ const map=useMap()
+ useEffect(()=>{
+  const container=map.getContainer()
+  let frame=0
+  const observer=new ResizeObserver(()=>{
+   window.cancelAnimationFrame(frame)
+   frame=window.requestAnimationFrame(()=>map.invalidateSize({animate:false}))
+  })
+  observer.observe(container)
+  return ()=>{window.cancelAnimationFrame(frame);observer.disconnect()}
+ },[map])
+ return null
+}
+
 function FitBounds({points}:{points:Coordinate[]}){
  const map=useMap()
  const pointsRef=useRef(points)
@@ -324,6 +346,7 @@ export default function OperationsMap({routes,driverLocations=[],fitDriverLocati
   <div className={styles.canvas}>
    <MapContainer center={[center.lat,center.lng]} zoom={12} scrollWheelZoom={false} dragging={interactive} touchZoom={interactive} doubleClickZoom={interactive} zoomControl={interactive}>
     <TileLayer attribution='© OpenStreetMap contributors' url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'/>
+    <InvalidateOnResize/>
     <FitBounds points={fitPoints}/>
     {sequences.map(sequence=><Fragment key={`sequence-${sequence.key}`}>
      {routeLineSegments(sequence).map(segment=><Polyline key={segment.key} positions={segment.points.map(point=>[point.lat,point.lng] as [number,number])} pathOptions={{color:segment.color,weight:6,opacity:.96,lineCap:'round',lineJoin:'round',dashArray:sequence.street?undefined:'10 8'}}/>)}

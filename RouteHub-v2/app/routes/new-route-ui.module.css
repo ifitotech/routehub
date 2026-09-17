@@ -10,8 +10,8 @@
 
 /* Read-only stand-in for a select control that has nothing else to pick -
    a single branch, for example. Same info, a fraction of the height. */
-.compactValue{display:flex;align-items:center;gap:6px;min-height:24px;color:var(--rh-ink);font-size:12px;font-weight:600}
-.compactValue svg{flex:none;color:var(--rh-ink-soft);width:13px;height:13px}
+.compactValue{display:flex;align-items:center;gap:8px;min-height:30px;color:var(--rh-ink);font-size:13px;font-weight:600}
+.compactValue svg{flex:none;color:var(--rh-ink-soft);width:15px;height:15px}
 
 /* Saved-contact tag sits inside the address TEXT FIELD itself, in the
    blank space to the right of the typed address - not over the separate
@@ -20,7 +20,11 @@
    width (~78px) plus its gap, or it lands on top of the button instead of
    inside the field. */
 .destinationWrap{position:relative;overflow:visible}
-.destinationWrap :global(.routehub-address-control > input){padding-right:100px}
+/* Only clear room for the saved-contact tag when the tag is actually there.
+   Reserving it unconditionally cost 100px on top of the 42px the search icon
+   already takes on the left, which truncated the placeholder ("Choose a saved
+   contact or store") on any column narrower than the old full-width panel. */
+.destinationWrap:has(.savedContactBadge) :global(.routehub-address-control > input){padding-right:100px}
 .savedContactBadge{position:absolute;top:50%;right:96px;transform:translateY(-50%);z-index:1;display:inline-flex;align-items:center;gap:6px;max-width:110px;padding:3px 6px 3px 9px;border:1px solid #b9cdf4;border-radius:999px;background:var(--rh-soft-blue);color:var(--rh-blue-700);font-size:10px;font-weight:700;line-height:1.4}
 .savedContactBadge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .savedContactClose{flex:none;width:14px;height:14px;display:flex;align-items:center;justify-content:center;border:0;border-radius:99px;background:var(--rh-blue-700);color:#fff;cursor:pointer}
@@ -62,42 +66,42 @@
 .compactTitle span{overflow:hidden;color:#64748B;font-size:10px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
 .inlinePanelBody{display:flex;flex-direction:column;gap:0;padding:3px 10px 0;overflow-y:auto;width:100%;min-height:0}
 
-.sectionHeading{margin:0 0 3px;color:var(--rh-ink);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.sectionHeading{margin:0 0 9px;color:var(--rh-ink);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 
 /* A small vertical timeline (hollow dot -> dashed line -> filled pin) ties
    the starting point visually to the destination, the way a route actually
    reads top to bottom, instead of two identical-looking blocks stacked
    with no visual relationship. */
-.timelineRow{display:grid;grid-template-columns:14px minmax(0,1fr);gap:7px}
+.timelineRow{display:grid;grid-template-columns:14px minmax(0,1fr);gap:11px}
 .timelineTrack{display:flex;flex-direction:column;align-items:center;padding-top:2px}
 .timelineDotEmpty{width:9px;height:9px;flex:none;border:1.5px solid #94a3b8;border-radius:50%;background:#fff}
 .timelineDotFilled{width:11px;height:11px;flex:none;border-radius:50%;background:var(--rh-blue);box-shadow:0 0 0 2px rgba(22,96,240,.14)}
 .timelineLine{flex:1;width:0;min-height:8px;border-left:1.5px dashed #cbd5e1;margin:1px 0}
-.timelineContent{display:grid;gap:6px;min-width:0}
+.timelineContent{display:grid;gap:10px;min-width:0}
 
 /* Explicit Origin/Destination tags next to each point on the timeline -
    the dot shape alone (hollow vs filled) hinted at direction but needed
    reading the surrounding labels to confirm which was which. */
-.timelineTag{display:block;margin-bottom:6px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--rh-ink-soft)}
+.timelineTag{display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--rh-ink-soft)}
 .timelineTagDest{color:var(--rh-blue)}
 
 /* Starting point collapses to a real decision (here vs. somewhere else)
    instead of three chips competing equally, when "here" (the branch) is
    the common case. Choosing "Otro punto" reveals Last route/Custom as
    sub-options instead of sharing the same row. */
-.originToggle{display:flex;border:1px solid var(--rh-line);border-radius:10px;padding:3px;background:var(--rh-card);margin-bottom:6px}
-.originToggle button{flex:1;min-height:34px;border:0;border-radius:8px;background:transparent;color:var(--rh-ink);font-size:12px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.originToggle{display:flex;border:1px solid var(--rh-line);border-radius:11px;padding:4px;background:var(--rh-card);margin-bottom:10px}
+.originToggle button{flex:1;min-height:40px;border:0;border-radius:8px;background:transparent;color:var(--rh-ink);font-size:13px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
 .originToggleActive{background:#1660f0!important;color:#fff!important}
-.originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:6px}
-.originSubChip{min-height:28px;border:1px solid var(--rh-line);border-radius:7px;background:var(--rh-surface-2);color:var(--rh-ink-soft);font-size:11px;font-weight:700;cursor:pointer}
+.originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.originSubChip{min-height:36px;border:1px solid var(--rh-line);border-radius:9px;background:var(--rh-surface-2);color:var(--rh-ink-soft);font-size:12px;font-weight:700;cursor:pointer}
 .originSubChipActive{background:#eaf2ff!important;color:var(--rh-blue)!important;border-color:#b9cdf4!important}
 
 /* Groups the destination address with who receives it there, instead of
    Contact name/phone sitting as two loose fields after the address with
    no visual link back to it. */
-.destCard{border:1px solid var(--rh-line);border-radius:10px;padding:6px;background:var(--rh-surface-2);display:grid;gap:4px}
-.contactBlock{padding-top:3px;border-top:1px dashed #dbe3ed;display:grid;gap:2px;margin-top:1px}
-.contactBlockLabel{display:flex;align-items:center;gap:4px;margin:0;font-size:8px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--rh-ink-soft)}
+.destCard{border:1px solid var(--rh-line);border-radius:12px;padding:14px;background:var(--rh-surface-2);display:grid;gap:10px}
+.contactBlock{padding-top:12px;border-top:1px dashed #dbe3ed;display:grid;gap:8px;margin-top:4px}
+.contactBlockLabel{display:flex;align-items:center;gap:5px;margin:0;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--rh-ink-soft)}
 
 .assignmentPanel{padding:8px;border-radius:11px;background:var(--rh-surface-2);border:1px solid #e7edf4;display:grid;gap:5px;align-content:space-between;min-width:0;min-height:0}
 .assignmentPanel h3{margin:0 0 2px;font-size:9px;font-weight:800;color:var(--rh-ink);text-transform:uppercase;letter-spacing:.04em}
@@ -105,11 +109,14 @@
 
 .driverCard{display:flex;align-items:center;gap:6px;width:100%;padding:5px 8px;border-radius:9px;border:1px solid var(--rh-line);background:var(--rh-card);cursor:pointer;text-align:left;color:inherit;font-size:11px}
 .driverCard:hover{border-color:#b7cdf1}
-.driverCard .avatar{width:24px;height:24px;flex:none;border-radius:50%;background:var(--rh-soft-blue);color:var(--rh-blue);display:grid;place-items:center;font-weight:800;font-size:9px}
-.driverCard .driverInfo{display:grid;gap:0px;flex:1;min-width:0}
-.driverCard .driverInfo strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.driverCard .driverInfo span{font-size:9px;color:#64748B;line-height:1.1}
-.driverCard>svg{flex:none;color:var(--rh-ink-soft);width:14px;height:14px}
+.driverCard .avatar{width:30px;height:30px;flex:none;border-radius:50%;background:var(--rh-soft-blue);color:var(--rh-blue);display:grid;place-items:center;font-weight:800;font-size:12px}
+.driverCard .driverInfo{display:grid;gap:1px;flex:1;min-width:0}
+/* Sized against the 50px button: 14px name (~18px line) + 11px role (~13px)
+   + the button's 7px vertical padding lands at ~45px, so the text grows into
+   the space already there instead of stretching the control. */
+.driverCard .driverInfo strong{font-size:14px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.driverCard .driverInfo span{font-size:11px;color:#64748B;line-height:1.2}
+.driverCard>svg{flex:none;color:var(--rh-ink-soft);width:16px;height:16px}
 .driverMenu{display:grid;gap:1px;margin-top:4px;padding:4px;border-radius:10px;border:1px solid var(--rh-line);background:var(--rh-card);box-shadow:0 6px 16px rgba(15,23,42,.06)}
 .driverMenuItem{display:flex;align-items:center;gap:6px;width:100%;padding:4px 6px;border:0;border-radius:7px;background:transparent;color:inherit;font-size:11px;font-weight:700;text-align:left;cursor:pointer}
 .driverMenuItem:hover{background:#f1f5f9}
@@ -209,6 +216,27 @@
 :global(html[data-theme='dark']) .scheduleToggle{background:#0f1c2d;border-color:var(--rh-border)}
 :global(html[data-theme='dark']) .originToggle{background:#0f1c2d;border-color:var(--rh-border)}
 :global(html[data-theme='dark']) .originSubChip{background:#18263b;color:var(--rh-text-secondary)}
+
+/* The toggles above only had their track darkened - their labels still read
+   var(--rh-ink), which is pinned light on .page, so "Choose date" and "Otro
+   punto" came out near-black on a near-black track. */
+:global(html[data-theme='dark']) .scheduleToggle button,
+:global(html[data-theme='dark']) .originToggle button{color:var(--rh-text)}
+
+/* Surfaces and labels that had no dark rule at all - invisible until the
+   panel behind them was still light and hid the problem. */
+:global(html[data-theme='dark']) .sectionHeading,
+:global(html[data-theme='dark']) .compactValue{color:var(--rh-text)}
+:global(html[data-theme='dark']) .compactValue svg,
+:global(html[data-theme='dark']) .timelineTag,
+:global(html[data-theme='dark']) .contactBlockLabel,
+:global(html[data-theme='dark']) .optionalLabel{color:var(--rh-text-secondary)}
+:global(html[data-theme='dark']) .timelineTagDest{color:#7fb0ff}
+:global(html[data-theme='dark']) .destCard{background:#142238;border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .driverCard{background:#142238;border-color:var(--rh-border);color:var(--rh-text)}
+:global(html[data-theme='dark']) .driverCard:hover{border-color:#4a7fe0}
+:global(html[data-theme='dark']) .driverMenu{background:#142238;border-color:var(--rh-border)}
+:global(html[data-theme='dark']) .savedContactBadge{background:rgba(36,147,255,.16);border-color:#4a7fe0;color:#bcd6ff}
 :global(html[data-theme='dark']) .formFooter{border-color:var(--rh-border)}
 :global(html[data-theme='dark']) .inlinePanel{background:#0f172a}
 @media (pointer: coarse) and (min-width: 641px) {

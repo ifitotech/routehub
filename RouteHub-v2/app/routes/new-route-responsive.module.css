@@ -1,0 +1,624 @@
+/* Add Route - two column layout.
+   Left column carries the decisions (type, origin, destination), the right
+   column is who/when/how. A single hairline divider separates them instead
+   of the grey card the assignment fields used to sit in - the grey box read
+   as a nested dialog rather than the other half of the same form. */
+
+.responsivePanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(min(100%, 262px), 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  background: var(--rh-card, #fff);
+  border-radius: 16px;
+  /* Fluid rather than stepped: the panel lives in the dispatch board's centre
+     column, so its width tracks the window continuously and a breakpoint jump
+     reads as the layout snapping. Breakpoints below only handle the changes
+     clamp cannot express - stacking the columns, wrapping the type cards. */
+  column-gap: clamp(18px, 2.2vw, 32px);
+  row-gap: clamp(14px, 1.6vw, 20px);
+  padding: clamp(16px, 1.8vw, 26px) clamp(16px, 2.2vw, 32px);
+  min-height: 0;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  grid-column: 1 / -1;
+  gap: 12px;
+}
+
+.headerTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.headerTitle h2 {
+  margin: 0;
+  font-size: clamp(20px, 1.9vw, 26px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  color: var(--rh-ink, #172033);
+}
+
+.headerBranch {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rh-ink-soft, #64748b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeBtn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--rh-ink-soft, #64748b);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.closeBtn:hover {
+  background: var(--rh-surface-2, #f1f5f9);
+  color: var(--rh-ink, #172033);
+}
+
+/* Columns */
+.content {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(13px, 1.5vw, 18px);
+  min-width: 0;
+  min-height: 0;
+}
+
+.sidebar {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.3vw, 16px);
+  min-width: 0;
+  min-height: 0;
+  padding-left: clamp(18px, 2.2vw, 32px);
+  border-left: 1px solid var(--rh-line, #e7edf4);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-width: 0;
+}
+
+.sectionLabel {
+  margin: 0;
+  color: var(--rh-ink, #172033);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Route type - one row, icon then label then the radio that confirms it,
+   so the three read as a single choice rather than three stacked tiles. */
+.typeCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.typeCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  padding: 10px 13px;
+  border: 1.5px solid var(--rh-line, #e7edf4);
+  border-radius: 12px;
+  background: var(--rh-card, #fff);
+  color: var(--rh-ink, #172033);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.typeCard:hover {
+  border-color: #b7cdf1;
+}
+
+.typeCardIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--rh-ink-soft, #64748b);
+}
+
+/* "Return to branch" is the long one - it wraps onto a second line inside
+   the card instead of being cut to "Return t...", which is what set the
+   card height rather than any fixed value. */
+.typeCardLabel {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.typeRadio {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+}
+
+.typeCardActive {
+  border-color: #1660f0;
+  background: var(--rh-soft-blue, #eaf2ff);
+  color: #1e40af;
+}
+
+.typeCardActive .typeCardIcon {
+  color: #1660f0;
+}
+
+.typeCardActive .typeRadio {
+  border-color: #1660f0;
+}
+
+.typeCardActive .typeRadio::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1660f0;
+}
+
+/* Assignment fields, flattened out of their grey card. These reach into the
+   markup NewRouteAssignment owns, so every rule is scoped under .sidebar and
+   carries enough specificity to win against new-route-ui's own .assignmentPanel
+   rules regardless of stylesheet order. */
+.assignFields {
+  min-width: 0;
+}
+
+.assignFields > div {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  gap: clamp(12px, 1.5vw, 17px);
+  align-content: start;
+}
+
+.assignFields > div > div {
+  display: grid;
+  gap: 9px;
+  align-content: start;
+}
+
+.assignFields div h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--rh-ink, #172033);
+}
+
+.assignFields div label > span {
+  display: block;
+  margin: 0 0 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--rh-ink, #172033);
+}
+
+.assignFields div select,
+.assignFields div input,
+.assignFields div textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid var(--rh-line, #e7edf4);
+  border-radius: 11px;
+  background: var(--rh-card, #fff);
+  color: var(--rh-ink, #172033);
+  font-size: 14px;
+  line-height: 1.3;
+  outline: none;
+}
+
+/* Deliberately short - the note is optional and resizable, and its height is
+   what decides whether Cancel/Assign land inside the panel or push it into a
+   scroll. Drag it taller when a long note is actually needed. */
+.assignFields div textarea {
+  min-height: 54px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.assignFields div textarea::placeholder {
+  font-size: 14px;
+  color: var(--rh-ink-soft, #94a3b8);
+}
+
+.assignFields div select:focus,
+.assignFields div input:focus,
+.assignFields div textarea:focus {
+  border-color: #1660f0;
+  box-shadow: 0 0 0 3px rgba(22, 96, 240, 0.12);
+}
+
+.assignFields div button[class*='driverCard'] {
+  min-height: 50px;
+  padding: 7px 13px;
+  border-radius: 11px;
+  font-size: 14px;
+}
+
+.assignFields div [class*='scheduleToggle'] {
+  border-radius: 11px;
+}
+
+.assignFields div [class*='scheduleToggle'] button {
+  min-height: 38px;
+  font-size: 13px;
+}
+
+.assignFields div [class*='fieldSpaced'] {
+  margin-top: 0;
+}
+
+.assignFields div [class*='moreDetailsPanel'] {
+  display: grid;
+  gap: 15px;
+  padding-top: 0;
+}
+
+/* Cancel / Assign close the right column, under the last field it belongs
+   to, rather than spanning both columns where they read as page-level. */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.btnCancel,
+.btnSubmit {
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btnCancel {
+  border: 1px solid var(--rh-line, #e7edf4);
+  background: var(--rh-card, #fff);
+  color: var(--rh-ink, #172033);
+}
+
+.btnCancel:hover {
+  background: var(--rh-surface-2, #f1f5f9);
+  border-color: #cbd5e1;
+}
+
+.btnSubmit {
+  flex: 1;
+  border: 0;
+  background: #1660f0;
+  color: #fff;
+}
+
+.btnSubmit:hover {
+  background: #0d47a1;
+}
+
+.btnSubmit:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.successPanel {
+  grid-column: 1 / -1;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #18a566;
+}
+
+/* One column once the two no longer fit side by side - the divider becomes
+   a rule above the assignment fields instead of beside them. */
+@media (max-width: 1100px) {
+  .responsivePanel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content,
+  .sidebar {
+    grid-column: 1;
+  }
+
+  .sidebar {
+    padding-left: 0;
+    padding-top: 20px;
+    border-left: 0;
+    border-top: 1px solid var(--rh-line, #e7edf4);
+  }
+}
+
+/* Short windows: the panel's height is fixed by the dispatch board, so when
+   there is less of it the note gives way first - it is the one field that is
+   optional, resizable, and tall enough to matter. Keeps Cancel/Assign in view
+   instead of handing the whole panel a scrollbar. */
+@media (max-height: 860px) {
+  .assignFields div textarea {
+    min-height: 44px;
+  }
+}
+
+@media (max-height: 760px) {
+  .assignFields div textarea {
+    min-height: 38px;
+  }
+
+  .assignFields div select,
+  .assignFields div input,
+  .assignFields div [class*='driverCard'] {
+    min-height: 42px;
+  }
+}
+
+/* Phone: full-screen takeover, same reasoning new-route-ui.module.css's
+   .inlinePanel used to apply before this panel replaced it. The dispatch
+   board underneath (calendar strip, list/map toggle, app nav) leaves only a
+   sliver of a phone viewport for the form itself, so it stops trying to fit
+   inside the board's centre column and instead covers the whole screen -
+   header, a scrolling middle, and a footer pinned above the safe area, laid
+   out as three stacked flex regions rather than the desktop grid. */
+@media (max-width: 640px) {
+  .responsivePanel {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    border-radius: 0;
+    padding: 0;
+    column-gap: 0;
+    row-gap: 0;
+  }
+
+  .header {
+    padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
+    border-bottom: 1px solid var(--rh-line, #e7edf4);
+    flex: none;
+  }
+
+  /* .content and .sidebar stop being grid columns and become the two
+     sections of one scrolling body - .content up top (route type, then
+     route details), .sidebar under it (assign fields, then the footer). */
+  .content,
+  .sidebar {
+    display: block;
+    padding: 0 16px;
+    border: 0;
+  }
+
+  .content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .content > * + * {
+    margin-top: 18px;
+  }
+
+  .sidebar {
+    flex: none;
+    padding-top: 14px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    background: var(--rh-card, #fff);
+    box-shadow: 0 -6px 16px -8px rgba(15, 29, 53, 0.12);
+  }
+
+  .sidebar > * + * {
+    margin-top: 16px;
+  }
+
+  .assignFields {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .typeCardGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .typeCard {
+    min-height: 52px;
+  }
+
+  .footer {
+    flex-direction: row;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .btnCancel {
+    flex: 1;
+    padding: 0 12px;
+  }
+}
+
+/* Dark mode.
+   routes.module.css pins --rh-ink / --rh-card / --rh-line / --rh-surface-2 to
+   literal LIGHT values on .page, and nothing redefines them for the dark theme,
+   so every token-based colour above resolves light no matter the theme. Same
+   reason new-route-ui.module.css ends in a block like this one. Every rule here
+   therefore restates a literal dark value rather than leaning on those tokens -
+   only --rh-text / --rh-text-secondary / --rh-border are genuinely theme-aware
+   (globals.css). Selectors that reach into NewRouteAssignment's markup also need
+   to out-specify new-route-ui's own `html[data-theme='dark'] .assignmentPanel`
+   rules (0,2,1), which is why they are written as
+   `:global(html[data-theme='dark']) .assignFields > div` (0,2,2). */
+
+/* Matches .center in dispatch-layout.module.css, so the panel reads as part of
+   the column instead of a lighter card floating on it. */
+:global(html[data-theme='dark']) .responsivePanel {
+  background: #0f172a;
+}
+
+:global(html[data-theme='dark']) .headerTitle h2 {
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .headerBranch {
+  color: var(--rh-text-secondary);
+}
+
+:global(html[data-theme='dark']) .closeBtn {
+  color: var(--rh-text-secondary);
+}
+
+:global(html[data-theme='dark']) .closeBtn:hover {
+  background: #1d3150;
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .sectionLabel {
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .typeCard {
+  background: #142238;
+  border-color: var(--rh-border);
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .typeCard:hover {
+  border-color: #4a7fe0;
+}
+
+:global(html[data-theme='dark']) .typeCardIcon {
+  color: var(--rh-text-secondary);
+}
+
+:global(html[data-theme='dark']) .typeCardActive {
+  background: rgba(36, 147, 255, 0.14);
+  border-color: #4a7fe0;
+  color: #bcd6ff;
+}
+
+:global(html[data-theme='dark']) .typeCardActive .typeCardIcon {
+  color: #7fb0ff;
+}
+
+:global(html[data-theme='dark']) .typeRadio {
+  border-color: #4c72a4;
+}
+
+:global(html[data-theme='dark']) .typeCardActive .typeRadio {
+  border-color: #7fb0ff;
+}
+
+:global(html[data-theme='dark']) .typeCardActive .typeRadio::after {
+  background: #7fb0ff;
+}
+
+:global(html[data-theme='dark']) .sidebar {
+  border-left-color: var(--rh-border);
+}
+
+/* Undo new-route-ui's dark .assignmentPanel card - the fields are flat here. */
+:global(html[data-theme='dark']) .assignFields > div {
+  background: transparent;
+  border: 0;
+}
+
+:global(html[data-theme='dark']) .assignFields div h3,
+:global(html[data-theme='dark']) .assignFields div label > span {
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .assignFields div select,
+:global(html[data-theme='dark']) .assignFields div input,
+:global(html[data-theme='dark']) .assignFields div textarea {
+  background: #102036;
+  border-color: var(--rh-border);
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .assignFields div textarea::placeholder {
+  color: var(--rh-text-secondary);
+}
+
+/* .driverCard and .scheduleToggle get their dark surfaces from
+   new-route-ui.module.css - the rules here only resize them, so there is
+   nothing to restate. */
+
+:global(html[data-theme='dark']) .btnCancel {
+  background: transparent;
+  border-color: var(--rh-border);
+  color: var(--rh-text);
+}
+
+:global(html[data-theme='dark']) .btnCancel:hover {
+  background: #1d3150;
+  border-color: #4a7fe0;
+}
+
+:global(html[data-theme='dark']) .btnSubmit:disabled {
+  background: #2b3d57;
+  color: var(--rh-text-secondary);
+}
+
+@media (max-width: 1100px) {
+  :global(html[data-theme='dark']) .sidebar {
+    border-top-color: var(--rh-border);
+  }
+}
+
+@media (max-width: 640px) {
+  :global(html[data-theme='dark']) .responsivePanel {
+    background: #0f172a;
+  }
+
+  :global(html[data-theme='dark']) .header {
+    border-bottom-color: var(--rh-border);
+  }
+
+  :global(html[data-theme='dark']) .sidebar {
+    background: #142238;
+    border-top-color: var(--rh-border);
+  }
+}

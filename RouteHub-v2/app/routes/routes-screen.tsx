@@ -8,7 +8,7 @@ import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
-import NewRoutePanel from './new-route-panel'
+import NewRouteResponsive from './new-route-responsive'
 import RouteDetailView from './route-detail-view'
 import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
@@ -321,7 +321,7 @@ export default function Routes() {
               <RouteDetailView route={viewingRoute} locale={locale} c={c} driverIndex={driverIndex} onClose={() => setViewingRouteId(null)}/>
             ) : open ? (
               <div className={styles.formViewFade}>
-                <NewRoutePanel
+                <NewRouteResponsive
                   saving={saving} setOpen={setOpen} justCreated={justCreated} locale={locale} c={c} openBuilder={() => openBuilder(selectedDate)}
                   form={form} setForm={setForm} selectedContact={selectedContact} originMode={originMode} setOriginSource={setOriginSource}
                   selectDriver={selectDriver} oc={oc} branches={branches} contacts={contacts} defaultBranch={defaultBranch}
