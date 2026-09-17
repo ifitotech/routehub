@@ -83,6 +83,20 @@ function distanceKm(a:MapCoordinate,b:MapCoordinate){
   return radius*2*Math.atan2(Math.sqrt(value),Math.sqrt(1-value))
 }
 
+// Put the vehicle in the lower third of the viewport so the driver can see
+// more of the road ahead, matching the follow-camera behavior of dedicated
+// navigation apps. The offset scales with zoom and uses the current heading
+// when available; without a reliable heading we keep the camera centered.
+function cameraTargetAhead(position:MapCoordinate,heading:number|null|undefined,zoom:number){
+  if(!Number.isFinite(heading))return position
+  const distanceMeters=zoom>=18.3?70:zoom>=17.5?105:145
+  const radians=Number(heading)*Math.PI/180
+  const latOffset=(Math.cos(radians)*distanceMeters)/111_320
+  const lngScale=Math.max(.2,Math.cos(position.lat*Math.PI/180))
+  const lngOffset=(Math.sin(radians)*distanceMeters)/(111_320*lngScale)
+  return {lat:position.lat+latOffset,lng:position.lng+lngOffset}
+}
+
 function nearestPathIndex(path:MapCoordinate[],position:MapCoordinate){
   let index=0,best=Number.POSITIVE_INFINITY
   path.forEach((point,candidate)=>{
@@ -311,7 +325,9 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       const heading=interpolateHeading(fromHeading,targetHeading,fraction)
       cameraHeading.current=heading
       if(navigationRef.current.cameraMode==='follow'&&!exploringRef.current){
-        if(map?.moveCamera)map.moveCamera({center:point,heading,tilt:45,zoom:navigationRef.current.navigationZoom})
+        const zoom=navigationRef.current.navigationZoom
+        const target=cameraTargetAhead(point,heading,zoom)
+        if(map?.moveCamera)map.moveCamera({center:target,heading,tilt:45,zoom})
         else map?.panTo(point)
       }
       marker?.setIcon?.({path:'M 0,-16 L 12,13 L 0,7 L -12,13 Z',scale:1,fillColor:'#1667F2',fillOpacity:1,strokeColor:'#fff',strokeWeight:3,rotation:heading-(map?.getHeading?.()||0)})

@@ -352,7 +352,15 @@ export default function DriverNavigationMap({
         <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={22}/>:<VolumeX size={22}/>}</button>
       </aside>
       <div className={styles.mapArea}>
-        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={canGuide&&nextManeuver&&nextManeuver.distanceToManeuverMeters<150?18:17.5}/>
+        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
+          canGuide && nextManeuver
+            ? nextManeuver.distanceToManeuverMeters < 90
+              ? 18.5
+              : nextManeuver.distanceToManeuverMeters < 260
+                ? 18
+                : 16.8
+            : 17.2
+        }/>
         {loading&&<div className={styles.notice}>{copy.loading}</div>}
         {!loading&&!gpsReady&&<button className={styles.notice} type="button" onClick={retryGps}><LocateFixed size={18}/>{foregroundGps?labels.gpsAction:labels.enable}</button>}
         {gpsReady&&!routing&&estimate?.source!=='google'&&<button className={styles.notice} type="button" onClick={()=>setRerouteToken(value=>value+1)}>{labels.retry}</button>}
