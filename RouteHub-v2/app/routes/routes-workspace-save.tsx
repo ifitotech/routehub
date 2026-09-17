@@ -17,7 +17,7 @@ export function useRoutesSave(w: any) {
     selectedDriverGps, returnBranchCoordinate, selectedDestinationLocation, returnBranch,
     originBranch, defaultBranch, branchId, previousRoute, insertBeforeId, currentUserId,
     searchParams, setForm, setSelectedDestinationLocation, setInsertBeforeId, loadWorkspace,
-    setJustCreated, locale, driverIndex,
+    setJustCreated, locale, driverIndex, editingRouteId, setEditingRouteId, setOpen,
   } = w
   const save = async () => {
     if (saving) return
@@ -59,14 +59,6 @@ export function useRoutesSave(w: any) {
       if (!destinationCoordinate && persistedDestinationAddress) {
         destinationCoordinate = (await geocodeAddress(persistedDestinationAddress, undefined, originCoordinate || savedCoordinate(defaultBranch)))?.coordinate || null
       }
-      let positionQuery = client.from('routes').select('position').eq('company_id', companyId).eq('driver_id', form.driver_id).eq('route_date', form.date).in('status', routeStatuses).order('position', {ascending:false}).limit(1)
-      positionQuery = branchId ? positionQuery.eq('branch_id', branchId) : positionQuery.is('branch_id', null)
-      const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
-      if (positionError) throw positionError
-      let queueQuery = client.from('routes').select('id,position,destination_name,mission_type,status').eq('company_id', companyId).eq('driver_id', form.driver_id).eq('route_date', form.date).in('status', ['draft','pending','published','paused']).order('position', {ascending: true})
-      queueQuery = branchId ? queueQuery.eq('branch_id', branchId) : queueQuery.is('branch_id', null)
-      const {data: lastQueue, error: queueError} = await queueQuery
-      if (queueError) throw queueError
       const payload: Record<string, unknown> = {
         company_id: companyId,
         branch_id: branchId,
@@ -90,9 +82,44 @@ export function useRoutesSave(w: any) {
         order_number: form.order_number.trim() || null,
         notes: form.notes.trim() || null,
         scheduled_at: scheduledAt,
-        position: Number(lastRoute?.position || 0) + 1,
       }
       if (destinationContactName) payload.destination_contact_name = destinationContactName
+
+      if (editingRouteId) {
+        // Editing an existing route (opened via "click to edit" in Edit
+        // mode) - update it in place instead of inserting a duplicate, and
+        // leave its queue position untouched since it isn't moving.
+        let updated = await client.from('routes').update(payload).eq('id', editingRouteId).select('id').single()
+        if (updated.error && /destination_contact_name|schema cache|column/i.test(updated.error.message || '')) {
+          delete payload.destination_contact_name
+          updated = await client.from('routes').update(payload).eq('id', editingRouteId).select('id').single()
+        }
+        const {data: updatedRoute, error} = updated
+        if (error) throw error
+        if (updatedRoute?.id && currentUserId) {
+          await recordActivity({companyId,userId:currentUserId,action:'route_updated',recordId:updatedRoute.id,after:{driver_id:form.driver_id,priority:form.priority,destination:destinationAddress}}).catch(()=>undefined)
+          void sendRoutePush(updatedRoute.id, 'updated')
+        }
+        window.dispatchEvent(new Event('routehub:notifications-refresh'))
+        setForm((current: {driver_id: string}) => ({...initialForm(), driver_id: current.driver_id}))
+        setSelectedDestinationLocation(null)
+        setInsertBeforeId('')
+        setEditingRouteId('')
+        await loadWorkspace()
+        setMessage(locale==='es' ? 'Ruta actualizada.' : locale==='fr' ? 'Itinéraire mis à jour.' : 'Route updated.')
+        setOpen(false)
+        return
+      }
+
+      let positionQuery = client.from('routes').select('position').eq('company_id', companyId).eq('driver_id', form.driver_id).eq('route_date', form.date).in('status', routeStatuses).order('position', {ascending:false}).limit(1)
+      positionQuery = branchId ? positionQuery.eq('branch_id', branchId) : positionQuery.is('branch_id', null)
+      const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
+      if (positionError) throw positionError
+      let queueQuery = client.from('routes').select('id,position,destination_name,mission_type,status').eq('company_id', companyId).eq('driver_id', form.driver_id).eq('route_date', form.date).in('status', ['draft','pending','published','paused']).order('position', {ascending: true})
+      queueQuery = branchId ? queueQuery.eq('branch_id', branchId) : queueQuery.is('branch_id', null)
+      const {data: lastQueue, error: queueError} = await queueQuery
+      if (queueError) throw queueError
+      payload.position = Number(lastRoute?.position || 0) + 1
       let created = await client.from('routes').insert(payload).select('id').single()
       if (created.error && /destination_contact_name|schema cache|column/i.test(created.error.message || '')) {
         delete payload.destination_contact_name

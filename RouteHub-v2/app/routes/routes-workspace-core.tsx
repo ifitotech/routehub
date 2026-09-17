@@ -36,6 +36,13 @@ export function useRoutesCore() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [open, setOpen] = useState(false)
+  // Set when the Add Route panel was opened from an existing row's "click to
+  // edit" in Edit mode - tells save() to UPDATE that route instead of
+  // inserting a new one. Cleared whenever a fresh route starts (openBuilder,
+  // or the URL-param quick-create effect below), so a stale id left over
+  // from a cancelled edit can never silently redirect a later create into
+  // an update of the wrong route.
+  const [editingRouteId, setEditingRouteId] = useState('')
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [justCreated, setJustCreated] = useState(false)
   const [originMode, setOriginMode] = useState<OriginMode>('branch')
@@ -142,6 +149,7 @@ export function useRoutesCore() {
         destination_phone: contact?.phone || current.destination_phone,
         stop_contact_name: contact?.contact_name || current.stop_contact_name,
       }))
+      setEditingRouteId('')
       setOpen(true)
     }
   }, [contacts, searchParams])
@@ -165,6 +173,7 @@ export function useRoutesCore() {
     locale, t, c, searchParams, form, setForm, contacts, setContacts, branches, setBranches,
     drivers, setDrivers, driverLocations, routes, setRoutes, companyId, currentUserId,
     branchId, message, setMessage, loading, setLoading, saving, setSaving, open, setOpen,
+    editingRouteId, setEditingRouteId,
     detailsOpen, setDetailsOpen, justCreated, setJustCreated, originMode, setOriginMode,
     insertBeforeId, setInsertBeforeId, previewOpen, setPreviewOpen,
     selectedDestinationLocation, setSelectedDestinationLocation, pendingLocation, setPendingLocation,

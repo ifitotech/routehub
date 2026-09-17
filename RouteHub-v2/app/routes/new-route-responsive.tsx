@@ -11,7 +11,7 @@ import type {useRoutesWorkspace} from './routes-workspace'
 type Workspace = ReturnType<typeof useRoutesWorkspace>
 
 type NewRouteResponsiveProps = Pick<Workspace,
-  | 'saving' | 'setOpen' | 'justCreated' | 'locale' | 'c' | 'openBuilder'
+  | 'saving' | 'setOpen' | 'justCreated' | 'locale' | 'c' | 'openBuilder' | 'editingRouteId'
   | 'form' | 'setForm' | 'selectedContact'
   | 'originMode' | 'setOriginSource' | 'selectDriver' | 'oc' | 'branches' | 'contacts'
   | 'defaultBranch' | 'detailsOpen' | 'setDetailsOpen' | 'todayValue' | 'drivers' | 'save'
@@ -34,13 +34,16 @@ const typeIcons: Record<string, typeof Truck> = {
 const typeOrder = ['delivery', 'pickup', 'return']
 
 export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
-  const {saving, setOpen, justCreated, locale, c, form, setForm, defaultBranch, save, openBuilder} = p
+  const {saving, setOpen, justCreated, locale, c, form, setForm, defaultBranch, save, openBuilder, editingRouteId} = p
+  const isEditing = Boolean(editingRouteId)
 
-  const assignLabel = form.type === 'pickup'
-    ? (locale === 'es' ? 'Asignar recogida' : locale === 'fr' ? 'Attribuer la collecte' : 'Assign pickup')
-    : form.type === 'return'
-      ? (locale === 'es' ? 'Asignar regreso' : locale === 'fr' ? 'Attribuer le retour' : 'Assign return')
-      : (locale === 'es' ? 'Asignar entrega' : locale === 'fr' ? 'Attribuer la livraison' : 'Assign delivery')
+  const assignLabel = isEditing
+    ? (locale === 'es' ? 'Guardar cambios' : locale === 'fr' ? 'Enregistrer' : 'Save changes')
+    : form.type === 'pickup'
+      ? (locale === 'es' ? 'Asignar recogida' : locale === 'fr' ? 'Attribuer la collecte' : 'Assign pickup')
+      : form.type === 'return'
+        ? (locale === 'es' ? 'Asignar regreso' : locale === 'fr' ? 'Attribuer le retour' : 'Assign return')
+        : (locale === 'es' ? 'Asignar entrega' : locale === 'fr' ? 'Attribuer la livraison' : 'Assign delivery')
 
   const cards = typeOrder
     .map(value => routeTypes.find(entry => entry.value === value))
@@ -50,7 +53,9 @@ export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
     <div className={styles.responsivePanel}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <h2>{locale === 'es' ? 'Nueva ruta' : locale === 'fr' ? 'Nouvel itinéraire' : 'New route'}</h2>
+          <h2>{isEditing
+            ? (locale === 'es' ? 'Editar ruta' : locale === 'fr' ? 'Modifier l’itinéraire' : 'Edit route')
+            : (locale === 'es' ? 'Nueva ruta' : locale === 'fr' ? 'Nouvel itinéraire' : 'New route')}</h2>
           {defaultBranch?.name && <span className={styles.headerBranch}>{defaultBranch.name}</span>}
         </div>
         <button

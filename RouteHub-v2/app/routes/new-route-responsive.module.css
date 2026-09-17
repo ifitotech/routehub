@@ -6,7 +6,15 @@
 
 .responsivePanel {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(min(100%, 262px), 1fr);
+  /* The sidebar's floor used to be 262px - fine when the panel itself had
+     room, but with the map now taking a bigger share of the workspace
+     (dispatch-layout.module.css's form:map ratio), the content column could
+     get squeezed thinner than its type cards need, and CSS breaks a word
+     letter-by-letter rather than overflow when nothing fits. A lower floor
+     here leaves content more of whatever width is actually available, and
+     the type card grid below also gets its own floor as a second layer of
+     protection regardless of how this split lands. */
+  grid-template-columns: minmax(0, 1.45fr) minmax(min(100%, 200px), 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   width: 100%;
   background: var(--rh-card, #fff);
@@ -137,7 +145,14 @@
    so the three read as a single choice rather than three stacked tiles. */
 .typeCardGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* A hard floor per card, not minmax(0, 1fr) - without one, a squeeze on
+     the content column (map taking more width, sidebar's own floor, a
+     narrower browser window) had nowhere to go but the label text, and
+     overflow-wrap: break-word breaks a word letter-by-letter once its
+     container is narrower than the word itself. Below this floor the row
+     overflows slightly instead - illegible text is worse than a soft
+     overflow. */
+  grid-template-columns: repeat(3, minmax(68px, 1fr));
   gap: 6px;
 }
 
@@ -391,7 +406,7 @@
 
 /* One column once the two no longer fit side by side - the divider becomes
    a rule above the assignment fields instead of beside them. */
-@media (max-width: 1100px) {
+@media (max-width: 1450px) {
   .responsivePanel {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -622,7 +637,7 @@
   color: var(--rh-text-secondary);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1450px) {
   :global(html[data-theme='dark']) .sidebar {
     border-top-color: var(--rh-border);
   }

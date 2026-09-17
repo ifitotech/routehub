@@ -13,7 +13,7 @@ export function useRoutesWorkspace() {
     searchParams, form, setForm, drivers, defaultBranch, routes, setOriginMode,
     setMessage, setDetailsOpen, setJustCreated, setSelectedDestinationLocation,
     setPendingLocation, setSaveContactOpen, setNewContactName, setContactSaveMessage,
-    setInsertBeforeId, setOpen, contacts, setContacts, companyId, branchId,
+    setInsertBeforeId, setOpen, setEditingRouteId, contacts, setContacts, companyId, branchId,
     selectedDestinationLocation, newContactName, savingContact, setSavingContact,
     c,
   } = derived
@@ -87,6 +87,7 @@ export function useRoutesWorkspace() {
     setNewContactName('')
     setContactSaveMessage('')
     setInsertBeforeId('')
+    setEditingRouteId('')
     setOpen(true)
   }
 
