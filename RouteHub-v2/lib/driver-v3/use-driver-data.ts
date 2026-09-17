@@ -24,6 +24,19 @@ type DriverV3Data = {
 
 const DriverV3Context = createContext<DriverV3Data | null>(null)
 
+const DRIVER_ROUTE_CACHE_TTL = 24 * 60 * 60 * 1000
+function routeCacheKey(driverId: string, companyId: string) { return `routehub:driver-routes:v1:${companyId}:${driverId}` }
+function readCachedRoutes(driverId: string, companyId: string): DriverV3Route[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(routeCacheKey(driverId, companyId)) || 'null')
+    if (!raw || Date.now() - Number(raw.savedAt) > DRIVER_ROUTE_CACHE_TTL || !Array.isArray(raw.routes)) return []
+    return raw.routes as DriverV3Route[]
+  } catch { return [] }
+}
+function writeCachedRoutes(driverId: string, companyId: string, rows: DriverV3Route[]) {
+  try { localStorage.setItem(routeCacheKey(driverId, companyId), JSON.stringify({savedAt: Date.now(), routes: rows})) } catch { /* storage is optional */ }
+}
+
 function useDriverDataInternal(): DriverV3Data {
   const [routes, setRoutes] = useState<DriverV3Route[]>([])
   const routesRef = useRef<DriverV3Route[]>([])
@@ -38,9 +51,11 @@ function useDriverDataInternal(): DriverV3Data {
   const load = useCallback(async (quiet=false) => {
     if(!quiet) setLoading(true)
     setError('')
+    let identity: {driverId: string; companyId: string} | null = null
     try {
       const user = await currentUser()
       const membership = await currentMembership()
+      identity = {driverId: user.id, companyId: membership.company_id}
       setDriverId(user.id)
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id ?? null)
@@ -83,6 +98,7 @@ function useDriverDataInternal(): DriverV3Data {
       if (loadError) throw loadError
       routesRef.current = (rows || []) as DriverV3Route[]
       setRoutes(routesRef.current)
+      writeCachedRoutes(user.id, membership.company_id, routesRef.current)
       // A driving-session/GPS problem must not hide an otherwise valid route.
       // The route remains usable and the session can be recovered on the next
       // focus/refresh once the protected session table is available.
@@ -97,7 +113,7 @@ function useDriverDataInternal(): DriverV3Data {
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to load Driver workspace.'
-      const cached = routesRef.current
+      const cached = routesRef.current.length ? routesRef.current : identity ? readCachedRoutes(identity.driverId, identity.companyId) : []
       if (cached.length) {
         // A wide workspace refresh may fail because of an optional field or a
         // resumed mobile connection. Reconcile the cached rows with a minimal
@@ -117,7 +133,9 @@ function useDriverDataInternal(): DriverV3Data {
           setRoutes(routesRef.current)
           setError('')
         } catch {
-          setError(message)
+          routesRef.current = cached
+          setRoutes(cached)
+          setError('')
         }
       } else {
         setError(message)
