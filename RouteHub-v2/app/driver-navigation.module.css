@@ -9,7 +9,7 @@
 .navigation .controls{bottom:16px}
 .navigation .notice{top:8px}
 .mapArea{position:absolute;inset:0;min-width:0;min-height:120px;overflow:hidden;background:#d9e4ef}.canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.navigation::before{content:'';position:absolute;z-index:3;top:0;right:0;left:0;height:env(safe-area-inset-top,0px);background:#fff}
+.navigation::before{content:'';position:absolute;z-index:3;top:0;right:0;left:0;height:env(safe-area-inset-top,0px);background:#0f1d35}
 
 /* --- Maneuver / guidance card --- */
 .guidance{position:absolute;z-index:4;top:12px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:44px minmax(0,1fr) 40px;align-items:center;gap:10px;padding:12px;background:linear-gradient(135deg,#071B42 0%,#0D2E5F 55%,#123F78 100%);border:1px solid rgba(125,185,255,.42);border-radius:18px;color:#fff;box-shadow:0 12px 28px rgba(3,17,43,.32)}
@@ -58,7 +58,8 @@
 .upcomingBlock li svg{flex:none;color:#94a3b8}
 .openMapsButton{display:flex;align-items:center;justify-content:center;gap:7px;height:38px;border-radius:12px;border:1px solid #dbe6f5;background:transparent;color:#1667f2;font-size:12.5px;font-weight:750}
 
-:global(html[data-theme='light']) .guidance{background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(246,249,255,.94) 60%,rgba(231,241,255,.92));border-color:rgba(83,130,188,.22);box-shadow:0 10px 24px rgba(34,78,131,.16);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#0f1d35}
+:global(html[data-theme='light']) .navigation::before{background:#fff}
+:global(html[data-theme='light']) .guidance{background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(246,249,255,.82) 60%,rgba(231,241,255,.76));border-color:rgba(83,130,188,.22);box-shadow:0 10px 24px rgba(34,78,131,.16);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);color:#0f1d35}
 :global(html[data-theme='light']) .maneuver{color:#0f1d35}
 :global(html[data-theme='light']) .streetLine{color:#243b5c}
 :global(html[data-theme='light']) .actionLine{color:#657995}
@@ -67,7 +68,8 @@
 
 :global(html[data-theme='dark']) .navigation{background:#06152c}
 :global(html[data-theme='dark']) .navigation::before{background:#0f1d35}
-:global(html[data-theme='dark']) .bottom{border-color:rgba(125,185,255,.22);background:linear-gradient(135deg,#071B42 0%,#0D2E5F 55%,#123F78 100%);color:#fff;box-shadow:0 -10px 28px rgba(0,0,0,.34)}
+:global(html[data-theme='dark']) .guidance{background:linear-gradient(135deg,rgba(7,27,66,.9) 0%,rgba(13,46,95,.82) 55%,rgba(18,63,120,.76) 100%);border-color:rgba(125,185,255,.46);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%)}
+:global(html[data-theme='dark']) .bottom{border-color:rgba(125,185,255,.28);background:linear-gradient(135deg,rgba(7,27,66,.9) 0%,rgba(13,46,95,.82) 55%,rgba(18,63,120,.76) 100%);color:#fff;box-shadow:0 -10px 28px rgba(0,0,0,.34);backdrop-filter:blur(22px) saturate(155%);-webkit-backdrop-filter:blur(22px) saturate(155%)}
 :global(html[data-theme='dark']) .primaryRow,:global(html[data-theme='dark']) .footerRow,:global(html[data-theme='dark']) .expandedPanel{border-color:rgba(150,195,255,.2)}
 :global(html[data-theme='dark']) .stopSummary,:global(html[data-theme='dark']) .shortAddress,:global(html[data-theme='dark']) .timeBlock span,:global(html[data-theme='dark']) .activeDot,:global(html[data-theme='dark']) .expandedLabel{color:#b7cce7}
 :global(html[data-theme='dark']) .timeBlock strong{color:#fff}
