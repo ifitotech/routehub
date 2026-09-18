@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {usePathname} from 'next/navigation'
+import {usePathname, useSearchParams} from 'next/navigation'
 import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck, UserRound} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
@@ -47,10 +47,11 @@ export default function DriverV3Shell({
 }: Props) {
   const {t} = useLocale()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isStack = mode === 'stack'
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
-  const mapOpen = pathname === '/driver/map'
+  const mapOpen = pathname === '/driver/map' || (pathname === '/driver' && searchParams.get('view') === 'map')
 
   return (
     <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
@@ -69,8 +70,8 @@ export default function DriverV3Shell({
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
         ) : (
-          <Link href={mapOpen ? '/driver' : '/driver/map'} className={styles.headerIcon} aria-label={mapOpen ? (t.drvToday || 'Today') : (t.drvMap || 'Map')}>
-            <MapIcon size={22} strokeWidth={2.2} />
+          <Link href={mapOpen ? '/driver' : '/driver?view=map'} className={styles.headerIcon} aria-label={mapOpen ? (t.drvToday || 'Today') : (t.drvMap || 'Map')}>
+            {mapOpen ? <Home size={22} strokeWidth={2.2} /> : <MapIcon size={22} strokeWidth={2.2} />}
           </Link>
         )}
         <Link href="/driver" className={styles.headerBrand}>

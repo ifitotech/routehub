@@ -63,6 +63,7 @@ function compactAddress(value: unknown) {
 
 export default function DriverV3Page() {
   const searchParams=useSearchParams()
+  const mapRequested=searchParams.get('view')==='map'
   const {t,locale}=useLocale()
   const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,offline}=useDriverData()
   const [busy,setBusy]=useState(false)
@@ -161,7 +162,11 @@ export default function DriverV3Page() {
     captureNavOrigin()
     setNavigationVisible(true)
   },[started,route?.id,simpleMode])
-  const arrived=phase==='arrived'
+  useEffect(()=>{
+    if(!mapRequested||simpleMode||!started||getNavigationPreference()!=='internal')return
+    captureNavOrigin()
+    setNavigationVisible(true)
+  },[mapRequested,simpleMode,started,route?.id])
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
