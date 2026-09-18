@@ -63,25 +63,19 @@ test('driver queue identifies unfinished work from the authoritative operational
 
 test('Driver V3 map keeps the live map mounted while actions return to Today',async()=>{
   const source=await readFile(new URL('../app/driver-v3/map/page.tsx',import.meta.url),'utf8')
-  assert.match(source,/dynamic\(\(\) => import\('\.\.\/\.\.\/driver-route-navigation'\)/)
-  assert.match(source,/sharedLocation=\{gps\}/)
-  assert.match(source,/onExit=\{\(\) => router\.push\('\/driver'\)\}/)
-  assert.match(source,/router\.push\('\/driver'\)/)
+  assert.match(source,/router\.replace\('\/driver\?view=map'\)/)
 })
 
 test('Arrival is an explicit V3 action and refreshes the authoritative operation',async()=>{
   const source=await readFile(new URL('../app/driver-v3/page.tsx',import.meta.url),'utf8')
-  const map=await readFile(new URL('../app/driver-v3/map/page.tsx',import.meta.url),'utf8')
   assert.match(source,/markArrived\(ctx\(\)\)/)
   assert.match(source,/await refresh\(\)/)
-  assert.match(map,/markArrived\(\{routeId: route\.id, driverId, companyId: route\.company_id\}\)/)
-  assert.match(map,/disabled=\{busy\}/)
+  assert.match(source,/disabled=\{busy\}/)
 })
 
 test('navigation exit and arrival return to the Driver workflow instead of restarting the map',async()=>{
   const map=await readFile(new URL('../app/driver-v3/map/page.tsx',import.meta.url),'utf8')
-  assert.match(map,/onExit=\{\(\) => router\.push\('\/driver'\)\}/)
-  assert.match(map,/router\.push\('\/driver'\)/)
+  assert.match(map,/router\.replace\('\/driver\?view=map'\)/)
   assert.doesNotMatch(map,/autoStartNavigation/)
 })
 

@@ -82,6 +82,7 @@ export default function DriverV3Page() {
   const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
+  const autoNavigationRouteRef=useRef<string|null>(null)
   const refreshStartY=useRef<number|null>(null)
   const refreshDistance=useRef(0)
   const completionHandleStartY=useRef<number|null>(null)
@@ -478,7 +479,14 @@ export default function DriverV3Page() {
   // which layer is on top; the animation between them grows out of / shrinks
   // back into the hero's own route preview map (see captureNavOrigin).
   const showNavLayer=Boolean(started&&route&&!simpleMode&&getNavigationPreference()==='internal')
+  const navAvailable=showNavLayer
   const navOpen=Boolean(navigationVisible&&showNavLayer)
+  const [navMounted,setNavMounted]=useState(false)
+  useEffect(()=>{
+    if(navOpen){setNavMounted(true);return}
+    const timer=window.setTimeout(()=>setNavMounted(false),480)
+    return ()=>window.clearTimeout(timer)
+  },[navOpen])
   const navigationStops=route?[route,...(snapshot?.queue.upcoming||[])]:[]
 
   // A CSS transition only animates a value that CHANGES after mount - since
