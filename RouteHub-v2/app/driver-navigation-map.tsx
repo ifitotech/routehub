@@ -370,7 +370,7 @@ export default function DriverNavigationMap({
       title:validStops[index]?.label||validStops[index]?.address||`Stop ${index+1}`,
       tone:'#0F1D35',
     })),
-    ...(displayLocation?[{id:'driver',position:displayLocation,label:'',title:locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location',tone:'#1667F2',driver:true,heading}]:[]),
+    ...(displayLocation?[{id:'driver',position:displayLocation,label:'',title:locale==='es'?'Tu ubicación':locale==='fr'?'Votre position':'Your location',tone:'#FFFFFF',driver:true,heading}]:[]),
   ],[destinations,validStops,displayLocation,heading,locale])
 
   const confirmArrival=async()=>{
