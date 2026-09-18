@@ -519,7 +519,7 @@ export default function DriverV3Page() {
   return <DriverV3Shell
     active="today"
     headerStatus={drivingSession?t.drvDayActive:t.drvDayInactive}
-    hideNav={Boolean((sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
+    hideNav={Boolean(navOpen||(sheet && sheet!=='delivery' && operation)||confirmPickupOpen)}
     hideHeader={navOpen}
     flush
   >
