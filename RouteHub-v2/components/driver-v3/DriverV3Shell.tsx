@@ -23,6 +23,7 @@ type Props = {
   headerStatus?: string
   flush?: boolean
   hideNav?: boolean
+  hideHeader?: boolean
   swipeDownTo?: string
   // Today (and any screen that needs it) can swap the default profile
   // shortcut for its own header action - the Tools menu (Maps/Call/
@@ -42,6 +43,7 @@ export default function DriverV3Shell({
   headerStatus,
   flush = false,
   hideNav = false,
+  hideHeader = false,
   swipeDownTo,
   rightSlot,
 }: Props) {
@@ -63,7 +65,7 @@ export default function DriverV3Shell({
           minHeight: 'calc(48px + env(safe-area-inset-top))',
           padding: 'env(safe-area-inset-top) 16px 0',
         }}
-        className={`${styles.header} ${styles.appHeader}`}
+        className={`${styles.header} ${styles.appHeader} ${hideHeader ? styles.headerHidden : ''}`}
       >
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
