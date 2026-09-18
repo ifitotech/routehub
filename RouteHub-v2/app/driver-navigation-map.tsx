@@ -10,6 +10,7 @@ import type {RouteEstimate} from '../lib/maps/types'
 import {distanceFromNavigationPath,usableNavigationFix,projectNavigationPosition,navigationManeuver,navigationRemainingSeconds,type NavigationProgress} from '../lib/maps/navigation-progress'
 import {reportAppError} from '../lib/error-reporting'
 import {openNavigationWithFallback} from '../lib/maps/external-navigation'
+import {resolvedTheme,themePreference} from '../lib/use-preferences'
 import styles from './driver-navigation.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -149,7 +150,10 @@ export default function DriverNavigationMap({
   const [mapTheme,setMapTheme]=useState<'light'|'dark'>('dark')
 
   useEffect(()=>{
-    const syncTheme=()=>setMapTheme(document.documentElement.dataset.theme==='light'?'light':'dark')
+    // The saved RouteHub preference is authoritative. Reading only
+    // `data-theme` let the navigation map briefly (and, on a restored PWA,
+    // permanently) fall back to light while the rest of Driver was dark.
+    const syncTheme=()=>setMapTheme(resolvedTheme(themePreference()))
     syncTheme()
     const observer=new MutationObserver(syncTheme)
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})
@@ -484,7 +488,7 @@ export default function DriverNavigationMap({
   }
 
   return (
-    <section className={styles.navigation} aria-label="Driver Map">
+    <section className={styles.navigation} data-map-theme={mapTheme} aria-label="Driver Map">
       <aside className={styles.guidance} data-state={navState}>
         <div className={styles.maneuver}><ManeuverIcon size={38}/></div>
         <div className={styles.instruction} aria-live="polite">
