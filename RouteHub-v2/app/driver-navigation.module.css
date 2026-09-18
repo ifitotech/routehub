@@ -1,4 +1,4 @@
-.navigation{position:relative;display:grid;grid-template-rows:auto minmax(120px,1fr) auto;width:100%;height:calc(100% + 48px + env(safe-area-inset-top,0px));min-height:0;margin-top:calc(-48px - env(safe-area-inset-top,0px));overflow:auto;background:#081a31;color:#fff;isolation:isolate}
+.navigation{position:relative;display:grid;grid-template-rows:auto minmax(120px,1fr) auto;width:100%;height:100%;min-height:0;margin:0;overflow:auto;background:#081a31;color:#fff;isolation:isolate}
 .navigation button{font:inherit;font-weight:750;cursor:pointer;touch-action:manipulation}.navigation button:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.navigation button:disabled{opacity:.5;cursor:wait}
 /* Reserve actual panel heights in layout so Maps centers on the visible area.
    Specificity keeps compact-screen rules from restoring absolute offsets. */
