@@ -81,7 +81,6 @@ export default function DriverV3Page() {
   const [nameFocus,setNameFocus]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null)
   const openedCompletionRef=useRef('')
-  const autoNavigationRouteRef=useRef<string|null>(null)
   const refreshStartY=useRef<number|null>(null)
   const refreshDistance=useRef(0)
   const completionHandleStartY=useRef<number|null>(null)
@@ -138,28 +137,21 @@ export default function DriverV3Page() {
   const started=phase==='started'||phase==='arrived'
   const simpleMode=getDriverModePreference()==='simple'
   const internalNavigationEnabled=started&&getNavigationPreference()==='internal'
-  useEffect(()=>{
-    if(internalNavigationEnabled)setNavigationVisible(true)
-  },[internalNavigationEnabled,route?.id])
-  const arrived=phase==='arrived'
-
   // Settings promises guidance "opens when starting a stop" while the
   // in-app navigator is on, but navigationVisible is plain component state -
   // it used to only turn on from the explicit call inside startCurrent, so a
-  // driver who reopens the app mid-route (backgrounded tab, PWA relaunch)
+  // driver who reopened the app mid-route (backgrounded tab, PWA relaunch)
   // landed back on the static route preview instead of resuming live
-  // navigation. This restores it once per route per mount whenever the
-  // route is already started and the preference is internal. The ref guard
-  // means "Volver a Today" (setNavigationVisible(false)) still holds for the
-  // rest of that mount instead of snapping back open on the next render.
+  // navigation. This restores it whenever the route is already started and
+  // the preference is internal, and also captures the hero map's rect first
+  // so the same open animation (grow out of the map) plays here too instead
+  // of popping straight into the open state.
   useEffect(()=>{
-    if(!started||!route?.id)return
-    if(getNavigationPreference()!=='internal')return
-    if(autoNavigationRouteRef.current===route.id)return
-    autoNavigationRouteRef.current=route.id
+    if(!internalNavigationEnabled)return
     captureNavOrigin()
     setNavigationVisible(true)
-  },[started,route?.id])
+  },[internalNavigationEnabled,route?.id])
+  const arrived=phase==='arrived'
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
@@ -464,31 +456,45 @@ export default function DriverV3Page() {
     event.stopPropagation()
     if(start!==null&&end!==undefined&&start-end>28)openDelivery()
   }
-  // showNavLayer mounts the navigator once a stop is started with the
-  // in-app preference on - it then stays mounted (GPS watch, voice, wake
-  // lock all keep running) for the rest of that stop, so closing back to
-  // Today never restarts navigation state, only hides it. navOpen is purely
-  // which layer is on top; the animation between them grows out of / shrinks
-  // back into the hero's own route preview map (see captureNavOrigin).
-  const showNavLayer=Boolean(started&&route&&getNavigationPreference()==='internal')
-  const navOpen=Boolean(navigationVisible&&showNavLayer)
+  // navAvailable: a stop is started with the in-app preference on, so
+  // navigation CAN be opened (drives the hero map's tap-to-navigate hint).
+  // navOpen: it is currently the foreground view.
+  // navMounted: <DriverRouteNavigation> actually exists in the DOM. This is
+  // intentionally NOT the same as navAvailable/navOpen - it stays true for
+  // one closing-animation's worth of time after navOpen goes false, then
+  // unmounts. Keeping the live navigator (Google Maps, a WebGL map) mounted
+  // for the entire stop - the first version of this - left it running
+  // permanently alongside Today's own WebGL map (DriverRouteMap/MapLibre)
+  // any time navigation was "peeked" closed, and mobile browsers cap
+  // simultaneous WebGL contexts: Today's map was losing that race and
+  // rendering blank. Unmounting for real once the close animation finishes
+  // frees that context; GPS/voice/wake lock do restart on the next open,
+  // same as before this session's navigation work.
+  const navAvailable=Boolean(started&&route&&getNavigationPreference()==='internal')
+  const navOpen=Boolean(navigationVisible&&navAvailable)
+  const [navMounted,setNavMounted]=useState(false)
+  useEffect(()=>{
+    if(navOpen){setNavMounted(true);return}
+    const timer=window.setTimeout(()=>setNavMounted(false),480)
+    return ()=>window.clearTimeout(timer)
+  },[navOpen])
   const navigationStops=route?[route,...(snapshot?.queue.upcoming||[])]:[]
 
-  // A CSS transition only animates a value that CHANGES after mount - if
-  // navOpen is already true the instant .navLayer first mounts (the normal
-  // case: starting a stop opens navigation immediately), there is no prior
-  // "closed" frame for the browser to transition from, so it would just pop
-  // in already full-size. navEntering forces one closed paint right after
-  // mount, then clears on the next frame so the real navOpen value takes
-  // over and the grow-from-the-map transition actually plays.
+  // A CSS transition only animates a value that CHANGES after mount - since
+  // navMounted now flips to true right as navOpen does (opening always
+  // freshly mounts the layer), there is no prior "closed" frame for the
+  // browser to transition from, so it would just pop in already full-size.
+  // navEntering forces one closed paint right after mount, then clears on
+  // the next frame so the real navOpen value takes over and the
+  // grow-from-the-map transition actually plays.
   const [navEntering,setNavEntering]=useState(false)
   useEffect(()=>{
-    if(!showNavLayer)return
+    if(!navMounted)return
     setNavEntering(true)
     let raf2=0
     const raf1=requestAnimationFrame(()=>{raf2=requestAnimationFrame(()=>setNavEntering(false))})
     return ()=>{cancelAnimationFrame(raf1);cancelAnimationFrame(raf2)}
-  },[showNavLayer])
+  },[navMounted])
   const navVisuallyOpen=navOpen&&!navEntering
   // Keep the primary navigation available on the empty Today state. A stale
   // completion sheet must not hide the nav after the last route is completed.
@@ -536,13 +542,13 @@ export default function DriverV3Page() {
           <div
             ref={heroMapRef}
             className={`${styles.routeGlyphHost} ${started?styles.routeGlyphHostCompact:''}`}
-            role={showNavLayer?'button':undefined}
-            tabIndex={showNavLayer?0:undefined}
-            aria-label={showNavLayer?(locale==='es'?'Abrir navegación':locale==='fr'?'Ouvrir la navigation':'Open navigation'):undefined}
-            onClick={()=>{if(!showNavLayer||navOpen)return;captureNavOrigin();setNavigationVisible(true)}}
+            role={navAvailable?'button':undefined}
+            tabIndex={navAvailable?0:undefined}
+            aria-label={navAvailable?(locale==='es'?'Abrir navegación':locale==='fr'?'Ouvrir la navigation':'Open navigation'):undefined}
+            onClick={()=>{if(!navAvailable||navOpen)return;captureNavOrigin();setNavigationVisible(true)}}
           >
             <DriverRouteMap route={route} driverFix={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null} locale={locale}/>
-            {showNavLayer&&!navOpen&&(
+            {navAvailable&&!navOpen&&(
               <span className={styles.mapNavHint}><Navigation size={13}/>{locale==='es'?'Toca para navegar':locale==='fr'?'Touchez pour naviguer':'Tap to navigate'}</span>
             )}
           </div>
@@ -624,12 +630,13 @@ export default function DriverV3Page() {
       )}
 
     </div>
-    {/* Mounted for the whole started stop, not just while open - see
-        showNavLayer above. The inline transform on the closed state mirrors
-        the hero map's own rect (captureNavOrigin), so opening/closing reads
-        as the navigator growing out of / shrinking back into that map
-        instead of one screen replacing another. */}
-    {showNavLayer&&(
+    {/* Mounted only while open (plus one closing animation's worth of time
+        after) - see navMounted above; NOT for the whole started stop, to
+        avoid running two live WebGL maps at once. The inline transform on
+        the closed state mirrors the hero map's own rect (captureNavOrigin),
+        so opening/closing reads as the navigator growing out of / shrinking
+        back into that map instead of one screen replacing another. */}
+    {navMounted&&(
       <div
         className={styles.navLayer}
         data-open={navVisuallyOpen?'true':'false'}
