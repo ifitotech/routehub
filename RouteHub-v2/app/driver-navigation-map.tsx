@@ -1,7 +1,7 @@
 'use client'
 
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import {ArrowUp,Box,CornerUpLeft,CornerUpRight,Flag,LocateFixed,MapPin,Navigation,PackageCheck,RotateCcw,Volume2,VolumeX} from 'lucide-react'
+import {ArrowUp,Box,Clock,CornerUpLeft,CornerUpRight,Flag,LocateFixed,MapPin,Navigation,PackageCheck,RotateCcw,Volume2,VolumeX} from 'lucide-react'
 import GoogleRouteCanvas from '../components/google-route-canvas'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters} from '../lib/maps/routing'
@@ -532,8 +532,11 @@ export default function DriverNavigationMap({
         </div>
         <div className={styles.primaryRow}>
           <div className={styles.timeBlock}>
-            <strong>{eta!=null?`${eta} min`:'—'}</strong>
-            <span>{[remainingDistance,arrivalTime].filter(Boolean).join(' · ')||'—'}</span>
+            <span className={styles.timeIcon}><Clock size={16}/></span>
+            <div className={styles.timeCopy}>
+              <strong>{eta!=null?`${eta} min`:'—'}</strong>
+              <span>{[remainingDistance,arrivalTime].filter(Boolean).join(' · ')||'—'}</span>
+            </div>
           </div>
           <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={16}/>{copy.arrived}</button>
         </div>
