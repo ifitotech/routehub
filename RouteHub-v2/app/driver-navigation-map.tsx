@@ -87,6 +87,15 @@ type Props={
   arrivalDisabled?:boolean
   stopNumber?:number
   stopTotal?:number
+  // Lets the parent (page.tsx) drive a live drag-to-close transition back
+  // to Today using this same handle, in addition to its own existing
+  // tap-to-expand behavior. onHandleDrag reports the raw pointer delta in
+  // px (negative = dragged up) once a genuine upward drag is recognized;
+  // the parent owns deciding the resulting animation, this component only
+  // reports the gesture.
+  onHandleDragStart?:()=>void
+  onHandleDrag?:(deltaY:number)=>void
+  onHandleDragEnd?:()=>void
 }
 
 export default function DriverNavigationMap({
@@ -104,6 +113,9 @@ export default function DriverNavigationMap({
   arrivalDisabled=false,
   stopNumber,
   stopTotal,
+  onHandleDragStart,
+  onHandleDrag,
+  onHandleDragEnd,
 }:Props){
   const [points,setPoints]=useState<Coordinate[]>([])
   const [line,setLine]=useState<Coordinate[]>([])
@@ -144,6 +156,13 @@ export default function DriverNavigationMap({
   // Bottom sheet expand/collapse - purely visual, does not affect routing,
   // GPS tracking or the map's own camera/fit logic below.
   const [sheetExpanded,setSheetExpanded]=useState(false)
+  // Disambiguates a plain tap (toggle sheetExpanded, existing behavior) from
+  // a real upward drag (report to the parent's Today transition) on the
+  // same handle. "engaged" only flips once the drag clearly moved upward
+  // past a small threshold, and once engaged every further move (even back
+  // downward) keeps reporting so the parent's live progress stays accurate
+  // if the driver drags partway then lets it settle back.
+  const handleDragRef=useRef<{y:number;engaged:boolean;moved:boolean}|null>(null)
   // Google Maps does not inherit CSS colors. Keep the real map palette in
   // sync with the resolved RouteHub/system theme instead of only darkening
   // the controls that sit on top of it.
@@ -523,7 +542,36 @@ export default function DriverNavigationMap({
         </div>
       </div>
       <footer className={styles.bottom} data-expanded={sheetExpanded?'true':'false'}>
-        <button type="button" className={styles.sheetHandleButton} aria-expanded={sheetExpanded} aria-label={sheetExpanded?copy.collapse:copy.expand} onClick={()=>setSheetExpanded(value=>!value)}>
+        <button
+          type="button"
+          className={styles.sheetHandleButton}
+          aria-expanded={sheetExpanded}
+          aria-label={sheetExpanded?copy.collapse:copy.expand}
+          onPointerDown={event=>{
+            handleDragRef.current={y:event.clientY,engaged:false,moved:false}
+            event.currentTarget.setPointerCapture?.(event.pointerId)
+          }}
+          onPointerMove={event=>{
+            const drag=handleDragRef.current
+            if(!drag)return
+            const delta=event.clientY-drag.y
+            if(Math.abs(delta)>6)drag.moved=true
+            if(!drag.engaged&&delta<-16){drag.engaged=true;onHandleDragStart?.()}
+            if(drag.engaged)onHandleDrag?.(delta)
+          }}
+          onPointerUp={()=>{
+            const drag=handleDragRef.current
+            handleDragRef.current=null
+            if(!drag)return
+            if(drag.engaged){onHandleDragEnd?.();return}
+            if(!drag.moved)setSheetExpanded(value=>!value)
+          }}
+          onPointerCancel={()=>{
+            const drag=handleDragRef.current
+            handleDragRef.current=null
+            if(drag?.engaged)onHandleDragEnd?.()
+          }}
+        >
           <span className={styles.sheetHandle} aria-hidden="true"/>
         </button>
         <div className={styles.stopSummary}>

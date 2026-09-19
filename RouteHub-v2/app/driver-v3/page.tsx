@@ -481,13 +481,49 @@ export default function DriverV3Page() {
   const showNavLayer=Boolean(started&&route&&!simpleMode&&getNavigationPreference()==='internal')
   const navAvailable=showNavLayer
   const navOpen=Boolean(navigationVisible&&showNavLayer)
+  // A live drag (either handle) needs the navigator mounted before it has
+  // fully "opened" in the navOpen sense - dragMountForce keeps it mounted
+  // for the duration of the gesture even though navOpen only flips once
+  // the drag actually commits.
+  const [dragMountForce,setDragMountForce]=useState(false)
   const [navMounted,setNavMounted]=useState(false)
   useEffect(()=>{
-    if(navOpen){setNavMounted(true);return}
+    if(navOpen||dragMountForce){setNavMounted(true);return}
     const timer=window.setTimeout(()=>setNavMounted(false),480)
     return ()=>window.clearTimeout(timer)
-  },[navOpen])
+  },[navOpen,dragMountForce])
   const navigationStops=route?[route,...(snapshot?.queue.upcoming||[])]:[]
+
+  // Live drag-to-transition, shared by Today's own handle (below the
+  // header) and the same handle inside the navigator's bottom sheet -
+  // one gesture, two entry points. dragProgress is 0 (Today) to 1 (fully
+  // open) while a drag is in progress; null the rest of the time, which
+  // hands rendering back to the tap-driven navVisuallyOpen/CSS-transition
+  // path below. Kept as plain state (not a ref-driven imperative DOM
+  // write) since pointermove on a handle this small does not fire often
+  // enough to be a real performance concern.
+  const DRAG_RANGE=180
+  const dragBaseRef=useRef<'closed'|'open'>('closed')
+  const [dragProgress,setDragProgress]=useState<number|null>(null)
+  const beginDrag=(base:'closed'|'open')=>{
+    dragBaseRef.current=base
+    captureNavOrigin()
+    setDragMountForce(true)
+    setDragProgress(base==='closed'?0:1)
+  }
+  const updateDrag=(deltaY:number)=>{
+    const raw=dragBaseRef.current==='closed'?deltaY/DRAG_RANGE:1+deltaY/DRAG_RANGE
+    setDragProgress(Math.max(0,Math.min(1,raw)))
+  }
+  const endDrag=()=>{
+    const progress=dragProgress
+    setDragProgress(null)
+    setDragMountForce(false)
+    if(progress==null)return
+    captureNavOrigin()
+    setNavigationVisible(progress>0.5)
+  }
+  const todayHandleDragRef=useRef<{y:number;engaged:boolean;moved:boolean}|null>(null)
 
   // A CSS transition only animates a value that CHANGES after mount - since
   // navMounted now flips to true right as navOpen does (opening always
@@ -548,6 +584,39 @@ export default function DriverV3Page() {
         <h1>{t.drvCouldntLoad}</h1><p>{t.drvConnRetry}</p>
         <button type="button" onClick={()=>void refresh()}>{t.drvTryAgain}</button>
       </section>:operation&&route?<>
+        {navAvailable&&(
+          <button
+            type="button"
+            className={styles.todayHandleButton}
+            aria-label={locale==='es'?'Abrir navegación':locale==='fr'?'Ouvrir la navigation':'Open navigation'}
+            onPointerDown={event=>{
+              todayHandleDragRef.current={y:event.clientY,engaged:false,moved:false}
+              event.currentTarget.setPointerCapture?.(event.pointerId)
+            }}
+            onPointerMove={event=>{
+              const drag=todayHandleDragRef.current
+              if(!drag)return
+              const delta=event.clientY-drag.y
+              if(Math.abs(delta)>6)drag.moved=true
+              if(!drag.engaged&&delta>16){drag.engaged=true;beginDrag('closed')}
+              if(drag.engaged)updateDrag(delta)
+            }}
+            onPointerUp={()=>{
+              const drag=todayHandleDragRef.current
+              todayHandleDragRef.current=null
+              if(!drag)return
+              if(drag.engaged){endDrag();return}
+              if(!drag.moved){captureNavOrigin();setNavigationVisible(true)}
+            }}
+            onPointerCancel={()=>{
+              const drag=todayHandleDragRef.current
+              todayHandleDragRef.current=null
+              if(drag?.engaged)endDrag()
+            }}
+          >
+            <span className={styles.todayHandle} aria-hidden="true"/>
+          </button>
+        )}
         <section className={`${styles.hero} ${kind==='pickup'?styles.servicePickup:kind==='delivery'?styles.serviceDelivery:styles.serviceReturn}`}>
           <div
             ref={heroMapRef}
@@ -650,7 +719,15 @@ export default function DriverV3Page() {
       <div
         className={styles.navLayer}
         data-open={navVisuallyOpen?'true':'false'}
-        style={!navVisuallyOpen?{transform:`translate(${navOriginRef.current.x}px,${navOriginRef.current.y}px) scale(${navOriginRef.current.scaleX},${navOriginRef.current.scaleY})`}:undefined}
+        style={
+          dragProgress!=null
+            ? {
+                transition:'none',
+                opacity:dragProgress,
+                transform:`translate(${navOriginRef.current.x*(1-dragProgress)}px,${navOriginRef.current.y*(1-dragProgress)}px) scale(${navOriginRef.current.scaleX+(1-navOriginRef.current.scaleX)*dragProgress},${navOriginRef.current.scaleY+(1-navOriginRef.current.scaleY)*dragProgress})`,
+              }
+            : (!navVisuallyOpen?{transform:`translate(${navOriginRef.current.x}px,${navOriginRef.current.y}px) scale(${navOriginRef.current.scaleX},${navOriginRef.current.scaleY})`}:undefined)
+        }
         aria-hidden={!navOpen}
       >
         <DriverRouteNavigation
@@ -663,6 +740,9 @@ export default function DriverV3Page() {
           disabled={busy}
           onArrive={()=>void arriveFromNavigation()}
           onExit={()=>{captureNavOrigin();setNavigationVisible(false)}}
+          onHandleDragStart={()=>beginDrag('open')}
+          onHandleDrag={updateDrag}
+          onHandleDragEnd={endDrag}
         />
       </div>
     )}

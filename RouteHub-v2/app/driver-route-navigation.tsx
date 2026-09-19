@@ -50,6 +50,9 @@ type Props={
   disabled?:boolean
   onArrive?:()=>void|Promise<void>
   onExit?:()=>void
+  onHandleDragStart?:()=>void
+  onHandleDrag?:(deltaY:number)=>void
+  onHandleDragEnd?:()=>void
 }
 
 export default function DriverRouteNavigation({
@@ -66,6 +69,9 @@ export default function DriverRouteNavigation({
   disabled=false,
   onArrive,
   onExit,
+  onHandleDragStart,
+  onHandleDrag,
+  onHandleDragEnd,
 }:Props){
   const synthesized:NavigationStop[]=stops?.length?stops:[
     ...waypoints.map((point,index)=>({
@@ -123,5 +129,5 @@ export default function DriverRouteNavigation({
   // Navigation is the correct moment to acquire a fresh foreground GPS fix.
   // A saved driving-session location is useful as an initial reference, but
   // must never leave turn guidance paused when it is stale or unavailable.
-  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice sharedLocation={liveLocation} arrivalDisabled={disabled} stopNumber={activePosition} stopTotal={sorted.length} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit}/>
+  return <RoutePlanMap originAddress={resolvedOriginAddress} originCoordinate={resolvedOrigin} stops={planned} locale={locale} navigationOnly autoStartNavigation trackDevice sharedLocation={liveLocation} arrivalDisabled={disabled} stopNumber={activePosition} stopTotal={sorted.length} onArrive={onArrive} onExitNavigation={onExit} onReturnToday={onExit} onHandleDragStart={onHandleDragStart} onHandleDrag={onHandleDrag} onHandleDragEnd={onHandleDragEnd}/>
 }
