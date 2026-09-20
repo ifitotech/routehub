@@ -438,12 +438,16 @@ export default function DriverV3Page() {
     setRefreshing(true)
     try{await refresh()}finally{setRefreshing(false);setPullDistance(0)}
   }
+  // Pull-to-refresh and the Pro-mode drag handle both claim a downward drag
+  // starting near the top of the page - Simple mode has no handle (no
+  // internal navigator to reach), so it keeps this; Pro mode drops it so
+  // the two gestures stop fighting over the same touch.
   const pullStart=(event:React.TouchEvent<HTMLDivElement>)=>{
-    if(sheet||refreshing)return
+    if(!simpleMode||sheet||refreshing)return
     refreshStartY.current=event.touches[0]?.clientY??null
   }
   const pullMove=(event:React.TouchEvent<HTMLDivElement>)=>{
-    if(refreshStartY.current==null)return
+    if(!simpleMode||refreshStartY.current==null)return
     const distance=Math.max(0,(event.touches[0]?.clientY??refreshStartY.current)-refreshStartY.current)
     refreshDistance.current=Math.min(distance,88)
     setPullDistance(refreshDistance.current)
@@ -666,7 +670,9 @@ export default function DriverV3Page() {
                   <span>{t.drvIssue}</span>
                 </button>}
               </div>
-              <span className={styles.startedHandle} role={kind==='delivery'?'button':undefined} aria-label={kind==='delivery'?'Swipe up to complete delivery':undefined} aria-hidden={kind==='delivery'?undefined:'true'} onTouchStart={completionHandleStart} onTouchMove={completionHandleMove} onTouchEnd={completionHandleEnd}/>
+              {kind==='delivery'&&(
+                <span className={styles.startedHandle} role="button" aria-label="Swipe up to complete delivery" onTouchStart={completionHandleStart} onTouchMove={completionHandleMove} onTouchEnd={completionHandleEnd}/>
+              )}
             </>
           )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}

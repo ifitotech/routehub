@@ -14,12 +14,20 @@ export const metadata: Metadata = {
   // Version the manifest URL so installed PWAs re-read orientation/theme
   // metadata instead of retaining the browser's previous manifest snapshot.
   manifest: '/manifest-driver.json?v=21',
-  // Keep the system/status area opaque. Translucent status bars let iOS tint
-  // the header and produce the haze/colour veil visible in the PWA capture.
+  // Keep the system/status area opaque - translucent (black-translucent)
+  // lets iOS draw content under the status bar, and iOS 26/27's "Liquid
+  // Glass" material then applies its own system backdrop-blur over that
+  // strip regardless of what's painted behind it (a real, current iOS
+  // platform behavior, not something fixable from this side). 'default'
+  // avoided the blur but is a fixed white bar with black icons on iOS,
+  // mismatched with Driver's dark-by-default theme. 'black' is still a
+  // fixed, non-theme-reactive color (iOS reads this once, at PWA launch -
+  // it doesn't follow an in-session light/dark toggle), but a solid dark
+  // bar reads far closer to Driver's own navy than a solid white one does.
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',
-    statusBarStyle: 'default',
+    statusBarStyle: 'black',
   },
   icons: {
     icon: '/routehub-driver-new.jpg?v=21',
