@@ -18,16 +18,24 @@ export const metadata: Metadata = {
   // lets iOS draw content under the status bar, and iOS 26/27's "Liquid
   // Glass" material then applies its own system backdrop-blur over that
   // strip regardless of what's painted behind it (a real, current iOS
-  // platform behavior, not something fixable from this side). 'default'
-  // avoided the blur but is a fixed white bar with black icons on iOS,
-  // mismatched with Driver's dark-by-default theme. 'black' is still a
-  // fixed, non-theme-reactive color (iOS reads this once, at PWA launch -
-  // it doesn't follow an in-session light/dark toggle), but a solid dark
-  // bar reads far closer to Driver's own navy than a solid white one does.
+  // platform behavior, not something fixable from this side).
+  //
+  // 'black' was tried first (reasoning: same opaque/non-translucent
+  // behavior as 'default', just dark instead of light) but a driver
+  // confirmed the blur on a fully-reinstalled PWA even with 'black' live
+  // in production, verified by fetching this app's own deployed HTML.
+  // 'default' is the one combination with an actual confirmed real-world
+  // fix for this specific iOS 26/27 bug (a fixed white bar, mismatched
+  // with Driver's dark-by-default theme, but no blur) - reverted to it to
+  // prioritize killing the blur regression over the color match. If this
+  // is confirmed fixed, revisit getting closer to Driver's navy without
+  // reintroducing the blur (e.g. a native status-bar-color capability
+  // instead of this web meta tag, which only ever offers white/black/
+  // translucent).
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',
-    statusBarStyle: 'black',
+    statusBarStyle: 'default',
   },
   icons: {
     icon: '/routehub-driver-new.jpg?v=21',
