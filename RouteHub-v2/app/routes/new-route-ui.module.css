@@ -91,7 +91,7 @@
    sub-options instead of sharing the same row. */
 .originToggle{display:flex;border:1px solid var(--rh-line);border-radius:9px;padding:2px;background:var(--rh-card);margin-bottom:clamp(3px,0.5vh,5px)}
 .originToggle button{flex:1;min-height:clamp(24px,3vh,27px);border:0;border-radius:7px;background:transparent;color:var(--rh-ink);font-size:11px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
-.originToggleActive{background:#1660f0!important;color:#fff!important}
+.originToggleActive{background:var(--rh-soft-blue,#eaf2ff)!important;color:var(--rh-blue-700,#0e48c4)!important}
 .originSubChips{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(3px,0.5vh,4px);margin-bottom:clamp(3px,0.5vh,5px)}
 .originSubChip{min-height:clamp(22px,2.8vh,25px);border:1px solid var(--rh-line);border-radius:7px;background:var(--rh-surface-2);color:var(--rh-ink-soft);font-size:11px;font-weight:700;cursor:pointer}
 .originSubChipActive{background:#eaf2ff!important;color:var(--rh-blue)!important;border-color:#b9cdf4!important}
@@ -127,7 +127,7 @@
    it used to always show a bare <input type=date>. */
 .scheduleToggle{display:flex;gap:1px;padding:2px;border:1px solid var(--rh-line);border-radius:8px;background:#fff}
 .scheduleToggle button{flex:1;min-height:28px;border:0;border-radius:6px;background:transparent;color:var(--rh-ink);font-size:10px;font-weight:800;cursor:pointer;transition:background-color .15s ease,color .15s ease}
-.scheduleToggleActive{background:#1660f0!important;color:#fff!important}
+.scheduleToggleActive{background:var(--rh-soft-blue,#eaf2ff)!important;color:var(--rh-blue-700,#0e48c4)!important}
 
 .field{display:block;min-width:0}
 .fieldSpaced{margin-top:3px}
@@ -222,6 +222,13 @@
    punto" came out near-black on a near-black track. */
 :global(html[data-theme='dark']) .scheduleToggle button,
 :global(html[data-theme='dark']) .originToggle button{color:var(--rh-text)}
+
+/* Selected state softened from a solid intense blue fill to a tinted one,
+   matching the same lighter treatment applied to .segmentActive - the dark
+   track underneath needs its own tint rather than the light-mode soft-blue,
+   which would wash out against it. */
+:global(html[data-theme='dark']) .originToggleActive,
+:global(html[data-theme='dark']) .scheduleToggleActive{background:rgba(34,110,255,.22)!important;color:#bbd3f7!important}
 
 /* Surfaces and labels that had no dark rule at all - invisible until the
    panel behind them was still light and hid the problem. */

@@ -21,10 +21,10 @@
 
 .input input {
   width: 100%;
-  min-height: 52px;
-  padding: 10px 12px 10px 38px;
+  min-height: 42px;
+  padding: 8px 12px 8px 38px;
   border:1px solid var(--rh-line);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--rh-card, #fff);
   color: var(--rh-text, #0f1d35);
   font-size: 13px;
