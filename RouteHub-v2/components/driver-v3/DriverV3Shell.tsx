@@ -61,9 +61,18 @@ export default function DriverV3Shell({
         style={{
           zIndex: 300,
           boxSizing: 'border-box',
-          height: 'calc(48px + env(safe-area-inset-top))',
-          minHeight: 'calc(48px + env(safe-area-inset-top))',
-          padding: 'env(safe-area-inset-top) 16px 0',
+          // iOS 26/27's "Liquid Glass" scroll-edge effect (a system-drawn
+          // blur WebKit applies over the safe-area-inset-top strip, not
+          // something a web page can turn off - see WebKit bug 295843,
+          // whose fix is a native WKWebView API with no web equivalent)
+          // documented reports put its bleed at roughly 30px past the
+          // inset. This extra buffer keeps the actual logo/text that far
+          // clear of the edge, so the effect has nothing but flat header
+          // background to blur instead of the brand mark - it can't be
+          // eliminated from here, only kept off the content that matters.
+          height: 'calc(48px + env(safe-area-inset-top) + 28px)',
+          minHeight: 'calc(48px + env(safe-area-inset-top) + 28px)',
+          padding: 'calc(env(safe-area-inset-top) + 28px) 16px 0',
         }}
         className={`${styles.header} ${styles.appHeader} ${hideHeader ? styles.headerHidden : ''}`}
       >

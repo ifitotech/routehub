@@ -158,9 +158,13 @@
   background:#0F1D35;
   background-color:#0F1D35;
   color:#fff;
-  height:calc(48px + env(safe-area-inset-top));
-  min-height:calc(48px + env(safe-area-inset-top));
-  padding:env(safe-area-inset-top) 16px 0;
+  /* Kept in sync with DriverV3Shell.tsx's inline style, which is what
+     actually wins on the rendered element (inline beats class for the
+     same property) - see the comment there for why there's a +28px
+     buffer past the safe-area inset now. */
+  height:calc(48px + env(safe-area-inset-top) + 28px);
+  min-height:calc(48px + env(safe-area-inset-top) + 28px);
+  padding:calc(env(safe-area-inset-top) + 28px) 16px 0;
   box-sizing:border-box;
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
