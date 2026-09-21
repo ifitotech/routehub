@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- Matches capacitor.config.ts's android.backgroundColor and the web
+         app's own navy/blue branding (driver-theme-tokens.css --rh-ink /
+         --rh-primary), so the native status bar (colorPrimaryDark) and any
+         AppCompat-themed chrome match the app instead of an unbranded
+         Android default. -->
+    <color name="colorPrimary">#0f1d35</color>
+    <color name="colorPrimaryDark">#0f1d35</color>
+    <color name="colorAccent">#1677ff</color>
+</resources>

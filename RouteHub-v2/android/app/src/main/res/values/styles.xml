@@ -7,6 +7,15 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- Driver is permanently dark-navy branded (never a light chrome),
+             so the status bar icons must stay light/white to stay legible -
+             the "Light" in Theme.AppCompat.Light otherwise defaults toward
+             dark icons, which would be unreadable over colorPrimaryDark.
+             statusBarColor is the pre-edge-to-edge fallback matching the
+             same navy MainActivity's WindowInsets handling already reads
+             as --android-safe-top for the web content underneath it. -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
