@@ -115,7 +115,11 @@ export function useRoutesCore() {
       setRoutes((routeResult.data || []) as RouteRecord[])
       setBranches(availableBranches)
       const latestLocations: Record<string,string> = {}
-      for (const row of (locationResult.data || []) as Array<{driver_id:string;last_lat:number|null;last_lng:number|null}>) if (latestLocations[row.driver_id]===undefined && row.last_lat!=null && row.last_lng!=null) latestLocations[row.driver_id] = `${row.last_lat}, ${row.last_lng}`
+      // Same 10-minute freshness cutoff as live-route.tsx/routes-board.tsx -
+      // an old driving_sessions row must not be offered as a driver's
+      // "current location" starting point for a new route.
+      const freshLocationCutoff = Date.now() - 10 * 60 * 1000
+      for (const row of (locationResult.data || []) as Array<{driver_id:string;last_lat:number|null;last_lng:number|null;last_updated_at?:string|null}>) if (latestLocations[row.driver_id]===undefined && row.last_lat!=null && row.last_lng!=null && row.last_updated_at && new Date(row.last_updated_at).getTime()>=freshLocationCutoff) latestLocations[row.driver_id] = `${row.last_lat}, ${row.last_lng}`
       setDriverLocations(latestLocations)
       setForm(current => ({
         ...current,

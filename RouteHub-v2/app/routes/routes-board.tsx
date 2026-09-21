@@ -64,8 +64,16 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
         if (membership.branch_id) query = query.eq('branch_id', membership.branch_id)
         const {data: sessions} = await query
         if (disposed) return
+        // A driving_sessions row can sit at 'active'/'paused' for a long time
+        // without a fresh GPS write (phone backgrounded, offline, driving day
+        // left open). Showing that stale last_lat/last_lng as if it were the
+        // driver's current position is exactly what read as "a fake location"
+        // on this map - live-route.tsx already treats 10 minutes as the
+        // freshness cutoff for the same driving_sessions data, so this
+        // filters out anything older instead of trusting every row.
+        const freshCutoff = Date.now() - 10 * 60 * 1000
         setDrivers((sessions || []).flatMap(session => (
-          session.last_lat == null || session.last_lng == null ? [] : [{
+          session.last_lat == null || session.last_lng == null || !session.last_updated_at || new Date(session.last_updated_at).getTime() < freshCutoff ? [] : [{
             id: String(session.id),
             driver_id: String(session.driver_id),
             location: {lat: Number(session.last_lat), lng: Number(session.last_lng)},
