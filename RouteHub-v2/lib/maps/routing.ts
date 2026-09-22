@@ -1,6 +1,7 @@
 import {mapProviderLimits} from './map-config'
 import {sanitizeCoordinate} from './coordinates'
 import type {ActiveRouteManeuver,MapCoordinate,RouteEstimate,RouteManeuver} from './types'
+import {authenticatedApiFetch} from '../authenticated-api-fetch'
 
 export function distanceMeters(a:MapCoordinate,b:MapCoordinate){
   const radians=Math.PI/180
@@ -45,7 +46,7 @@ export async function calculateRoute(points:MapCoordinate[],signal?:AbortSignal,
   const fallback={coordinates:points,source:'fallback' as const}
   if(points.length<2)return fallback
   try{
-    const response=await fetch('/api/routing',{
+    const response=await authenticatedApiFetch('/api/routing',{
       method:'POST',
       headers:{'content-type':'application/json'},
       body:JSON.stringify({points:points.slice(0,25),locale,trafficAware}),
@@ -83,7 +84,7 @@ export async function calculateOperationsRoute(points:MapCoordinate[],signal?:Ab
   if(google.source==='google')return google
   if(points.length<2)return google
   try{
-    const response=await fetch('/api/operations-routing',{
+    const response=await authenticatedApiFetch('/api/operations-routing',{
       method:'POST',
       headers:{'content-type':'application/json'},
       body:JSON.stringify({points:points.slice(0,mapProviderLimits.maximumRoutePoints)}),

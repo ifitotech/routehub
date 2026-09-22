@@ -37,6 +37,11 @@ export default function History() {
   const [day, setDay] = useState(operationalDate())
   const [section, setSection] = useState<'pending' | 'done'>('pending')
   const [query, setQuery] = useState('')
+  const historyCopy = locale === 'es'
+    ? {returnToday: 'Desliza hacia abajo para volver a Hoy', search: 'Buscar rutas', placeholder: 'Ruta, cliente, dirección o PO', route: 'RUTA'}
+    : locale === 'fr'
+      ? {returnToday: 'Glissez vers le bas pour revenir à Aujourd’hui', search: 'Rechercher des itinéraires', placeholder: 'Itinéraire, client, adresse ou PO', route: 'ITINÉRAIRE'}
+      : {returnToday: 'Swipe down to return to Today', search: 'Search routes', placeholder: 'Route, customer, address or PO', route: 'ROUTE'}
   const currentId = (snapshot?.currentOperation?.route as {id?: string} | undefined)?.id
   const scheduledLabel = locale === 'es' ? 'Programada' : locale === 'fr' ? 'Prévue' : 'Scheduled'
 
@@ -85,7 +90,7 @@ export default function History() {
       <button
         type="button"
         className="driver-route-swipe-back"
-        aria-label={locale === 'es' ? 'Desliza hacia abajo para volver a Hoy' : 'Swipe down to return to Today'}
+        aria-label={historyCopy.returnToday}
         onTouchStart={event => { swipeStartY.current = event.touches[0]?.clientY ?? null }}
         onTouchEnd={event => {
           if (swipeStartY.current == null) return
@@ -96,7 +101,7 @@ export default function History() {
         onClick={() => router.push('/driver')}
       >
         <span aria-hidden="true" className="driver-route-swipe-back__bar" />
-        <span>{locale === 'es' ? 'Desliza hacia abajo para volver a Hoy' : 'Swipe down to return to Today'}</span>
+        <span>{historyCopy.returnToday}</span>
       </button>
       <label className="card" style={{display: 'block', marginBottom: 12, padding: '12px 14px'}}>
         <span className="eyebrow" style={{display: 'block', marginBottom: 6}}>{t.drvRouteHistory}</span>
@@ -106,7 +111,7 @@ export default function History() {
           onChange={event => setDay(event.target.value || operationalDate())}
           style={{width: '100%', minHeight: 48, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}}
         />
-        <input aria-label="Search routes" value={query} onChange={event => setQuery(event.target.value)} placeholder="Route, customer, address or PO" style={{width: '100%', minHeight: 48, marginTop: 8, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}} />
+        <input aria-label={historyCopy.search} value={query} onChange={event => setQuery(event.target.value)} placeholder={historyCopy.placeholder} style={{width: '100%', minHeight: 48, marginTop: 8, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}} />
       </label>
 
       {loading ? (
@@ -157,7 +162,7 @@ export default function History() {
                     <p className="eyebrow" style={{margin: 0, color: look.badge}}>
                       {typeLabel(r.mission_type, t)} · {statusText}
                     </p>
-                    <p className="muted" style={{margin: '3px 0 0', fontSize: 12, fontWeight: 700}}>ROUTE {routeNumber(r)}</p>
+                    <p className="muted" style={{margin: '3px 0 0', fontSize: 12, fontWeight: 700}}>{historyCopy.route} {routeNumber(r)}</p>
                     <h2 style={{margin: '4px 0 4px', fontSize: 17, color: 'var(--rh-text, #0f1d35)'}}>
                       {r.destination_name || r.destination_address || t.drvRoute}
                     </h2>

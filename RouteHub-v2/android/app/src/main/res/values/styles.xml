@@ -13,7 +13,7 @@
              dark icons, which would be unreadable over colorPrimaryDark.
              statusBarColor is the pre-edge-to-edge fallback matching the
              same navy MainActivity's WindowInsets handling already reads
-             as --android-safe-top for the web content underneath it. -->
+             as the Android safe-top CSS variable for the web content underneath it. -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
     </style>

@@ -61,7 +61,7 @@ export default function DriverPrivacyPage() {
           </section>
         ))}
         <p className={styles.footer}>
-          <Link href="/terms">Terms of Use</Link>
+          <Link href="/terms">{locale === 'es' ? 'Términos de uso' : locale === 'fr' ? 'Conditions d’utilisation' : 'Terms of Use'}</Link>
           {' · '}
           <a href={USER_GUIDE_URL} target="_blank" rel="noreferrer">Guide</a>
           {' · '}

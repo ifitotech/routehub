@@ -12,6 +12,7 @@ type DriverV3Data = {
   routes: DriverV3Route[]
   driverId: string
   companyId: string
+  companyPlan: string | null
   branchId: string | null
   drivingSession: DrivingSession | null
   liveFix: {lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null
@@ -43,6 +44,7 @@ function useDriverDataInternal(): DriverV3Data {
   const routesRef = useRef<DriverV3Route[]>([])
   const [driverId, setDriverId] = useState('')
   const [companyId, setCompanyId] = useState('')
+  const [companyPlan, setCompanyPlan] = useState<string | null>(null)
   const [branchId, setBranchId] = useState<string | null>(null)
   const [drivingSession, setDrivingSession] = useState<DrivingSession | null>(null)
   const [liveFix, setLiveFix] = useState<{lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null>(null)
@@ -61,6 +63,10 @@ function useDriverDataInternal(): DriverV3Data {
       setDriverId(user.id)
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id ?? null)
+      // Plan access is read-only product configuration. Do not make a route
+      // refresh fail if an older workspace policy has not exposed this field.
+      void getSupabase().from('companies').select('plan').eq('id', membership.company_id).maybeSingle()
+        .then(({data}) => setCompanyPlan(typeof data?.plan === 'string' ? data.plan : null))
       const first = await getSupabase()
         .from('routes')
         .select('id,company_id,branch_id,driver_id,route_date,status,position,mission_type,origin_address,origin_lat,origin_lng,destination_name,destination_address,destination_phone,destination_contact_name,destination_lat,destination_lng,order_number,notes,driver_note,scheduled_at,arrived_at,completed_at,route_started_at,route_completed_at,completion_photo_path,customer_signature_path,finalized_at')
@@ -213,7 +219,7 @@ function useDriverDataInternal(): DriverV3Data {
     return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update) }
   }, [])
 
-  return {routes, driverId, companyId, branchId, drivingSession, liveFix, setLiveFix, loading, error, offline, refresh: () => load(), snapshot}
+  return {routes, driverId, companyId, companyPlan, branchId, drivingSession, liveFix, setLiveFix, loading, error, offline, refresh: () => load(), snapshot}
 }
 
 export function DriverV3Provider({children}: {children: ReactNode}) {

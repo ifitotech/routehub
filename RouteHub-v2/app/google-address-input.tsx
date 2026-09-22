@@ -4,6 +4,7 @@ import {useCallback, useEffect, useId, useRef, useState} from 'react'
 import type {InputHTMLAttributes} from 'react'
 import type {GeocodedLocation} from '../lib/maps/types'
 import {loadGoogleMaps} from '../lib/maps/google-maps'
+import {authenticatedApiFetch} from '../lib/authenticated-api-fetch'
 
 type PlaceResult = {formatted_address?: string; name?: string; geometry?:{location?:{lat:()=>number;lng:()=>number}}}
 export type AddressSearchSuggestion = {
@@ -121,7 +122,7 @@ export default function GoogleAddressInput({
     try {
       const params = new URLSearchParams({q: query})
       if (searchContext.trim()) params.set('near', searchContext.trim())
-      const response = await fetch(`/api/address-suggestions?${params.toString()}`, {signal: controller.signal, cache: 'no-store'})
+      const response = await authenticatedApiFetch(`/api/address-suggestions?${params.toString()}`, {signal: controller.signal, cache: 'no-store'})
       if (!response.ok) throw new Error('Address lookup unavailable')
       const payload = await response.json() as {suggestions?: AddressSearchSuggestion[]}
       const suggestions = payload.suggestions || []

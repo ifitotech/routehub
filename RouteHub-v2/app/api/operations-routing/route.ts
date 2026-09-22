@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from 'next/server'
 import {sanitizeCoordinate, type MapPoint} from '../../../lib/maps/coordinates'
+import {requireQuotaUser} from '../../../lib/api-request-guard'
 
 type CachedRoute={expires:number;value:{coordinates:MapPoint[];distanceMeters?:number;durationSeconds?:number}}
 
@@ -18,6 +19,8 @@ function keyFor(points:MapPoint[]){
 
 /** Server-side OSRM keeps Operations Map independent from Google quota and browser CORS. */
 export async function POST(request:NextRequest){
+ const access=await requireQuotaUser(request,'operations-routing',30)
+ if('response' in access)return access.response
  let points:MapPoint[]=[]
  try{points=validPoints((await request.json() as {points?:unknown}).points)}catch{points=[]}
  if(points.length<2)return NextResponse.json({coordinates:points})

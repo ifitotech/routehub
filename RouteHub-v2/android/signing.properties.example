@@ -1,0 +1,7 @@
+# Copy this file to android/signing.properties. It is intentionally ignored.
+# Use a keystore stored outside the repository, or provide the same values as
+# protected CI environment variables.
+ROUTEHUB_RELEASE_STORE_FILE=C:\\secure\\routehub-release.keystore
+ROUTEHUB_RELEASE_STORE_PASSWORD=
+ROUTEHUB_RELEASE_KEY_ALIAS=routehub
+ROUTEHUB_RELEASE_KEY_PASSWORD=

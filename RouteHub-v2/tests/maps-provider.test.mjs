@@ -33,7 +33,8 @@ test('Driver entry uses the current operation preview and honors the navigation 
   assert.match(source,/<DriverRouteEstimate route=\{route\} locale=\{locale\}/)
   assert.doesNotMatch(source,/<OperationsMap/)
   assert.doesNotMatch(source,/router\.prefetch\('\/driver\/map'\)/)
-  assert.match(source,/getNavigationPreference\(\)===\'internal\'/)
+  assert.match(source,/resolveDriverExperience\(getDriverModePreference\(\),getNavigationPreference\(\),companyPlan\)/)
+  assert.match(source,/navigationPreference===\'internal\'/)
   assert.match(source,/setNavigationVisible\(true\)/)
   assert.match(source,/await refresh\(\)[\s\S]*openPreferredNavigation\(\)/)
   assert.match(source,/<DriverRouteNavigation/)
@@ -107,6 +108,20 @@ test('routing adapter uses the Google Routes API with a safe coordinate-only fal
   assert.match(api,/function isCompatibleRoute/)
   assert.match(api,/const routeCoordinates=isCompatibleRoute\(decoded,points\)\?decoded:points/)
   assert.match(source,/function geometryMatchesEndpoints/)
+})
+
+test('paid map endpoints require the signed-in RouteHub session before using a provider',async()=>{
+  const guard=await readFile(new URL('../lib/api-request-guard.ts',import.meta.url),'utf8')
+  const client=await readFile(new URL('../lib/authenticated-api-fetch.ts',import.meta.url),'utf8')
+  const routing=await readFile(new URL('../app/api/routing/route.ts',import.meta.url),'utf8')
+  const geocode=await readFile(new URL('../app/api/geocode/route.ts',import.meta.url),'utf8')
+  const suggestions=await readFile(new URL('../app/api/address-suggestions/route.ts',import.meta.url),'utf8')
+  assert.match(guard,/auth\.getUser\(token\)/)
+  assert.match(guard,/Too many requests/)
+  assert.match(client,/headers\.set\('Authorization'/)
+  assert.match(routing,/requireQuotaUser\(request,'routing',30\)/)
+  assert.match(geocode,/requireQuotaUser\(request,'geocode',40\)/)
+  assert.match(suggestions,/requireQuotaUser\(request, 'address-suggestions', 40\)/)
 })
 
 test('operations preview keeps the stored starting point and connects the authoritative queue',()=>{

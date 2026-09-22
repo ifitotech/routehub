@@ -10,6 +10,18 @@ create table if not exists public.support_requests (
 alter table public.support_requests add column if not exists company_id uuid references public.companies(id) on delete set null;
 alter table public.support_requests add column if not exists user_id uuid references public.users(id) on delete set null;
 alter table public.support_requests add column if not exists message text;
+-- Keep compatibility with the original support inbox schema used by the
+-- Manager screen. These fields are required in production and are also
+-- populated by lib/support.ts for new Driver requests.
+alter table public.support_requests add column if not exists created_by uuid references public.users(id) on delete set null;
+alter table public.support_requests add column if not exists category text default 'general';
+alter table public.support_requests add column if not exists subject text default 'Support request';
+update public.support_requests set created_by = coalesce(created_by, user_id) where created_by is null;
+update public.support_requests set category = coalesce(category, 'general') where category is null;
+update public.support_requests set subject = coalesce(subject, 'Support request') where subject is null;
+alter table public.support_requests alter column created_by set not null;
+alter table public.support_requests alter column category set not null;
+alter table public.support_requests alter column subject set not null;
 update public.support_requests set message = coalesce(message, '') where message is null;
 alter table public.support_requests alter column message set not null;
 alter table public.support_requests add column if not exists status text not null default 'open';

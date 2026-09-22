@@ -39,7 +39,7 @@ export default function DriverV3Shell({
   title,
   subtitle,
   backHref,
-  backLabel = 'Back',
+  backLabel,
   headerStatus,
   flush = false,
   hideNav = false,
@@ -70,26 +70,18 @@ export default function DriverV3Shell({
           right: 0,
           zIndex: 300,
           boxSizing: 'border-box',
-          // iOS 26/27's "Liquid Glass" scroll-edge effect (a system-drawn
-          // blur WebKit applies over the safe-area-inset-top strip, not
-          // something a web page can turn off - see WebKit bug 295843,
-          // whose fix is a native WKWebView API with no web equivalent)
-          // documented reports put its bleed at roughly 30px past the
-          // inset. This extra buffer keeps the actual logo/text that far
-          // clear of the edge, so the effect has nothing but flat header
-          // background to blur instead of the brand mark. It's applied by
-          // floating the header (absolute, over .content) rather than by
-          // growing the grid row it used to sit in, so the extra 28px
-          // covers the top of the content underneath instead of pushing
-          // the content/nav down and shrinking the usable screen.
-          height: 'calc(48px + env(safe-area-inset-top) + 28px)',
-          minHeight: 'calc(48px + env(safe-area-inset-top) + 28px)',
-          padding: 'calc(env(safe-area-inset-top) + 28px) 16px 0',
+          // Keep only the real safe-area inset. The previous extra buffer
+          // made the header look like a blurred glass strip and consumed
+          // map space on iPhone PWAs. A solid header plus the native inset is
+          // enough to keep the status area clear without covering content.
+          height: 'calc(48px + env(safe-area-inset-top))',
+          minHeight: 'calc(48px + env(safe-area-inset-top))',
+          padding: 'env(safe-area-inset-top) 16px 0',
         }}
         className={`${styles.header} ${styles.appHeader} ${hideHeader ? styles.headerHidden : ''}`}
       >
         {isStack ? (
-          <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel}>
+          <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel || t.drvBack || 'Back'}>
             <ChevronLeft size={22} strokeWidth={2.4} />
           </Link>
         ) : (
@@ -110,7 +102,7 @@ export default function DriverV3Shell({
 
       <section data-driver-screen={active} className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>
 
-      <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label="Driver navigation">
+      <nav className={`${styles.nav} ${hideNav ? styles.navHidden : ''}`} aria-label={localeLabel(t, 'nav')}>
         <Link className={active === 'today' ? styles.active : ''} href="/driver">
           <Home />
           <span>{t.drvToday}</span>
@@ -130,9 +122,20 @@ export default function DriverV3Shell({
       </nav>
       <aside className={styles.rotatePortrait} role="status" aria-live="polite">
         <RotateCw aria-hidden="true" />
-        <strong>Rotate your device</strong>
-        <span>RouteHub Driver is designed for portrait mode.</span>
+        <strong>{localeLabel(t, 'rotateTitle')}</strong>
+        <span>{localeLabel(t, 'rotateBody')}</span>
       </aside>
     </main>
   )
+}
+
+function localeLabel(t: Record<string, string>, key: 'nav' | 'rotateTitle' | 'rotateBody') {
+  const spanish = t.drvToday === 'Hoy'
+  const french = t.drvToday === "Aujourd'hui"
+  const labels = spanish
+    ? {nav: 'Navegación de Driver', rotateTitle: 'Gira tu dispositivo', rotateBody: 'RouteHub Driver está diseñado para usarse en vertical.'}
+    : french
+      ? {nav: 'Navigation Driver', rotateTitle: 'Tournez votre appareil', rotateBody: 'RouteHub Driver est conçu pour le mode portrait.'}
+      : {nav: 'Driver navigation', rotateTitle: 'Rotate your device', rotateBody: 'RouteHub Driver is designed for portrait mode.'}
+  return labels[key]
 }

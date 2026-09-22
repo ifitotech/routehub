@@ -1,14 +1,7 @@
 'use client'
 
-import {Capacitor, registerPlugin} from '@capacitor/core'
 import {getSupabase} from './supabase'
-
-type NativeLocationPlugin = {
-  startLocationTracking(options: {supabaseUrl: string; supabaseAnonKey: string; accessToken: string; refreshToken: string; sessionId: string; driverId: string; intervalMinutes: number}): Promise<void>
-  stopLocationTracking(): Promise<void>
-}
-
-const DeviceAccess = registerPlugin<NativeLocationPlugin>('DeviceAccess')
+import {Capacitor, deviceAccess} from './device-access'
 
 function androidNative() {
   return typeof window !== 'undefined' && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
@@ -22,7 +15,7 @@ export async function startNativeLocationTracking(input: {sessionId: string; dri
   if (!supabaseUrl?.startsWith('https://') || !supabaseAnonKey) throw new Error('Secure location sync is not configured.')
   const {data, error} = await getSupabase().auth.getSession()
   if (error || !data.session) throw new Error('Sign in again to share location.')
-  await DeviceAccess.startLocationTracking({
+  await deviceAccess.startLocationTracking({
     supabaseUrl, supabaseAnonKey,
     accessToken: data.session.access_token, refreshToken: data.session.refresh_token,
     sessionId: input.sessionId, driverId: input.driverId, intervalMinutes: input.intervalMinutes,
@@ -32,6 +25,6 @@ export async function startNativeLocationTracking(input: {sessionId: string; dri
 
 export async function stopNativeLocationTracking() {
   if (!androidNative()) return false
-  await DeviceAccess.stopLocationTracking()
+  await deviceAccess.stopLocationTracking()
   return true
 }

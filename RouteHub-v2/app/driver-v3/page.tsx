@@ -12,6 +12,7 @@ import {useDriverData} from '../../lib/driver-v3/use-driver-data'
 import {openNavigationWithFallback} from '../../lib/maps/external-navigation'
 import {getNavigationPreference} from '../../lib/navigation-preference'
 import {getDriverModePreference} from '../../lib/driver-mode-preference'
+import {resolveDriverExperience} from '../../lib/driver-premium'
 import {getCurrentLocation} from '../../lib/location'
 import {updateDrivingLocation} from '../../lib/driving-session'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
@@ -65,7 +66,7 @@ export default function DriverV3Page() {
   const searchParams=useSearchParams()
   const mapRequested=searchParams.get('view')==='map'
   const {t,locale}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,branchId,refresh,drivingSession,liveFix,offline}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,companyPlan,branchId,refresh,drivingSession,liveFix,offline}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
@@ -137,10 +138,12 @@ export default function DriverV3Page() {
   },[sheet])
   const phase=route?driverOperationPhase(route):'pending'
   const started=phase==='started'||phase==='arrived'
-  const simpleMode=getDriverModePreference()==='simple'
+  const driverExperience=resolveDriverExperience(getDriverModePreference(),getNavigationPreference(),companyPlan)
+  const simpleMode=driverExperience.mode==='simple'
+  const navigationPreference=driverExperience.navigation
   // Simple mode intentionally preserves the original A→B workflow. Internal
   // turn-by-turn guidance and its persistent layer belong to Pro only.
-  const internalNavigationEnabled=started&&!simpleMode&&getNavigationPreference()==='internal'
+  const internalNavigationEnabled=started&&!simpleMode&&navigationPreference==='internal'
   useEffect(()=>{
     if(internalNavigationEnabled)setNavigationVisible(true)
   },[internalNavigationEnabled,route?.id])
@@ -157,17 +160,17 @@ export default function DriverV3Page() {
   // of popping straight into the open state.
   useEffect(()=>{
     if(!started||!route?.id)return
-    if(simpleMode||getNavigationPreference()!=='internal')return
+    if(simpleMode||navigationPreference!=='internal')return
     if(autoNavigationRouteRef.current===route.id)return
     autoNavigationRouteRef.current=route.id
     captureNavOrigin()
     setNavigationVisible(true)
-  },[started,route?.id,simpleMode])
+  },[started,route?.id,simpleMode,navigationPreference])
   useEffect(()=>{
-    if(!mapRequested||simpleMode||!started||getNavigationPreference()!=='internal')return
+    if(!mapRequested||simpleMode||!started||navigationPreference!=='internal')return
     captureNavOrigin()
     setNavigationVisible(true)
-  },[mapRequested,simpleMode,started,route?.id])
+  },[mapRequested,simpleMode,started,route?.id,navigationPreference])
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
 
@@ -197,7 +200,7 @@ export default function DriverV3Page() {
   const openMaps=()=>openMapsForRoute(route)
 
   const openPreferredNavigation=()=>{
-    if(!simpleMode&&getNavigationPreference()==='internal'){
+    if(!simpleMode&&navigationPreference==='internal'){
       captureNavOrigin()
       setNavigationVisible(true)
     }else openMapsForRoute(route)
@@ -482,7 +485,7 @@ export default function DriverV3Page() {
   // Today never restarts navigation state, only hides it. navOpen is purely
   // which layer is on top; the animation between them grows out of / shrinks
   // back into the hero's own route preview map (see captureNavOrigin).
-  const showNavLayer=Boolean(started&&route&&!simpleMode&&getNavigationPreference()==='internal')
+  const showNavLayer=Boolean(started&&route&&!simpleMode&&navigationPreference==='internal')
   const navAvailable=showNavLayer
   const navOpen=Boolean(navigationVisible&&showNavLayer)
   // A live drag (either handle) needs the navigator mounted before it has
@@ -646,7 +649,7 @@ export default function DriverV3Page() {
             <h1>{shortDestination(route.destination_name||route.destination_address)||t.drvCurrentStopName}</h1>
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{compactAddress(route.destination_address)}</span></p>}
           </button>
-          {!simpleMode&&<DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null} simpleNavigation={getNavigationPreference()==='external'}/>} 
+          {!simpleMode&&<DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null} simpleNavigation={navigationPreference==='external'}/>}
           <button type="button" className={styles.primary} data-map-cta disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
             {busy?t.drvBusy:action.label}
           </button>
@@ -659,7 +662,7 @@ export default function DriverV3Page() {
               <div className={`${styles.secondaryRow} ${simpleMode?styles.secondaryRowSimple:''}`}>
                 <button type="button" className={styles.secondaryAction} onClick={openPreferredNavigation}>
                   <span className={styles.secondaryActionIcon}><MapPin size={22}/></span>
-                  <span>{(!simpleMode&&getNavigationPreference()==='internal')?(locale==='es'?'Continuar navegación':locale==='fr'?'Reprendre la navigation':'Resume navigation'):(locale==='es'?'Abrir navegación del teléfono':locale==='fr'?'Ouvrir la navigation du téléphone':'Open phone navigation')}</span>
+                  <span>{(!simpleMode&&navigationPreference==='internal')?(locale==='es'?'Continuar navegación':locale==='fr'?'Reprendre la navigation':'Resume navigation'):(locale==='es'?'Abrir navegación del teléfono':locale==='fr'?'Ouvrir la navigation du téléphone':'Open phone navigation')}</span>
                 </button>
                 {!simpleMode&&<button type="button" className={styles.secondaryAction} onClick={()=>setSheet('info')}>
                   <span className={styles.secondaryActionIcon}><Info size={22}/></span>

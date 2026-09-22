@@ -3,6 +3,7 @@
 import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import {getSupabase} from '../../lib/supabase'
+import {useLocale} from '../../lib/use-preferences'
 
 /**
  * Auth gate for the Driver V3 workspace.
@@ -10,6 +11,7 @@ import {getSupabase} from '../../lib/supabase'
  */
 export default function DriverSessionGate({children}: {children: React.ReactNode}) {
   const router = useRouter()
+  const {locale} = useLocale()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
       <div className="driver-v3-splash" role="status" aria-live="polite">
         <img src="/routehub-driver-new.jpg" alt="" width={72} height={72} />
         <strong>RouteHub Driver</strong>
-        <p>Opening your workspace…</p>
+        <p>{locale === 'es' ? 'Abriendo tu espacio de trabajo…' : locale === 'fr' ? 'Ouverture de votre espace de travail…' : 'Opening your workspace…'}</p>
         <div className="spin" aria-hidden="true" />
       </div>
     )

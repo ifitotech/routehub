@@ -1,15 +1,10 @@
 'use client'
-import {Capacitor, registerPlugin} from '@capacitor/core'
 import {useEffect, useState} from 'react'
 import styles from '../../app/driver-v3/driver-preferences.module.css'
 import {registerPushNotifications} from '../../lib/push-notifications'
+import {Capacitor, deviceAccess, type DeviceAccessStatus} from '../../lib/device-access'
 
-type Access = {location: string; camera: string; versionCode: number}
-const device = registerPlugin<{
-  status(): Promise<Access>
-  request(options: {permission: 'location' | 'camera'}): Promise<Access>
-  openSettings(): Promise<void>
-}>('DeviceAccess')
+type Access = DeviceAccessStatus
 
 export default function DevicePermissions({locale}: {locale: string}) {
   const [native, setNative] = useState(false)
@@ -22,7 +17,7 @@ export default function DevicePermissions({locale}: {locale: string}) {
     if (Capacitor.getPlatform() !== 'android') return
     setNative(true)
     void import('@capacitor/push-notifications').then(({PushNotifications}) => PushNotifications.checkPermissions().then(value => setNotifications(value.receive))).catch(() => {})
-    const refresh = () => { void device.status().then(setAccess).catch(() => setError(es ? 'Instala la APK nueva para gestionar permisos.' : 'Install the latest APK to manage permissions.')) }
+    const refresh = () => { void deviceAccess.status().then(setAccess).catch(() => setError(es ? 'Instala la APK nueva para gestionar permisos.' : 'Install the latest APK to manage permissions.')) }
     refresh()
     window.addEventListener('focus', refresh)
     document.addEventListener('visibilitychange', refresh)
@@ -32,7 +27,7 @@ export default function DevicePermissions({locale}: {locale: string}) {
   const request = async (permission: 'location' | 'camera') => {
     setBusy(true)
     setError('')
-    try { setAccess(await device.request({permission})) }
+    try { setAccess(await deviceAccess.request({permission})) }
     catch { setError(es ? 'No se pudo solicitar el permiso. Revisa Ajustes de Android.' : 'Permission request failed. Check Android settings.') }
     finally { setBusy(false) }
   }
@@ -56,7 +51,7 @@ export default function DevicePermissions({locale}: {locale: string}) {
         <small>{notifications === 'granted' ? (es ? 'Permitidas y registradas' : 'Allowed and registered') : (es ? 'Requiere permiso' : 'Permission needed')}</small></span>
       <button type="button" className={styles.choice} disabled={busy || notifications === 'granted'} onClick={() => void requestNotifications()}>{es ? 'Permitir' : 'Allow'}</button>
     </div>
-    <div className={styles.actionRow}><button type="button" className={styles.choice} onClick={() => void device.openSettings().catch(() => setError(es ? 'Instala la APK nueva.' : 'Install the latest APK.'))}>{es ? 'Abrir ajustes de Android' : 'Open Android settings'}</button></div>
+    <div className={styles.actionRow}><button type="button" className={styles.choice} onClick={() => void deviceAccess.openSettings().catch(() => setError(es ? 'Instala la APK nueva.' : 'Install the latest APK.'))}>{es ? 'Abrir ajustes de Android' : 'Open Android settings'}</button></div>
     {error && <p className={styles.footer} role="status">{error}</p>}
   </section>
 }

@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server'
 import {geocodingConfig,isInFlorida,mapProviderLimits,withFloridaQuery} from '../../../lib/maps/map-config'
+import {requireQuotaUser} from '../../../lib/api-request-guard'
 
 type GoogleMatch = {formatted_address?: string; place_id?: string; geometry?: {location?: {lat?: number; lng?: number}}}
 type Coordinate = {lat: number; lng: number}
@@ -58,6 +59,8 @@ function response(suggestions: Suggestion[]) { return NextResponse.json({suggest
  * same provider when Places is unavailable.
  */
 export async function GET(request: NextRequest) {
+  const access = await requireQuotaUser(request, 'address-suggestions', 40)
+  if ('response' in access) return access.response
   const query = request.nextUrl.searchParams.get('q')?.trim() || ''
   const near = request.nextUrl.searchParams.get('near')?.trim() || ''
   if (query.length < mapProviderLimits.minimumSearchCharacters || query.length > mapProviderLimits.maximumSearchCharacters) return response([])

@@ -49,7 +49,9 @@ Required:
 Optional Google Places integration:
 
 - `NEXT_PUBLIC_ADDRESS_SEARCH_PROVIDER` - set to `google` only when Google Places is intentionally enabled; otherwise RouteHub uses the beta server-side address fallback.
-- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - browser-restricted Google Maps key used only when the provider above is `google`.
+- `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY` - browser-restricted Google Maps JavaScript/Places key. Restrict it to the production HTTPS domains.
+- `GOOGLE_MAPS_SERVER_KEY` - server-only Routes and Geocoding key. Do not expose it in the browser or Android project files.
+- `NEXT_PUBLIC_DRIVER_PREMIUM_ENFORCEMENT` - leave `false` during the Pro beta. At launch, set `true` to enforce Basic (Simple + phone navigation) versus Premium/Pro/trial (Pro + in-app navigation) from the company plan.
 
 The Google key is exposed to the browser by design and therefore must be restricted in Google Cloud by the allowed RouteHub HTTP referrers and required APIs.
 
@@ -67,6 +69,10 @@ Never rename or rewrite a migration that may already have been applied. Add all 
 ## Beta verification
 
 Run the practical branch workflow in [`BETA_CHECKLIST.md`](BETA_CHECKLIST.md) before testing with a real branch or deploying a database change.
+
+## Android pilot distribution
+
+`assembleDebug` is for local device testing only. A pilot release must be signed with a persistent RouteHub upload key and distributed through Google Play Internal Testing or managed-device distribution; Android will always warn when a user sideloads an APK from an unknown source. Copy `android/signing.properties.example` to the ignored `android/signing.properties` (or use protected CI variables) before running a release build. The build intentionally refuses an unsigned release.
 
 ## Project boundaries
 

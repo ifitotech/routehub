@@ -30,6 +30,7 @@ button.row{width:100%;text-align:left;border:0;background:transparent;font:inher
 .languageChoice:active{transform:scale(.97)}
 .languageChoiceSelected{border-color:#1667f2;background:#eaf2ff;color:#1667f2}
 .footer{margin:0;padding:2px 2px 0;color:#8a9ab0;font-size:11px;text-align:center}
+.planHint{margin:0;padding:0 14px 12px;color:#667892;font-size:12px;line-height:1.4}
 .page :global(.settings-card){margin:0!important;padding:12px 14px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
 .page :global(.settings-card + .settings-card){border-top:1px solid #edf1f5!important}
 .page :global(.settings-card h2){display:flex;align-items:center;gap:8px;margin:0;color:#0f1d35;font-size:15px}
@@ -57,11 +58,12 @@ button.row{width:100%;text-align:left;border:0;background:transparent;font:inher
 .profileAccount{display:flex;align-items:center;gap:9px;padding:14px 15px;color:#0f1d35;font-size:14px;font-weight:800}
 .profileSignout{margin:0 15px 15px!important}
 :global(html:not([data-theme='light'])) .pageHeader h1,:global(html:not([data-theme='light'])) .sectionHeader h2,:global(html:not([data-theme='light'])) .row,:global(html:not([data-theme='light'])) .page :global(.settings-card h2),:global(html:not([data-theme='light'])) .profileHero h1,:global(html:not([data-theme='light'])) .profileSectionHeader h2,:global(html:not([data-theme='light'])) .infoRow,:global(html:not([data-theme='light'])) .profileAccount{color:#f4f7fb}
-:global(html:not([data-theme='light'])) .section,:global(html:not([data-theme='light'])) .profileSection,:global(html:not([data-theme='light'])) .page :global(.settings-card){background:#18263b!important;border-color:#31445f}
-:global(html:not([data-theme='light'])) .row,:global(html:not([data-theme='light'])) .infoRow,:global(html:not([data-theme='light'])) .page :global(.settings-card + .settings-card),:global(html:not([data-theme='light'])) .actionRow{border-color:#31445f}
-:global(html:not([data-theme='light'])) .choice,:global(html:not([data-theme='light'])) .languageChoice,:global(html:not([data-theme='light'])) .editForm input{background:#102036;color:#f4f7fb;border-color:#31445f}
+:global(html:not([data-theme='light'])) .section,:global(html:not([data-theme='light'])) .profileSection,:global(html:not([data-theme='light'])) .page :global(.settings-card){background:var(--rh-card-bg)!important;border-color:var(--rh-border)}
+:global(html:not([data-theme='light'])) .row,:global(html:not([data-theme='light'])) .infoRow,:global(html:not([data-theme='light'])) .page :global(.settings-card + .settings-card),:global(html:not([data-theme='light'])) .actionRow{border-color:var(--rh-border)}
+:global(html:not([data-theme='light'])) .choice,:global(html:not([data-theme='light'])) .languageChoice,:global(html:not([data-theme='light'])) .editForm input{background:#0b2345;color:#f4f7fb;border-color:var(--rh-border)}
 :global(html:not([data-theme='light'])) .choiceSelected,:global(html:not([data-theme='light'])) .languageChoiceSelected{background:#17345c;color:#9cc4ff;border-color:#6ea5ff}
 :global(html:not([data-theme='light'])) .pageHeader p,:global(html:not([data-theme='light'])) .eyebrow,:global(html:not([data-theme='light'])) .sectionHeader p,:global(html:not([data-theme='light'])) .rowCopy small,:global(html:not([data-theme='light'])) .profileHero p,:global(html:not([data-theme='light'])) .infoRow small,:global(html:not([data-theme='light'])) .footer{color:#b9c9dd}
+:global(html:not([data-theme='light'])) .planHint{color:#b9c9dd}
 :global(html:not([data-theme='light'])) .rowIcon{background:#17345c;color:#9cc4ff}
 :global(html:not([data-theme='light'])) .rowChevron,:global(html:not([data-theme='light'])) .infoRow svg{color:#9aabc0}
 :global(html:not([data-theme='light'])) .status{background:#153a2b;color:#8fe7bc}

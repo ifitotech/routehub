@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from 'next/server'
 import {mapProviderLimits} from '../../../lib/maps/map-config'
 import type {MapCoordinate,RouteEstimate,RouteManeuver} from '../../../lib/maps/types'
+import {requireQuotaUser} from '../../../lib/api-request-guard'
 
 type GoogleRoutePayload={
  routes?:Array<{
@@ -75,6 +76,8 @@ function routeLocale(value:unknown){
 }
 
 export async function POST(request:NextRequest){
+ const access=await requireQuotaUser(request,'routing',30)
+ if('response' in access)return access.response
  let points:MapCoordinate[]=[]
  let languageCode='en-US'
  let trafficAware=false

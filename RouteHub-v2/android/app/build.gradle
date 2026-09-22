@@ -1,5 +1,19 @@
 apply plugin: 'com.android.application'
 
+def releaseSigningProperties = new Properties()
+def releaseSigningFile = rootProject.file('signing.properties')
+if (releaseSigningFile.exists()) {
+    releaseSigningFile.withInputStream { releaseSigningProperties.load(it) }
+}
+def releaseSigningValue = { String name ->
+    releaseSigningProperties.getProperty(name) ?: project.findProperty(name)?.toString() ?: System.getenv(name)
+}
+def releaseStoreFile = releaseSigningValue('ROUTEHUB_RELEASE_STORE_FILE')
+def releaseStorePassword = releaseSigningValue('ROUTEHUB_RELEASE_STORE_PASSWORD')
+def releaseKeyAlias = releaseSigningValue('ROUTEHUB_RELEASE_KEY_ALIAS')
+def releaseKeyPassword = releaseSigningValue('ROUTEHUB_RELEASE_KEY_PASSWORD')
+def hasReleaseSigning = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
+
 android {
     buildFeatures { buildConfig true }
     namespace = "com.routehub.driver"
@@ -17,8 +31,25 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            // Never let a manually distributed pilot build accidentally ship
+            // unsigned. Supply the four ROUTEHUB_RELEASE_* values through a
+            // local ignored signing.properties file or CI secrets.
+            if (!hasReleaseSigning && gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }) {
+                throw new GradleException('Release signing is required. Configure ROUTEHUB_RELEASE_* in android/signing.properties or CI secrets.')
+            }
+            if (hasReleaseSigning) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

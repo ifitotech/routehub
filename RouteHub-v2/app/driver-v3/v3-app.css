@@ -352,9 +352,9 @@ html[data-theme='dark'] .driver-v3-root > main > header * {
   color: #fff !important;
 }
 html[data-theme='dark'] .driver-v3-root .card {
-  background: #18263b;
-  border-color: #31445f;
-  color: #f4f7fb;
+  background: var(--rh-card-bg);
+  border-color: var(--rh-border);
+  color: var(--rh-text);
 }
 html[data-theme='dark'] .driver-v3-root .eyebrow,
 html[data-theme='dark'] .driver-v3-root .muted {

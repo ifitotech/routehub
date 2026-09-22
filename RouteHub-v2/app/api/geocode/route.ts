@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from 'next/server'
 import {floridaBounds,geocodingConfig,isInFlorida,mapProviderLimits,optionalCoordinateNumber,withFloridaQuery} from '../../../lib/maps/map-config'
+import {requireQuotaUser} from '../../../lib/api-request-guard'
 
 type CensusMatch={matchedAddress?:string;coordinates?:{x?:number;y?:number}}
 type NominatimMatch={display_name?:string;lat?:string;lon?:string}
@@ -19,6 +20,8 @@ function usable(lat:number,lng:number,near:{lat:number;lng:number}|null){
 }
 
 export async function GET(request:NextRequest){
+ const access=await requireQuotaUser(request,'geocode',40)
+ if('response' in access)return access.response
  const address=withFloridaQuery(request.nextUrl.searchParams.get('address')?.trim()||'')
  const nearLat=optionalCoordinateNumber(request.nextUrl.searchParams.get('nearLat'))
  const nearLng=optionalCoordinateNumber(request.nextUrl.searchParams.get('nearLng'))

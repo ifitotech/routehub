@@ -19,6 +19,7 @@ import {requestOnboardingReplay} from '../../../lib/onboarding'
 import {getSupabase} from '../../../lib/supabase'
 import {getNavigationPreference, setNavigationPreference, type NavigationPreference} from '../../../lib/navigation-preference'
 import {getDriverModePreference, setDriverModePreference, type DriverMode} from '../../../lib/driver-mode-preference'
+import {DRIVER_PREMIUM_ENFORCEMENT, driverPremiumFeaturesAvailable, hasDriverPremium} from '../../../lib/driver-premium'
 import styles from '../driver-preferences.module.css'
 // confirmBackdrop/confirmSheet/confirmActions live in driver-v3-b.module.css -
 // the combined driver-v3.module.css only @imports the split files, it
@@ -36,7 +37,7 @@ export default function DriverV3Settings() {
   const {locale, setLocale, t} = useLocale()
   const {theme, setTheme} = useThemePreference()
   const copy = settingsCopy(locale)
-  const {drivingSession, driverId, companyId, branchId, refresh} = useDriverData()
+  const {drivingSession, driverId, companyId, companyPlan, branchId, refresh} = useDriverData()
   const [dayBusy, setDayBusy] = useState(false)
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [message, setMessage] = useState('')
@@ -52,6 +53,8 @@ export default function DriverV3Settings() {
   const [signingOut, setSigningOut] = useState(false)
   const [navigationPreference, setNavigationPreferenceState] = useState<NavigationPreference>('internal')
   const [driverMode, setDriverModeState] = useState<DriverMode>('pro')
+  const premiumAvailable = driverPremiumFeaturesAvailable(companyPlan)
+  const premiumEnforced = DRIVER_PREMIUM_ENFORCEMENT && !premiumAvailable
 
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') setNotify('on')
@@ -59,12 +62,22 @@ export default function DriverV3Settings() {
 
   useEffect(() => { setNavigationPreferenceState(getNavigationPreference()) }, [])
   useEffect(() => { setDriverModeState(getDriverModePreference()) }, [])
+  useEffect(() => {
+    if (premiumAvailable) return
+    // Once billing enforcement is enabled, repair an old device preference
+    // immediately so the setting screen and the live Today screen agree.
+    setDriverModePreference('simple')
+    setNavigationPreference('external')
+    setDriverModeState('simple')
+    setNavigationPreferenceState('external')
+  }, [premiumAvailable])
 
   const chooseNavigation = (value: NavigationPreference) => {
     setNavigationPreference(value)
     setNavigationPreferenceState(value)
   }
   const chooseDriverMode = (value: DriverMode) => {
+    if (value === 'pro' && !premiumAvailable) return
     setDriverModePreference(value)
     setDriverModeState(value)
   }
@@ -207,16 +220,19 @@ export default function DriverV3Settings() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2>{locale === 'es' ? 'Experiencia de Driver' : locale === 'fr' ? 'Expérience Driver' : 'Driver experience'}</h2>
-            <p>{locale === 'es' ? 'Simple muestra solo las acciones necesarias. Pro conserva el resumen completo de la parada.' : locale === 'fr' ? 'Simple affiche uniquement les actions nécessaires. Pro conserve le résumé complet de l’arrêt.' : 'Simple shows only the needed actions. Pro keeps the complete stop summary.'}</p>
+            <p>{locale === 'es' ? 'Simple muestra solo las acciones necesarias. Pro conserva el resumen completo y la navegación integrada.' : locale === 'fr' ? 'Simple affiche uniquement les actions nécessaires. Pro conserve le résumé complet et la navigation intégrée.' : 'Simple shows only the needed actions. Pro keeps the complete stop summary and in-app navigation.'}</p>
           </div>
           <div className={`${styles.choices} ${styles.twoChoices}`}>
             <button type="button" className={`${styles.choice} ${driverMode === 'simple' ? styles.choiceSelected : ''}`} onClick={() => chooseDriverMode('simple')}>
               {locale === 'es' ? 'Simple' : 'Simple'}
             </button>
-            <button type="button" className={`${styles.choice} ${driverMode === 'pro' ? styles.choiceSelected : ''}`} onClick={() => chooseDriverMode('pro')}>
-              Pro
+            <button type="button" className={`${styles.choice} ${driverMode === 'pro' ? styles.choiceSelected : ''}`} disabled={!premiumAvailable} onClick={() => chooseDriverMode('pro')}>
+              Pro{premiumEnforced ? ' · Premium' : ''}
             </button>
           </div>
+          {DRIVER_PREMIUM_ENFORCEMENT && <p className={styles.planHint}>{hasDriverPremium(companyPlan)
+            ? (locale === 'es' ? 'Tu empresa tiene acceso Premium.' : locale === 'fr' ? 'Votre entreprise a accès à Premium.' : 'Your workspace has Premium access.')
+            : (locale === 'es' ? 'Pro y la navegación integrada están incluidos en Premium.' : locale === 'fr' ? 'Pro et la navigation intégrée sont inclus dans Premium.' : 'Pro and in-app navigation are included with Premium.')}</p>}
         </section>
 
         <section className={styles.section}>
@@ -287,8 +303,8 @@ export default function DriverV3Settings() {
             <button type="button" className={`${styles.choice} ${navigationPreference === 'external' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('external')}>
               {locale === 'es' ? 'Teléfono' : locale === 'fr' ? 'Téléphone' : 'Phone'}
             </button>
-            <button type="button" className={`${styles.choice} ${navigationPreference === 'internal' ? styles.choiceSelected : ''}`} onClick={() => chooseNavigation('internal')}>
-              {locale === 'es' ? 'RouteHub' : locale === 'fr' ? 'RouteHub' : 'RouteHub'}
+            <button type="button" className={`${styles.choice} ${navigationPreference === 'internal' ? styles.choiceSelected : ''}`} disabled={!premiumAvailable || driverMode === 'simple'} onClick={() => chooseNavigation('internal')}>
+              {locale === 'es' ? 'RouteHub' : locale === 'fr' ? 'RouteHub' : 'RouteHub'}{premiumEnforced ? ' · Premium' : ''}
             </button>
           </div>
         </section>

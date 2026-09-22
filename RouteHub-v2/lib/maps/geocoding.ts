@@ -1,6 +1,7 @@
 import {mapProviderLimits} from './map-config'
 import {sanitizeCoordinate} from './coordinates'
 import type {GeocodedLocation,MapCoordinate} from './types'
+import {authenticatedApiFetch} from '../authenticated-api-fetch'
 
 type LocationPayload={coordinate?:MapCoordinate|null;label?:string;source?:GeocodedLocation['source'];externalId?:string;name?:string}
 
@@ -31,7 +32,7 @@ export async function geocodeAddress(address:string,signal?:AbortSignal,near?:Ma
       params.set('nearLat',String(near.lat))
       params.set('nearLng',String(near.lng))
     }
-    const response=await fetch(`/api/geocode?${params.toString()}`,{signal})
+    const response=await authenticatedApiFetch(`/api/geocode?${params.toString()}`,{signal})
     if(!response.ok)return null
     return normalizeLocationPayload(await response.json() as LocationPayload,address)
   }catch{return null}
