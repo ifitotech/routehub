@@ -55,12 +55,8 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
 
   if (!ready) {
     return (
-      <div className="driver-v3-splash" role="status" aria-live="polite">
+      <div className="driver-v3-splash" role="status" aria-live="polite" aria-label={locale === 'es' ? 'Cargando RouteHub Driver' : locale === 'fr' ? 'Chargement de RouteHub Driver' : 'Loading RouteHub Driver'}>
         <img className="driver-v3-splash-hero" src="/driver-empty-route-hero.png" alt="" />
-        <img src="/routehub-driver-new.jpg" alt="" width={72} height={72} />
-        <strong>RouteHub Driver</strong>
-        <p>{locale === 'es' ? 'Abriendo tu espacio de trabajo…' : locale === 'fr' ? 'Ouverture de votre espace de travail…' : 'Opening your workspace…'}</p>
-        <div className="spin" aria-hidden="true" />
       </div>
     )
   }
