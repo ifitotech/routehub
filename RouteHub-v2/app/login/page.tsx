@@ -27,15 +27,17 @@ function accessMessage(code: string) {
 }
 
 function WorkflowPreview() {
-  const flow = [
-    {Icon: Plus, label: 'Create', detail: 'Pickup or delivery'},
-    {Icon: Users, label: 'Assign', detail: 'Right driver'},
-    {Icon: MapPin, label: 'Track', detail: 'Live operation'},
-    {Icon: ShieldCheck, label: 'Complete', detail: 'Proof captured'},
-  ]
-  return <div className={styles.workflowPreview} aria-label="RouteHub pickup and delivery operations workflow">
-    <div className={styles.workflowHeader}><div><span>ROUTEHUB OPERATIONS</span><h3>One connected workflow</h3></div><span className={styles.workflowPill}><i/>Ready</span></div>
-    <div className={styles.workflowSteps}>{flow.map(({Icon, label, detail}, index) => <div className={styles.workflowStep} key={label}><span className={styles.workflowIcon}><Icon size={18}/></span><div><strong>{label}</strong><small>{detail}</small></div>{index < flow.length - 1 && <span className={styles.workflowLine}/>}</div>)}</div>
+  // Was a fully illustrated fake UI (a hand-drawn sidebar/KPI/map mockup
+  // that never matched the real Manager screen, down to a sidebar nav
+  // Manager doesn't even have anymore - it moved to a top bar). A real
+  // screenshot of the actual Dashboard is the honest version of "here's
+  // the product" - this shares the same file the in-app guide uses
+  // (public/guide.html), so one real capture covers both. Falls back to
+  // the icon summary below it if the screenshot hasn't been uploaded yet.
+  return <div className={styles.workflowPreview} aria-label="RouteHub Manager dashboard preview">
+    <div className={styles.workflowShot}>
+      <img src="/guide-manager-dashboard.png" alt="RouteHub Manager dashboard" onError={event => { (event.currentTarget.closest(`.${styles.workflowShot}`) as HTMLElement | null)?.style.setProperty('display', 'none') }} />
+    </div>
     <div className={styles.workflowProof}><span className={styles.workflowProofIcon}><CheckCircle2 size={18}/></span><div><strong>Live operations preview</strong><small>Manager routes, Driver Today and proof of delivery stay connected.</small></div></div>
   </div>
 }
