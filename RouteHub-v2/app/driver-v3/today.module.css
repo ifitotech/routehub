@@ -284,6 +284,19 @@ html[data-theme='light'] .emptyToday{color:#0f1d35;background:radial-gradient(ci
 :global(html[data-theme='light']) .stateCard{border-color:rgba(95,151,224,.18);background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(242,247,255,.9));box-shadow:0 14px 34px rgba(53,105,170,.08)}
 :global(html[data-theme='light']) .stateCard h1{color:#0b1f3a}.stateCard p{font-weight:600}
 .loading{display:flex;flex-direction:column;gap:12px}
+/* Empty-state polish: a restrained entrance gives the workspace a sense of
+   continuity without delaying interaction. The light theme keeps the hero
+   illustration legible instead of letting screen blending wash it out. */
+.emptyToday{isolation:isolate}
+.emptyHeroArt{animation:emptyHeroIn .75s cubic-bezier(.2,.8,.2,1) both}
+.emptyToday h2,.emptyCopy,.emptyToday .emptyRefresh,.lastUpdated{animation:emptyContentIn .52s cubic-bezier(.2,.8,.2,1) both}
+.emptyToday h2{animation-delay:.12s}.emptyCopy{animation-delay:.18s}.emptyToday .emptyRefresh{animation-delay:.24s}.lastUpdated{animation-delay:.29s}
+.activityCard{animation:emptyCardIn .58s .32s cubic-bezier(.2,.8,.2,1) both}
+html[data-theme='light'] .emptyHeroArt{opacity:.78;filter:saturate(1.2) contrast(1.08) drop-shadow(0 12px 22px rgba(16,119,255,.18))}
+@keyframes emptyHeroIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes emptyContentIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes emptyCardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.emptyHeroArt,.emptyToday h2,.emptyCopy,.emptyToday .emptyRefresh,.lastUpdated,.activityCard{animation:none}}
 .loadingHero,.loadingProgress,.loadingNext{border:1px solid #e5e7eb;border-radius:18px;background:linear-gradient(90deg,#fff 20%,#f2f5f9 50%,#fff 80%);background-size:220% 100%;animation:shimmer 1.4s infinite}
 .loadingHero{height:286px}
 .loadingProgress{height:64px}
