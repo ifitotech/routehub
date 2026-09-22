@@ -11,7 +11,7 @@ export async function submitSupportRequest(message: string) {
   // fields are required (created_by/category/subject). Keep both user_id and
   // created_by populated so the request is visible to the admin queue and
   // remains attributable to the signed-in driver.
-  const {error} = await getSupabase().from('support_requests').insert({
+  const request = getSupabase().from('support_requests').insert({
     user_id: user.id,
     created_by: user.id,
     company_id: companyId,
@@ -19,5 +19,9 @@ export async function submitSupportRequest(message: string) {
     subject: 'Driver support request',
     message: trimmed.slice(0, 2000),
   })
+  const timeout = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Support is taking too long to respond. Check your connection and try again.')), 15000)
+  })
+  const {error} = await Promise.race([request, timeout])
   if (error) throw error
 }

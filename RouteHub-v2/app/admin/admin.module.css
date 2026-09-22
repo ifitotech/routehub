@@ -34,6 +34,11 @@
 .subtitle { max-width: 670px; margin: 9px 0 0; color: var(--muted); line-height: 1.55; }
 .adminStats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; margin-bottom:16px; }
 .adminStats article { padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:var(--surface); box-shadow:0 10px 24px rgb(15 32 58 / 5%); }
+.adminStatLink { display:block; padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:var(--surface); color:inherit; text-decoration:none; box-shadow:0 10px 24px rgb(15 32 58 / 5%); transition:transform 160ms ease,border-color 160ms ease; }
+.adminStatLink:hover,.adminStatLink:focus-visible { transform:translateY(-1px); border-color:#9bbcf1; outline:none; }
+.adminStatLink span,.adminStatLink small { display:block; color:var(--muted); font-size:.82rem; }
+.adminStatLink strong { display:block; margin:8px 0 2px; color:var(--ink); font-size:2rem; line-height:1; }
+.adminStatLink.alertStat strong { color:#dc2626; }
 .adminStats span,.adminStats small { display:block; color:var(--muted); font-size:.82rem; }
 .adminStats strong { display:block; margin:8px 0 2px; color:var(--ink); font-size:2rem; line-height:1; }
 .adminStats .alertStat strong { color:#dc2626; }

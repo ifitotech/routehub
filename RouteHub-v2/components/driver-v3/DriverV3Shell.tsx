@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import {usePathname, useSearchParams} from 'next/navigation'
+import {useEffect, useRef, useState} from 'react'
 import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck, UserRound} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
@@ -54,6 +55,24 @@ export default function DriverV3Shell({
   const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
   const menuHref = profileOpen ? '/driver' : '/driver/more'
   const mapOpen = pathname === '/driver/map' || (pathname === '/driver' && searchParams.get('view') === 'map')
+  const autoHideHeader = active !== 'today' && active !== 'map' && !hideHeader
+  const [headerVisible, setHeaderVisible] = useState(true)
+  const lastScroll = useRef(0)
+
+  useEffect(() => {
+    if (!autoHideHeader) { setHeaderVisible(true); return }
+    lastScroll.current = window.scrollY
+    const onScroll = () => {
+      const current = window.scrollY
+      const delta = current - lastScroll.current
+      if (Math.abs(delta) < 4) return
+      if (current < 12 || delta < 0) setHeaderVisible(true)
+      else if (delta > 0) setHeaderVisible(false)
+      lastScroll.current = current
+    }
+    window.addEventListener('scroll', onScroll, {passive: true})
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [autoHideHeader])
 
   return (
     <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
@@ -78,7 +97,7 @@ export default function DriverV3Shell({
           minHeight: 'calc(48px + env(safe-area-inset-top))',
           padding: 'env(safe-area-inset-top) 16px 0',
         }}
-        className={`${styles.header} ${styles.appHeader} ${hideHeader ? styles.headerHidden : ''}`}
+        className={`${styles.header} ${styles.appHeader} ${hideHeader || (autoHideHeader && !headerVisible) ? styles.headerHidden : ''}`}
       >
         {isStack ? (
           <Link href={backHref || '/driver'} className={styles.headerIcon} aria-label={backLabel || t.drvBack || 'Back'}>

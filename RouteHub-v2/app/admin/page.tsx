@@ -1,5 +1,5 @@
 'use client'
-import {AlertTriangle, Building2, ChevronRight, CreditCard, LifeBuoy, ScrollText, ShieldCheck, User, UserCheck} from 'lucide-react'
+import {AlertTriangle, Building2, ChevronRight, LifeBuoy, ScrollText, ShieldCheck, UserCheck} from 'lucide-react'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
@@ -8,7 +8,6 @@ import styles from './admin.module.css'
 
 const quickLinks = [
   {href: '/admin/companies', title: 'Companies', description: 'Review registered workspaces.', icon: Building2},
-  {href: '/admin/billing', title: 'Billing', description: 'Plans, subscription status and trials.', icon: CreditCard},
   {href: '/admin/errors', title: 'Errors', description: 'Crashes reported from every company.', icon: AlertTriangle},
   {href: '/admin/support', title: 'Support', description: 'Requests sent from Settings.', icon: LifeBuoy},
   {href: '/admin/admins', title: 'Platform admins', description: 'Who has CEO-level access.', icon: ShieldCheck},
@@ -49,7 +48,7 @@ export default function Admin() {
       <section className={styles.adminStats} aria-label="Platform summary">
         <article><span>Pending trials</span><strong>{counts.pending}</strong><small>Needs review</small></article>
         <article><span>Companies</span><strong>{counts.companies}</strong><small>Registered workspaces</small></article>
-        <article className={counts.errors > 0 ? styles.alertStat : undefined}><span>Open errors</span><strong>{counts.errors}</strong><small>Needs attention</small></article>
+        <Link href="/admin/errors" className={`${styles.adminStatLink} ${counts.errors > 0 ? styles.alertStat : ''}`} aria-label={`Open errors: ${counts.errors}`}><span>Open errors</span><strong>{counts.errors}</strong><small>Needs attention · Open reports</small></Link>
       </section>
       <h2 className={styles.sectionLabel}>Platform activity</h2>
       <section className={styles.adminStats} aria-label="Platform activity">
@@ -71,7 +70,7 @@ export default function Admin() {
       )}
       <section className={styles.panel}>
         <header className={styles.panelHeader}><div><h2>Access requests</h2><p>Review trial signups and company plans.</p></div><span className={styles.panelIcon}><ShieldCheck size={21}/></span></header>
-        <div className={styles.empty}><span><UserCheck size={24}/></span><h2>{counts.pending ? `${counts.pending} pending request${counts.pending === 1 ? '' : 's'}` : 'No pending requests'}</h2><p>{counts.pending ? 'Review them before the trial ends.' : 'New trial signups will appear here.'}</p><Link className={styles.primaryButton} href="/admin/billing">Open billing <ChevronRight size={17}/></Link></div>
+          <div className={styles.empty}><span><UserCheck size={24}/></span><h2>{counts.pending ? `${counts.pending} pending request${counts.pending === 1 ? '' : 's'}` : 'No pending requests'}</h2><p>{counts.pending ? 'Review them before the trial ends.' : 'New trial signups will appear here.'}</p><Link className={styles.primaryButton} href="/admin/companies">Review companies <ChevronRight size={17}/></Link></div>
       </section>
       <h2 className={styles.sectionLabel}>Quick access</h2>
       <section className={styles.grid} aria-label="Admin quick access">{quickLinks.map(({href, title, description, icon: Icon}) => <Link className={styles.actionCard} href={href} key={href}><span className={styles.actionIcon}><Icon size={20}/></span><h3>{title}</h3><p>{description}</p><ChevronRight className={styles.arrow} size={18}/></Link>)}</section>

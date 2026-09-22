@@ -9,7 +9,6 @@ export type AdminSection = 'home' | 'companies' | 'billing' | 'errors' | 'suppor
 const nav: {id: AdminSection; href: string; label: string}[] = [
   {id: 'home', href: '/admin', label: 'Home'},
   {id: 'companies', href: '/admin/companies', label: 'Companies'},
-  {id: 'billing', href: '/admin/billing', label: 'Billing'},
   {id: 'errors', href: '/admin/errors', label: 'Errors'},
   {id: 'support', href: '/admin/support', label: 'Support'},
   {id: 'admins', href: '/admin/admins', label: 'Admins'},
