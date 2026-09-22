@@ -7,6 +7,7 @@
    values match Manager's real tokens (app/routes/routes.module.css .page)
    exactly instead of the close-but-not-quite shades this had before. */
 .landing{--blue:#1660f0;--navy:#0f1d35;--ink:#0f1d35;--muted:#566688;--soft-blue:#e9f1fe;--border:#e3e9f1;min-height:100svh;background:#f7f9fc;color:var(--ink);overflow-x:hidden}
+.pwaLoading{display:grid;place-items:center;min-height:100dvh;background:linear-gradient(180deg,#f8fbff 0%,#eaf2fc 100%);overflow:hidden}.pwaLoading img{width:min(92vw,520px);height:auto;mix-blend-mode:screen;opacity:.62;filter:saturate(1.2) contrast(1.08) drop-shadow(0 18px 30px rgba(22,103,242,.2));animation:pwaDrive 2.8s ease-in-out infinite}@keyframes pwaDrive{0%,100%{opacity:.2;transform:translateX(-12px) scale(.96)}18%{opacity:.62}50%{opacity:.72;transform:translateX(10px) scale(1)}82%{opacity:.62}}@media(prefers-reduced-motion:reduce){.pwaLoading img{animation:none;opacity:.62}}
 .header{height:calc(76px + env(safe-area-inset-top));max-width:1280px;padding:env(safe-area-inset-top) 32px 0;border-bottom:1px solid var(--border);background:#fff!important;background-image:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;filter:none!important;opacity:1!important;gap:36px;box-sizing:border-box}
 .wordmark{color:var(--ink);font-size:25px;letter-spacing:-.05em}.wordmark img{width:42px;height:42px}.wordmark em{color:var(--blue)}
 .nav{gap:30px}.nav a{color:var(--muted);font-size:14px;font-weight:650;transition:color 140ms ease}.nav a:hover{color:var(--blue)}
