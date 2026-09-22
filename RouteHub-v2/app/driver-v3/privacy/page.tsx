@@ -65,7 +65,7 @@ export default function DriverPrivacyPage() {
           {' · '}
           <a href={USER_GUIDE_URL} target="_blank" rel="noreferrer">Guide</a>
           {' · '}
-          September 15, 2026
+          September 21, 2026
         </p>
       </div>
     </DriverV3Shell>

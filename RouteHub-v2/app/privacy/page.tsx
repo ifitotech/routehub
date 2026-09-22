@@ -9,7 +9,7 @@ const sections = [
   ['2. Account',
     'We store the name, email and phone saved on the profile, the avatar if one is uploaded, plus the role and branch the company assigned. Sign-in is handled by the authentication provider configured for the workspace. Accounts ending in @routehub.local are test logins managed by the company.'],
   ['3. Location',
-    'Location is collected only after Driving Day is On and the device has granted permission. Updates are used so the branch can see the live route during that work period. Turning Driving Day Off stops sharing. The web / PWA build cannot read GPS after the Driver app is closed. Device permission can be withdrawn in system Settings. Driving Day and the system permission are two different switches.'],
+    'Location is collected only after Driving Day is On and the device has granted permission. Updates are used so the branch can see operational route progress during that work period. The Android app may send an approximate location about every 8 minutes while its configured driving session is active. Turning Driving Day Off stops new sharing. The web / PWA build cannot read GPS after the Driver app is closed. Device permission can be withdrawn in system Settings. Driving Day and the system permission are two different switches.'],
   ['4. Routes, contacts and proof',
     'Stops may include addresses, contact names, phone numbers, PO / order number, notes, recipient name, photos, signatures and Issue reports. Upload only what that stop needs. Contacts and branch addresses belong to the company workspace.'],
   ['5. Notifications',
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
         ))}
       </section>
       <p style={{marginTop: 28, color: '#8a98aa', fontSize: 13, lineHeight: 1.55}}>
-        Last updated: September 15, 2026 · <Link href="/terms">Terms of Use</Link> · <Link href="/guide.html">User guide</Link>
+        Last updated: September 21, 2026 · <Link href="/terms">Terms of Use</Link> · <Link href="/guide.html">User guide</Link>
       </p>
     </main>
   )

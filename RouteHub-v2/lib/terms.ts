@@ -3,7 +3,9 @@
  * fresh acknowledgement without touching the user's account or route data.
  * The value is stored locally because acceptance is device/browser specific.
  */
-export const TERMS_VERSION = 'v1'
+// v2 adds the operational location, safe-driving, evidence and external-map
+// terms. Bump this whenever a material user-facing obligation changes.
+export const TERMS_VERSION = 'v2'
 
 export function termsStorageKey(userId: string) {
   return `routehub_terms_${TERMS_VERSION}:${userId}`

@@ -19,10 +19,10 @@ export default function TermsGate() {
   const [checked, setChecked] = useState(false)
 
   const copy = locale === 'es'
-    ? {title:'Términos de uso de RouteHub',intro:'Antes de continuar, revisa y acepta los términos de uso de RouteHub.',consent:'Acepto los Términos de uso y entiendo cómo se utilizan los datos de rutas, ubicación y comprobantes en la aplicación.',read:'Leer términos completos',continue:'Aceptar y continuar',version:`Versión ${TERMS_VERSION}`}
+    ? {title:'Términos de uso de RouteHub',intro:'Antes de continuar, revisa y acepta los Términos de uso actualizados de RouteHub.',consent:'Acepto los Términos de uso, incluidos el uso de rutas, ubicación operativa, mapas y comprobantes de entrega.',read:'Leer términos completos',continue:'Aceptar y continuar',version:`Versión ${TERMS_VERSION}`}
     : locale === 'fr'
-      ? {title:'Conditions d’utilisation RouteHub',intro:'Avant de continuer, consultez et acceptez les conditions d’utilisation de RouteHub.',consent:'J’accepte les conditions d’utilisation et je comprends comment les itinéraires, la position et les preuves sont utilisés dans l’application.',read:'Lire les conditions complètes',continue:'Accepter et continuer',version:`Version ${TERMS_VERSION}`}
-      : {title:'RouteHub Terms of Use',intro:'Before continuing, please review and accept the RouteHub Terms of Use.',consent:'I accept the Terms of Use and understand how route, location and proof data are used in the application.',read:'Read the full terms',continue:'Accept and continue',version:`Version ${TERMS_VERSION}`}
+      ? {title:'Conditions d’utilisation RouteHub',intro:'Avant de continuer, consultez et acceptez les conditions d’utilisation mises à jour de RouteHub.',consent:'J’accepte les conditions, y compris l’utilisation des itinéraires, de la position opérationnelle, des cartes et des preuves de livraison.',read:'Lire les conditions complètes',continue:'Accepter et continuer',version:`Version ${TERMS_VERSION}`}
+      : {title:'RouteHub Terms of Use',intro:'Before continuing, please review and accept the updated RouteHub Terms of Use.',consent:'I accept the Terms of Use, including operational route, location, maps and proof-of-delivery use.',read:'Read the full terms',continue:'Accept and continue',version:`Version ${TERMS_VERSION}`}
 
   useEffect(() => {
     if (PUBLIC_PATHS.some(path => pathname === path || (path !== '/' && pathname.startsWith(path)))) {

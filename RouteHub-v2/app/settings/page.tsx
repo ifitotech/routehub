@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Building2, Camera, ChevronRight, LogOut, Save} from 'lucide-react'
+import {Building2, Camera, ChevronRight, LogOut, Save, Send} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale, useThemePreference} from '../../lib/use-preferences'
 import {sanitizeCoordinate, type MapPoint} from '../../lib/maps/coordinates'
@@ -10,6 +10,7 @@ import GoogleAddressInput from '../google-address-input'
 import DeviceNotificationsSetting from '../device-notifications-setting'
 import InstallAppCard from '../install-app-card'
 import {requestOnboardingReplay} from '../../lib/onboarding'
+import {submitSupportRequest} from '../../lib/support'
 import ManagerShell from '../manager/manager-shell'
 import {settingsCopy} from './settings-copy'
 import styles from './settings.module.css'
@@ -32,6 +33,9 @@ export default function Settings() {
   const [plan, setPlan] = useState('free')
   const [trialEnd, setTrialEnd] = useState<string | null>(null)
   const [isCeo, setIsCeo] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportMessage, setSupportMessage] = useState('')
+  const [supportSending, setSupportSending] = useState(false)
   const copy = settingsCopy[locale] || settingsCopy.en
 
   useEffect(() => {
@@ -112,6 +116,25 @@ export default function Settings() {
     }).eq('id', branch.id)
     setMessage(error ? error.message : copy.branchSaved)
     setBranchSaving(false)
+  }
+  const supportCopy = locale === 'es'
+    ? {placeholder: 'Describe lo que necesitas. No incluyas contraseñas ni datos de tarjeta.', send: 'Enviar solicitud', sending: 'Enviando…', sent: 'Tu solicitud fue enviada a soporte.'}
+    : locale === 'fr'
+      ? {placeholder: 'Décrivez votre besoin. N’ajoutez ni mot de passe ni données de carte.', send: 'Envoyer la demande', sending: 'Envoi…', sent: 'Votre demande a été envoyée au support.'}
+      : {placeholder: 'Tell us what you need. Do not include passwords or card details.', send: 'Send request', sending: 'Sending…', sent: 'Your support request was sent.'}
+  const sendSupport = async () => {
+    if (supportSending || !supportMessage.trim()) return
+    setSupportSending(true)
+    try {
+      await submitSupportRequest(supportMessage)
+      setSupportMessage('')
+      setSupportOpen(false)
+      setMessage(supportCopy.sent)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to send support request.')
+    } finally {
+      setSupportSending(false)
+    }
   }
 
   return (
@@ -219,10 +242,22 @@ export default function Settings() {
             <span className={styles.copy}><strong>{copy.help}</strong><small>{copy.helpHelp}</small></span>
             <ChevronRight size={18} />
           </Link>
-          <Link className={styles.row} href="/settings/help">
-            <span className={styles.copy}><strong>{t.contactSupport}</strong><small>{t.supportHelp}</small></span>
-            <ChevronRight size={18} />
-          </Link>
+          {supportOpen ? (
+            <div className={styles.editor}>
+              <label>
+                {t.contactSupport}
+                <textarea value={supportMessage} onChange={event => setSupportMessage(event.target.value)} placeholder={supportCopy.placeholder} rows={4} />
+              </label>
+              <button type="button" className={styles.primary} disabled={supportSending || !supportMessage.trim()} onClick={() => void sendSupport()}>
+                <Send size={16}/>{supportSending ? supportCopy.sending : supportCopy.send}
+              </button>
+            </div>
+          ) : (
+            <button className={styles.row} type="button" onClick={() => setSupportOpen(true)}>
+              <span className={styles.copy}><strong>{t.contactSupport}</strong><small>{t.supportHelp}</small></span>
+              <ChevronRight size={18} />
+            </button>
+          )}
           <Link className={styles.row} href="/settings/privacy"><span className={styles.copy}><strong>{copy.privacy}</strong></span><ChevronRight size={18} /></Link>
           <Link className={styles.row} href="/settings/terms"><span className={styles.copy}><strong>{copy.terms}</strong></span><ChevronRight size={18} /></Link>
         </section>
