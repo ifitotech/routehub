@@ -783,8 +783,8 @@ export default function DriverV3Page() {
 
 function TodayLoading({label}:{label:string}) {
   return (
-    <div className={styles.loading} aria-label={label}>
-      <div className={styles.loadingHero}/>
+    <div className={styles.loading} aria-label={label} role="status">
+      <img className={styles.loadingArt} src="/driver-empty-route-hero.png" alt="" />
     </div>
   )
 }
