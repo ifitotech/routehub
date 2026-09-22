@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {usePathname, useRouter} from 'next/navigation'
 import {getSupabase} from '../lib/supabase'
 import {canOpenPath, resolveAccess, workspaceForStrictRole} from './auth-access'
@@ -25,11 +25,17 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
   const router = useRouter()
   const [verifiedPath, setVerifiedPath] = useState<string | null>(null)
   const [verifiedRoleOk, setVerifiedRoleOk] = useState(false)
+  // Tracks whether Supabase has resolved its initial auth state at least
+  // once in this app session (see the comment below) - a ref, not state,
+  // since it must survive across pathname changes without itself
+  // triggering a re-render.
+  const authInitialized = useRef(false)
 
   useEffect(() => {
     const client = getSupabase()
     const isPublic = pathname === '/' || publicPaths.some(path => pathname.startsWith(path))
     let active = true
+    let initTimeout: number | undefined
     const verify = async () => {
       if (isPublic) return
       try {
@@ -46,11 +52,27 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
         if (error instanceof Error && error.message !== 'AUTH_REQUIRED') {
           sessionStorage.setItem('routehub_auth_error', error.message)
         }
-        router.replace('/login')
+        if (active) router.replace('/login')
       }
     }
-    void verify()
+    // Calling verify() eagerly on a cold app launch (an installed PWA
+    // reopened from fully closed) can race Supabase rehydrating the
+    // persisted session from storage: resolveAccess()'s getUser() call
+    // then has no token to send and looks unauthenticated even though a
+    // valid session exists, bouncing straight to /login - which is what
+    // was producing the visible flash before landing back on the real
+    // workspace. onAuthStateChange's first callback reflects the session
+    // Supabase actually resolved after checking storage, so the very first
+    // verify() in this app session waits for that instead of firing blind.
+    // Once initialized, later pathname changes verify immediately as
+    // before - there's no cold-start race left to wait out.
     const {data: listener} = client.auth.onAuthStateChange(event => {
+      if (!active) return
+      if (!authInitialized.current) {
+        authInitialized.current = true
+        void verify()
+        return
+      }
       if (event === 'SIGNED_OUT') {
         setVerifiedPath(null)
         setVerifiedRoleOk(false)
@@ -58,9 +80,22 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
       }
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') void verify()
     })
+    if (authInitialized.current) {
+      void verify()
+    } else if (!isPublic) {
+      // Safety net: if onAuthStateChange never fires for some reason, this
+      // would otherwise wait on the loading UI forever instead of just
+      // falling back to sign-in like it did before this fix.
+      initTimeout = window.setTimeout(() => {
+        if (!active || authInitialized.current) return
+        authInitialized.current = true
+        router.replace('/login')
+      }, 8000)
+    }
     return () => {
       active = false
       listener.subscription.unsubscribe()
+      if (initTimeout) window.clearTimeout(initTimeout)
     }
   }, [pathname, router])
 
