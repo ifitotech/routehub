@@ -57,8 +57,17 @@ export default function DriverV3Shell({
 
   return (
     <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
+      {/* Reserves exactly the pre-buffer header height in the grid, so the
+          blur-guard overlay below doesn't shrink .content/.nav - only the
+          header itself (positioned absolute, floating on top) grows past
+          this into the content's own space. */}
+      <div aria-hidden="true" style={{height: 'calc(48px + env(safe-area-inset-top))'}} />
       <header
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
           zIndex: 300,
           boxSizing: 'border-box',
           // iOS 26/27's "Liquid Glass" scroll-edge effect (a system-drawn
@@ -68,8 +77,11 @@ export default function DriverV3Shell({
           // documented reports put its bleed at roughly 30px past the
           // inset. This extra buffer keeps the actual logo/text that far
           // clear of the edge, so the effect has nothing but flat header
-          // background to blur instead of the brand mark - it can't be
-          // eliminated from here, only kept off the content that matters.
+          // background to blur instead of the brand mark. It's applied by
+          // floating the header (absolute, over .content) rather than by
+          // growing the grid row it used to sit in, so the extra 28px
+          // covers the top of the content underneath instead of pushing
+          // the content/nav down and shrinking the usable screen.
           height: 'calc(48px + env(safe-area-inset-top) + 28px)',
           minHeight: 'calc(48px + env(safe-area-inset-top) + 28px)',
           padding: 'calc(env(safe-area-inset-top) + 28px) 16px 0',

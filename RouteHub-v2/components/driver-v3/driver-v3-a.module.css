@@ -13,6 +13,10 @@
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
   display:grid;
   grid-template-rows:auto minmax(0,1fr) auto;
+  /* Anchors the header, which is position:absolute (see DriverV3Shell.tsx)
+     so its iOS-blur-guard buffer floats over .content instead of growing
+     this grid's own header row and shrinking .content/.nav. */
+  position:relative;
   overflow:hidden;
   box-sizing:border-box;
   overscroll-behavior:none;
