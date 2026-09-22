@@ -75,6 +75,17 @@ body[data-driver-app='v3'] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   animation: drv3-splash-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
+.driver-v3-splash .driver-v3-splash-hero {
+  width: min(86vw, 360px);
+  height: auto;
+  margin-bottom: -18px;
+  border-radius: 0;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  opacity: .9;
+  filter: drop-shadow(0 16px 28px rgba(24,126,255,.28));
+  animation: drv3-splash-hero-in .85s cubic-bezier(.2,.8,.2,1) both;
+}
 .driver-v3-splash strong {
   font-size: 18px;
   font-weight: 800;
@@ -355,6 +366,26 @@ html[data-theme='dark'] .driver-v3-root .card {
   background: var(--rh-card-bg);
   border-color: var(--rh-border);
   color: var(--rh-text);
+}
+@keyframes drv3-splash-hero-in {
+  from { opacity: 0; transform: translateY(18px) scale(.92); }
+  to { opacity: .9; transform: none; }
+}
+html[data-theme='light'] .driver-v3-splash {
+  background: linear-gradient(180deg,#f8fbff 0%,#eaf2fc 100%);
+  color: #0f1d35;
+}
+html[data-theme='light'] .driver-v3-splash .driver-v3-splash-hero {
+  mix-blend-mode: screen;
+  opacity: .58;
+  filter: saturate(1.15) contrast(1.05) drop-shadow(0 16px 28px rgba(24,126,255,.18));
+}
+html[data-theme='light'] .driver-v3-splash p { color: #6b7f9d; }
+@media (prefers-reduced-motion: reduce) {
+  .driver-v3-splash .driver-v3-splash-hero,
+  .driver-v3-splash img,
+  .driver-v3-splash strong,
+  .driver-v3-splash p { animation: none; }
 }
 html[data-theme='dark'] .driver-v3-root .eyebrow,
 html[data-theme='dark'] .driver-v3-root .muted {

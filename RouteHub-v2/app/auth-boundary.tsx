@@ -119,6 +119,7 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
     if (isDriverWorkspace(pathname)) {
       return (
         <div className="driver-v3-splash" role="status" aria-live="polite">
+          <img className="driver-v3-splash-hero" src="/driver-empty-route-hero.png" alt="" />
           <img src="/routehub-driver-new.jpg" alt="" width={72} height={72} />
           <strong>RouteHub Driver</strong>
           <p>Opening your workspace…</p>
