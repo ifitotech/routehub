@@ -14,21 +14,33 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
 
   useEffect(() => {
     let cancelled = false
-    getSupabase()
-      .auth.getSession()
-      .then(({data}) => {
-        if (cancelled) return
-        if (!data.session) {
-          router.replace('/login')
-          return
-        }
-        setReady(true)
-      })
-      .catch(() => {
-        if (!cancelled) router.replace('/login')
-      })
+    let decided = false
+    const client = getSupabase()
+    // A bare getSession() call right on mount can race a cold PWA launch:
+    // Supabase hasn't necessarily finished rehydrating the persisted session
+    // from storage yet, so it can resolve with no session even though a
+    // valid one exists - which was bouncing every cold launch through
+    // /login (where a second, later check found the real session) before
+    // landing back on /driver. onAuthStateChange's first callback reflects
+    // the session Supabase actually resolved after checking storage, so
+    // waiting for that instead removes the false negative. A timeout
+    // fallback still redirects if the auth client genuinely never resolves,
+    // so a real failure doesn't strand the splash forever.
+    const {data: {subscription}} = client.auth.onAuthStateChange((_event, session) => {
+      if (cancelled || decided) return
+      decided = true
+      if (!session) { router.replace('/login'); return }
+      setReady(true)
+    })
+    const timeout = window.setTimeout(() => {
+      if (cancelled || decided) return
+      decided = true
+      router.replace('/login')
+    }, 8000)
     return () => {
       cancelled = true
+      window.clearTimeout(timeout)
+      subscription.unsubscribe()
     }
   }, [router])
 
