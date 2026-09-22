@@ -43,9 +43,10 @@ function WorkflowPreview() {
 }
 
 export default function Login() {
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null); const [checkingPwaSession, setCheckingPwaSession] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('source') === 'pwa')
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null); const [checkingPwaSession, setCheckingPwaSession] = useState(true)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    if (params.get('source') !== 'pwa') setCheckingPwaSession(false)
     const tokenHash = params.get('token_hash')
     const tokenType = params.get('type')
     if (tokenHash && (tokenType === 'invite' || tokenType === 'recovery')) {
