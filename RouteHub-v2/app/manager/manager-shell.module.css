@@ -54,6 +54,7 @@
 
 .mobileNav { display: none; }
 .mobileNewRoute { display: none; }
+.mobileHeader { display:none; }
 
 .avatar {
   display: grid;
@@ -297,6 +298,14 @@
 }
 
 @media (max-width: 1023px) {
+  .mobileHeader { position:sticky; top:0; z-index:15; display:flex; align-items:center; gap:10px; min-height:58px; padding:calc(8px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-left)) 8px max(14px,env(safe-area-inset-right)); background:color-mix(in srgb,var(--rh-page-bg) 94%,transparent); border-bottom:1px solid var(--rh-border); backdrop-filter:blur(12px); }
+  .mobileBrand { display:flex; align-items:center; gap:7px; color:var(--rh-text); font-size:16px; font-weight:850; letter-spacing:-.04em; text-decoration:none; flex:0 0 auto; }
+  .mobileBrand img { width:32px; height:32px; border-radius:9px; }
+  .mobileBrand em { color:var(--rh-blue); font-style:normal; }
+  .mobileWorkspace { min-width:0; display:grid; gap:1px; flex:1; }
+  .mobileWorkspace small { color:var(--rh-muted); font-size:9px; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+  .mobileWorkspace strong { overflow:hidden; color:var(--rh-text); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+  .mobileProfile { display:grid; place-items:center; flex:0 0 auto; text-decoration:none; }
   .shell[data-manager-section='today'] .content {
     padding-inline: 16px;
   }
@@ -304,9 +313,7 @@
   /* viewport-fit=cover renders content under the notch/status bar unless
      something reserves that space - the flat 18px here left the page's own
      eyebrow/title rendering partly behind the system status bar. */
-  .content {
-    padding-top: calc(18px + env(safe-area-inset-top));
-  }
+  .content { padding-top: 14px; }
 
   /* Centered pill with a capped width instead of stretching edge to edge -
      on a wider tablet (a Tab S11 in portrait is well within this

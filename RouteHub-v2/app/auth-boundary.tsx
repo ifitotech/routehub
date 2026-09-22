@@ -55,6 +55,17 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
         if (active) router.replace('/login')
       }
     }
+    // Warm starts already have a persisted session. Let the current workspace
+    // paint while role verification completes in the background; invalid or
+    // expired sessions are still redirected by verify().
+    if (!isPublic) {
+      void client.auth.getSession().then(({data}) => {
+        if (active && data.session && verifiedPath === null) {
+          setVerifiedPath(pathname)
+          setVerifiedRoleOk(true)
+        }
+      }).catch(() => {})
+    }
     // Calling verify() eagerly on a cold app launch (an installed PWA
     // reopened from fully closed) can race Supabase rehydrating the
     // persisted session from storage: resolveAccess()'s getUser() call

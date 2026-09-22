@@ -56,7 +56,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover',
+  // Keep the status-area outside the web canvas. On iOS PWAs `cover` lets
+  // Safari composite its translucent scroll-edge material over the header;
+  // `contain` gives the system an opaque, theme-colored strip instead.
+  viewportFit: 'contain',
   themeColor: [
     {media: '(prefers-color-scheme: light)', color: '#FFFFFF'},
     {media: '(prefers-color-scheme: dark)', color: '#0F1D35'},

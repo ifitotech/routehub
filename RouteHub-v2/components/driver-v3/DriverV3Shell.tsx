@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import {usePathname, useSearchParams} from 'next/navigation'
 import {useEffect, useRef, useState} from 'react'
-import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck, UserRound} from 'lucide-react'
+import {ChevronLeft, History, Home, Map as MapIcon, RotateCw, Settings, Truck} from 'lucide-react'
 import shellA from './driver-v3-a.module.css'
 import shellB from './driver-v3-b.module.css'
 import './driver-route-swipe.css'
 import {useLocale} from '../../lib/use-preferences'
+import NotificationBell from '../../app/notification-bell'
 
 const styles = {...shellA, ...shellB}
 
@@ -52,8 +53,6 @@ export default function DriverV3Shell({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isStack = mode === 'stack'
-  const profileOpen = pathname === '/driver/more' || pathname.startsWith('/driver/more/')
-  const menuHref = profileOpen ? '/driver' : '/driver/more'
   const mapOpen = pathname === '/driver/map' || (pathname === '/driver' && searchParams.get('view') === 'map')
   const autoHideHeader = active !== 'today' && active !== 'map' && !hideHeader
   const [headerVisible, setHeaderVisible] = useState(true)
@@ -112,11 +111,7 @@ export default function DriverV3Shell({
           <img src="/routehub-driver-new.jpg" alt="" width={32} height={32} />
           <span>RouteHub</span>
         </Link>
-        {rightSlot || (
-          <Link href={menuHref} className={styles.headerIcon} aria-label={t.drvProfile}>
-            <UserRound strokeWidth={2.2} />
-          </Link>
-        )}
+        {rightSlot || (!mapOpen ? <NotificationBell /> : <span aria-hidden="true" />)}
       </header>
 
       <section data-driver-screen={active} className={`${styles.content} ${flush ? styles.contentFlush : ''} ${active === 'today' ? styles.contentToday : ''}`}>{children}</section>

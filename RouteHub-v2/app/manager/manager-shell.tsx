@@ -90,6 +90,14 @@ export default function ManagerShell({children, active = 'today', branchName, di
         <Link href="/settings" className={styles.profile}><span className={styles.avatar}>{initials}</span><span><strong>{name}</strong><small>{role}</small></span><ChevronDown size={16} /></Link>
       </div>
     </aside>
+    <header className={styles.mobileHeader}>
+      <Link href="/routes" className={styles.mobileBrand} aria-label="RouteHub manager dashboard">
+        <Image src="/routehub-regular-new.jpg" alt="" width={32} height={32} priority />
+        <span>Route<em>Hub</em></span>
+      </Link>
+      <div className={styles.mobileWorkspace}><small>{copy.workspace}</small><strong>{branchName || t.mainBranch}</strong></div>
+      <Link href="/settings" className={styles.mobileProfile} aria-label={t.more}><span className={styles.avatar}>{initials}</span></Link>
+    </header>
     <section className={styles.content}>{children}</section>
     {active !== 'routes' && <Link href="/routes?new=1" className={styles.mobileNewRoute} aria-label={copy.newRoute}><Plus size={24}/></Link>}
     <nav className={styles.mobileNav} aria-label="Mobile manager navigation">

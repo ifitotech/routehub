@@ -33,7 +33,7 @@ import dynamic from 'next/dynamic'
 // map consumer in this app (driver-route-navigation, compact-map, etc.)
 const DriverRouteMap = dynamic(() => import('../../components/driver-v3/DriverRouteMap'), {ssr: false})
 const DriverRouteNavigation = dynamic(() => import('../driver-route-navigation'), {ssr: false})
-import {Info, MapPin, TriangleAlert} from 'lucide-react'
+import {History, Info, MapPin, TriangleAlert} from 'lucide-react'
 
 // Driver Today owns only temporary presentation data. A completed route must
 // not leave its route geometry behind on this device (nor affect another
@@ -66,7 +66,7 @@ export default function DriverV3Page() {
   const searchParams=useSearchParams()
   const mapRequested=searchParams.get('view')==='map'
   const {t,locale}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,companyPlan,branchId,refresh,drivingSession,liveFix,offline}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,companyPlan,branchId,branchName,routes,refresh,drivingSession,liveFix,offline}=useDriverData()
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
@@ -141,6 +141,12 @@ export default function DriverV3Page() {
   const driverExperience=resolveDriverExperience(getDriverModePreference(),getNavigationPreference(),companyPlan)
   const simpleMode=driverExperience.mode==='simple'
   const navigationPreference=driverExperience.navigation
+  const localHour=new Date().getHours()
+  const greeting=localHour<12?(locale==='es'?'Buenos días':locale==='fr'?'Bonjour':'Good morning'):localHour<18?(locale==='es'?'Buenas tardes':locale==='fr'?'Bon après-midi':'Good afternoon'):(locale==='es'?'Buenas noches':locale==='fr'?'Bonsoir':'Good evening')
+  const todayRoutes=routes.filter(item=>String(item.route_date||'')===operationalDate())
+  const deliveries=todayRoutes.filter(item=>String(item.mission_type||'').toLowerCase()==='delivery'&&String(item.status)==='completed').length
+  const pickups=todayRoutes.filter(item=>String(item.mission_type||'').toLowerCase()==='pickup'&&String(item.status)==='completed').length
+  const pendingStops=todayRoutes.filter(item=>!['completed','cancelled','issue'].includes(String(item.status))).length
   // Simple mode intentionally preserves the original A→B workflow. Internal
   // turn-by-turn guidance and its persistent layer belong to Pro only.
   const internalNavigationEnabled=started&&!simpleMode&&navigationPreference==='internal'
@@ -680,14 +686,15 @@ export default function DriverV3Page() {
           )}
           {message&&!sheet&&<p className={`${styles.feedback}${/could not|failed|pending|error|no se pudo|imposible|add |enter |indica|ajoute/i.test(message)?` ${styles.feedbackError}`:''}`} role="status">{message}</p>}
         </section>
-      </>:<section className={styles.stateCard} aria-live="polite">
-        <div className={styles.emptyRouteArt} aria-hidden="true"><span/><i/><b/></div>
-        <Package className={styles.emptyRouteIcon}/>
-        <h1>{locale==='es'?'Todo listo por ahora':'You’re all caught up'}</h1>
-        <p>{t.drvNoStops}</p>
-        <button type="button" className={styles.emptyRefresh} onClick={()=>void refreshToday()} disabled={refreshing}>
-          <RefreshCw size={16} className={refreshing?styles.spin:''}/>{locale==='es'?'Actualizar rutas':'Refresh routes'}
-        </button>
+      </>:<section className={`${styles.emptyToday} ${drivingSession?styles.emptyTodayOnDuty:''}`} aria-live="polite">
+        <div className={styles.emptyGreeting}><span>{new Date().toLocaleDateString(locale==='es'?'es-US':locale==='fr'?'fr-FR':'en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()}</span><h1>{greeting}</h1><p><MapPin size={15}/>{branchName || (locale==='es'?'Tu sucursal':locale==='fr'?'Votre succursale':'Your branch')}</p></div>
+        <span className={styles.dutyPill}><i/>{drivingSession?(locale==='es'?'En jornada':locale==='fr'?'En service':'On duty'):(locale==='es'?'Fuera de jornada':locale==='fr'?'Hors service':'Off duty')}</span>
+        <img className={styles.emptyHeroArt} src="/driver-empty-route-hero.png" alt="" />
+        <h2>{locale==='es'?'Listo para tu próxima parada':locale==='fr'?'Prêt pour votre prochain arrêt':'Ready for your next stop'}</h2>
+        <p className={styles.emptyCopy}>{locale==='es'?'No hay rutas asignadas ahora. Las nuevas asignaciones aparecerán aquí.':locale==='fr'?'Aucun itinéraire assigné pour le moment. Les nouvelles affectations apparaîtront ici.':'No routes assigned right now. New assignments will appear here.'}</p>
+        <button type="button" className={styles.emptyRefresh} onClick={()=>void refreshToday()} disabled={refreshing}><RefreshCw size={16} className={refreshing?styles.spin:''}/>{locale==='es'?'Buscar actualizaciones':locale==='fr'?'Rechercher des mises à jour':'Check for updates'}</button>
+        <small className={styles.lastUpdated}>{locale==='es'?'Última actualización ahora':locale==='fr'?'Dernière mise à jour à l’instant':'Last updated just now'}</small>
+        <section className={styles.activityCard}><header><strong>{locale==='es'?'Actividad de hoy':locale==='fr'?'Activité du jour':'Today’s activity'}</strong><History size={18}/></header><div><span className={styles.activityDelivery}><b>{deliveries}</b><small>{locale==='es'?'Entregas':locale==='fr'?'Livraisons':'Deliveries'}</small></span><span className={styles.activityPickup}><b>{pickups}</b><small>{locale==='es'?'Recogidas':locale==='fr'?'Collectes':'Pickups'}</small></span><span className={styles.activityPending}><b>{pendingStops}</b><small>{locale==='es'?'Pendientes':locale==='fr'?'En attente':'Pending'}</small></span></div></section>
       </section>}
 
       {sheet==='info'&&route&&(

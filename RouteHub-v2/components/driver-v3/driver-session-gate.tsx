@@ -18,6 +18,13 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
     let cancelled = false
     let decided = false
     const client = getSupabase()
+    // A persisted Supabase session is available immediately on most warm and
+    // installed-PWA launches. Render the workspace without waiting for the
+    // auth event so the splash is not shown on every open.
+    void client.auth.getSession().then(({data}) => {
+      if (cancelled || decided) return
+      if (data.session) { decided = true; setReady(true) }
+    }).catch(() => {})
     // A bare getSession() call right on mount can race a cold PWA launch:
     // Supabase hasn't necessarily finished rehydrating the persisted session
     // from storage yet, so it can resolve with no session even though a

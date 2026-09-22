@@ -14,6 +14,7 @@ type DriverV3Data = {
   companyId: string
   companyPlan: string | null
   branchId: string | null
+  branchName: string
   drivingSession: DrivingSession | null
   liveFix: {lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null
   setLiveFix: (fix: {lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null) => void
@@ -46,6 +47,7 @@ function useDriverDataInternal(): DriverV3Data {
   const [companyId, setCompanyId] = useState('')
   const [companyPlan, setCompanyPlan] = useState<string | null>(null)
   const [branchId, setBranchId] = useState<string | null>(null)
+  const [branchName, setBranchName] = useState('')
   const [drivingSession, setDrivingSession] = useState<DrivingSession | null>(null)
   const [liveFix, setLiveFix] = useState<{lat: number; lng: number; accuracy?: number; heading?: number | null; at: string} | null>(null)
   const [loading, setLoading] = useState(true)
@@ -63,6 +65,10 @@ function useDriverDataInternal(): DriverV3Data {
       setDriverId(user.id)
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id ?? null)
+      if (membership.branch_id) {
+        void getSupabase().from('branches').select('name').eq('id', membership.branch_id).maybeSingle()
+          .then(({data}) => setBranchName(typeof data?.name === 'string' ? data.name : ''))
+      }
       // Plan access is read-only product configuration. Do not make a route
       // refresh fail if an older workspace policy has not exposed this field.
       void getSupabase().from('companies').select('plan').eq('id', membership.company_id).maybeSingle()
@@ -219,7 +225,7 @@ function useDriverDataInternal(): DriverV3Data {
     return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update) }
   }, [])
 
-  return {routes, driverId, companyId, companyPlan, branchId, drivingSession, liveFix, setLiveFix, loading, error, offline, refresh: () => load(), snapshot}
+  return {routes, driverId, companyId, companyPlan, branchId, branchName, drivingSession, liveFix, setLiveFix, loading, error, offline, refresh: () => load(), snapshot}
 }
 
 export function DriverV3Provider({children}: {children: ReactNode}) {
