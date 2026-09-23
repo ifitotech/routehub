@@ -277,7 +277,7 @@ export default function Routes() {
             already do, without leaving their normal dashboard. */}
         <TemporaryRouteAssignments/>
 
-        {message && <div className={message.includes('successfully') || message.includes('publicad') ? styles.successMessage : styles.message} role="status">{message}</div>}
+        {message && <div className={message.includes('successfully') || message.includes('publicad') ? styles.successMessage : styles.message} role="status" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:14}}><span>{message}</span>{!(message.includes('successfully') || message.includes('publicad')) && <button type="button" onClick={() => window.location.reload()} style={{flex:'none',padding:'7px 11px',border:'1px solid currentColor',borderRadius:999,background:'transparent',color:'inherit',font:'inherit',fontSize:12,fontWeight:800,cursor:'pointer'}}>{locale==='es'?'Reintentar':locale==='fr'?'Réessayer':'Retry'}</button>}</div>}
 
         {!loading && (scopedRoutes.issues?.length || 0) > 0 && (
           <Link href="/routes/issues" className={styles.attentionBanner} data-tone="alert">
