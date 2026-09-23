@@ -38,6 +38,7 @@
   opacity:1;
   transition:transform .22s ease,opacity .18s ease;
 }
+.navigationFullscreen{grid-template-rows:minmax(0,1fr)!important}
 .headerHidden{transform:translateY(calc(-100% - env(safe-area-inset-top)));opacity:0;pointer-events:none;transition:transform .22s ease,opacity .18s ease}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;font-size:20px;font-weight:800;text-decoration:none;letter-spacing:-.02em}
 .brand img{width:40px;height:40px;border-radius:12px;object-fit:cover}

@@ -74,12 +74,12 @@ export default function DriverV3Shell({
   }, [autoHideHeader])
 
   return (
-    <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''}`}>
+    <main data-driver-screen={active} className={`${styles.shell} ${active === 'today' ? styles.todaySurface : ''} ${hideHeader ? styles.navigationFullscreen : ''}`}>
       {/* Reserves exactly the pre-buffer header height in the grid, so the
           blur-guard overlay below doesn't shrink .content/.nav - only the
           header itself (positioned absolute, floating on top) grows past
           this into the content's own space. */}
-      <div aria-hidden="true" style={{height: 'calc(48px + env(safe-area-inset-top))'}} />
+      {!hideHeader && <div aria-hidden="true" style={{height: 'calc(48px + env(safe-area-inset-top))'}} />}
       <header
         style={{
           position: 'absolute',
