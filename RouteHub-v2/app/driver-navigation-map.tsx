@@ -169,10 +169,15 @@ export default function DriverNavigationMap({
   const [mapTheme,setMapTheme]=useState<'light'|'dark'>('dark')
 
   useEffect(()=>{
-    // The saved RouteHub preference is authoritative. Reading only
-    // `data-theme` let the navigation map briefly (and, on a restored PWA,
-    // permanently) fall back to light while the rest of Driver was dark.
-    const syncTheme=()=>setMapTheme(resolvedTheme(themePreference()))
+    // The rendered app theme is the source of truth for this portal. Driver
+    // navigation lives under document.body (outside the Driver root), so a
+    // stale localStorage preference here could otherwise make the map and
+    // its cards light while the visible app is dark. Fall back to storage
+    // only before the app has applied its theme to <html>.
+    const syncTheme=()=>{
+      const applied=document.documentElement.dataset.theme
+      setMapTheme(applied==='light'||applied==='dark'?applied:resolvedTheme(themePreference()))
+    }
     syncTheme()
     const observer=new MutationObserver(syncTheme)
     observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})
