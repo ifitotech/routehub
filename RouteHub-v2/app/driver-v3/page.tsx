@@ -689,7 +689,11 @@ export default function DriverV3Page() {
       </>:<section className={`${styles.emptyToday} ${drivingSession?styles.emptyTodayOnDuty:''}`} aria-live="polite">
         <div className={styles.emptyGreeting}><span>{new Date().toLocaleDateString(locale==='es'?'es-US':locale==='fr'?'fr-FR':'en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()}</span><h1>{greeting}</h1><p><MapPin size={15}/>{branchName || (locale==='es'?'Tu sucursal':locale==='fr'?'Votre succursale':'Your branch')}</p></div>
         <span className={styles.dutyPill}><i/>{drivingSession?(locale==='es'?'En jornada':locale==='fr'?'En service':'On duty'):(locale==='es'?'Fuera de jornada':locale==='fr'?'Hors service':'Off duty')}</span>
-        <img className={styles.emptyHeroArt} src="/driver-empty-route-hero.png" alt="" />
+        <div className={styles.emptyHeroAnimation} aria-hidden="true">
+          <img className={styles.emptyHeroArt} src="/driver-empty-route-hero.png" alt="" />
+          <span className={styles.emptyRouteGlow}/>
+          <span className={styles.emptyDestinationPulse}/>
+        </div>
         <h2>{locale==='es'?'Listo para tu próxima parada':locale==='fr'?'Prêt pour votre prochain arrêt':'Ready for your next stop'}</h2>
         <p className={styles.emptyCopy}>{locale==='es'?'No hay rutas asignadas ahora. Las nuevas asignaciones aparecerán aquí.':locale==='fr'?'Aucun itinéraire assigné pour le moment. Les nouvelles affectations apparaîtront ici.':'No routes assigned right now. New assignments will appear here.'}</p>
         <button type="button" className={styles.emptyRefresh} onClick={()=>void refreshToday()} disabled={refreshing}><RefreshCw size={16} className={refreshing?styles.spin:''}/>{locale==='es'?'Buscar actualizaciones':locale==='fr'?'Rechercher des mises à jour':'Check for updates'}</button>
