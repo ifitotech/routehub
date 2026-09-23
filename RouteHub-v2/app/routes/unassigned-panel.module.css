@@ -5,28 +5,10 @@
   width: 100%;
   padding: 16px;
   background: var(--rh-card, #fff);
-  border: 1.5px dashed transparent;
+  border: 1px solid var(--rh-border, #dde5ee);
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
   transition: border-color 120ms ease, background-color 120ms ease;
-}
-
-/* An assigned route dragged out of the board lands here to lose its driver,
-   which is the same outcome as its unassign button. */
-.panel[data-drop-active='true'] {
-  border-color: var(--rh-primary, #1660f0);
-  background: var(--rh-soft-blue, #eaf2ff);
-}
-
-.dropHint {
-  margin: 0;
-  padding: 10px;
-  border-radius: 10px;
-  background: var(--rh-primary, #1660f0);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
 }
 
 .header {
@@ -108,42 +90,9 @@
   word-break: break-word;
 }
 
-.item[data-draggable='true'] {
-  cursor: grab;
-}
-
-.item[data-draggable='true']:active {
-  cursor: grabbing;
-}
-
-.grip {
-  flex: none;
-  margin-top: 1px;
-  color:var(--rh-ink-soft);
-}
-
-.assignButton {
-  padding: 7px 10px;
-  border: 1.5px solid var(--rh-primary, #1660f0);
-  border-radius: 8px;
-  background: var(--rh-primary, #1660f0);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.assignButton:hover:not(:disabled) {
-  background:var(--rh-blue-700);
-}
-
-.assignButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .assignSelect {
+  width: 100%;
+  min-height: 38px;
   padding: 7px 10px;
   border: 1.5px solid var(--rh-border, #dde5ee);
   border-radius: 8px;
@@ -227,11 +176,6 @@
   box-shadow: 0 4px 16px rgba(2, 8, 20, 0.35);
 }
 
-:global(html[data-theme='dark']) .panel[data-drop-active='true'] {
-  border-color: #2493ff;
-  background: rgba(36, 147, 255, 0.12);
-}
-
 :global(html[data-theme='dark']) .headerIcon {
   background: rgba(147, 193, 255, 0.1);
 }
@@ -245,17 +189,6 @@
 :global(html[data-theme='dark']) .item {
   background: rgba(255, 255, 255, 0.045);
   border-color: rgba(147, 193, 255, 0.14);
-}
-
-:global(html[data-theme='dark']) .assignButton {
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  background: linear-gradient(135deg, #2493ff, #1677ff, #0a5fe8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 16px rgba(22, 119, 255, 0.22);
-}
-
-:global(html[data-theme='dark']) .assignButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2493ff, #1677ff, #0a5fe8);
-  filter: brightness(1.06);
 }
 
 :global(html[data-theme='dark']) .assignSelect {

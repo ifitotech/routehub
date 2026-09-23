@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, GripVertical, Truck} from 'lucide-react'
+import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Truck} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -9,9 +9,7 @@ type UnassignedPanelProps = {
   routes: RouteRecord[]
   drivers: Driver[]
   onAssign: (route: RouteRecord, driverId: string) => void
-  onDropRoute?: (routeId: string) => void
   busyRouteId?: string
-  managing?: boolean
   locale: string
   // Completed/issue routes have nothing left to do in the active board, so
   // they live here instead - out of the way of today's active work, but
@@ -23,8 +21,7 @@ type UnassignedPanelProps = {
   onViewDetails?: (routeId: string) => void
 }
 
-export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute, busyRouteId, managing, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
-  const [dropActive, setDropActive] = useState(false)
+export default function UnassignedPanel({routes, drivers, onAssign, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
   // Both start collapsed - an open list (especially Issues, which can run
   // long) crowded out Unassigned above it and made the panel feel heavy to
   // scan. The header (with its count) always shows on its own either way,
@@ -48,37 +45,13 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
     const {name} = driverDetails(driver, role)
     return name === role ? role : `${name} · ${role}`
   }
-  const assignLabel = locale === 'es' ? 'Asignar' : locale === 'fr' ? 'Attribuer' : 'Assign'
-  const pickLabel = locale === 'es' ? 'Asignar a...' : locale === 'fr' ? 'Attribuer à...' : 'Assign to...'
+  const pickLabel = locale === 'es' ? 'Mover a conductor…' : locale === 'fr' ? 'Déplacer vers…' : 'Move to driver…'
   const detailsLabel = locale === 'es' ? 'Ver detalles' : locale === 'fr' ? 'Voir les détails' : 'View details'
   const issuesLabel = locale === 'es' ? 'Incidencias' : locale === 'fr' ? 'Incidents' : 'Issues'
   const completedLabel = locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed'
 
-  const dropHint = locale === 'es'
-    ? 'Suelta aquí para quitar el conductor'
-    : locale === 'fr'
-      ? 'Déposez ici pour retirer le conducteur'
-      : 'Drop here to remove the driver'
-  const dragOutHint = locale === 'es'
-    ? 'Arrastra al tablero para asignar'
-    : locale === 'fr'
-      ? 'Glisser vers le tableau pour attribuer'
-      : 'Drag onto the board to assign'
-
   return (
-    <aside
-      className={styles.panel}
-      data-drop-active={dropActive ? 'true' : 'false'}
-      onDragOver={onDropRoute ? event => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; if (!dropActive) setDropActive(true) } : undefined}
-      onDragLeave={onDropRoute ? event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDropActive(false) } : undefined}
-      onDrop={onDropRoute ? event => {
-        event.preventDefault()
-        setDropActive(false)
-        const routeId = event.dataTransfer.getData('text/plain')
-        if (routeId) onDropRoute(routeId)
-      } : undefined}
-    >
-      {dropActive && <p className={styles.dropHint}>{dropHint}</p>}
+    <aside className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.headerIcon}><Truck size={18} /></div>
         <div className={styles.headerLabel}>
@@ -95,45 +68,25 @@ export default function UnassignedPanel({routes, drivers, onAssign, onDropRoute,
         <div className={styles.list}>
           {routes.map(route => {
             const busy = busyRouteId === route.id
-            const canDrag = Boolean(managing) && !busy
             return (
-              <div
-                key={route.id}
-                className={styles.item}
-                data-draggable={canDrag ? 'true' : 'false'}
-                draggable={canDrag}
-                title={canDrag ? dragOutHint : undefined}
-                onDragStart={canDrag ? event => {
-                  event.dataTransfer.setData('text/plain', route.id)
-                  event.dataTransfer.effectAllowed = 'move'
-                } : undefined}
-              >
+              <div key={route.id} className={styles.item}>
                 <div className={styles.destination}>
-                  {canDrag ? <GripVertical size={13} className={styles.grip} aria-hidden /> : null}
                   {route.destination_name || route.destination_address}
                 </div>
-                {drivers.length === 1 ? (
-                  <button
-                    type="button"
-                    className={styles.assignButton}
-                    disabled={busy}
-                    onClick={() => onAssign(route, drivers[0].user_id)}
-                  >
-                    {busy ? '…' : assignLabel}
-                  </button>
-                ) : (
+                {drivers.length > 0 ? (
                   <select
                     className={styles.assignSelect}
                     disabled={busy}
                     value=""
                     onChange={e => { if (e.target.value) onAssign(route, e.target.value) }}
+                    aria-label={`${pickLabel} ${route.destination_name || route.destination_address || ''}`}
                   >
                     <option value="" disabled>{busy ? '…' : pickLabel}</option>
                     {drivers.map(driver => (
                       <option key={driver.user_id} value={driver.user_id}>{nameFor(driver)}</option>
                     ))}
                   </select>
-                )}
+                ) : <p className={styles.empty}>{locale === 'es' ? 'Agrega un miembro disponible para mover esta ruta.' : locale === 'fr' ? 'Ajoutez un membre disponible pour déplacer cet itinéraire.' : 'Add an available team member to move this route.'}</p>}
               </div>
             )
           })}

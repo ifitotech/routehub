@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {useRef, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 import {geocodeAddress} from '../../lib/maps/geocoding'
@@ -11,6 +11,7 @@ import {initialForm, routeStatuses, savedCoordinate} from './routes-model'
 
 export function useRoutesSave(w: any) {
   const [busyRouteId, setBusyRouteId] = useState('')
+  const routeMoveLocks = useRef(new Set<string>())
   const {
     saving, form, contacts, companyId, c, setMessage, setSaving, originMode,
     originBranchCoordinate, previousDestinationCoordinate, originContactCoordinate,
@@ -205,9 +206,10 @@ export function useRoutesSave(w: any) {
   // also push a notification explicitly naming that driver (captured before
   // the update, since after it the route has no driver to look up).
   const unassignRoute = async (route: RouteRecord) => {
-    if (!route.driver_id || busyRouteId) return
+    if (!route.driver_id || busyRouteId || routeMoveLocks.current.has(route.id)) return
     if (['active', 'completed', 'cancelled'].includes(route.status || '')) return
     const previousDriverId = route.driver_id
+    routeMoveLocks.current.add(route.id)
     setBusyRouteId(route.id)
     try {
       const client = getSupabase()
@@ -215,7 +217,7 @@ export function useRoutesSave(w: any) {
       // update returns success with zero rows, so without this the manager
       // would get a "moved to unassigned" confirmation for a route that never
       // actually moved. toggleRoutePause guards the same way.
-      const {data: updated, error} = await client.from('routes').update({driver_id: null, position: null, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).select('id').maybeSingle()
+      const {data: updated, error} = await client.from('routes').update({driver_id: null, position: null, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).select('id').maybeSingle()
       if (error) throw error
       if (!updated) throw new Error(locale === 'es' ? 'No se pudo mover la ruta. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'Impossible de déplacer l’itinéraire. Actualisez la liste et réessayez.' : 'The route could not be moved. Refresh the list and try again.')
       let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
@@ -234,6 +236,7 @@ export function useRoutesSave(w: any) {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : c.saveError)
     } finally {
+      routeMoveLocks.current.delete(route.id)
       setBusyRouteId('')
     }
   }
@@ -293,27 +296,26 @@ export function useRoutesSave(w: any) {
   }
 
   const assignRouteToDriver = async (route: RouteRecord, driverId: string) => {
-    if (!driverId || busyRouteId) return
+    if (!driverId || busyRouteId || route.driver_id === driverId || routeMoveLocks.current.has(route.id)) return
+    if (!['draft', 'pending', 'published', 'paused'].includes(route.status || '')) return
+    routeMoveLocks.current.add(route.id)
     setBusyRouteId(route.id)
     try {
       const client = getSupabase()
-      let positionQuery = client.from('routes').select('position').eq('company_id', route.company_id).eq('driver_id', driverId).eq('route_date', route.route_date || '').in('status', routeStatuses).order('position', {ascending: false}).limit(1)
-      positionQuery = route.branch_id == null ? positionQuery.is('branch_id', null) : positionQuery.eq('branch_id', route.branch_id)
-      const {data: lastRoute, error: positionError} = await positionQuery.maybeSingle()
-      if (positionError) throw positionError
-      const nextPosition = Number(lastRoute?.position || 0) + 1
-      // Same reason as unassignRoute: an RLS-refused update succeeds with zero
-      // rows, which would otherwise report an assignment that never happened.
-      const {data: updated, error} = await client.from('routes').update({driver_id: driverId, position: nextPosition, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).select('id').maybeSingle()
+      // Reassign this existing row atomically. This keeps the same route ID and
+      // lets the database normalize both queues in one operation, so retries
+      // cannot create a second copy or leave duplicate positions behind.
+      const {data, error} = await client.rpc('reassign_upcoming_route', {p_route_id: route.id, p_driver_id: driverId})
       if (error) throw error
-      if (!updated) throw new Error(locale === 'es' ? 'No se pudo asignar la ruta. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'Impossible d’attribuer l’itinéraire. Actualisez la liste et réessayez.' : 'The route could not be assigned. Refresh the list and try again.')
-      if (currentUserId && companyId) await recordActivity({companyId, userId: currentUserId, action: 'route_assigned_by_manager', recordId: route.id, after: {driver_id: driverId}}).catch(() => undefined)
+      if (!Array.isArray(data) || data.length !== 1 || data[0]?.id !== route.id) throw new Error(locale === 'es' ? 'La ruta cambió antes de moverla. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'L’itinéraire a changé avant son déplacement. Actualisez et réessayez.' : 'The route changed before it could be moved. Refresh the list and try again.')
+      if (route.driver_id) void sendRoutePush(route.id, 'unassigned', route.driver_id)
       void sendRoutePush(route.id, 'assigned')
       await loadWorkspace()
-      setMessage(locale === 'es' ? 'Ruta asignada.' : locale === 'fr' ? 'Itinéraire attribué.' : 'Route assigned.')
+      setMessage(locale === 'es' ? 'Ruta movida.' : locale === 'fr' ? 'Itinéraire déplacé.' : 'Route moved.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : c.saveError)
     } finally {
+      routeMoveLocks.current.delete(route.id)
       setBusyRouteId('')
     }
   }

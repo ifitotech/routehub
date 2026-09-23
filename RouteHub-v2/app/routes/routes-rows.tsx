@@ -1,11 +1,11 @@
 'use client'
 
-import {ChevronDown, ChevronRight, ChevronUp, CornerUpLeft, GripVertical, Pause, Play, X} from 'lucide-react'
+import {ChevronDown, ChevronRight, ChevronUp, Pause, Play, X} from 'lucide-react'
 import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './routes-model'
-import type {RouteRecord} from './routes-model'
+import type {Driver, RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
 
-export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, onViewDetails, onEdit, busyRouteId, managing}: {
+export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, onAssign, drivers = [], onViewDetails, onEdit, busyRouteId, managing}: {
   items: RouteRecord[]
   locale: string
   c: any
@@ -14,16 +14,18 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   onMove?: (route: RouteRecord, direction: 'up' | 'down') => void
   onTogglePause?: (route: RouteRecord) => void
   onUnassign?: (route: RouteRecord) => void
+  onAssign?: (route: RouteRecord, driverId: string) => void
+  drivers?: Driver[]
   onViewDetails?: (routeId: string) => void
   onEdit?: (route: RouteRecord) => void
   busyRouteId?: string
   managing?: boolean
 }) {
   const label = locale === 'es'
-    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', unassign: 'Mover a sin asignar', drag: 'Arrastra a Sin asignar', details: 'Ver detalles'}
+    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', moveTo: 'Mover a…', unassigned: 'Sin asignar', details: 'Ver detalles'}
     : locale === 'fr'
-      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', unassign: 'Déplacer vers non attribué', drag: 'Glisser vers Non attribuées', details: 'Voir les détails'}
-      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', unassign: 'Move to unassigned', drag: 'Drag to Unassigned', details: 'View details'}
+      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', moveTo: 'Déplacer vers…', unassigned: 'Non attribué', details: 'Voir les détails'}
+      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', moveTo: 'Move to…', unassigned: 'Unassigned', details: 'View details'}
 
   return (
     <div className={styles.list}>
@@ -39,7 +41,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         // click and silently do nothing. Only show it where it can actually work.
         const canMove = canManage && status !== 'active' && status !== 'issue' && Boolean(onMove)
         const canTogglePause = canManage && ['active', 'paused'].includes(status) && Boolean(onTogglePause)
-        const canUnassign = canManage && status !== 'active' && Boolean(route.driver_id) && Boolean(onUnassign)
+        const canMoveAssignee = ['draft', 'pending', 'published', 'paused'].includes(status) && Boolean(onAssign && onUnassign && drivers.length)
         const busy = busyRouteId === route.id
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
         return (
@@ -48,18 +50,10 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
             className={styles.row}
             data-status={status}
             data-managing={managing ? 'true' : 'false'}
-            data-draggable={canUnassign ? 'true' : 'false'}
-            draggable={canUnassign && !busy}
-            title={canUnassign ? label.drag : undefined}
             style={managing && onEdit ? {cursor: 'pointer'} : undefined}
             onClick={managing && onEdit && !busy ? () => onEdit(route) : undefined}
-            onDragStart={canUnassign ? event => {
-              event.dataTransfer.setData('text/plain', route.id)
-              event.dataTransfer.effectAllowed = 'move'
-            } : undefined}
           >
             <span className={styles.num}>
-              {canUnassign ? <GripVertical size={14} className={styles.grip} aria-hidden /> : null}
               {String(route.position || index + 1).padStart(2, '0')}
             </span>
             <div className={styles.body}>
@@ -81,12 +75,40 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                   center column instead of navigating to History, so the
                   calendar day being viewed never gets lost. */}
               {(status === 'completed' || status === 'issue') && onViewDetails && (
-                <button type="button" className={styles.detailsLink} onClick={() => onViewDetails(route.id)}>
+                <button type="button" className={styles.detailsLink} onClick={event => { event.stopPropagation(); onViewDetails(route.id) }}>
                   {label.details}<ChevronRight size={14} />
                 </button>
               )}
-              {canManage ? (
-                <div className={styles.actions}>
+              {canManage || canMoveAssignee ? (
+                <div className={styles.actions} onClick={event => event.stopPropagation()}>
+                  {canMoveAssignee ? (
+                    <select
+                      className={styles.moveSelect}
+                      defaultValue=""
+                      disabled={busy}
+                      aria-label={`${label.moveTo} ${destination}`}
+                      onClick={event => event.stopPropagation()}
+                      onChange={event => {
+                        event.stopPropagation()
+                        const value = event.currentTarget.value
+                        event.currentTarget.value = ''
+                        if (value === '__unassigned__') onUnassign?.(route)
+                        else if (value) onAssign?.(route, value)
+                      }}
+                    >
+                      <option value="" disabled>{busy ? '…' : label.moveTo}</option>
+                      <option value="__unassigned__">{label.unassigned}</option>
+                      {drivers.filter(person => person.user_id !== route.driver_id).map(person => {
+                        const roleLabel = locale === 'es'
+                          ? ({driver: 'Conductor', branch_manager: 'Gerente', operations_manager: 'Operaciones', sales_representative: 'Ventas', counter_sales: 'Mostrador'} as Record<string, string>)[person.role || ''] || 'Conductor'
+                          : locale === 'fr'
+                            ? ({driver: 'Conducteur', branch_manager: 'Responsable', operations_manager: 'Opérations', sales_representative: 'Ventes', counter_sales: 'Comptoir'} as Record<string, string>)[person.role || ''] || 'Conducteur'
+                            : ({driver: 'Driver', branch_manager: 'Manager', operations_manager: 'Operations', sales_representative: 'Sales', counter_sales: 'Counter'} as Record<string, string>)[person.role || ''] || 'Driver'
+                        const personName = driverDetails(person, roleLabel).name
+                        return <option key={person.user_id} value={person.user_id}>{personName === roleLabel ? roleLabel : `${personName} · ${roleLabel}`}</option>
+                      })}
+                    </select>
+                  ) : null}
                   {canMove ? (
                     <>
                       <button type="button" className={styles.iconButton} disabled={busy} onClick={() => onMove?.(route, 'up')} title={label.up} aria-label={label.up}>
@@ -108,11 +130,6 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                       aria-label={status === 'paused' ? label.resume : label.pause}
                     >
                       {status === 'paused' ? <Play size={15} /> : <Pause size={15} />}
-                    </button>
-                  ) : null}
-                  {canUnassign ? (
-                    <button type="button" className={styles.iconButton} data-tone="unassign" disabled={busy} onClick={() => onUnassign?.(route)} title={label.unassign} aria-label={label.unassign}>
-                      <CornerUpLeft size={15} />
                     </button>
                   ) : null}
                   {canCancel ? (

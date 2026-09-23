@@ -38,7 +38,9 @@
 .status[data-status='cancelled']{background:var(--rh-surface-2);color:var(--rh-ink-soft)}
 .detailsLink{display:inline-flex;align-items:center;gap:2px;margin-top:6px;padding:0;border:0;background:transparent;color:var(--rh-blue);font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
 .detailsLink:hover{text-decoration:underline}
-.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.moveSelect{min-width:132px;max-width:100%;min-height:34px;padding:6px 28px 6px 10px;border:1px solid var(--rh-line);border-radius:10px;background:var(--rh-card);color:var(--rh-ink);font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.moveSelect:focus-visible{outline:2px solid var(--rh-blue);outline-offset:2px}
 .iconButton{
   display:grid;place-items:center;
   width:34px;height:34px;
@@ -56,8 +58,4 @@
 .iconButton[data-tone='cancel']:hover{border-color:#f87171;background:var(--rh-danger-soft);color:var(--rh-danger)}
 .iconButton:disabled{cursor:wait;opacity:.58}
 
-/* Dragging a row onto the Unassigned panel is the same action as its
-   unassign button, so the grip only shows when that action is available. */
-.row[data-draggable='true']{cursor:grab}
-.row[data-draggable='true']:active{cursor:grabbing}
-.grip{color:var(--rh-ink-soft)}
+:global(html[data-theme='dark']) .moveSelect{border-color:rgba(147,193,255,.22);background:#102747;color:#e6efff}
