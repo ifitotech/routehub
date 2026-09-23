@@ -4,8 +4,7 @@
    Specificity keeps compact-screen rules from restoring absolute offsets. */
 .navigation .guidance{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));inset-block-end:auto;margin:0;grid-template-columns:38px minmax(0,1fr) 40px;padding:10px 12px;gap:9px}
 .navigation .guidance button{width:38px;height:38px;flex:none}
-.navigation .bottom{position:absolute;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:max(10px,env(safe-area-inset-bottom,0px));gap:0;padding-top:6px;max-height:46%;max-height:46dvh;overflow-y:auto;min-height:0}
-.navigation .bottom{bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.navigation .bottom{position:absolute;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,calc(env(safe-area-inset-bottom,0px) + 8px));gap:0;padding-top:6px;padding-bottom:10px;max-height:46%;max-height:46dvh;overflow-y:auto;min-height:0}
 .navigation .bottom[data-expanded='true']{max-height:72%;max-height:72dvh}
 .navigation .controls{bottom:16px}
 .navigation .notice{top:8px}
@@ -45,7 +44,7 @@
 .notice{position:absolute;z-index:3;top:112px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:7px;max-width:calc(100% - 28px);min-height:38px;padding:7px 12px;border:1px solid #e9c571;border-radius:12px;background:#fff8e7;color:#744a08;font-size:12px;text-align:center;box-shadow:0 2px 8px #071b421a}
 
 /* --- Bottom sheet: same glass card language as the guidance card above --- */
-.bottom{position:absolute;z-index:4;right:0;bottom:0;left:0;display:flex;flex-direction:column;padding:0 16px 10px;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:28px;background:rgba(7,27,56,.95);color:var(--rh-text,#f7faff);box-shadow:0 14px 34px rgba(15,29,53,.2);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%)}
+.bottom{position:absolute;z-index:4;right:0;bottom:0;left:0;display:flex;flex-direction:column;padding:0 16px 10px;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:26px;background:rgba(7,27,56,.84);color:var(--rh-text,#f7faff);box-shadow:0 18px 44px rgba(3,12,28,.34),0 4px 12px rgba(3,12,28,.18),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(24px) saturate(165%);-webkit-backdrop-filter:blur(24px) saturate(165%)}
 .sheetHandleButton{display:flex;justify-content:center;padding:7px 0 4px;border:0;background:transparent}
 .sheetHandle{width:34px;height:4px;border-radius:99px;background:linear-gradient(90deg,var(--rh-primary,#1677ff),var(--rh-cyan,#17d9d2))}
 .stopSummary{display:flex;align-items:center;gap:7px;min-width:0;padding-bottom:6px;color:var(--rh-text-muted,#9fb2d0);font-size:11.5px;font-weight:750}
@@ -102,7 +101,7 @@
 .navigation[data-map-theme='light']::before{background:#f5f9ff}
 .navigation[data-map-theme='light'] .mapArea{background:#f5f9ff}
 .navigation[data-map-theme='light']{--rh-ink:#f5f9ff;--rh-navy:#fff;--rh-primary:#075fd8;--rh-primary-bright:#075fd8;--rh-cyan:#087f91;--rh-text:#10233d;--rh-text-muted:#334b68;--rh-text-subtle:#526985;--rh-border-strong:rgba(31,96,170,.32);--rh-divider:rgba(11,31,58,.16);--rh-surface-soft:rgba(15,62,120,.07);--rh-success:#087f52;--rh-pickup-bg:rgba(22,119,255,.1);--rh-pickup-border:rgba(22,119,255,.28);--rh-pickup-fg:#064db1;--rh-delivery-bg:rgba(139,92,246,.11);--rh-delivery-border:rgba(109,40,217,.28);--rh-delivery-fg:#5422a6;--rh-return-bg:rgba(88,112,143,.1);--rh-return-border:rgba(88,112,143,.25);--rh-return-fg:#344c68}
-.navigation[data-map-theme='light'] .guidance,.navigation[data-map-theme='light'] .bottom{background:rgba(248,251,255,.95);color:#10233d;border-color:rgba(31,96,170,.3);box-shadow:0 12px 30px rgba(15,35,60,.18)}
+.navigation[data-map-theme='light'] .guidance,.navigation[data-map-theme='light'] .bottom{background:rgba(248,251,255,.84);color:#10233d;border-color:rgba(31,96,170,.28);box-shadow:0 18px 42px rgba(15,35,60,.18),0 4px 12px rgba(15,35,60,.08),inset 0 1px 0 rgba(255,255,255,.82)}
 .navigation[data-map-theme='light'] .bigLine,.navigation[data-map-theme='light'] .shortAddress,.navigation[data-map-theme='light'] .timeCopy strong,.navigation[data-map-theme='light'] .expandedRow,.navigation[data-map-theme='light'] .upcomingBlock li{color:#10233d}
 .navigation[data-map-theme='light'] .streetLine,.navigation[data-map-theme='light'] .stopSummary,.navigation[data-map-theme='light'] .activeDot{color:#334b68}
 .navigation[data-map-theme='light'] .actionLine,.navigation[data-map-theme='light'] .timeCopy span,.navigation[data-map-theme='light'] .expandedLabel,.navigation[data-map-theme='light'] .upcomingBlock li svg{color:#526985}
@@ -111,6 +110,12 @@
 .navigation[data-map-theme='dark']{background:#06152c}
 .navigation[data-map-theme='dark']::before{background:#0f1d35}
 .navigation[data-map-theme='dark'] .mapArea{background:#06152c}
+
+/* A distinct lift from the map (not a full-bleed footer). Keep the native
+   home-indicator/gesture area clear while retaining floating geometry on
+   devices without safe-area insets. */
+.navigation .bottom{border-radius:26px;border-color:rgba(126,181,255,.34)}
+.navigation[data-map-theme='light'] .bottom{border-color:rgba(31,96,170,.24)}
 
 @media(max-width:370px){
   .guidance{grid-template-columns:38px minmax(0,1fr) 36px;gap:8px;padding:10px}
@@ -124,7 +129,7 @@
 }
 @media(max-height:650px){
   .guidance{top:8px;padding:9px 10px}
-  .bottom{padding-top:4px;border-radius:18px 18px 0 0}
+  .bottom{padding-top:4px}
   .timeCopy strong{font-size:22px}
   .exitButton,.arrived{height:42px}
   .controls{bottom:196px}
