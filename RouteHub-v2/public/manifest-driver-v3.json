@@ -3,7 +3,7 @@
   "name": "RouteHub Driver",
   "short_name": "RouteHub Driver",
   "description": "Driver routes, proof of delivery and truck tools.",
-  "start_url": "/driver?source=pwa",
+  "start_url": "/login?source=pwa&app=driver",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone"],
@@ -18,9 +18,15 @@
   ],
   "icons": [
     {
-      "src": "/routehub-driver-new.jpg?v=21",
-      "sizes": "1254x1254",
-      "type": "image/jpeg",
+      "src": "/routehub-driver-pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/routehub-driver-pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ],

@@ -1,7 +1,7 @@
 'use client'
 
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import {ArrowUp,Box,Clock,CornerUpLeft,CornerUpRight,Flag,LocateFixed,MapPin,Navigation,PackageCheck,RotateCcw,Volume2,VolumeX} from 'lucide-react'
+import {ArrowUp,Box,Clock,CornerUpLeft,CornerUpRight,Flag,LocateFixed,LogOut,MapPin,Navigation,PackageCheck,RotateCcw,Volume2,VolumeX} from 'lucide-react'
 import GoogleRouteCanvas from '../components/google-route-canvas'
 import {geocodeAddress} from '../lib/maps/geocoding'
 import {calculateRoute,distanceMeters} from '../lib/maps/routing'
@@ -388,7 +388,10 @@ export default function DriverNavigationMap({
     :locale==='fr'
       ?{loading:'Préparation du trajet…',unavailable:'Nous ne pouvons pas encore localiser les arrêts.',exit:'Quitter',arrived:'Arrivé',recenter:'Recentrer',eta:'Arrivée estimée',traffic:'Trafic sur l’itinéraire',voiceOn:'Voix active',voiceOff:'Activer la voix',routeActive:'Itinéraire actif',after:'Ensuite',openMaps:'Ouvrir Plans',po:'PO',notes:'Notes',upcoming:'Arrêts suivants',expand:'Plus de détails',collapse:'Moins de détails'}
       :{loading:'Preparing route…',unavailable:'We could not locate these stops yet.',exit:'Exit',arrived:'Arrived',recenter:'Re-center',eta:'Estimated arrival',traffic:'Traffic on route',voiceOn:'Voice on',voiceOff:'Turn on voice',routeActive:'Route active',after:'Then',openMaps:'Open Maps',po:'PO',notes:'Notes',upcoming:'Upcoming stops',expand:'More details',collapse:'Fewer details'}
-  const displayLocation=matched&&currentProgress?currentProgress.coordinate:deviceLocation
+  // Never keep drawing/following a stale fix after GPS expires. The last
+  // coordinate may still be useful as a route origin, but presenting it as
+  // the driver's live position is misleading while guidance is paused.
+  const displayLocation=gpsReady?(matched&&currentProgress?currentProgress.coordinate:deviceLocation):null
   const heading=matched&&currentProgress?currentProgress.heading:deviceLocation?.heading??null
   const markers=useMemo(()=>[
     ...destinations.map((point,index)=>({
@@ -490,7 +493,6 @@ export default function DriverNavigationMap({
   const shortAddress=(destinationAddress||destinationLabel).split(',')[0]?.trim()||destinationLabel
   const stopKind=validStops[0]?.kind||'delivery'
   const typeLabel=stopKind==='pickup'?'PICKUP':stopKind==='branch'?'RETURN':'DELIVERY'
-  const backLabel=locale==='es'?'Volver a Today':locale==='fr'?'Retour à Today':'Back to Today'
   const upcomingStops=validStops.slice(1,4)
   // No contact-name field reaches this component (PlannedStop only carries
   // address/label/kind/orderNumber/notes) - the expanded panel shows the PO
@@ -591,10 +593,12 @@ export default function DriverNavigationMap({
               <span>{[remainingDistance,arrivalTime].filter(Boolean).join(' · ')||'—'}</span>
             </div>
           </div>
-          <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={16}/>{copy.arrived}</button>
+          <div className={styles.navigationActions}>
+            <button type="button" className={styles.exitButton} onClick={()=>{(onExitNavigation||onReturnToday)?.()}}><LogOut size={15}/>{copy.exit}</button>
+            <button type="button" className={styles.arrived} disabled={arriving||arrivalDisabled} onClick={()=>void confirmArrival()}><Flag size={16}/>{copy.arrived}</button>
+          </div>
         </div>
         <div className={styles.footerRow}>
-          <button type="button" className={styles.backLink} onClick={()=>{(onExitNavigation||onReturnToday)?.()}}><ArrowUp size={15}/>{backLabel}</button>
           <span className={styles.activeDot}><i/>{copy.routeActive}</span>
         </div>
         {sheetExpanded&&(

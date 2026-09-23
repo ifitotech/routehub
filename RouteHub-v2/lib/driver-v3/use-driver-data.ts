@@ -29,12 +29,23 @@ const DriverV3Context = createContext<DriverV3Data | null>(null)
 
 const DRIVER_ROUTE_CACHE_TTL = 24 * 60 * 60 * 1000
 function routeCacheKey(driverId: string, companyId: string) { return `routehub:driver-routes:v1:${companyId}:${driverId}` }
+function membershipCacheKey(driverId: string) { return `routehub:driver-membership:v1:${driverId}` }
 function readCachedRoutes(driverId: string, companyId: string): DriverV3Route[] {
   try {
     const raw = JSON.parse(localStorage.getItem(routeCacheKey(driverId, companyId)) || 'null')
     if (!raw || Date.now() - Number(raw.savedAt) > DRIVER_ROUTE_CACHE_TTL || !Array.isArray(raw.routes)) return []
     return raw.routes as DriverV3Route[]
   } catch { return [] }
+}
+function readCachedMembership(driverId: string): {companyId:string;branchId:string|null}|null {
+  try {
+    const raw = JSON.parse(localStorage.getItem(membershipCacheKey(driverId)) || 'null')
+    if (!raw || Date.now() - Number(raw.savedAt) > DRIVER_ROUTE_CACHE_TTL || typeof raw.companyId !== 'string') return null
+    return {companyId:raw.companyId,branchId:typeof raw.branchId==='string'?raw.branchId:null}
+  } catch { return null }
+}
+function writeCachedMembership(driverId:string,companyId:string,branchId:string|null) {
+  try { localStorage.setItem(membershipCacheKey(driverId),JSON.stringify({savedAt:Date.now(),companyId,branchId})) } catch { /* storage is optional */ }
 }
 function writeCachedRoutes(driverId: string, companyId: string, rows: DriverV3Route[]) {
   try { localStorage.setItem(routeCacheKey(driverId, companyId), JSON.stringify({savedAt: Date.now(), routes: rows})) } catch { /* storage is optional */ }
@@ -65,6 +76,7 @@ function useDriverDataInternal(): DriverV3Data {
       setDriverId(user.id)
       setCompanyId(membership.company_id)
       setBranchId(membership.branch_id ?? null)
+      writeCachedMembership(user.id,membership.company_id,membership.branch_id??null)
       if (membership.branch_id) {
         void getSupabase().from('branches').select('name').eq('id', membership.branch_id).maybeSingle()
           .then(({data}) => setBranchName(typeof data?.name === 'string' ? data.name : ''))
@@ -128,6 +140,22 @@ function useDriverDataInternal(): DriverV3Data {
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to load Driver workspace.'
+      if (!identity) {
+        // Auth.getSession reads Supabase's persisted local session without a
+        // network request. Use it only to find this device's scoped snapshot;
+        // all mutations and role checks still require server verification.
+        try {
+          const {data:{session}} = await getSupabase().auth.getSession()
+          const persistedUserId = session?.user?.id
+          const cachedMembership = persistedUserId ? readCachedMembership(persistedUserId) : null
+          if (persistedUserId && cachedMembership) {
+            identity={driverId:persistedUserId,companyId:cachedMembership.companyId}
+            setDriverId(persistedUserId)
+            setCompanyId(cachedMembership.companyId)
+            setBranchId(cachedMembership.branchId)
+          }
+        } catch { /* offline mode has no authenticated snapshot to show */ }
+      }
       const cached = routesRef.current.length ? routesRef.current : identity ? readCachedRoutes(identity.driverId, identity.companyId) : []
       if (cached.length) {
         // A wide workspace refresh may fail because of an optional field or a

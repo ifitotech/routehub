@@ -3,7 +3,7 @@
   "name": "RouteHub Driver",
   "short_name": "RouteHub Driver",
   "description": "Driver routes, navigation and proof of delivery.",
-  "start_url": "/login?source=pwa",
+  "start_url": "/login?source=pwa&app=driver",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -13,10 +13,11 @@
   "lang": "en",
   "categories": ["business", "productivity", "navigation"],
   "icons": [
-    {"src": "/routehub-driver-new.jpg?v=21", "sizes": "1254x1254", "type": "image/jpeg", "purpose": "any"}
+    {"src": "/routehub-driver-pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/routehub-driver-pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
   ],
   "shortcuts": [
-    {"name": "Today", "short_name": "Today", "url": "/driver", "icons": [{"src": "/routehub-driver-new.jpg?v=21", "sizes": "1254x1254", "type": "image/jpeg"}]},
-    {"name": "Routes", "short_name": "Routes", "url": "/driver/route", "icons": [{"src": "/routehub-driver-new.jpg?v=21", "sizes": "1254x1254", "type": "image/jpeg"}]}
+    {"name": "Today", "short_name": "Today", "url": "/driver", "icons": [{"src": "/routehub-driver-pwa-192.png", "sizes": "192x192", "type": "image/png"}]},
+    {"name": "Routes", "short_name": "Routes", "url": "/driver/route", "icons": [{"src": "/routehub-driver-pwa-192.png", "sizes": "192x192", "type": "image/png"}]}
   ]
 }

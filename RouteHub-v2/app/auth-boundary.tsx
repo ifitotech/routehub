@@ -2,6 +2,7 @@
 
 import {useEffect, useRef, useState} from 'react'
 import {usePathname, useRouter} from 'next/navigation'
+import {Truck} from 'lucide-react'
 import {getSupabase} from '../lib/supabase'
 import {canOpenPath, resolveAccess, workspaceForStrictRole} from './auth-access'
 
@@ -20,11 +21,20 @@ function sameWorkspace(a: string | null, b: string) {
   return root(a) === root(b)
 }
 
+function loginTarget(path: string) {
+  const installed = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as Navigator & {standalone?: boolean}).standalone))
+  if (!installed) return '/login'
+  if (isDriverWorkspace(path)) return '/login?source=pwa&app=driver'
+  if (path === '/manager' || path.startsWith('/manager/')) return '/login?source=pwa&app=manager'
+  return '/login?source=pwa'
+}
+
 export default function AuthBoundary({children}: {children: React.ReactNode}) {
   const pathname = usePathname()
   const router = useRouter()
   const [verifiedPath, setVerifiedPath] = useState<string | null>(null)
   const [verifiedRoleOk, setVerifiedRoleOk] = useState(false)
+  const verifiedPathRef = useRef<string | null>(null)
   // Tracks whether Supabase has resolved its initial auth state at least
   // once in this app session (see the comment below) - a ref, not state,
   // since it must survive across pathname changes without itself
@@ -45,6 +55,7 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
           return
         }
         if (active) {
+          verifiedPathRef.current = pathname
           setVerifiedPath(pathname)
           setVerifiedRoleOk(true)
         }
@@ -52,7 +63,7 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
         if (error instanceof Error && error.message !== 'AUTH_REQUIRED') {
           sessionStorage.setItem('routehub_auth_error', error.message)
         }
-        if (active) router.replace('/login')
+        if (active) router.replace(loginTarget(pathname))
       }
     }
     // Warm starts already have a persisted session. Let the current workspace
@@ -60,7 +71,8 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
     // expired sessions are still redirected by verify().
     if (!isPublic) {
       void client.auth.getSession().then(({data}) => {
-        if (active && data.session && verifiedPath === null) {
+        if (active && data.session && verifiedPathRef.current === null) {
+          verifiedPathRef.current = pathname
           setVerifiedPath(pathname)
           setVerifiedRoleOk(true)
         }
@@ -85,9 +97,10 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
         return
       }
       if (event === 'SIGNED_OUT') {
+        verifiedPathRef.current = null
         setVerifiedPath(null)
         setVerifiedRoleOk(false)
-        router.replace('/login')
+        router.replace(loginTarget(pathname))
       }
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') void verify()
     })
@@ -100,7 +113,7 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
       initTimeout = window.setTimeout(() => {
         if (!active || authInitialized.current) return
         authInitialized.current = true
-        router.replace('/login')
+        router.replace(loginTarget(pathname))
       }, 8000)
     }
     return () => {
@@ -119,7 +132,10 @@ export default function AuthBoundary({children}: {children: React.ReactNode}) {
     if (isDriverWorkspace(pathname)) {
       return (
         <div className="driver-v3-splash" role="status" aria-live="polite" aria-label="Loading RouteHub Driver">
-          <img className="driver-v3-splash-hero" src="/driver-empty-route-hero.png" alt="" />
+          <div className="driver-v3-splash-loader" aria-hidden="true">
+            <span className="driver-v3-splash-track" />
+            <span className="driver-v3-splash-truck"><Truck size={30} strokeWidth={2.2}/></span>
+          </div>
         </div>
       )
     }

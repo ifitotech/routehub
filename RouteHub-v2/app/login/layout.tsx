@@ -15,7 +15,10 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#ffffff',
+  themeColor: [
+    {media: '(prefers-color-scheme: light)', color: '#FFFFFF'},
+    {media: '(prefers-color-scheme: dark)', color: '#0F1D35'},
+  ],
 }
 
 export default function LoginLayout({children}: {children: React.ReactNode}) {

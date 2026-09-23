@@ -75,17 +75,10 @@ body[data-driver-app='v3'] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   animation: drv3-splash-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
-.driver-v3-splash .driver-v3-splash-hero {
-  width: min(86vw, 360px);
-  height: auto;
-  margin-bottom: -18px;
-  border-radius: 0;
-  object-fit: contain;
-  mix-blend-mode: screen;
-  opacity: .9;
-  filter: drop-shadow(0 16px 28px rgba(24,126,255,.28));
-  animation: drv3-splash-drive 2.8s ease-in-out infinite;
-}
+.driver-v3-splash-loader { position: relative; width: min(76vw, 250px); height: 56px; margin: 0 auto; }
+.driver-v3-splash-track { position: absolute; right: 3px; bottom: 9px; left: 3px; height: 4px; overflow: hidden; border-radius: 999px; background: rgba(136,179,235,.23); }
+.driver-v3-splash-track::after { position: absolute; inset: 0; background: repeating-linear-gradient(90deg,rgba(59,160,255,.95) 0 12px,transparent 12px 22px); content: ''; animation: drv3-splash-road 1s linear infinite; }
+.driver-v3-splash-truck { position: absolute; top: 8px; left: 4%; display: grid; width: 42px; height: 36px; place-items: center; border: 1px solid rgba(120,184,255,.42); border-radius: 12px; background: linear-gradient(145deg,#238bff,#0755c9); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.3),0 7px 20px rgba(0,91,211,.35); animation: drv3-splash-travel 1.9s ease-in-out infinite; will-change: transform; }
 .driver-v3-splash strong {
   font-size: 18px;
   font-weight: 800;
@@ -367,24 +360,17 @@ html[data-theme='dark'] .driver-v3-root .card {
   border-color: var(--rh-border);
   color: var(--rh-text);
 }
-@keyframes drv3-splash-drive {
-  0%,100% { opacity: .25; transform: translateX(-10px) scale(.96); }
-  18% { opacity: .9; }
-  50% { opacity: 1; transform: translateX(8px) scale(1); }
-  82% { opacity: .9; }
-}
 html[data-theme='light'] .driver-v3-splash {
   background: linear-gradient(180deg,#f8fbff 0%,#eaf2fc 100%);
   color: #0f1d35;
 }
-html[data-theme='light'] .driver-v3-splash .driver-v3-splash-hero {
-  mix-blend-mode: screen;
-  opacity: .58;
-  filter: saturate(1.15) contrast(1.05) drop-shadow(0 16px 28px rgba(24,126,255,.18));
-}
+html[data-theme='light'] .driver-v3-splash-track { background: #d4e0f0; }
+html[data-theme='light'] .driver-v3-splash-truck { border-color: rgba(7,95,216,.24); box-shadow: inset 0 1px 0 rgba(255,255,255,.45),0 7px 20px rgba(0,91,211,.2); }
 html[data-theme='light'] .driver-v3-splash p { color: #6b7f9d; }
+@keyframes drv3-splash-travel { 0%,100% { transform: translateX(0); } 46% { transform: translateX(calc(min(76vw,250px) - 58px)); } 50% { transform: translateX(calc(min(76vw,250px) - 58px)) scaleX(-1); } 96% { transform: scaleX(-1); } }
+@keyframes drv3-splash-road { to { transform: translateX(22px); } }
 @media (prefers-reduced-motion: reduce) {
-  .driver-v3-splash .driver-v3-splash-hero { animation: none; opacity: .9; }
+  .driver-v3-splash-truck,.driver-v3-splash-track::after { animation: none; }
 }
 html[data-theme='dark'] .driver-v3-root .eyebrow,
 html[data-theme='dark'] .driver-v3-root .muted {

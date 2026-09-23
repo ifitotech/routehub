@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect, useMemo} from 'react'
+import {useCallback, useEffect, useMemo} from 'react'
 import {sanitizeCoordinate} from '../../lib/maps/coordinates'
 import type {GeocodedLocation} from '../../lib/maps/types'
 import type {AddressSearchSuggestion, LocalAddressSuggestion} from '../google-address-input'
@@ -60,13 +60,13 @@ export function useRoutesDerived() {
   // return to the branch, so it should never inherit today's or any other
   // day's last destination. Only look up a previous route when planning
   // for today; every other date starts from the branch by default.
-  const findPreviousRoute = (driverId: string, date: string) => {
+  const findPreviousRoute = useCallback((driverId: string, date: string) => {
     if (date !== localSchedule().date) return undefined
     return routes
       .filter(route => route.driver_id === driverId && routeDateValue(route) === date && (!branchId || !route.branch_id || route.branch_id === branchId))
       .sort((a, b) => Number(b.position || 0) - Number(a.position || 0))[0]
-  }
-  const previousRoute = useMemo(() => findPreviousRoute(form.driver_id, form.date), [branchId, routes, form.driver_id, form.date])
+  }, [branchId, routes])
+  const previousRoute = useMemo(() => findPreviousRoute(form.driver_id, form.date), [findPreviousRoute, form.driver_id, form.date])
   useEffect(() => {
     if (!form.driver_id || (originMode !== 'branch' && originMode !== 'previous')) return
     const route = findPreviousRoute(form.driver_id, form.date)
@@ -74,7 +74,7 @@ export function useRoutesDerived() {
     const nextMode: OriginMode = route ? 'previous' : 'branch'
     setOriginMode(current => current === nextMode ? current : nextMode)
     setForm(current => current.origin === nextOrigin ? current : {...current, origin: nextOrigin})
-  }, [branchId, defaultBranch?.address, defaultBranch?.name, form.date, form.driver_id, originMode, routes])
+  }, [defaultBranch?.address, defaultBranch?.name, findPreviousRoute, form.date, form.driver_id, originMode, setForm, setOriginMode])
   const branchForValue = (value: string) => branches.find(branch => (branch.address || branch.name) === value) || null
   const originContact = originMode === 'contact' ? contacts.find(contact => contact.address === form.origin) || null : null
   const originBranch = originMode === 'branch' ? branchForValue(form.origin) || defaultBranch : null
@@ -86,21 +86,21 @@ export function useRoutesDerived() {
   const returnBranchCoordinate = savedCoordinate(returnBranch)
   const searchContext = defaultBranch?.address || ''
   const todayValue = localSchedule().date
-  const routeSort = (left: RouteRecord, right: RouteRecord) => Number(left.position || 0) - Number(right.position || 0) || String(left.scheduled_at || '').localeCompare(String(right.scheduled_at || '')) || left.id.localeCompare(right.id)
+  const routeSort = useCallback((left: RouteRecord, right: RouteRecord) => Number(left.position || 0) - Number(right.position || 0) || String(left.scheduled_at || '').localeCompare(String(right.scheduled_at || '')) || left.id.localeCompare(right.id), [])
   const todayRoutes = useMemo(() => routes
     .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && !['completed', 'issue', 'cancelled'].includes(route.status || ''))
-    .sort(routeSort), [routes, todayValue])
+    .sort(routeSort), [routeSort, routes, todayValue])
   const inProgressRoutes = useMemo(() => todayRoutes.filter(route => ['active', 'paused'].includes(route.status || '')), [todayRoutes])
   const scheduledTodayRoutes = useMemo(() => todayRoutes.filter(route => !['active', 'paused'].includes(route.status || '')), [todayRoutes])
   const issueTodayRoutes = useMemo(() => routes
     .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'issue')
-    .sort(routeSort), [routes, todayValue])
+    .sort(routeSort), [routeSort, routes, todayValue])
   const upcomingRoutes = useMemo(() => routes
     .filter(route => routeDateValue(route) > todayValue && !['completed', 'issue', 'cancelled'].includes(route.status || ''))
-    .sort((left, right) => routeDateValue(left).localeCompare(routeDateValue(right)) || routeSort(left, right)), [routes, todayValue])
+    .sort((left, right) => routeDateValue(left).localeCompare(routeDateValue(right)) || routeSort(left, right)), [routeSort, routes, todayValue])
   const completedTodayRoutes = useMemo(() => routes
     .filter(route => (!routeDateValue(route) || routeDateValue(route) === todayValue) && route.status === 'completed')
-    .sort(routeSort), [routes, todayValue])
+    .sort(routeSort), [routeSort, routes, todayValue])
 
   // Group routes by date and status for flexible dispatch layout
   const routesByDateAndStatus = useMemo(() => {
@@ -187,7 +187,7 @@ export function useRoutesDerived() {
       })
     }
     return configured
-  }, [branchId, form.destination, form.destination_label, form.driver_id, form.origin, form.type, originBranch?.address, originBranchCoordinate, originContactCoordinate, originMode, previousDestinationCoordinate, returnBranch?.address, returnBranch?.name, returnBranchCoordinate, routes, selectedContact?.company_name, selectedContact?.latitude, selectedContact?.longitude, selectedDestinationLocation, selectedDriverGps, todayValue])
+  }, [branchId, form.destination, form.destination_label, form.driver_id, form.notes, form.order_number, form.origin, form.priority, form.type, originBranch?.address, originBranchCoordinate, originContactCoordinate, originMode, previousDestinationCoordinate, returnBranch?.address, returnBranch?.name, returnBranchCoordinate, routes, selectedContact?.company_name, selectedContact?.latitude, selectedContact?.longitude, selectedDestinationLocation, selectedDriverGps, todayValue])
 
   const setOriginSource = (mode: OriginMode) => {
     setOriginMode(mode)
@@ -218,7 +218,7 @@ export function useRoutesDerived() {
     const contact = contacts.find(item => {
       const option = `${item.company_name} - ${item.address}`.toLowerCase()
       const code = item.location_code?.toLowerCase() || ''
-      return option === normalized || code === normalized || item.company_name.toLowerCase() === normalized || item.address.toLowerCase() === normalized
+      return option === normalized || code === normalized || item.company_name.toLowerCase() === normalized || (item.address || '').toLowerCase() === normalized
     })
     setForm(current => {
       const replacingSavedContact = Boolean(current.contact_id)

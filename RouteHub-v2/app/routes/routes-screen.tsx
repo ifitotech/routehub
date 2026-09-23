@@ -402,7 +402,7 @@ export default function Routes() {
                           destination: route.destination_name || route.destination_address || '',
                           destination_label: route.destination_name || route.destination_address || '',
                           destination_phone: route.destination_phone || '',
-                          stop_contact_name: route.destination_name || '',
+                          stop_contact_name: route.destination_contact_name || '',
                           contact_id: '',
                           priority: (route.priority === 'priority' || route.priority === 'urgent' ? route.priority : 'normal') as any,
                           order_number: route.order_number || '',

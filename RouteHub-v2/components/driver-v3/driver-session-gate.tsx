@@ -2,8 +2,14 @@
 
 import {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
+import {Truck} from 'lucide-react'
 import {getSupabase} from '../../lib/supabase'
 import {useLocale} from '../../lib/use-preferences'
+
+function loginTarget() {
+  const installed = window.matchMedia('(display-mode: standalone)').matches || Boolean((navigator as Navigator & {standalone?: boolean}).standalone)
+  return installed ? '/login?source=pwa&app=driver' : '/login'
+}
 
 /**
  * Auth gate for the Driver V3 workspace.
@@ -38,13 +44,13 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
     const {data: {subscription}} = client.auth.onAuthStateChange((_event, session) => {
       if (cancelled || decided) return
       decided = true
-      if (!session) { router.replace('/login'); return }
+      if (!session) { router.replace(loginTarget()); return }
       setReady(true)
     })
     const timeout = window.setTimeout(() => {
       if (cancelled || decided) return
       decided = true
-      router.replace('/login')
+      router.replace(loginTarget())
     }, 8000)
     return () => {
       cancelled = true
@@ -56,7 +62,10 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
   if (!ready) {
     return (
       <div className="driver-v3-splash" role="status" aria-live="polite" aria-label={locale === 'es' ? 'Cargando RouteHub Driver' : locale === 'fr' ? 'Chargement de RouteHub Driver' : 'Loading RouteHub Driver'}>
-        <img className="driver-v3-splash-hero" src="/driver-empty-route-hero.png" alt="" />
+        <div className="driver-v3-splash-loader" aria-hidden="true">
+          <span className="driver-v3-splash-track" />
+          <span className="driver-v3-splash-truck"><Truck size={30} strokeWidth={2.2}/></span>
+        </div>
       </div>
     )
   }

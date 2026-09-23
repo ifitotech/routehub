@@ -12,24 +12,27 @@ import TermsGate from './terms-gate'
 import AppErrorListener from './app-error-listener'
 
 export const metadata = {
-  title: {default: 'RouteHub Driver — Routes and navigation', template: '%s · RouteHub Driver'},
+  title: {default: 'RouteHub', template: '%s · RouteHub'},
   description: 'RouteHub Driver routes, navigation and proof of delivery.',
   // This layout also serves /login.  A PWA gets its name and home-screen icon
   // when it is installed, not after authentication, so the driver identity
   // must be present before a driver signs in.
   applicationName: 'RouteHub Driver',
-  manifest: '/manifest.json?v=21',
+  manifest: '/manifest.json?v=22',
   appleWebApp: {capable: true, title: 'RouteHub Driver', statusBarStyle: 'default' as const},
-  icons: {icon: '/routehub-driver-new.jpg?v=21', apple: '/routehub-driver-new.jpg?v=21'},
+  icons: {icon: '/routehub-driver-pwa-512.png', apple: '/routehub-driver-pwa-512.png'},
 }
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover' as const,
-  // The app defaults to the dark driver chrome. Keeping the static value in
-  // sync prevents a blue/white browser safe-area strip before hydration.
-  themeColor: '#0f1d35',
+  // Give the browser the correct first-paint color before the stored RouteHub
+  // preference can override it during the inline theme bootstrap.
+  themeColor: [
+    {media: '(prefers-color-scheme: light)', color: '#FFFFFF'},
+    {media: '(prefers-color-scheme: dark)', color: '#0F1D35'},
+  ],
 }
 
 // Apply the stored theme before React paints. ThemeBoot continues to keep it
@@ -38,5 +41,5 @@ export const viewport = {
 const themeBootstrap = `(()=>{try{const saved=localStorage.getItem('routehub_theme');const preference=saved==='light'||saved==='dark'||saved==='system'?saved:'dark';const theme=preference==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):preference;const color=theme==='dark'?'#0f1d35':'#ffffff';document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;const applyThemeColor=()=>{const metas=document.querySelectorAll('meta[name="theme-color"]');if(!metas.length&&document.head){const meta=document.createElement('meta');meta.name='theme-color';document.head.appendChild(meta)}document.querySelectorAll('meta[name="theme-color"]').forEach(meta=>meta.setAttribute('content',color))};applyThemeColor();document.addEventListener('DOMContentLoaded',applyThemeColor,{once:true})}catch{}})()`
 
 export default function Layout({children}: {children: React.ReactNode}) {
-  return <html lang="en"><head><script dangerouslySetInnerHTML={{__html: themeBootstrap}}/></head><body><PwaRegister/><ThemeBoot/><AppErrorListener/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
+  return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html: themeBootstrap}}/></head><body><PwaRegister/><ThemeBoot/><AppErrorListener/><AuthBoundary><GlobalChrome/>{children}<AppBottomNav/><TermsGate/><OnboardingGate/></AuthBoundary></body></html>
 }

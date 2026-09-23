@@ -76,6 +76,7 @@ export type RouteRecord = {
   destination_location_source: GeocodedLocation['source'] | null
   destination_location_external_id: string | null
   destination_phone?: string | null
+  destination_contact_name?: string | null
   origin_lat: number | null
   origin_lng: number | null
   scheduled_at: string | null

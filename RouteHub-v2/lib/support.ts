@@ -15,8 +15,8 @@ export async function submitSupportRequest(message: string) {
     user_id: user.id,
     created_by: user.id,
     company_id: companyId,
-    category: 'general',
-    subject: 'Driver support request',
+    category: 'question',
+    subject: 'RouteHub support request',
     message: trimmed.slice(0, 2000),
   })
   const timeout = new Promise<never>((_, reject) => {

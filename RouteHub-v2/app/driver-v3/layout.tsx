@@ -9,11 +9,11 @@ import './driver-theme-tokens.css'
 import './driver-modern.css'
 
 export const metadata: Metadata = {
-  title: 'RouteHub Driver',
+  title: {absolute: 'RouteHub Driver'},
   applicationName: 'RouteHub Driver',
   // Version the manifest URL so installed PWAs re-read orientation/theme
   // metadata instead of retaining the browser's previous manifest snapshot.
-  manifest: '/manifest-driver.json?v=21',
+  manifest: '/manifest-driver.json?v=22',
   // Keep the system/status area opaque - translucent (black-translucent)
   // lets iOS draw content under the status bar, and iOS 26/27's "Liquid
   // Glass" material then applies its own system backdrop-blur over that
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
   },
   icons: {
-    icon: '/routehub-driver-new.jpg?v=21',
-    apple: '/routehub-driver-new.jpg?v=21',
+    icon: '/routehub-driver-pwa-512.png',
+    apple: '/routehub-driver-pwa-512.png',
   },
   formatDetection: {
     telephone: true,

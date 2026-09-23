@@ -284,11 +284,16 @@ html[data-theme='light'] .emptyToday{color:#0f1d35;background:radial-gradient(ci
 :global(html[data-theme='light']) .stateCard{border-color:rgba(95,151,224,.18);background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(242,247,255,.9));box-shadow:0 14px 34px rgba(53,105,170,.08)}
 :global(html[data-theme='light']) .stateCard h1{color:#0b1f3a}.stateCard p{font-weight:600}
 .loading{display:flex;flex-direction:column;gap:12px}
-.loading{position:relative;display:grid;place-items:center;min-height:calc(100dvh - 132px);overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(34,123,255,.16),transparent 34%);isolation:isolate}
-.loadingArt{width:min(88vw,430px);height:auto;mix-blend-mode:screen;opacity:.82;filter:saturate(1.2) contrast(1.08) drop-shadow(0 16px 28px rgba(22,119,255,.24));animation:loadingDrive 2.8s ease-in-out infinite}
-html[data-theme='light'] .loading{background:radial-gradient(circle at 50% 42%,rgba(70,154,255,.14),transparent 34%)}html[data-theme='light'] .loadingArt{opacity:.7;filter:saturate(1.2) contrast(1.08) drop-shadow(0 16px 28px rgba(22,119,255,.18))}
-@keyframes loadingDrive{0%,100%{opacity:.26;transform:translateX(-10px) scale(.96)}18%{opacity:.82}50%{opacity:.95;transform:translateX(9px) scale(1)}82%{opacity:.82}}
-@media(prefers-reduced-motion:reduce){.loadingArt{animation:none;opacity:.82}}
+.loading{position:relative;display:grid;place-items:center;min-height:calc(100dvh - 132px);overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(34,123,255,.12),transparent 34%);isolation:isolate}
+.loadingScene{position:relative;width:min(72vw,230px);height:48px}
+.loadingRoad{position:absolute;right:0;bottom:7px;left:0;height:4px;overflow:hidden;border-radius:999px;background:rgba(147,193,255,.2)}
+.loadingRoad i{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(102,178,255,.85) 0 11px,transparent 11px 21px);animation:loadingRoadMove .9s linear infinite}
+.loadingTruck{position:absolute;top:3px;left:0;display:grid;width:36px;height:32px;place-items:center;border:1px solid rgba(120,184,255,.4);border-radius:11px;background:linear-gradient(145deg,#238bff,#0755c9);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 6px 16px rgba(0,91,211,.28);animation:loadingTruckMove 1.8s ease-in-out infinite}
+html[data-theme='light'] .loading{background:radial-gradient(circle at 50% 42%,rgba(70,154,255,.1),transparent 34%)}
+html[data-theme='light'] .loadingRoad{background:#d8e2ef}
+@keyframes loadingTruckMove{0%,100%{transform:translateX(0)}46%{transform:translateX(calc(min(72vw,230px) - 36px))}50%{transform:translateX(calc(min(72vw,230px) - 36px)) scaleX(-1)}96%{transform:scaleX(-1)}}
+@keyframes loadingRoadMove{to{transform:translateX(21px)}}
+@media(prefers-reduced-motion:reduce){.loadingTruck,.loadingRoad i{animation:none}}
 /* Empty-state polish: a restrained entrance gives the workspace a sense of
    continuity without delaying interaction. The light theme keeps the hero
    illustration legible instead of letting screen blending wash it out. */

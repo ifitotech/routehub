@@ -11,6 +11,7 @@ import styles from './landing.module.css'
 import InstallAppCard from '../install-app-card'
 
 type DialogMode = 'sign-in' | 'request' | null
+type CredentialFlow = 'sign-in' | 'recovery' | 'invite'
 type Step = {Icon: LucideIcon; title: string; copy: string}
 const steps: Step[] = [
   {Icon: Plus, title: 'CREATE', copy: 'Build pickup and delivery work quickly.'},
@@ -43,22 +44,23 @@ function WorkflowPreview() {
 }
 
 export default function Login() {
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null); const [checkingPwaSession, setCheckingPwaSession] = useState(true)
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [fullName, setFullName] = useState(''); const [companyName, setCompanyName] = useState(''); const [phone, setPhone] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const [dialog, setDialog] = useState<DialogMode>(null); const [credentialFlow, setCredentialFlow] = useState<CredentialFlow>('sign-in'); const [menu, setMenu] = useState(false); const [workspaceHref, setWorkspaceHref] = useState<string | null>(null); const [checkingPwaSession, setCheckingPwaSession] = useState(true)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('source') !== 'pwa') setCheckingPwaSession(false)
+    const launchedFromPwa = params.get('source') === 'pwa'
+    if (!launchedFromPwa) setCheckingPwaSession(false)
     const tokenHash = params.get('token_hash')
     const tokenType = params.get('type')
     if (tokenHash && (tokenType === 'invite' || tokenType === 'recovery')) {
       setCheckingPwaSession(false)
       void getSupabase().auth.verifyOtp({token_hash: tokenHash, type: tokenType as 'invite' | 'recovery'}).then(({error}) => {
         if (error) setMessage(error.message)
-        else { window.location.hash = `type=${tokenType}`; setDialog('sign-in'); setMessage(tokenType === 'invite' ? 'You have been invited to RouteHub. Create a password to accept the invitation.' : 'Create a new password to continue.') }
+        else { window.location.hash = `type=${tokenType}`; setCredentialFlow(tokenType); setDialog('sign-in'); setMessage(tokenType === 'invite' ? 'You have been invited to RouteHub. Create a password to accept the invitation.' : 'Create a new password to continue.') }
       })
       return
     }
-    if (window.location.hash.includes('type=recovery')) { setCheckingPwaSession(false); setDialog('sign-in'); setMessage('Create a new password to continue.'); return }
-    if (window.location.hash.includes('type=invite')) { setCheckingPwaSession(false); setDialog('sign-in'); setMessage('You have been invited to RouteHub. Create a password to accept the invitation.'); return }
+    if (window.location.hash.includes('type=recovery')) { setCheckingPwaSession(false); setCredentialFlow('recovery'); setDialog('sign-in'); setMessage('Create a new password to continue.'); return }
+    if (window.location.hash.includes('type=invite')) { setCheckingPwaSession(false); setCredentialFlow('invite'); setDialog('sign-in'); setMessage('You have been invited to RouteHub. Create a password to accept the invitation.'); return }
     const storedError = sessionStorage.getItem('routehub_auth_error')
     if (storedError) { sessionStorage.removeItem('routehub_auth_error'); setCheckingPwaSession(false); setMessage(accessMessage(storedError)); setDialog('sign-in') }
     let client: ReturnType<typeof getSupabase>
@@ -75,7 +77,11 @@ export default function Login() {
       new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('SESSION_CHECK_TIMEOUT')), 8000)),
     ])
     sessionCheck.then(({data}) => {
-      if (!data.session) { setCheckingPwaSession(false); return null }
+      if (!data.session) {
+        setCheckingPwaSession(false)
+        if (launchedFromPwa) setDialog('sign-in')
+        return null
+      }
       // A suspended iOS PWA can leave an auth/RPC request pending forever.
       // Never strand the launch screen; fall back to the sign-in dialog.
       return Promise.race([
@@ -95,35 +101,12 @@ export default function Login() {
       setDialog('sign-in')
     })
   }, [])
-  useEffect(() => { if (dialog !== 'sign-in' || !window.location.hash.includes('type=recovery')) return; const input = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]'); const submit = document.querySelector<HTMLButtonElement>('.modalPrimary'); if (!input || !submit || submit.dataset.recoveryReady) return; input.autocomplete = 'new-password'; input.placeholder = 'New password (8+ characters)'; submit.dataset.recoveryReady = 'true'; submit.textContent = 'Update password'; submit.onclick = async () => { if (input.value.length < 8) { setMessage('Use at least 8 characters.'); return }; setBusy(true); const {error} = await getSupabase().auth.updateUser({password: input.value}); setMessage(error?.message || 'Password updated. You can now sign in.'); setBusy(false); if (!error) { window.history.replaceState({}, '', '/login'); setDialog(null) } } }, [dialog])
-  useEffect(() => {
-    if (dialog !== 'sign-in' || !window.location.hash.includes('type=invite')) return
-    const input = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]')
-    const submit = document.querySelector<HTMLButtonElement>('.modalPrimary')
-    if (!input || !submit || submit.dataset.inviteReady) return
-    input.autocomplete = 'new-password'
-    input.placeholder = 'Create password (8+ characters)'
-    submit.dataset.inviteReady = 'true'
-    submit.textContent = 'Accept invitation'
-    submit.onclick = async () => {
-      if (input.value.length < 8) { setMessage('Use at least 8 characters.'); return }
-      setBusy(true)
-      try {
-        const client = getSupabase()
-        const {error} = await client.auth.updateUser({password: input.value})
-        if (error) throw error
-        const access = await resolveAccess(client)
-        window.history.replaceState({}, '', '/login')
-        window.location.replace(workspaceForStrictRole(access.role))
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'Could not accept the invitation.')
-      } finally { setBusy(false) }
-    }
-  }, [dialog])
-  const open = (mode: DialogMode) => { setMessage(''); setDialog(mode); setMenu(false) }
+  const open = (mode: DialogMode) => { setMessage(''); if (mode === 'sign-in') setCredentialFlow('sign-in'); setDialog(mode); setMenu(false) }
   const closeDialog = () => { if (!busy) { setDialog(null); setMessage('') } }
-  useEffect(() => { if (dialog !== 'sign-in') return; const passwordInput = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]'); if (!passwordInput || passwordInput.parentElement?.querySelector('[data-reset-password]')) return; const link = document.createElement('button'); link.type = 'button'; link.dataset.resetPassword = 'true'; link.textContent = 'Forgot password?'; link.style.cssText = 'display:block;margin:10px 0 0 auto;border:0;background:transparent;color:#2563eb;font:inherit;font-size:13px;font-weight:800;cursor:pointer'; link.onclick = async () => { const address = document.querySelector<HTMLInputElement>('input[autocomplete="username"]')?.value.trim().toLowerCase(); if (!address) { setMessage('Enter your email first.'); return }; setBusy(true); setMessage('Sending password reset email…'); const {error} = await getSupabase().auth.resetPasswordForEmail(address, {redirectTo: 'https://routehub-wisu.vercel.app/login'}); setMessage(error?.message || 'Check your email for a secure password reset link.'); setBusy(false) }; passwordInput.parentElement?.appendChild(link); return () => link.remove() }, [dialog])
   const signIn = async () => { if (!email || !password || busy) return; setBusy(true); setMessage('Signing in…'); try { const client = getSupabase(); const timeout = () => new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('AUTH_TIMEOUT')), 15000)); const {error} = await Promise.race([client.auth.signInWithPassword({email: email.trim().toLowerCase(), password}), timeout()]); if (error) throw error; const access = await Promise.race([resolveAccess(client), timeout()]); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to sign in.'; setMessage(raw === 'AUTH_TIMEOUT' ? 'Sign in timed out. Check your connection and try again.' : raw.startsWith('ROLE_') || raw === 'MULTIPLE_ROLES' || raw === 'TRIAL_EXPIRED' ? accessMessage(raw) : raw) } finally { setBusy(false) } }
+  const completeCredentialFlow = async () => { if (password.length < 8 || busy) { setMessage('Use at least 8 characters.'); return }; setBusy(true); try { const client = getSupabase(); const {error} = await client.auth.updateUser({password}); if (error) throw error; const access = await resolveAccess(client); window.history.replaceState({}, '', '/login'); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { setMessage(error instanceof Error ? error.message : credentialFlow === 'invite' ? 'Could not accept the invitation.' : 'Could not update the password.') } finally { setBusy(false) } }
+  const requestPasswordReset = async () => { const address = email.trim().toLowerCase(); if (!address || busy) { setMessage('Enter your email first.'); return }; setBusy(true); setMessage('Sending password reset email…'); const {error} = await getSupabase().auth.resetPasswordForEmail(address, {redirectTo: `${window.location.origin}/login`}); setMessage(error?.message || 'Check your email for a secure password reset link.'); setBusy(false) }
+  const submitCredentials = () => credentialFlow === 'sign-in' ? signIn() : completeCredentialFlow()
   const requestAccess = async () => { if (!fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8 || busy) return; setBusy(true); setMessage('Creating your workspace…'); try { const client = getSupabase(); await client.auth.signOut(); const {data, error} = await client.auth.signUp({email: email.trim().toLowerCase(), password, options: {data: {full_name: fullName.trim(), company_name: companyName.trim(), phone: phone.trim()}}}); if (error) throw error; if (!data.session) { setMessage('Your account was created. Check your email to confirm it, then sign in.'); return }; const {error: workspaceError} = await client.rpc('create_trial_workspace', {requester_name: fullName.trim(), requester_company: companyName.trim(), requester_phone: phone.trim() || null}); if (workspaceError) throw workspaceError; const access = await resolveAccess(client); window.location.replace(workspaceForStrictRole(access.role)) } catch (error) { const raw = error instanceof Error ? error.message : 'Unable to create your workspace.'; setMessage(raw.includes('already registered') ? 'This email already has an account. Sign in instead.' : raw) } finally { setBusy(false) } }
   if (checkingPwaSession) return <main className={`${styles.landing} ${styles.pwaLoading}`} role="status" aria-label="Loading RouteHub"><img src="/driver-empty-route-hero.png" alt="" /></main>
   const primaryAction = workspaceHref ? <Link className={styles.primaryButton} href={workspaceHref}>Open RouteHub <ArrowRight size={18}/></Link> : <button className={styles.primaryButton} onClick={() => open('request')}>Get Started <ArrowRight size={18}/></button>
@@ -135,6 +118,30 @@ export default function Login() {
     <section className={styles.features} aria-label="RouteHub benefits"><article><i><Zap/></i><div><b>Faster Operations</b><p>Create and organize pickups and deliveries with fewer steps.</p></div><CheckCircle2/></article><article><i><MapPin/></i><div><b>Real-Time Visibility</b><p>See active operations, route progress and current driver location.</p></div><CheckCircle2/></article><article><i><ShieldCheck/></i><div><b>Proof of Delivery</b><p>Keep photos, signatures, notes and completion records together.</p></div><CheckCircle2/></article></section>
     <InstallAppCard/>
     <footer className={styles.footer}><span>© {new Date().getFullYear()} RouteHub</span><span style={{display:'inline-flex',alignItems:'center',gap:18}}><Link href="/terms" style={{color:'var(--blue)',fontWeight:800,textDecoration:'none'}}>Terms of Use</Link><button onClick={() => open('sign-in')}>Sign in</button></span></footer>
-    {dialog && <div className={styles.modalBackdrop} role="presentation"><section className={styles.modal} aria-modal="true" role="dialog" aria-labelledby="access-dialog-title"><button className={styles.close} aria-label="Close" onClick={closeDialog}>×</button><Image src="/routehub-regular-new.jpg" alt="RouteHub" width={58} height={58}/>{dialog === 'sign-in' ? <><h2 id="access-dialog-title">Welcome back</h2><p>Sign in to manage your pickup and delivery operations.</p><label>Email<input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void signIn() }}/></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void signIn() }}/></label><button className={styles.modalPrimary} disabled={busy || !email || !password} onClick={signIn}>{busy ? 'Signing in…' : 'Sign in'}</button><button className={styles.textButton} onClick={() => open('request')} disabled={busy}>New to RouteHub? Get started</button></> : <><h2 id="access-dialog-title">Start your workspace</h2><p>Tell us a little about your team to start using RouteHub.</p><label>Your name<input autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)}/></label><label>Company name<input autoComplete="organization" value={companyName} onChange={event => setCompanyName(event.target.value)}/></label><label>Email<input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)}/></label><label>Phone number <small>Optional</small><input type="tel" autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)}/></label><label>Create password<input type="password" autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void requestAccess() }}/></label><button className={styles.modalPrimary} disabled={busy || !fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8} onClick={requestAccess}>{busy ? 'Creating workspace…' : 'Start 7-day trial'}</button><button className={styles.textButton} onClick={() => open('sign-in')} disabled={busy}>I already have an account</button></>}{message && <p className={styles.message} role="status">{message}</p>}</section></div>}
+    {dialog && <div className={styles.modalBackdrop} role="presentation">
+      <section className={styles.modal} aria-modal="true" role="dialog" aria-labelledby="access-dialog-title">
+        <button className={styles.close} aria-label="Close" onClick={closeDialog}>×</button>
+        <Image src="/routehub-regular-new.jpg" alt="RouteHub" width={58} height={58}/>
+        {dialog === 'sign-in' ? <>
+          <h2 id="access-dialog-title">{credentialFlow === 'sign-in' ? 'Welcome back' : credentialFlow === 'invite' ? 'Accept your invitation' : 'Choose a new password'}</h2>
+          <p>{credentialFlow === 'sign-in' ? 'Sign in to manage your pickup and delivery operations.' : credentialFlow === 'invite' ? 'Create a password to join your RouteHub workspace.' : 'Use at least 8 characters for your new password.'}</p>
+          {credentialFlow === 'sign-in' ? <label>Email<input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void submitCredentials() }}/></label> : null}
+          <label>{credentialFlow === 'sign-in' ? 'Password' : 'New password'}<input type="password" autoComplete={credentialFlow === 'sign-in' ? 'current-password' : 'new-password'} placeholder={credentialFlow === 'sign-in' ? undefined : '8+ characters'} value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void submitCredentials() }}/></label>
+          {credentialFlow === 'sign-in' ? <button className={styles.textButton} type="button" onClick={() => void requestPasswordReset()} disabled={busy}>Forgot password?</button> : null}
+          <button className={styles.modalPrimary} disabled={busy || (credentialFlow === 'sign-in' ? !email || !password : password.length < 8)} onClick={() => void submitCredentials()}>{busy ? 'Please wait…' : credentialFlow === 'sign-in' ? 'Sign in' : credentialFlow === 'invite' ? 'Accept invitation' : 'Update password'}</button>
+          {credentialFlow === 'sign-in' ? <button className={styles.textButton} onClick={() => open('request')} disabled={busy}>New to RouteHub? Get started</button> : null}
+        </> : <>
+          <h2 id="access-dialog-title">Start your workspace</h2><p>Tell us a little about your team to start using RouteHub.</p>
+          <label>Your name<input autoComplete="name" value={fullName} onChange={event => setFullName(event.target.value)}/></label>
+          <label>Company name<input autoComplete="organization" value={companyName} onChange={event => setCompanyName(event.target.value)}/></label>
+          <label>Email<input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)}/></label>
+          <label>Phone number <small>Optional</small><input type="tel" autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)}/></label>
+          <label>Create password<input type="password" autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') void requestAccess() }}/></label>
+          <button className={styles.modalPrimary} disabled={busy || !fullName.trim() || !companyName.trim() || !email.trim() || password.length < 8} onClick={requestAccess}>{busy ? 'Creating workspace…' : 'Start 7-day trial'}</button>
+          <button className={styles.textButton} onClick={() => open('sign-in')} disabled={busy}>I already have an account</button>
+        </>}
+        {message && <p className={styles.message} role="status">{message}</p>}
+      </section>
+    </div>}
   </main>
 }

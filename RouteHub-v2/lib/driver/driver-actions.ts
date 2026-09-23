@@ -86,9 +86,18 @@ export async function updateRouteStatus(ctx:DriverMutationContext, status:string
 
 export async function markArrived(ctx:DriverMutationContext) {
   return driverActions.run(`arrived:${ctx.routeId}`, async()=>{
-    const result=await getSupabase().from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).is('arrived_at',null).select('id,arrived_at').maybeSingle()
+    const client=getSupabase()
+    const result=await client.from('routes').update({arrived_at:new Date().toISOString(),updated_version:Date.now()}).eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).is('arrived_at',null).select('id,arrived_at').maybeSingle()
     if(result.error) throw result.error
-    if(!result.data) throw new Error('Arrival was already recorded.')
+    if(!result.data){
+      // Arrival is intentionally idempotent. A retry after a lost mobile
+      // response, app resume, or double tap must confirm the authoritative
+      // row instead of telling the driver the operation failed.
+      const current=await client.from('routes').select('id,arrived_at').eq('id',ctx.routeId).eq('driver_id',ctx.driverId).eq('company_id',ctx.companyId).maybeSingle()
+      if(current.error)throw current.error
+      if(current.data?.arrived_at)return current.data
+      throw new Error('We could not confirm arrival. This stop is still active.')
+    }
     return result.data
   })
 }

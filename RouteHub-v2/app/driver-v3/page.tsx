@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import {Capacitor} from '@capacitor/core'
 import {useSearchParams} from 'next/navigation'
 import {Navigation, Package, PackageCheck, PackagePlus, RefreshCw, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
@@ -180,6 +181,16 @@ export default function DriverV3Page() {
   },[mapRequested,simpleMode,started,route?.id,navigationPreference])
   const hasPod=Boolean(route?.completion_photo_path || route?.customer_signature_path || photo || signed)
   const ctx=()=>({routeId:route.id,driverId,companyId:route.company_id})
+  const offlineMessage=locale==='es'
+    ?'Necesitas conexión para guardar este cambio. La parada sigue activa.'
+    :locale==='fr'
+      ?'Une connexion est requise pour enregistrer ce changement. L’arrêt reste actif.'
+      :'You need a connection to save this change. The stop is still active.'
+  const canMutate=()=>{
+    const disconnected=offline||(typeof navigator!=='undefined'&&navigator.onLine===false)
+    if(disconnected)setMessage(offlineMessage)
+    return !disconnected
+  }
 
   // The full-screen navigator confirms arrival first, then comes back here
   // with the authoritative route id so the Driver immediately sees the right
@@ -214,7 +225,7 @@ export default function DriverV3Page() {
   }
 
   const startCurrent=async()=>{
-    if(!route||busy)return
+    if(!route||busy||!canMutate())return
     setBusy(true)
     setMessage('')
     try{
@@ -242,22 +253,24 @@ export default function DriverV3Page() {
     }
   }
 
-  const arrivePickup=()=>{
-    if(!route||!driverId)return
+  const arriveCurrent=async()=>{
+    if(!route||busy||!driverId||!canMutate())return
+    setBusy(true)
     setMessage('')
-    setSheet('pickup')
-    void (async()=>{
-      try{
-        if(!started) await startRoute(ctx(),operationalDate())
-        try{await markArrived(ctx())}catch{}
-      }catch(error){
-        setMessage(error instanceof Error?error.message:t.drvOpFailed)
-      }
-    })()
+    try{
+      if(!started)await startRoute(ctx(),operationalDate())
+      await markArrived(ctx())
+      await refresh()
+      if(kind==='pickup'||kind==='delivery'||kind==='return')setSheet(kind)
+    }catch(error){
+      setMessage(error instanceof Error?error.message:t.drvOpFailed)
+    }finally{
+      setBusy(false)
+    }
   }
 
   const confirmPickup=async()=>{
-    if(!route||busy||!driverId)return
+    if(!route||busy||!driverId||!canMutate())return
     setBusy(true)
     setMessage('')
     try{
@@ -273,14 +286,14 @@ export default function DriverV3Page() {
   }
 
   const completeReturnNow=async()=>{
-    if(!route||busy||!driverId)return
+    if(!route||busy||!driverId||!canMutate())return
     setBusy(true)
     setMessage('')
     try{
       // A recovered stop may already be arrived or marked issue. Do not try
       // to restart it; go straight to the guarded completion mutation.
       if(!started && !route.arrived_at && !['issue','completed'].includes(String(route.status || ''))) await startRoute(ctx(),operationalDate())
-      try{await markArrived(ctx())}catch{}
+      await markArrived(ctx())
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
       await completeReturn(ctx(),{location})
@@ -304,15 +317,11 @@ export default function DriverV3Page() {
   }
 
   const arriveFromNavigation=async()=>{
-    if(!route||busy||!driverId)return
+    if(!route||busy||!driverId||!canMutate())return
     setBusy(true)
     setMessage('')
     try{
-      if(!route.arrived_at){
-        try{await markArrived(ctx())}catch(error){
-          if(!/already recorded/i.test(error instanceof Error?error.message:''))throw error
-        }
-      }
+      await markArrived(ctx())
       await refresh()
       captureNavOrigin()
       setNavigationVisible(false)
@@ -346,7 +355,7 @@ export default function DriverV3Page() {
   }
 
   const confirmDelivery=async()=>{
-    if(!route||busy||!driverId)return
+    if(!route||busy||!driverId||!canMutate())return
     const name=recipient.trim()
     const withIssue=podPanel==='issue'||Boolean(issueNote.trim())
     if(!withIssue && !name){
@@ -360,12 +369,9 @@ export default function DriverV3Page() {
     setMessage('')
     try{
       if(!started) await startRoute(ctx(),operationalDate())
-      try{await markArrived(ctx())}catch{}
+      await markArrived(ctx())
       if(photo) await uploadStopPhoto(ctx(), photo)
       if(signed && canvas.current) await saveStopSignature(ctx(), canvas.current)
-      if(issueNote.trim()){
-        try{await saveStopNote(ctx(), issueNote.trim())}catch{}
-      }
       let location
       try{location=await getCurrentLocation({maximumAge:60_000})}catch{}
       if(withIssue){
@@ -391,7 +397,7 @@ export default function DriverV3Page() {
 
 
   const savePickupNote=async()=>{
-    if(!route||busy||!driverId)return
+    if(!route||busy||!driverId||!canMutate())return
     const note=issueNote.trim()
     if(!note){
       setMessage(t.drvNeedNote)
@@ -437,7 +443,7 @@ export default function DriverV3Page() {
     // opens the exact same flow as before (the wording is presentation
     // only), but a driver who is still en route sees an action that
     // matches where they are, not one that jumps straight to "done".
-    if(!arrived) return {label:t.drvArrived, run:openFlow}
+    if(!arrived) return {label:t.drvArrived, run:arriveCurrent}
     if(kind==='pickup') return {label:t.drvCompletePickup, run:openFlow}
     if(kind==='return') return {label:t.drvCompleteReturn, run:openFlow}
     return {label:t.drvCompleteDelivery, run:openFlow}
@@ -574,7 +580,7 @@ export default function DriverV3Page() {
     flush
   >
     <>
-    {offline&&<div className={styles.offlineNotice} role="status">{locale==='es'?'Sin conexión · usando la última ruta guardada':'Offline · using the last saved route'}</div>}
+    {offline&&<div className={styles.offlineNotice} role="status">{locale==='es'?'Sin conexión · última ruta guardada; los cambios requieren internet':locale==='fr'?'Hors ligne · dernière route enregistrée; les modifications nécessitent une connexion':'Offline · last saved route; changes require a connection'}</div>}
     {/* .page and the confirm dialog are siblings, not parent/child, on
         purpose - .pageShrink puts a `transform` on .page while the dialog
         is open, and `transform` on an ancestor turns its `position:fixed`
@@ -657,7 +663,7 @@ export default function DriverV3Page() {
             {route.destination_address&&<p className={styles.addressLine}><MapPin size={15}/><span>{compactAddress(route.destination_address)}</span></p>}
           </button>
           {!simpleMode&&<DriverRouteEstimate route={route} locale={locale} poNumber={kind==='pickup'&&route.order_number?route.order_number:null} simpleNavigation={navigationPreference==='external'}/>}
-          <button type="button" className={styles.primary} data-map-cta disabled={busy} onClick={event=>{event.preventDefault();event.stopPropagation();if(kind==='delivery'&&started)openDelivery();else void action.run()}}>
+          <button type="button" className={styles.primary} data-map-cta disabled={busy||offline} onClick={event=>{event.preventDefault();event.stopPropagation();void action.run()}}>
             {busy?t.drvBusy:action.label}
           </button>
           {/* Maps/Call/Issue only appear once the stop is actually started -
@@ -754,7 +760,12 @@ export default function DriverV3Page() {
           originCoordinate={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null}
           locale={locale}
           sharedLocation={liveFix}
-          disabled={busy}
+          // On web/PWA, DriverLiveLocation already owns the shared high-
+          // accuracy watch for an active session. Avoid opening a second
+          // geolocation listener in the navigator; native Android still
+          // keeps its foreground watch for turn-by-turn camera updates.
+          trackDevice={Capacitor.isNativePlatform()||!drivingSession}
+          disabled={busy||offline}
           onArrive={()=>void arriveFromNavigation()}
           onExit={()=>{captureNavOrigin();setNavigationVisible(false)}}
           onHandleDragStart={()=>beginDrag('open')}
@@ -785,7 +796,10 @@ export default function DriverV3Page() {
 function TodayLoading({label}:{label:string}) {
   return (
     <div className={styles.loading} aria-label={label} role="status">
-      <img className={styles.loadingArt} src="/driver-empty-route-hero.png" alt="" />
+      <div className={styles.loadingScene} aria-hidden="true">
+        <span className={styles.loadingRoad}><i/></span>
+        <span className={styles.loadingTruck}><Truck size={22} strokeWidth={2.2}/></span>
+      </div>
     </div>
   )
 }

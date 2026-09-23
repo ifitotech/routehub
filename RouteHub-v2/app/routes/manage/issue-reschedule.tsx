@@ -14,6 +14,7 @@ type IssueRoute = {
   driver_id: string
   destination?: string
   destination_name?: string
+  driver_note?: string | null
   position: number
 }
 
@@ -28,12 +29,24 @@ export default function IssueReschedule({
   help,
   typeLabel,
   issuesLabel,
+  dateLabel,
+  timeLabel,
+  noteLabel,
+  invalidDateMessage,
+  offlineMessage,
+  errorMessage,
 }: {
   route: IssueRoute
   label: string
   help: string
   typeLabel: string
   issuesLabel: string
+  dateLabel: string
+  timeLabel: string
+  noteLabel: string
+  invalidDateMessage: string
+  offlineMessage: string
+  errorMessage: string
 }) {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState(localDate)
@@ -45,32 +58,21 @@ export default function IssueReschedule({
     setSaving(true)
     setMessage('')
     try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) throw Error(offlineMessage)
       const scheduled = new Date(`${date}T${time || '09:00'}`)
-      if (Number.isNaN(scheduled.getTime())) throw Error('Invalid date')
+      if (Number.isNaN(scheduled.getTime())) throw Error(invalidDateMessage)
       const client = getSupabase()
-      const {error} = await client.from('routes').update({
-        status: 'published',
-        route_date: date,
-        scheduled_at: scheduled.toISOString(),
-        route_started_at: null,
-        route_completed_at: null,
-        updated_version: Date.now(),
-      }).eq('id', route.id)
+      const {error} = await client.rpc('reschedule_issue_route', {
+        p_route_id: route.id,
+        p_route_date: date,
+        p_scheduled_at: scheduled.toISOString(),
+      })
       if (error) throw error
-      let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', date).eq('driver_id', route.driver_id).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
-      queueQuery = route.branch_id === null ? queueQuery.is('branch_id', null) : queueQuery.eq('branch_id', route.branch_id)
-      const {data: queue, error: queueError} = await queueQuery
-      if (queueError) throw queueError
-      const ids = [...(queue ?? []).map(item => item.id).filter(id => id !== route.id), route.id]
-      if (ids.length) {
-        const {error: reorderError} = await client.rpc('reorder_route_queue', {p_route_ids: ids})
-        if (reorderError) throw reorderError
-      }
       void sendRoutePush(route.id, 'assigned')
       setOpen(false)
       setMessage('ok')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to reschedule')
+      setMessage(error instanceof Error ? error.message : errorMessage)
     } finally {
       setSaving(false)
     }
@@ -83,10 +85,11 @@ export default function IssueReschedule({
       <div className={`${styles.routeMain} ${fixes.content}`}>
         <div className={styles.meta}><b>{typeLabel}</b><span className={styles.statusIssue}>{issuesLabel}</span></div>
         <h2>{route.destination_name || route.destination || 'Destination'}</h2>
+        {route.driver_note ? <p><strong>{noteLabel}:</strong> {route.driver_note}</p> : null}
         {open && (
           <div className={styles.editor}>
-            <label>Date<input type="date" value={date} onChange={event => setDate(event.target.value)} /></label>
-            <label>Time<input type="time" value={time} onChange={event => setTime(event.target.value)} /></label>
+            <label>{dateLabel}<input type="date" value={date} onChange={event => setDate(event.target.value)} /></label>
+            <label>{timeLabel}<input type="time" value={time} onChange={event => setTime(event.target.value)} /></label>
             <p>{help}</p>
             <button className="primary" type="button" disabled={saving} onClick={() => void save()}>{label}</button>
             {message && message !== 'ok' && <small>{message}</small>}
