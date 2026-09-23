@@ -83,6 +83,7 @@ export default function DriverV3Shell({
       <header
         style={{
           position: 'absolute',
+          display: hideHeader ? 'none' : undefined,
           top: 0,
           left: 0,
           right: 0,

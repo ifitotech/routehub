@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {useSearchParams} from 'next/navigation'
 import {Navigation, Package, PackageCheck, PackagePlus, RefreshCw, Truck, Warehouse} from 'lucide-react'
 import {useEffect, useRef, useState} from 'react'
+import {createPortal} from 'react-dom'
 import DriverV3Shell from '../../components/driver-v3/DriverV3Shell'
 import {operationalDate} from '../../lib/driver-queue'
 import {completeDelivery, completeDeliveryWithRecipient, completePickupWithEvidence, completeReturn, markArrived, reportIssue, saveStopNote, saveStopSignature, startRoute, uploadStopPhoto} from '../../lib/driver-v3/actions'
@@ -731,7 +732,7 @@ export default function DriverV3Page() {
         the closed state mirrors the hero map's own rect (captureNavOrigin),
         so opening/closing reads as the navigator growing out of / shrinking
         back into that map instead of one screen replacing another. */}
-    {navMounted&&(
+    {navMounted&&typeof document!=='undefined'&&createPortal((
       <div
         className={styles.navLayer}
         data-open={navVisuallyOpen?'true':'false'}
@@ -761,7 +762,7 @@ export default function DriverV3Page() {
           onHandleDragEnd={endDrag}
         />
       </div>
-    )}
+    ),document.body)}
     </div>
     {confirmPickupOpen&&(
       <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
