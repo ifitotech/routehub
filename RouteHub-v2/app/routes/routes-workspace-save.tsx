@@ -230,7 +230,14 @@ export function useRoutesSave(w: any) {
       // update returns success with zero rows, so without this the manager
       // would get a "moved to unassigned" confirmation for a route that never
       // actually moved. toggleRoutePause guards the same way.
-      const {data: updated, error} = await client.from('routes').update({driver_id: null, position: null, updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).select('id').maybeSingle()
+      // route_started_at/arrived_at are what Driver's driverOperationPhase()
+      // actually checks to decide a stop is already "started" - independent
+      // of status. Left set, whoever picks this route up next would open
+      // Today straight into live navigation ("Ruta activa") before ever
+      // pressing Start. A route that's 'paused' here only got that way from
+      // its PREVIOUS driver's progress, so it goes back to 'published' too.
+      const wasPaused = wasActive || route.status === 'paused'
+      const {data: updated, error} = await client.from('routes').update({driver_id: null, position: null, route_started_at: null, arrived_at: null, ...(wasPaused ? {status: 'published'} : {}), updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).select('id').maybeSingle()
       if (error) throw error
       if (!updated) throw new Error(locale === 'es' ? 'No se pudo mover la ruta. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'Impossible de déplacer l’itinéraire. Actualisez la liste et réessayez.' : 'The route could not be moved. Refresh the list and try again.')
       let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', previousDriverId).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
