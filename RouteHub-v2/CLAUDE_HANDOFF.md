@@ -4,13 +4,20 @@ Actualizado: 24 de septiembre de 2026. Repositorio: `ifitotech/routehub`, rama `
 
 ## Estado de entrega actual
 
-La PWA está preparada para el piloto en código. El último push es `22951f3` (`Improve CEO platform control center`). Antes de los cambios recientes pasaron:
+La PWA está preparada para el piloto en código. Al cerrar esta entrega, los cambios locales pendientes de publicar incluyen CEO operativo, correcciones de GPS al reabrir la PWA, onboarding con capturas reales y el pulido de navegación. Antes de los cambios recientes pasaron:
 
 - `npm run typecheck`
 - `npm test` — 169 pruebas aprobadas
 - `npm run build`
 
 `npm run lint` también pasa; quedan avisos históricos de dependencias de hooks, elementos `<img>` y dos avisos de Autoprefixer. No bloquean el build, pero no se deben ocultar ni convertir en errores sin una revisión específica.
+
+### Último bloque de navegación (24 de septiembre de 2026)
+
+- `51b1ee5` mejora guía, tarjeta inferior y el camión cab-over orientado por GPS. La guía secundaria queda dentro de la tarjeta, no flotando/cortada; Exit/Arrived mantienen alto contraste.
+- `50bc900` sincroniza la base de Google Maps con RouteHub claro/oscuro mediante `colorScheme`. Al cambiar tema se recrea únicamente el canvas, porque Google no permite cambiar ese esquema en una instancia existente.
+- `4ebf1b1` extiende el mapa detrás de la barra de estado durante navegación (`viewportFit: 'cover'`, estado translúcido y sin scrim superior). Probar en una PWA instalada y relanzada en iPhone: iOS lee esos metadatos al inicio, no durante hot reload.
+- Las tres piezas pasaron `npm run typecheck`, `npm test` (170 pruebas) y `npm run build`. Los avisos de lint/build mencionados abajo ya existían antes de este bloque.
 
 La pendiente principal no es otra reescritura: es validación física del piloto en iPhone y Android. No afirmar que algo de GPS, cámara, firma, notificaciones o retorno desde Maps funciona en todos los dispositivos sin probarlo en un teléfono real.
 
