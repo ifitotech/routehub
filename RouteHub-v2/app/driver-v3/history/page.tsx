@@ -38,10 +38,10 @@ export default function History() {
   const [section, setSection] = useState<'pending' | 'done'>('pending')
   const [query, setQuery] = useState('')
   const historyCopy = locale === 'es'
-    ? {returnToday: 'Desliza hacia abajo para volver a Hoy', search: 'Buscar rutas', placeholder: 'Ruta, cliente, dirección o PO', route: 'RUTA'}
+    ? {returnToday: 'Desliza hacia abajo para volver a Hoy', search: 'Buscar rutas', placeholder: 'Ruta, cliente, dirección o PO', route: 'RUTA', date: 'Fecha de ruta'}
     : locale === 'fr'
-      ? {returnToday: 'Glissez vers le bas pour revenir à Aujourd’hui', search: 'Rechercher des itinéraires', placeholder: 'Itinéraire, client, adresse ou PO', route: 'ITINÉRAIRE'}
-      : {returnToday: 'Swipe down to return to Today', search: 'Search routes', placeholder: 'Route, customer, address or PO', route: 'ROUTE'}
+      ? {returnToday: 'Glissez vers le bas pour revenir à Aujourd’hui', search: 'Rechercher des itinéraires', placeholder: 'Itinéraire, client, adresse ou PO', route: 'ITINÉRAIRE', date: 'Date de l’itinéraire'}
+      : {returnToday: 'Swipe down to return to Today', search: 'Search routes', placeholder: 'Route, customer, address or PO', route: 'ROUTE', date: 'Route date'}
   const currentId = (snapshot?.currentOperation?.route as {id?: string} | undefined)?.id
   const scheduledLabel = locale === 'es' ? 'Programada' : locale === 'fr' ? 'Prévue' : 'Scheduled'
 
@@ -89,7 +89,7 @@ export default function History() {
     <DriverV3Shell active="history" title={t.drvRouteHistory} subtitle={day}>
       <button
         type="button"
-        className="driver-route-swipe-back"
+        className="driver-route-swipe-back driver-route-swipe-back--history"
         aria-label={historyCopy.returnToday}
         onTouchStart={event => { swipeStartY.current = event.touches[0]?.clientY ?? null }}
         onTouchEnd={event => {
@@ -103,26 +103,28 @@ export default function History() {
         <span aria-hidden="true" className="driver-route-swipe-back__bar" />
         <span>{historyCopy.returnToday}</span>
       </button>
-      <label className="card" style={{display: 'block', marginBottom: 12, padding: '12px 14px'}}>
-        <span className="eyebrow" style={{display: 'block', marginBottom: 6}}>{t.drvRouteHistory}</span>
+      <label className="card driver-history-filter">
+        <span className="eyebrow">{t.drvRouteHistory}</span>
         <input
+          className="driver-history-date"
           type="date"
+          aria-label={historyCopy.date}
           value={day}
           onChange={event => setDay(event.target.value || operationalDate())}
-          style={{width: '100%', minHeight: 48, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}}
+          style={{width: '100%', minHeight: 46, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}}
         />
-        <input aria-label={historyCopy.search} value={query} onChange={event => setQuery(event.target.value)} placeholder={historyCopy.placeholder} style={{width: '100%', minHeight: 48, marginTop: 8, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}} />
+        <input className="driver-history-search" aria-label={historyCopy.search} value={query} onChange={event => setQuery(event.target.value)} placeholder={historyCopy.placeholder} style={{width: '100%', minHeight: 46, border: '1px solid var(--rh-border, #dde5ee)', borderRadius: 12, padding: '0 12px', font: 'inherit', background: 'var(--rh-surface-soft, #fff)', color: 'var(--rh-text, #0f1d35)'}} />
       </label>
 
       {loading ? (
-        <section className="card"><p className="muted" style={{margin: 0}}>{t.drvLoading}</p></section>
+        <section className="card driver-history-empty"><p className="muted">{t.drvLoading}</p></section>
       ) : error ? (
-        <section className="card">
+        <section className="card driver-history-empty">
           <h2>{t.drvNoHistory}</h2>
           <p className="muted">{t.drvConnRetry}</p>
         </section>
       ) : rows.total === 0 ? (
-        <section className="card">
+        <section className="card driver-history-empty">
           <h2>{t.drvNoHistory}</h2>
           <p className="muted">{t.drvHistoryEmpty}</p>
         </section>

@@ -50,6 +50,7 @@ Lee también `ROUTEHUB_HANDOFF.md` y `CHATGPT_HANDOFF.md`: contienen decisiones 
 - La tarjeta inferior de navegación es flotante, compacta, con estética glass (iOS/Android), `Arrived` verde y `Exit` rojo lado a lado. No usar paneles pesados ni texto de bajo contraste.
 - El marcador del conductor debe ser el camión profesional blanco/azul tipo cab-over (Isuzu), no una flecha ni una van infantil.
 - El modo oscuro tiene que respetarse de extremo a extremo, incluidos mapas/superficies/loader. Nunca renderizar accidentalmente superficies claras en tema oscuro.
+- En History móvil, el gesto de regreso debe ser compacto y vinculado visualmente a los filtros; fecha y búsqueda comparten la misma retícula, y las tarjetas vacías/errores centran su contenido sin dejar espacios desbalanceados.
 - Sin rutas pendientes: pantalla Today con saludo, sucursal real, jornada, actividad real del día, botón de sincronizar e ilustración. Cero no es error; error/carga/sin conexión son estados distintos.
 
 ### Manager — UX aprobada

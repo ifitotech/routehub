@@ -2,3 +2,5 @@
 .driver-route-swipe-back:active{color:#1667f2;transform:scale(.98)}
 .driver-route-swipe-back:focus-visible{outline:3px solid rgba(22,119,255,.2);outline-offset:2px;border-radius:8px}
 .driver-route-swipe-back__bar{display:block;width:42px;height:4px;border-radius:999px;background:#b8c6d8}
+.driver-route-swipe-back--history{min-height:44px;margin:0 0 12px;padding:4px 8px 6px;gap:5px;color:var(--rh-text-muted,#64748b);letter-spacing:.01em}
+.driver-route-swipe-back--history .driver-route-swipe-back__bar{width:36px;background:var(--rh-border-strong,#9fb2cc)}
