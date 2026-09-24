@@ -1,12 +1,21 @@
 .page{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:2px 0 12px}
+.page>*{order:8}
 .pageHeader{min-height:0!important;padding:0 2px 2px!important;background:transparent!important}
 .pageHeader h1{margin:2px 0 0;color:#0f1d35;font-size:26px;line-height:1.16;letter-spacing:-.035em}
 .pageHeader p{margin:0;color:#667892;font-size:11px;line-height:1.4;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
 .eyebrow{margin:0 0 5px;color:#667892;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
 .section{flex:0 0 auto;overflow:hidden;border:1px solid #dde5ee;border-radius:15px;background:#fff;box-shadow:0 2px 8px rgba(15,29,53,.06)}
+.drivingDaySection{order:1}
+.experienceSection{order:2}
+.navigationSection{order:3}
+.accountSection{order:4}
+.alertsSection{order:5}
+.deviceSection{order:6}
+.preferencesSection{order:7}
 .sectionHeader{padding:12px 14px 5px}
 .sectionHeader h2{margin:0;color:#0f1d35;font-size:15px;letter-spacing:-.01em}
 .sectionHeader p{margin:4px 0 0;color:#667892;font-size:13px;line-height:1.42}
+.sectionDivider{height:1px;background:#edf1f5}
 .row{display:flex;align-items:center;gap:11px;min-height:64px;padding:10px 14px;color:#0f1d35;text-decoration:none;border-top:1px solid #edf1f5;transition:background-color .15s ease,transform .1s ease}
 .row:first-of-type{border-top:0}
 button.row{width:100%;text-align:left;border:0;background:transparent;font:inherit;box-sizing:border-box;appearance:none;-webkit-appearance:none;border-radius:0;box-shadow:none;color:inherit;cursor:pointer}
@@ -64,6 +73,7 @@ button.row{width:100%;text-align:left;border:0;background:transparent;font:inher
 :global(html:not([data-theme='light'])) .choiceSelected,:global(html:not([data-theme='light'])) .languageChoiceSelected{background:#17345c;color:#9cc4ff;border-color:#6ea5ff}
 :global(html:not([data-theme='light'])) .pageHeader p,:global(html:not([data-theme='light'])) .eyebrow,:global(html:not([data-theme='light'])) .sectionHeader p,:global(html:not([data-theme='light'])) .rowCopy small,:global(html:not([data-theme='light'])) .profileHero p,:global(html:not([data-theme='light'])) .infoRow small,:global(html:not([data-theme='light'])) .footer{color:#b9c9dd}
 :global(html:not([data-theme='light'])) .planHint{color:#b9c9dd}
+:global(html:not([data-theme='light'])) .sectionDivider{background:var(--rh-border)}
 :global(html:not([data-theme='light'])) .rowIcon{background:#17345c;color:#9cc4ff}
 :global(html:not([data-theme='light'])) .rowChevron,:global(html:not([data-theme='light'])) .infoRow svg{color:#9aabc0}
 :global(html:not([data-theme='light'])) .status{background:#153a2b;color:#8fe7bc}

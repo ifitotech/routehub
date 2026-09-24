@@ -208,7 +208,7 @@ export default function DriverV3Settings() {
   return (
     <DriverV3Shell active="more" title={t.drvSettings} hideNav={confirmEnd || confirmSignOut}>
       <div className={styles.page}>
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.experienceSection}`}>
           <div className={styles.sectionHeader}>
             <h2>{locale === 'es' ? 'Experiencia de Driver' : locale === 'fr' ? 'Expérience Driver' : 'Driver experience'}</h2>
             <p>{locale === 'es' ? 'Simple muestra solo las acciones necesarias. Pro conserva el resumen completo y la navegación integrada.' : locale === 'fr' ? 'Simple affiche uniquement les actions nécessaires. Pro conserve le résumé complet et la navigation intégrée.' : 'Simple shows only the needed actions. Pro keeps the complete stop summary and in-app navigation.'}</p>
@@ -226,7 +226,8 @@ export default function DriverV3Settings() {
             : (locale === 'es' ? 'Pro y la navegación integrada están incluidos en Premium.' : locale === 'fr' ? 'Pro et la navigation intégrée sont inclus dans Premium.' : 'Pro and in-app navigation are included with Premium.')}</p>}
         </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.accountSection}`}>
+          <div className={styles.sectionHeader}><h2>{locale === 'es' ? 'Cuenta y sucursal' : locale === 'fr' ? 'Compte et succursale' : 'Account & workspace'}</h2></div>
           <Link href="/driver/more" className={styles.row}>
             <span className={styles.rowIcon}><UserRound size={18} /></span>
             <span className={styles.rowCopy}>
@@ -235,11 +236,7 @@ export default function DriverV3Settings() {
             </span>
             <ChevronRight className={styles.rowChevron} size={19} />
           </Link>
-        </section>
-
-        {(workspace.company || workspace.branch) && (
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}><h2>{copy.workspace}</h2></div>
+          {(workspace.company || workspace.branch) && (
             <div className={styles.row}>
               <span className={styles.rowIcon}><Building2 size={18} /></span>
               <span className={styles.rowCopy}>
@@ -247,10 +244,10 @@ export default function DriverV3Settings() {
                 {workspace.branch ? <small>{copy.branch}: {workspace.branch}</small> : null}
               </span>
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.drivingDaySection}`}>
           <div className={styles.row}>
             <span className={styles.rowIcon}><CalendarDays size={18} /></span>
             <span className={styles.rowCopy}>
@@ -268,7 +265,7 @@ export default function DriverV3Settings() {
           </div>
         </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.navigationSection}`}>
           <div className={styles.sectionHeader}>
             <h2>{locale === 'es' ? 'Navegación' : locale === 'fr' ? 'Navigation' : 'Navigation'}</h2>
             <p>{locale === 'es' ? 'Elige si la guía se abre dentro de RouteHub o directamente en la app de mapas del teléfono.' : locale === 'fr' ? 'Choisissez si le guidage s’ouvre dans RouteHub ou directement dans l’app de cartes du téléphone.' : 'Choose whether guidance opens inside RouteHub or directly in the phone maps app.'}</p>
@@ -290,7 +287,7 @@ export default function DriverV3Settings() {
           </div>
         </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.alertsSection}`}>
           <div className={styles.sectionHeader}>
             <h2>{copy.alerts}</h2>
             <p>{copy.notificationsHelp}</p>
@@ -322,7 +319,7 @@ export default function DriverV3Settings() {
           </a>
         </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.preferencesSection}`}>
           <div className={styles.sectionHeader}><h2>{t.drvLanguage}</h2></div>
           <div className={styles.languageChoices}>
             {LANGS.map(lang => (
@@ -336,9 +333,7 @@ export default function DriverV3Settings() {
               </button>
             ))}
           </div>
-        </section>
-
-        <section className={styles.section}>
+          <div className={styles.sectionDivider} />
           <div className={styles.sectionHeader}><h2>{locale === 'es' ? 'Tema' : locale === 'fr' ? 'Thème' : 'Theme'}</h2></div>
           <div className={styles.languageChoices}>
             {([

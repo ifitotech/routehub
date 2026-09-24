@@ -82,7 +82,7 @@ export default function DevicePermissions({locale}: {locale: string}) {
         ? (es ? 'No disponible' : fr ? 'Indisponible' : 'Unavailable')
         : (es ? 'Aún no permitido' : fr ? 'Pas encore autorisé' : 'Not allowed yet')
 
-  return <section className={styles.section}>
+  return <section className={`${styles.section} ${styles.deviceSection}`}>
     <div className={styles.sectionHeader}><h2>{android ? (es ? 'Permisos de Android' : 'Android permissions') : (es ? 'Permisos del dispositivo' : fr ? 'Autorisations de l’appareil' : 'Device permissions')}</h2>
       <p>{es ? 'La ubicación solo se comparte mientras una ruta activa se navega dentro de RouteHub. Esta pantalla puede solicitar permisos, pero no envía tu ubicación.' : fr ? 'La position est partagée uniquement pendant un itinéraire actif dans la navigation RouteHub. Cet écran peut demander des autorisations, mais n’envoie pas votre position.' : 'Location is shared only while navigating an active route inside RouteHub. This screen can request permission, but it does not upload your location.'}</p></div>
     {android && <div className={styles.row}>
