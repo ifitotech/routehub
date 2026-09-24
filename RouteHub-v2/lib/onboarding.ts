@@ -1,4 +1,6 @@
-export const ONBOARDING_VERSION = 'v2'
+// The Driver tour now uses current product captures rather than the old
+// illustrated previews, so completed v2 tours should refresh once.
+export const ONBOARDING_VERSION = 'v3'
 export const ONBOARDING_REPLAY_EVENT = 'routehub:show-onboarding'
 
 export type OnboardingAudience = 'driver' | 'manager'

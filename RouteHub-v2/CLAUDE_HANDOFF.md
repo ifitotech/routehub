@@ -52,6 +52,7 @@ Lee también `ROUTEHUB_HANDOFF.md` y `CHATGPT_HANDOFF.md`: contienen decisiones 
 - El modo oscuro tiene que respetarse de extremo a extremo, incluidos mapas/superficies/loader. Nunca renderizar accidentalmente superficies claras en tema oscuro.
 - En History móvil, el gesto de regreso debe ser compacto y vinculado visualmente a los filtros; fecha y búsqueda comparten la misma retícula, y las tarjetas vacías/errores centran su contenido sin dejar espacios desbalanceados.
 - Settings de Driver se ordena por prioridad: jornada, experiencia, navegación, cuenta/sucursal, alertas, permisos del dispositivo, idioma/tema y por último soporte/actualizaciones/salida. No volver a repartir estas preferencias como tarjetas aisladas ni duplicar su función.
+- El popup inicial y el tour de Driver usan capturas reales en `public/onboarding-driver-*.jpg`; no reintroducir las vistas falsas en CSS. `ONBOARDING_VERSION` está en `v3` para mostrar el tour actualizado una vez a quienes terminaron el anterior.
 - Sin rutas pendientes: pantalla Today con saludo, sucursal real, jornada, actividad real del día, botón de sincronizar e ilustración. Cero no es error; error/carga/sin conexión son estados distintos.
 
 ### Manager — UX aprobada

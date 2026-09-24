@@ -1,6 +1,7 @@
 'use client'
 
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
+import Image from 'next/image'
 import {usePathname} from 'next/navigation'
 import {BellRing, Check, ChevronRight, ClipboardCheck, MapPinned, Route, Truck, UsersRound, X} from 'lucide-react'
 import {getSupabase} from '../lib/supabase'
@@ -154,6 +155,19 @@ export default function OnboardingGate() {
   const slide = slides[slideIndex]
   const Icon = slide.icon
   const isLast = slideIndex === slides.length - 1
+  // Real screens keep the Driver tour aligned with the product people will
+  // actually use, instead of teaching an obsolete CSS illustration.
+  const driverScreens = [
+    '/onboarding-driver-navigation.jpg',
+    '/onboarding-driver-route.jpg',
+    '/onboarding-driver-settings.jpg',
+  ]
+  const driverScreen = identity.audience === 'driver' ? driverScreens[slideIndex] : null
+  const driverScreenAlt = locale === 'es'
+    ? 'Pantalla real de RouteHub Driver'
+    : locale === 'fr'
+      ? 'Écran réel de RouteHub Driver'
+      : 'Real RouteHub Driver screen'
   const permissionCopy = locale === 'es' ? {
     eyebrow:'PREPARA TU DISPOSITIVO', title:'Permisos para usar RouteHub', description:'Al continuar, tu iPhone o Android te preguntará si permites notificaciones y ubicación. La ubicación solo se usa durante una ruta activa con la navegación interna abierta; esta preparación no envía tu posición.',
     location:'Ubicación para centrar y actualizar el mapa durante la navegación interna.', notifications:'Avisos de rutas asignadas y cambios importantes.', button:'Permitir y continuar', continue:'Continuar al recorrido', later:'Ahora no', busy:'Solicitando permisos…', granted:'Permitido', denied:'No permitido. Puedes activarlo en los ajustes del dispositivo.', unavailable:'No disponible en este navegador o dispositivo.', error:'No se pudo completar. Revisa los ajustes si ya rechazaste el permiso.',
@@ -173,10 +187,8 @@ export default function OnboardingGate() {
         <button className={styles.close} type="button" aria-label={copy.skip} onClick={complete}><X size={21}/></button>
       </header>
       {deviceSetupNeeded ? <>
-      <div className={`${styles.visual} ${styles.blue}`}>
-        <div className={styles.routeLine} aria-hidden="true"><i/><i/><i/></div>
-        <div className={styles.heroIcon}><MapPinned size={44}/></div>
-        <div className={styles.previewCard}><span>ROUTEHUB DRIVER</span><strong>{locale==='es'?'Ruta activa, ubicación protegida':locale==='fr'?'Itinéraire actif, position protégée':'Active route, protected location'}</strong><small><i/>{locale==='es'?'Solo durante navegación interna':locale==='fr'?'Navigation intégrée uniquement':'Only during in-app navigation'}</small></div>
+      <div className={`${styles.visual} ${styles.realVisual}`}>
+        <Image className={styles.realScreen} src="/onboarding-driver-navigation.jpg" alt={driverScreenAlt} fill sizes="(max-width: 520px) 100vw, 460px" priority/>
       </div>
       <div className={styles.content}>
         <span className={styles.eyebrow}>{permissionCopy.eyebrow}</span>
@@ -193,14 +205,16 @@ export default function OnboardingGate() {
         <button className={styles.next} type="button" disabled={deviceSetupBusy} onClick={()=>deviceSetupResult?setDeviceSetupNeeded(false):void prepareDevice()}>{deviceSetupBusy?permissionCopy.busy:deviceSetupResult?permissionCopy.continue:permissionCopy.button}<ChevronRight size={18}/></button>
       </div></footer>
       </> : <>
-      <div className={`${styles.visual} ${styles[slide.accent]}`}>
-        <div className={styles.routeLine} aria-hidden="true"><i/><i/><i/></div>
-        <div className={styles.heroIcon}><Icon size={44}/></div>
-        <div className={styles.previewCard}>
-          <span>{identity.audience === 'driver' ? (locale === 'es' ? 'PARADA ACTUAL' : locale === 'fr' ? 'ARRÊT ACTUEL' : 'CURRENT STOP') : (locale === 'es' ? 'EN VIVO' : locale === 'fr' ? 'EN DIRECT' : 'LIVE')}</span>
-          <strong>{identity.audience === 'driver' ? (locale === 'es' ? 'Siguiente destino' : locale === 'fr' ? 'Prochaine destination' : 'Next destination') : (locale === 'es' ? 'Operación conectada' : locale === 'fr' ? 'Opérations connectées' : 'Connected operations')}</strong>
-          <small><i/>{locale === 'es' ? 'Actualizado ahora' : locale === 'fr' ? 'Mis à jour maintenant' : 'Updated now'}</small>
-        </div>
+      <div className={`${styles.visual} ${driverScreen ? styles.realVisual : styles[slide.accent]}`}>
+        {driverScreen ? <Image className={styles.realScreen} src={driverScreen} alt={driverScreenAlt} fill sizes="(max-width: 520px) 100vw, 460px" priority/> : <>
+          <div className={styles.routeLine} aria-hidden="true"><i/><i/><i/></div>
+          <div className={styles.heroIcon}><Icon size={44}/></div>
+          <div className={styles.previewCard}>
+            <span>{locale === 'es' ? 'EN VIVO' : locale === 'fr' ? 'EN DIRECT' : 'LIVE'}</span>
+            <strong>{locale === 'es' ? 'Operación conectada' : locale === 'fr' ? 'Opérations connectées' : 'Connected operations'}</strong>
+            <small><i/>{locale === 'es' ? 'Actualizado ahora' : locale === 'fr' ? 'Mis à jour maintenant' : 'Updated now'}</small>
+          </div>
+        </>}
       </div>
       <div className={styles.content}>
         <span className={styles.eyebrow}>{slide.eyebrow}</span>

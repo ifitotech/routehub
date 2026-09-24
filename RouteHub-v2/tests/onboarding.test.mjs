@@ -6,7 +6,7 @@ const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
 
 test('onboarding is versioned per user and role', () => {
   const helper = read('../lib/onboarding.ts')
-  assert.match(helper, /ONBOARDING_VERSION = 'v2'/)
+  assert.match(helper, /ONBOARDING_VERSION = 'v3'/)
   assert.match(helper, /routehub_onboarding_\$\{ONBOARDING_VERSION\}:\$\{audience\}:\$\{userId\}/)
 })
 
@@ -18,6 +18,9 @@ test('driver and manager get different three-step tours', () => {
   // confirms pickup material, while the Manager follows routes by status.
   assert.match(gate, /Confirm materials at pickup/)
   assert.match(gate, /Follow routes by status/)
+  assert.match(gate, /onboarding-driver-navigation\.jpg/)
+  assert.match(gate, /onboarding-driver-route\.jpg/)
+  assert.match(gate, /onboarding-driver-settings\.jpg/)
   assert.match(gate, /slides\.length - 1/)
 })
 
