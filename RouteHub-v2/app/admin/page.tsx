@@ -16,7 +16,7 @@ const quickLinks = [
 
 export default function Admin() {
   const [counts, setCounts] = useState({pending: 0, companies: 0, errors: 0, support: 0})
-  const [activity, setActivity] = useState({routes: 0, drivers: 0, managers: 0})
+  const [activity, setActivity] = useState({activeRoutes: 0, issues: 0, drivers: 0, managers: 0})
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
@@ -25,15 +25,16 @@ export default function Admin() {
     setLoadError('')
     try {
       const supabase = getSupabase()
-      const [{data: requests, error: requestError}, {count: companies, error: companyError}, {count: errors, error: errorCountError}, {count: support, error: supportError}, {count: routes, error: routeError}, {data: roles, error: roleError}] = await Promise.all([
+      const [{data: requests, error: requestError}, {count: companies, error: companyError}, {count: errors, error: errorCountError}, {count: support, error: supportError}, {count: activeRoutes, error: activeRouteError}, {count: issues, error: issueError}, {data: roles, error: roleError}] = await Promise.all([
         supabase.from('platform_manager_approvals').select('status'),
         supabase.from('companies').select('id', {count: 'exact', head: true}),
         supabase.from('app_error_reports').select('id', {count: 'exact', head: true}).is('resolved_at', null),
         supabase.from('support_requests').select('id', {count: 'exact', head: true}).is('resolved_at', null),
-        supabase.from('routes').select('id', {count: 'exact', head: true}),
+        supabase.from('routes').select('id', {count: 'exact', head: true}).in('status', ['active', 'paused']),
+        supabase.from('routes').select('id', {count: 'exact', head: true}).eq('status', 'issue'),
         supabase.from('company_users').select('role'),
       ])
-      const queryError = requestError || companyError || errorCountError || supportError || routeError || roleError
+      const queryError = requestError || companyError || errorCountError || supportError || activeRouteError || issueError || roleError
       if (queryError) throw queryError
       setCounts({
         pending: (requests || []).filter(row => row.status === 'pending').length,
@@ -42,7 +43,8 @@ export default function Admin() {
         support: support || 0,
       })
       setActivity({
-        routes: routes || 0,
+        activeRoutes: activeRoutes || 0,
+        issues: issues || 0,
         drivers: (roles || []).filter(row => row.role === 'driver').length,
         managers: (roles || []).filter(row => ['branch_manager', 'operations_manager'].includes(row.role)).length,
       })
@@ -73,8 +75,9 @@ export default function Admin() {
           <Link href="/admin/errors" className={`${styles.adminStatLink} ${counts.errors > 0 ? styles.alertStat : ''}`} aria-label={`Open errors: ${counts.errors}`}><span>Open errors</span><strong>{counts.errors}</strong><small>{counts.errors ? 'Needs attention' : 'Nothing unresolved'}</small></Link>
         </section>
         <h2 className={styles.sectionLabel}>Platform activity</h2>
-        <section className={styles.adminStats} aria-label="Platform activity">
-          <article><span><Route size={15}/> Routes created</span><strong>{activity.routes}</strong><small>All-time, every company</small></article>
+        <section className={`${styles.adminStats} ${styles.adminActivityStats}`} aria-label="Platform activity">
+          <article><span><Route size={15}/> Active routes</span><strong>{activity.activeRoutes}</strong><small>Drivers currently working</small></article>
+          <Link href="/admin/companies" className={`${styles.adminStatLink} ${activity.issues > 0 ? styles.alertStat : ''}`}><span><AlertTriangle size={15}/> Route issues</span><strong>{activity.issues}</strong><small>{activity.issues ? 'Manager review required' : 'No unresolved route issues'}</small></Link>
           <article><span><UsersRound size={15}/> Drivers</span><strong>{activity.drivers}</strong><small>Across every company</small></article>
           <article><span><UsersRound size={15}/> Managers</span><strong>{activity.managers}</strong><small>Branch &amp; operations managers</small></article>
         </section>

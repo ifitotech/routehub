@@ -48,6 +48,7 @@
 .controlHero small { margin-top:3px; color:#c4d8f7; font-size:.83rem; }
 .controlHeroActions a { display:inline-flex; align-items:center; gap:5px; min-height:42px; padding:0 13px; border:1px solid rgb(255 255 255 / 23%); border-radius:12px; background:rgb(255 255 255 / 9%); color:#fff; font-size:.82rem; font-weight:800; text-decoration:none; white-space:nowrap; }
 .adminStats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; margin-bottom:16px; }
+.adminActivityStats { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .adminStats article { padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:var(--surface); box-shadow:0 10px 24px rgb(15 32 58 / 5%); }
 .adminStatLink { display:block; padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:var(--surface); color:inherit; text-decoration:none; box-shadow:0 10px 24px rgb(15 32 58 / 5%); transition:transform 160ms ease,border-color 160ms ease; }
 .adminStatLink:hover,.adminStatLink:focus-visible { transform:translateY(-1px); border-color:#9bbcf1; outline:none; }
@@ -151,7 +152,7 @@
 @keyframes spin { to { transform: rotate(360deg) } }
 
 @media (max-width: 760px) {
-  .adminStats { grid-template-columns:1fr; }
+  .adminStats,.adminActivityStats { grid-template-columns:1fr; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formGrid { grid-template-columns: 1fr; }
   .primaryButton { width: 100%; }
