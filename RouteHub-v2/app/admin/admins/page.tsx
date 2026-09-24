@@ -1,6 +1,6 @@
 'use client'
 
-import {ShieldAlert, ShieldCheck, Trash2, UserPlus} from 'lucide-react'
+import {RefreshCw, ShieldAlert, ShieldCheck, Trash2, UserPlus} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
 import AdminShell from '../admin-shell'
@@ -14,8 +14,12 @@ export default function PlatformAdmins() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('Loading platform admins…')
   const [selfId, setSelfId] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   const load = async () => {
+    setLoading(true)
     try {
       const supabase = getSupabase()
       const {data: userData} = await supabase.auth.getUser()
@@ -32,6 +36,8 @@ export default function PlatformAdmins() {
       setMessage('')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to load platform admins.')
+    } finally {
+      setLoading(false)
     }
   }
   useEffect(() => { void load() }, [])
@@ -48,8 +54,8 @@ export default function PlatformAdmins() {
       const {error} = await supabase.from('platform_admins').insert({user_id: person.id})
       if (error) throw error
       setEmail('')
-      setMessage('Admin access granted.')
       await load()
+      setMessage('Admin access granted.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to grant admin access.')
     } finally {
@@ -59,9 +65,19 @@ export default function PlatformAdmins() {
 
   const remove = async (userId: string) => {
     if (userId === selfId && rows.length <= 1) { setMessage('You are the only platform admin - add another one before removing yourself.'); return }
-    const {error} = await getSupabase().from('platform_admins').delete().eq('user_id', userId)
-    setMessage(error ? error.message : 'Admin access removed.')
-    if (!error) await load()
+    if (confirmRemoveId !== userId) { setConfirmRemoveId(userId); return }
+    setRemovingId(userId)
+    setConfirmRemoveId(null)
+    try {
+      const {error} = await getSupabase().from('platform_admins').delete().eq('user_id', userId)
+      if (error) throw error
+      await load()
+      setMessage('Admin access removed.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to remove admin access.')
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   return (
@@ -72,6 +88,7 @@ export default function PlatformAdmins() {
           <h1 className={styles.title}>Platform admins</h1>
           <p className={styles.subtitle}>Everyone with CEO-level access to every company on RouteHub. Grant this rarely.</p>
         </div>
+        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? styles.spinning : undefined}/>{loading ? 'Updating…' : 'Refresh'}</button>
       </header>
 
       <section className={styles.panel}>
@@ -91,7 +108,7 @@ export default function PlatformAdmins() {
             <span className={styles.rowIcon}><ShieldCheck size={20}/></span>
             <div className={styles.identity}><h2>{row.name || row.email || 'Unknown'}</h2><p>{row.email}{row.user_id === selfId ? ' · You' : ''}</p></div>
             <div className={styles.rowAside}>
-              <button className={styles.dangerButton} onClick={() => void remove(row.user_id)}><Trash2 size={14}/> Remove</button>
+              <button className={styles.dangerButton} disabled={removingId === row.user_id} onClick={() => void remove(row.user_id)}><Trash2 size={14}/> {removingId === row.user_id ? 'Removing…' : confirmRemoveId === row.user_id ? 'Remove access?' : 'Remove'}</button>
             </div>
           </article>
         ))}
