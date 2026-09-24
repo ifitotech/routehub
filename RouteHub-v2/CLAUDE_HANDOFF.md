@@ -4,7 +4,7 @@ Actualizado: 23 de septiembre de 2026. Repositorio: `ifitotech/routehub`, rama `
 
 ## Estado de entrega actual
 
-La PWA está preparada para el piloto en código. El último push es `50c002e` (`Prepare mobile beta reliability`). Antes de ese push pasaron:
+La PWA está preparada para el piloto en código. El último push es `22951f3` (`Improve CEO platform control center`). Antes de los cambios recientes pasaron:
 
 - `npm run typecheck`
 - `npm test` — 169 pruebas aprobadas
@@ -65,6 +65,16 @@ Lee también `ROUTEHUB_HANDOFF.md` y `CHATGPT_HANDOFF.md`: contienen decisiones 
 4. **Permisos y tour.** El flujo de preparación del driver usa gesto explícito para notificaciones/ubicación, con copy EN/ES/FR. No pide ni envía una ubicación de prueba durante el onboarding.
 5. **Navegación.** Marcador de camión actualizado; estados sin ETA/GPS/route muestran copy real localizado, no cifras inventadas ni guiones engañosos.
 6. **PWA.** Errores de `registration.update()` cuando está offline se controlan para no mostrar ruido ni romper la experiencia.
+
+## CEO/Admin — cierre operativo (23 de septiembre de 2026)
+
+El área CEO/Admin se está cerrando para operar el piloto, no para billing. Los cambios locales posteriores al último push mejoran el control operativo de compañías, solicitudes, errores, soporte, admins y auditoría:
+
+- Dashboard con salud de plataforma, refresco manual, conteos reales de rutas activas/incidencias/drivers/managers y estado explícito si una consulta falla. No debe mostrar ceros ni “sin solicitudes” cuando los datos no se pudieron cargar.
+- Companies, Support, Errors, Admins y Audit muestran estados de carga/error, previenen dobles acciones y dejan confirmación visible tras resolver o cambiar acceso. Audit enseña el actor asociado al evento; Support permite copiar un resumen compartible.
+- Navegación CEO con iconos y etiquetas, más usable en móvil. Billing sigue fuera del flujo operativo principal hasta que se defina el cobro.
+- Existe una migración nueva pendiente de aplicar en el entorno Supabase: `20260923170000_platform_admin_route_read.sql`. Añade exclusivamente `SELECT` de `public.routes` para miembros de `platform_admins`, necesario para que las métricas CEO de rutas funcionen sin ensanchar permisos de escritura. No afirmar que está activa en producción hasta aplicarla mediante el flujo de migraciones del proyecto.
+- La prueba `tests/ceo-route-read-policy.test.mjs` protege que esa política sea solo de lectura y solo para platform admins.
 
 ## Validación pendiente para cerrar beta
 

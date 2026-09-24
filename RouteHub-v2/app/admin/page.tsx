@@ -82,6 +82,7 @@ export default function Admin() {
           <article><span><UsersRound size={15}/> Managers</span><strong>{activity.managers}</strong><small>Branch &amp; operations managers</small></article>
         </section>
       </>}
+      {!loadError && <>
       {counts.errors > 0 && (
         <section className={styles.panel}>
           <header className={styles.panelHeader}><div><h2>Open errors</h2><p>Something crashed for a real user and has not been looked at yet.</p></div><span className={styles.panelIcon}><AlertTriangle size={21}/></span></header>
@@ -98,6 +99,7 @@ export default function Admin() {
         <header className={styles.panelHeader}><div><h2>Access requests</h2><p>Review trial signups and company plans.</p></div><span className={styles.panelIcon}><ShieldCheck size={21}/></span></header>
           <div className={styles.empty}><span><UserCheck size={24}/></span><h2>{counts.pending ? `${counts.pending} pending request${counts.pending === 1 ? '' : 's'}` : 'No pending requests'}</h2><p>{counts.pending ? 'Review them before the trial ends.' : 'New trial signups will appear here.'}</p><Link className={styles.primaryButton} href="/admin/companies">Review companies <ChevronRight size={17}/></Link></div>
       </section>
+      </>}
       <h2 className={styles.sectionLabel}>Quick access</h2>
       <section className={styles.grid} aria-label="Admin quick access">{quickLinks.map(({href, title, description, icon: Icon}) => <Link className={styles.actionCard} href={href} key={href}><span className={styles.actionIcon}><Icon size={20}/></span><h3>{title}</h3><p>{description}</p><ChevronRight className={styles.arrow} size={18}/></Link>)}</section>
       <div className={styles.adminNotice}><AlertTriangle size={18}/><span>Admin access is limited to platform security, billing and account approvals.</span></div>
