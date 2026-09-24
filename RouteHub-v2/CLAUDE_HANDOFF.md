@@ -72,6 +72,7 @@ El área CEO/Admin se está cerrando para operar el piloto, no para billing. Los
 
 - Dashboard con salud de plataforma, refresco manual, conteos reales de rutas activas/incidencias/drivers/managers y estado explícito si una consulta falla. No debe mostrar ceros ni “sin solicitudes” cuando los datos no se pudieron cargar.
 - Companies, Support, Errors, Admins y Audit muestran estados de carga/error, previenen dobles acciones y dejan confirmación visible tras resolver o cambiar acceso. Audit enseña el actor asociado al evento; Support permite copiar un resumen compartible.
+- El detalle de cada organización verifica cada consulta antes de renderizar sus conteos. Incluye carga, refresco y reintento; ante una falla no permite crear ramas ni presenta rutas, miembros o sucursales vacíos como datos válidos.
 - Navegación CEO con iconos y etiquetas, más usable en móvil. Billing sigue fuera del flujo operativo principal hasta que se defina el cobro.
 - Existe una migración nueva pendiente de aplicar en el entorno Supabase: `20260923170000_platform_admin_route_read.sql`. Añade exclusivamente `SELECT` de `public.routes` para miembros de `platform_admins`, necesario para que las métricas CEO de rutas funcionen sin ensanchar permisos de escritura. No afirmar que está activa en producción hasta aplicarla mediante el flujo de migraciones del proyecto.
 - La prueba `tests/ceo-route-read-policy.test.mjs` protege que esa política sea solo de lectura y solo para platform admins.
