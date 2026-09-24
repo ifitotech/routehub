@@ -1,5 +1,5 @@
 'use client'
-import {AlertTriangle, Building2, ChevronRight, LifeBuoy, ScrollText, ShieldCheck, UserCheck} from 'lucide-react'
+import {AlertTriangle, Building2, ChevronRight, LifeBuoy, Radio, RefreshCw, Route, ScrollText, ShieldCheck, UserCheck, UsersRound} from 'lucide-react'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
@@ -17,10 +17,15 @@ const quickLinks = [
 export default function Admin() {
   const [counts, setCounts] = useState({pending: 0, companies: 0, errors: 0, support: 0})
   const [activity, setActivity] = useState({routes: 0, drivers: 0, managers: 0})
-  useEffect(() => {
-    const load = async () => {
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+
+  const load = async () => {
+    setLoading(true)
+    setLoadError('')
+    try {
       const supabase = getSupabase()
-      const [{data: requests}, {count: companies}, {count: errors}, {count: support}, {count: routes}, {data: roles}] = await Promise.all([
+      const [{data: requests, error: requestError}, {count: companies, error: companyError}, {count: errors, error: errorCountError}, {count: support, error: supportError}, {count: routes, error: routeError}, {data: roles, error: roleError}] = await Promise.all([
         supabase.from('platform_manager_approvals').select('status'),
         supabase.from('companies').select('id', {count: 'exact', head: true}),
         supabase.from('app_error_reports').select('id', {count: 'exact', head: true}).is('resolved_at', null),
@@ -28,6 +33,8 @@ export default function Admin() {
         supabase.from('routes').select('id', {count: 'exact', head: true}),
         supabase.from('company_users').select('role'),
       ])
+      const queryError = requestError || companyError || errorCountError || supportError || routeError || roleError
+      if (queryError) throw queryError
       setCounts({
         pending: (requests || []).filter(row => row.status === 'pending').length,
         companies: companies || 0,
@@ -39,23 +46,39 @@ export default function Admin() {
         drivers: (roles || []).filter(row => row.role === 'driver').length,
         managers: (roles || []).filter(row => ['branch_manager', 'operations_manager'].includes(row.role)).length,
       })
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Unable to load platform data.')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     void load()
   }, [])
   return (
     <AdminShell active="home">
-      <header className={styles.header}><div><p className={styles.eyebrow}>CEO / Admin</p><h1 className={styles.title}>Admin access</h1><p className={styles.subtitle}>Approve accounts, manage billing and keep RouteHub healthy.</p></div></header>
-      <section className={styles.adminStats} aria-label="Platform summary">
-        <article><span>Pending trials</span><strong>{counts.pending}</strong><small>Needs review</small></article>
-        <article><span>Companies</span><strong>{counts.companies}</strong><small>Registered workspaces</small></article>
-        <Link href="/admin/errors" className={`${styles.adminStatLink} ${counts.errors > 0 ? styles.alertStat : ''}`} aria-label={`Open errors: ${counts.errors}`}><span>Open errors</span><strong>{counts.errors}</strong><small>Needs attention · Open reports</small></Link>
-      </section>
-      <h2 className={styles.sectionLabel}>Platform activity</h2>
-      <section className={styles.adminStats} aria-label="Platform activity">
-        <article><span>Routes created</span><strong>{activity.routes}</strong><small>All-time, every company</small></article>
-        <article><span>Drivers</span><strong>{activity.drivers}</strong><small>Across every company</small></article>
-        <article><span>Managers</span><strong>{activity.managers}</strong><small>Branch &amp; operations managers</small></article>
-      </section>
+      <header className={styles.header}>
+        <div><p className={styles.eyebrow}>CEO / Admin</p><h1 className={styles.title}>Platform control</h1><p className={styles.subtitle}>The operational view for pilot companies, support and platform reliability. Billing stays separate until it is enabled.</p></div>
+        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? styles.spinning : undefined}/>{loading ? 'Updating…' : 'Refresh'}</button>
+      </header>
+      {loadError ? <section className={styles.loadError} role="alert"><AlertTriangle size={19}/><div><strong>Platform data could not be refreshed.</strong><p>{loadError}</p></div><button className={styles.secondaryButton} type="button" onClick={() => void load()}>Try again</button></section> : <>
+        <section className={styles.controlHero} aria-label="Platform health">
+          <div><span className={styles.controlHeroIcon}><Radio size={18}/></span><p>Platform health</p><h2>{counts.errors || counts.support ? 'Needs attention' : 'All clear'}</h2><small>{counts.errors ? `${counts.errors} open error${counts.errors === 1 ? '' : 's'}` : counts.support ? `${counts.support} support request${counts.support === 1 ? '' : 's'} waiting` : 'No unresolved errors or support requests.'}</small></div>
+          <div className={styles.controlHeroActions}><Link href={counts.errors ? '/admin/errors' : counts.support ? '/admin/support' : '/admin/companies'}>{counts.errors ? 'Review errors' : counts.support ? 'Review support' : 'Review companies'}<ChevronRight size={16}/></Link></div>
+        </section>
+        <section className={styles.adminStats} aria-label="Platform summary">
+          <article><span>Pending access</span><strong>{counts.pending}</strong><small>Trial requests to review</small></article>
+          <article><span>Companies</span><strong>{counts.companies}</strong><small>Registered workspaces</small></article>
+          <Link href="/admin/errors" className={`${styles.adminStatLink} ${counts.errors > 0 ? styles.alertStat : ''}`} aria-label={`Open errors: ${counts.errors}`}><span>Open errors</span><strong>{counts.errors}</strong><small>{counts.errors ? 'Needs attention' : 'Nothing unresolved'}</small></Link>
+        </section>
+        <h2 className={styles.sectionLabel}>Platform activity</h2>
+        <section className={styles.adminStats} aria-label="Platform activity">
+          <article><span><Route size={15}/> Routes created</span><strong>{activity.routes}</strong><small>All-time, every company</small></article>
+          <article><span><UsersRound size={15}/> Drivers</span><strong>{activity.drivers}</strong><small>Across every company</small></article>
+          <article><span><UsersRound size={15}/> Managers</span><strong>{activity.managers}</strong><small>Branch &amp; operations managers</small></article>
+        </section>
+      </>}
       {counts.errors > 0 && (
         <section className={styles.panel}>
           <header className={styles.panelHeader}><div><h2>Open errors</h2><p>Something crashed for a real user and has not been looked at yet.</p></div><span className={styles.panelIcon}><AlertTriangle size={21}/></span></header>
