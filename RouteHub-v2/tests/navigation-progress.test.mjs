@@ -81,6 +81,7 @@ test('Driver navigation has its own surface and Manager keeps its previous compo
   const driver=await readFile(new URL('../app/driver-route-navigation.tsx',import.meta.url),'utf8')
   const manager=await readFile(new URL('../app/routes/live-route.tsx',import.meta.url),'utf8')
   const navigation=await readFile(new URL('../app/driver-navigation-map.tsx',import.meta.url),'utf8')
+  const canvas=await readFile(new URL('../components/google-route-canvas.tsx',import.meta.url),'utf8')
   assert.match(driver,/import\('\.\/driver-navigation-map'\)/)
   assert.match(manager,/import\('\.\.\/route-plan-map'\)/)
   assert.doesNotMatch(manager,/driver-navigation-map/)
@@ -90,6 +91,8 @@ test('Driver navigation has its own surface and Manager keeps its previous compo
   assert.match(navigation,/const start=usableNavigationFix\(deviceLocation,Date\.now\(\)\)\?sanitizeCoordinate\(deviceLocation\):null/)
   assert.match(navigation,/A saved origin belongs to the route plan, never to the driver/)
   assert.match(navigation,/path=\{gpsReady\?line:\[\]\}/)
+  assert.match(canvas,/colorScheme:theme==='dark'\?'DARK':'LIGHT'/)
+  assert.match(canvas,/navigationThemeRef\.current!==theme/)
 })
 test('distance projection stays within segment endpoints and handles repeated points',()=>{
   const point={lat:25,lng:-80}

@@ -27,6 +27,7 @@ type MapsApi={
   TrafficLayer:new()=>MapObject
   LatLngBounds:new()=>{extend:(point:MapCoordinate)=>void}
   SymbolPath:{CIRCLE:unknown;FORWARD_CLOSED_ARROW:unknown}
+  ColorScheme?:{LIGHT:unknown;DARK:unknown}
   RenderingType?:{VECTOR:string}
   event?:{trigger:(target:unknown,event:string)=>void}
 }
@@ -160,6 +161,7 @@ function nearestPathIndex(path:MapCoordinate[],position:MapCoordinate){
 export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[],fitPoints=[],followPosition=null,followToken=0,followDevice=false,interactive=true,showTraffic=false,navigation=false,cameraMode='follow',onCameraModeChange,navigationProgress=null,navigationHeading=null,navigationZoom=17.5,theme='light',onMapClick,onMarkerDrag}:Props){
   const containerRef=useRef<HTMLDivElement>(null)
   const mapRef=useRef<GoogleMap|null>(null)
+  const navigationThemeRef=useRef<'light'|'dark'|null>(null)
   const objectsRef=useRef<MapObject[]>([])
   const driverMarkerRef=useRef<MapObject|null>(null)
   const driverMarkerDetailRef=useRef<MapObject|null>(null)
@@ -200,6 +202,19 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       if(cancelled||!containerRef.current)return
       const maps=raw as unknown as MapsApi
       const current=renderDataRef.current
+      // Google Maps' native colorScheme is creation-only. Recreate the map
+      // when RouteHub changes theme rather than leaving a light base map under
+      // dark navigation cards (or the inverse). Overlay objects/listeners are
+      // disposed first; route and camera state are then rendered again below.
+      if(navigation&&mapRef.current&&navigationThemeRef.current!==theme){
+        objectsRef.current.forEach(object=>object.setMap(null))
+        objectsRef.current=[]
+        listenersRef.current.forEach(listener=>listener.remove?.())
+        listenersRef.current=[]
+        mapRef.current=null
+        cameraInitialized.current=false
+        lastNavigationSample.current=''
+      }
       const map=mapRef.current||(mapRef.current=new maps.Map(containerRef.current,{
         center:current.safeFit[0]||current.safePath[0]||current.fixedMarkers[0]?.position||current.driverMarker?.position||defaultCenter,
         zoom:14,
@@ -210,11 +225,16 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         gestureHandling:interactive?(followDevice?'greedy':'auto'):'none',
         ...(navigation?{
           renderingType:maps.RenderingType?.VECTOR||'VECTOR',
+          // Strings are supported by Google Maps JS and avoid a second async
+          // core-library import. Unlike JSON styling, this changes the base
+          // road map itself, including roads, land, water and labels.
+          colorScheme:theme==='dark'?'DARK':'LIGHT',
           disableDefaultUI:true,clickableIcons:false,isFractionalZoomEnabled:true,
           headingInteractionEnabled:true,tiltInteractionEnabled:true,
           styles:navigationMapStyles(theme),
         }:{}),
       }))
+      if(navigation)navigationThemeRef.current=theme
       // An existing Google Map retains its initial options across React renders.
       if(navigation)map.setOptions({styles:navigationMapStyles(theme)})
       objectsRef.current.forEach(object=>object.setMap(null))
