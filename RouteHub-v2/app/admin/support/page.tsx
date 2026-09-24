@@ -1,6 +1,6 @@
 'use client'
 
-import {Check, LifeBuoy, RefreshCw, RotateCcw} from 'lucide-react'
+import {Check, Copy, LifeBuoy, RefreshCw, RotateCcw} from 'lucide-react'
 import {useEffect, useMemo, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
 import AdminShell from '../admin-shell'
@@ -19,11 +19,21 @@ type SupportRow = {
 
 type Filter = 'open' | 'resolved' | 'all'
 
+function formatForCopy(row: SupportRow) {
+  return [
+    `Message: ${row.message}`,
+    `Company: ${row.companies?.name || 'Unknown company'}`,
+    `User: ${row.users?.name || row.users?.email || 'Unknown user'}`,
+    `When: ${new Date(row.created_at).toLocaleString()}`,
+  ].join('\n')
+}
+
 export default function AdminSupport() {
   const [rows, setRows] = useState<SupportRow[]>([])
   const [filter, setFilter] = useState<Filter>('open')
   const [message, setMessage] = useState('Loading support requests…')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const load = async () => {
     try {
@@ -44,6 +54,16 @@ export default function AdminSupport() {
 
   const filtered = useMemo(() => rows.filter(row => filter === 'all' || (filter === 'open' ? !row.resolved_at : Boolean(row.resolved_at))), [rows, filter])
   const openCount = rows.filter(row => !row.resolved_at).length
+
+  const copyRequest = async (row: SupportRow) => {
+    try {
+      await navigator.clipboard.writeText(formatForCopy(row))
+      setCopiedId(row.id)
+      setTimeout(() => setCopiedId(current => current === row.id ? null : current), 2000)
+    } catch {
+      setMessage('Could not copy to clipboard.')
+    }
+  }
 
   const resolve = async (id: string) => {
     if (busyId) return
@@ -94,6 +114,7 @@ export default function AdminSupport() {
               <p>{row.companies?.name || 'Unknown company'} · {row.users?.name || row.users?.email || 'Unknown user'} · {new Date(row.created_at).toLocaleString()}</p>
             </div>
             <div className={styles.rowAside} style={{flexDirection: 'column', alignItems: 'stretch', gap: 8}}>
+              <button type="button" className={styles.secondaryButton} onClick={() => void copyRequest(row)}>{copiedId === row.id ? <><Check size={14}/> Copied</> : <><Copy size={14}/> Copy</>}</button>
               {row.resolved_at
                 ? <button type="button" className={styles.secondaryButton} disabled={busyId === row.id} onClick={() => void reopen(row.id)}><RotateCcw size={14}/> {busyId === row.id ? 'Saving…' : 'Reopen'}</button>
                 : <button type="button" className={styles.dangerButton} disabled={busyId === row.id} style={{color: '#067647', borderColor: '#bbf0d0'}} onClick={() => void resolve(row.id)}><Check size={14}/> {busyId === row.id ? 'Saving…' : 'Resolve'}</button>}
