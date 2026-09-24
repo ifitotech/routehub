@@ -43,9 +43,9 @@ export default function ManagerHelpPage() {
   return (
     <ManagerShell active="settings">
       <div style={{maxWidth: 720, padding: '8px 4px 80px'}}>
-        <p style={{margin: 0, color: '#1667F2', fontSize: 12, fontWeight: 800, letterSpacing: '.12em'}}>ROUTEHUB MANAGER</p>
+        <p style={{margin: 0, color: 'var(--rh-blue)', fontSize: 12, fontWeight: 800, letterSpacing: '.12em'}}>ROUTEHUB MANAGER</p>
         <h1 style={{margin: '8px 0 16px', fontSize: 32, letterSpacing: '-.04em'}}>{title}</h1>
-        <p style={{color: '#5b6d85', lineHeight: 1.5, marginTop: 0}}>
+        <p style={{color: 'var(--rh-ink-soft)', lineHeight: 1.5, marginTop: 0}}>
           {locale === 'es'
             ? 'Cómo está armado Manager hoy. La lógica de rutas no cambia aquí.'
             : locale === 'fr'
@@ -54,13 +54,13 @@ export default function ManagerHelpPage() {
         </p>
         <div style={{display: 'grid', gap: 12}}>
           {topics(locale).map(([heading, body]) => (
-            <article key={heading} style={{padding: '16px 18px', border: '1px solid #dce5f0', borderRadius: 16, background: '#fff'}}>
+            <article key={heading} style={{padding: '16px 18px', border: '1px solid var(--rh-line)', borderRadius: 16, background: 'var(--rh-card)', boxShadow: 'var(--rh-shadow-sm)'}}>
               <h2 style={{margin: '0 0 6px', fontSize: 17}}>{heading}</h2>
-              <p style={{margin: 0, color: '#5b6d85', lineHeight: 1.5}}>{body}</p>
+              <p style={{margin: 0, color: 'var(--rh-ink-soft)', lineHeight: 1.5}}>{body}</p>
             </article>
           ))}
         </div>
-        <p style={{marginTop: 22, color: '#8a98aa', fontSize: 13}}>
+        <p style={{marginTop: 22, color: 'var(--rh-muted)', fontSize: 13}}>
           <Link href="/terms">Terms</Link>
           {' · '}
           <Link href="/privacy">Privacy</Link>

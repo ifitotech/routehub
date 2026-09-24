@@ -86,3 +86,8 @@
 :global(html[data-theme='dark']) .issueSection p{color:#fcd9a3}
 :global(html[data-theme='dark']) .detailGrid>div{background:rgba(255,255,255,.045)}
 :global(html[data-theme='dark']) .evidencePreview img{background:transparent}
+:global(html[data-theme='dark']) .details{border-top-color:var(--rh-divider)}
+:global(html[data-theme='dark']) .detailGrid>div{background:var(--rh-surface-2)}
+:global(html[data-theme='dark']) .issueSection{background:var(--rh-warning-soft)}
+:global(html[data-theme='dark']) .issueSection p{color:#fcd9a3}
+:global(html[data-theme='dark']) .skeleton{background:linear-gradient(90deg,rgba(19,53,96,.62),rgba(42,78,124,.76),rgba(19,53,96,.62));background-size:220% 100%}

@@ -16,7 +16,7 @@ import {getNavigationPreference} from '../../lib/navigation-preference'
 import {getDriverModePreference} from '../../lib/driver-mode-preference'
 import {resolveDriverExperience} from '../../lib/driver-premium'
 import {getCurrentLocation} from '../../lib/location'
-import {updateDrivingLocation} from '../../lib/driving-session'
+import {setDriverNavigationRouteId} from '../../lib/driver-navigation-state'
 import {driverOperationPhase} from '../../lib/driver/driver-state'
 import {useLocale} from '../../lib/use-preferences'
 import styles from './today.module.css'
@@ -68,7 +68,9 @@ export default function DriverV3Page() {
   const searchParams=useSearchParams()
   const mapRequested=searchParams.get('view')==='map'
   const {t,locale}=useLocale()
-  const {loading,error,snapshot,driverId,companyId,companyPlan,branchId,branchName,routes,refresh,drivingSession,liveFix,offline}=useDriverData()
+  const {loading,error,snapshot,driverId,companyId,companyPlan,branchId,branchName,routes,refresh,drivingSession,liveFix,offline,lastSyncedAt}=useDriverData()
+  const liveFixTime = liveFix ? Date.parse(liveFix.at) : Number.NaN
+  const freshLiveFix = liveFix && Number.isFinite(liveFixTime) && Date.now() - liveFixTime <= 90_000 ? liveFix : null
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
@@ -145,6 +147,9 @@ export default function DriverV3Page() {
   const navigationPreference=driverExperience.navigation
   const localHour=new Date().getHours()
   const greeting=localHour<12?(locale==='es'?'Buenos días':locale==='fr'?'Bonjour':'Good morning'):localHour<18?(locale==='es'?'Buenas tardes':locale==='fr'?'Bon après-midi':'Good afternoon'):(locale==='es'?'Buenas noches':locale==='fr'?'Bonsoir':'Good evening')
+  const lastUpdatedLabel=lastSyncedAt
+    ? (locale==='es'?`Última actualización: ${new Date(lastSyncedAt).toLocaleTimeString('es-US',{hour:'numeric',minute:'2-digit'})}`:locale==='fr'?`Dernière mise à jour : ${new Date(lastSyncedAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`:`Last updated: ${new Date(lastSyncedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`)
+    : (locale==='es'?'Aún no se actualizó':locale==='fr'?'Pas encore mis à jour':'Not synced yet')
   const todayRoutes=routes.filter(item=>String(item.route_date||'')===operationalDate())
   const deliveries=todayRoutes.filter(item=>String(item.mission_type||'').toLowerCase()==='delivery'&&String(item.status)==='completed').length
   const pickups=todayRoutes.filter(item=>String(item.mission_type||'').toLowerCase()==='pickup'&&String(item.status)==='completed').length
@@ -235,12 +240,6 @@ export default function DriverV3Page() {
       await startRoute({...ctx(),companyId:String(route.company_id||companyId||'')},operationalDate())
       if(!drivingSession){
         try{await startTemporaryRouteSession({companyId:companyId||route.company_id,branchId,driverId,routeId:route.id})}catch{}
-      }
-      if(drivingSession){
-        try{
-          const location=await getCurrentLocation({maximumAge:0})
-          await updateDrivingLocation(drivingSession.id,driverId,location)
-        }catch{}
       }
       await refresh()
       // The driver controls this per device: RouteHub navigation stays inside
@@ -501,6 +500,10 @@ export default function DriverV3Page() {
   const showNavLayer=Boolean(started&&route&&!simpleMode&&navigationPreference==='internal')
   const navAvailable=showNavLayer
   const navOpen=Boolean(navigationVisible&&showNavLayer)
+  useEffect(()=>{
+    setDriverNavigationRouteId(navOpen&&route?.id?String(route.id):null)
+  },[navOpen,route?.id])
+  useEffect(()=>()=>setDriverNavigationRouteId(null),[])
   // A live drag (either handle) needs the navigator mounted before it has
   // fully "opened" in the navOpen sense - dragMountForce keeps it mounted
   // for the duration of the gesture even though navOpen only flips once
@@ -646,7 +649,7 @@ export default function DriverV3Page() {
             aria-label={navAvailable?(locale==='es'?'Abrir navegación':locale==='fr'?'Ouvrir la navigation':'Open navigation'):undefined}
             onClick={()=>{if(!navAvailable||navOpen)return;captureNavOrigin();setNavigationVisible(true)}}
           >
-            <DriverRouteMap route={route} driverFix={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null} locale={locale}/>
+            <DriverRouteMap route={route} driverFix={freshLiveFix?{lat:freshLiveFix.lat,lng:freshLiveFix.lng}:null} locale={locale}/>
             {navAvailable&&!navOpen&&(
               <span className={styles.mapNavHint}><Navigation size={13}/>{locale==='es'?'Toca para navegar':locale==='fr'?'Touchez pour naviguer':'Tap to navigate'}</span>
             )}
@@ -700,7 +703,7 @@ export default function DriverV3Page() {
         <h2>{locale==='es'?'Listo para tu próxima parada':locale==='fr'?'Prêt pour votre prochain arrêt':'Ready for your next stop'}</h2>
         <p className={styles.emptyCopy}>{locale==='es'?'No hay rutas asignadas ahora. Las nuevas asignaciones aparecerán aquí.':locale==='fr'?'Aucun itinéraire assigné pour le moment. Les nouvelles affectations apparaîtront ici.':'No routes assigned right now. New assignments will appear here.'}</p>
         <button type="button" className={styles.emptyRefresh} onClick={()=>void refreshToday()} disabled={refreshing}><RefreshCw size={16} className={refreshing?styles.spin:''}/>{locale==='es'?'Buscar actualizaciones':locale==='fr'?'Rechercher des mises à jour':'Check for updates'}</button>
-        <small className={styles.lastUpdated}>{locale==='es'?'Última actualización ahora':locale==='fr'?'Dernière mise à jour à l’instant':'Last updated just now'}</small>
+        <small className={styles.lastUpdated}>{lastUpdatedLabel}</small>
         <section className={styles.activityCard}><header><strong>{locale==='es'?'Actividad de hoy':locale==='fr'?'Activité du jour':'Today’s activity'}</strong><History size={18}/></header><div><span className={styles.activityDelivery}><b>{deliveries}</b><small>{locale==='es'?'Entregas':locale==='fr'?'Livraisons':'Deliveries'}</small></span><span className={styles.activityPickup}><b>{pickups}</b><small>{locale==='es'?'Recogidas':locale==='fr'?'Collectes':'Pickups'}</small></span><span className={styles.activityPending}><b>{pendingStops}</b><small>{locale==='es'?'Pendientes':locale==='fr'?'En attente':'Pending'}</small></span></div></section>
       </section>}
 
@@ -757,9 +760,9 @@ export default function DriverV3Page() {
           stops={navigationStops}
           activeStopId={route.id}
           originAddress={route.origin_address}
-          originCoordinate={liveFix?{lat:liveFix.lat,lng:liveFix.lng}:null}
+          originCoordinate={freshLiveFix?{lat:freshLiveFix.lat,lng:freshLiveFix.lng}:null}
           locale={locale}
-          sharedLocation={liveFix}
+          sharedLocation={freshLiveFix}
           // On web/PWA, DriverLiveLocation already owns the shared high-
           // accuracy watch for an active session. Avoid opening a second
           // geolocation listener in the navigator; native Android still

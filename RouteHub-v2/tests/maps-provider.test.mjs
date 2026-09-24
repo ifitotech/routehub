@@ -87,8 +87,8 @@ test('Driver V3 GPS uses a fresh high-accuracy watch and persists accepted fixes
   assert.match(gps,/timeout:\s*(?:20_000|20000)/)
   assert.match(gps,/materiallyMorePrecise/)
   assert.match(gps,/next\.accuracy \+ 15 < previous\.accuracy/)
-  assert.match(gps,/updateDrivingLocation\(drivingSession\.id, driverId, next\)/)
-  assert.match(gps,/setLiveFix\(\{lat: next\.lat, lng: next\.lng/)
+  assert.match(gps,/updateDrivingLocation\(sessionId, driverId, next\)/)
+  assert.match(gps,/setLiveFix\(\{\.\.\.next, heading:/)
 })
 
 test('routing adapter uses the Google Routes API with a safe coordinate-only fallback',async()=>{

@@ -1,14 +1,12 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
-import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, MapPin, Navigation, Send, Shield, UserRound} from 'lucide-react'
+import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, Navigation, Send, Shield, UserRound} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
 import DevicePermissions from '../../../components/driver-v3/DevicePermissions'
 import {useDriverData} from '../../../lib/driver-v3/use-driver-data'
 import {startDrivingDay, endDrivingDay} from '../../../lib/driver-v3/actions'
-import {getCurrentLocation} from '../../../lib/location'
-import {updateDrivingLocation} from '../../../lib/driving-session'
 import {registerPushNotifications, disablePushNotifications} from '../../../lib/push-notifications'
 import {DRIVER_APP_VERSION} from '../../../lib/driver-app-version'
 import {settingsCopy} from '../../../lib/drv-settings-copy'
@@ -109,14 +107,7 @@ export default function DriverV3Settings() {
     setMessage('')
     try {
       if (wantOn) {
-        window.localStorage.setItem(`routehub-location-consent-v1:${driverId}`, 'accepted')
-        const session = await startDrivingDay({driverId, companyId, branchId})
-        try {
-          const location = await getCurrentLocation({maximumAge: 0})
-          if (session?.id) await updateDrivingLocation(session.id, driverId, location)
-        } catch {
-          /* GPS optional; Driving Day still starts. */
-        }
+        await startDrivingDay({driverId, companyId, branchId})
         setMessage(t.drvDayStarted)
       } else if (drivingSession) {
         await endDrivingDay({driverId, sessionId: drivingSession.id})
@@ -274,16 +265,6 @@ export default function DriverV3Settings() {
             <button type="button" className={`${styles.choice} ${dayOn ? styles.choiceSelected : ''}`} disabled={dayBusy} onClick={() => void toggleDay(true)}>
               {copy.on}
             </button>
-          </div>
-          <div className={styles.row}>
-            <span className={styles.rowIcon}><MapPin size={18} /></span>
-            <span className={styles.rowCopy}>
-              <strong>{copy.shareLocation}</strong>
-              <small>{t.drvConsentBody}</small>
-            </span>
-            <span className={styles.status} data-state={dayOn ? 'active' : 'inactive'}>
-              {dayOn ? t.drvActive : copy.off}
-            </span>
           </div>
         </section>
 

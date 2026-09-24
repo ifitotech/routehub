@@ -1,10 +1,14 @@
-export const ONBOARDING_VERSION = 'v1'
+export const ONBOARDING_VERSION = 'v2'
 export const ONBOARDING_REPLAY_EVENT = 'routehub:show-onboarding'
 
 export type OnboardingAudience = 'driver' | 'manager'
 
 export function onboardingStorageKey(userId: string, audience: OnboardingAudience) {
   return `routehub_onboarding_${ONBOARDING_VERSION}:${audience}:${userId}`
+}
+
+export function driverDeviceSetupKey(userId: string) {
+  return `routehub_driver_device_setup:v1:${userId}`
 }
 
 export function requestOnboardingReplay() {

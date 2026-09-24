@@ -1,6 +1,11 @@
 import { getSupabase } from './supabase'
 import {Capacitor, registerPlugin} from '@capacitor/core'
 
+// Keep browser push on the exact same versioned worker registration owned by
+// PwaRegister. A second unversioned registration can replace it on mobile
+// and leave an installed PWA running an older cache contract.
+const SERVICE_WORKER_URL = '/sw.js?v=29'
+
 type NativePush = {
   requestPermissions(): Promise<{receive: string}>
   register(): Promise<void>
@@ -57,7 +62,7 @@ export async function registerPushNotifications(vapidPublicKey?: string) {
   if (permission !== 'granted') throw new Error('Notification permission was not granted.')
   // PwaRegister owns /sw.js. Reuse it instead of installing a competing root
   // worker, which made notifications work only while the tab was open.
-  await navigator.serviceWorker.register('/sw.js', {scope: '/', updateViaCache: 'none'})
+  await navigator.serviceWorker.register(SERVICE_WORKER_URL, {scope: '/', updateViaCache: 'none'})
   const registration = await navigator.serviceWorker.ready
   const existing = await registration.pushManager.getSubscription()
   const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
@@ -82,7 +87,7 @@ export async function disablePushNotifications() {
     return
   }
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
-  const registration = await navigator.serviceWorker.getRegistration('/sw.js')
+  const registration = await navigator.serviceWorker.getRegistration('/')
   const existing = await registration?.pushManager.getSubscription()
   if (!existing) return
   const endpoint = existing.endpoint

@@ -6,7 +6,7 @@ const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
 
 test('onboarding is versioned per user and role', () => {
   const helper = read('../lib/onboarding.ts')
-  assert.match(helper, /ONBOARDING_VERSION = 'v1'/)
+  assert.match(helper, /ONBOARDING_VERSION = 'v2'/)
   assert.match(helper, /routehub_onboarding_\$\{ONBOARDING_VERSION\}:\$\{audience\}:\$\{userId\}/)
 })
 
@@ -14,11 +14,10 @@ test('driver and manager get different three-step tours', () => {
   const gate = read('../app/onboarding-gate.tsx')
   assert.match(gate, /access\.role === 'driver'/)
   assert.match(gate, /'branch_manager', 'operations_manager', 'sales_representative', 'counter_sales'/)
-  // Tour copy has been reworded since these were written; check for the
-  // same ideas (pickup confirmation, the manager dashboard's map) in their
-  // current wording instead of the exact old sentences.
-  assert.match(gate, /Confirm the material at pickup/)
-  assert.match(gate, /the branch map together/)
+  // Tour copy follows the current Driver/Manager interfaces: the Driver
+  // confirms pickup material, while the Manager follows routes by status.
+  assert.match(gate, /Confirm materials at pickup/)
+  assert.match(gate, /Follow routes by status/)
   assert.match(gate, /slides\.length - 1/)
 })
 
@@ -36,6 +35,14 @@ test('onboarding does not request notification or location permission on launch'
   const gate = read('../app/onboarding-gate.tsx')
   assert.doesNotMatch(gate, /Notification\.requestPermission/)
   assert.doesNotMatch(gate, /geolocation\.getCurrentPosition/)
+})
+
+test('driver device setup asks permissions only from its explicit action', () => {
+  const gate = read('../app/onboarding-gate.tsx')
+  const setup = read('../lib/driver-device-setup.ts')
+  assert.match(gate, /onClick=\{\(\)=>deviceSetupResult\?setDeviceSetupNeeded\(false\):void prepareDevice\(\)\}/)
+  assert.match(setup, /Notification\.requestPermission/)
+  assert.match(setup, /getCurrentLocation\(\{maximumAge: 0\}\)/)
 })
 
 test('tour dialog supports keyboard dismissal and keeps keyboard focus inside', () => {

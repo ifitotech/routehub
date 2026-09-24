@@ -7,7 +7,7 @@ function androidNative() {
   return typeof window !== 'undefined' && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
 }
 
-/** Starts only after the driver explicitly starts Driving Day. */
+/** Called only while an active route is open in in-app navigation. */
 export async function startNativeLocationTracking(input: {sessionId: string; driverId: string; intervalMinutes: 5 | 20}) {
   if (!androidNative()) return false
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

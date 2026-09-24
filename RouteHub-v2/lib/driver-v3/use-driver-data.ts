@@ -21,6 +21,7 @@ type DriverV3Data = {
   loading: boolean
   error: string
   offline: boolean
+  lastSyncedAt: number | null
   refresh: () => Promise<void>
   snapshot: ReturnType<typeof buildDriverSnapshot> | null
 }
@@ -28,6 +29,21 @@ type DriverV3Data = {
 const DriverV3Context = createContext<DriverV3Data | null>(null)
 
 const DRIVER_ROUTE_CACHE_TTL = 24 * 60 * 60 * 1000
+// A driving session is operational history, not a live-GPS cache. A saved
+// point is useful to Manager while it is fresh, but must never move a driver
+// back to where they were hours ago when the PWA is reopened.
+const LIVE_FIX_FRESHNESS_MS = 90_000
+function freshSessionFix(session: DrivingSession | null) {
+  if (session?.last_lat == null || session.last_lng == null) return null
+  const timestamp = Date.parse(session.last_updated_at || '')
+  if (!Number.isFinite(timestamp) || Date.now() - timestamp > LIVE_FIX_FRESHNESS_MS) return null
+  return {
+    lat: Number(session.last_lat),
+    lng: Number(session.last_lng),
+    accuracy: session.last_accuracy ?? undefined,
+    at: new Date(timestamp).toISOString(),
+  }
+}
 function routeCacheKey(driverId: string, companyId: string) { return `routehub:driver-routes:v1:${companyId}:${driverId}` }
 function membershipCacheKey(driverId: string) { return `routehub:driver-membership:v1:${driverId}` }
 function readCachedRoutes(driverId: string, companyId: string): DriverV3Route[] {
@@ -64,6 +80,7 @@ function useDriverDataInternal(): DriverV3Data {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [offline, setOffline] = useState(false)
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null)
 
   const load = useCallback(async (quiet=false) => {
     if(!quiet) setLoading(true)
@@ -125,19 +142,17 @@ function useDriverDataInternal(): DriverV3Data {
       routesRef.current = (rows || []) as DriverV3Route[]
       setRoutes(routesRef.current)
       setOffline(false)
+      setLastSyncedAt(Date.now())
       writeCachedRoutes(user.id, membership.company_id, routesRef.current)
       // A driving-session/GPS problem must not hide an otherwise valid route.
       // The route remains usable and the session can be recovered on the next
       // focus/refresh once the protected session table is available.
       let session = await getActiveDrivingSession(user.id)
       setDrivingSession(session.data)
-      if (session.data?.last_lat != null && session.data?.last_lng != null) {
-        setLiveFix({
-          lat: Number(session.data.last_lat),
-          lng: Number(session.data.last_lng),
-          at: session.data.last_updated_at || new Date().toISOString(),
-        })
-      }
+      // Only a confirmed recent point can be drawn as the driver. If the
+      // app has been closed/backgrounded, the navigation hook clears this
+      // and asks the device for a fresh foreground fix instead.
+      setLiveFix(freshSessionFix(session.data))
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unable to load Driver workspace.'
       if (!identity) {
@@ -253,7 +268,7 @@ function useDriverDataInternal(): DriverV3Data {
     return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update) }
   }, [])
 
-  return {routes, driverId, companyId, companyPlan, branchId, branchName, drivingSession, liveFix, setLiveFix, loading, error, offline, refresh: () => load(), snapshot}
+  return {routes, driverId, companyId, companyPlan, branchId, branchName, drivingSession, liveFix, setLiveFix, loading, error, offline, lastSyncedAt, refresh: () => load(), snapshot}
 }
 
 export function DriverV3Provider({children}: {children: ReactNode}) {

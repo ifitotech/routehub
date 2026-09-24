@@ -69,28 +69,31 @@ type Props={
   onMarkerDrag?:(id:string,coordinate:MapCoordinate)=>void
 }
 
-// Compact, top-down vehicle marker for active navigation. Keep its nose facing
-// north in the path; Google Maps rotates the symbol to the live GPS heading.
-function navigationCarIcon(rotation:number){
+// Compact top-down light-duty cab-over truck for active navigation. The
+// cargo box trails behind the cab; Google Maps rotates the SVG symbol to the
+// live GPS heading so it remains crisp at every zoom and device pixel ratio.
+function navigationTruckIcon(rotation:number){
   return {
-    path:'M -6 -18 C -9 -18 -10 -15 -11 -11 L -13 -4 L -13 13 C -13 17 -10 19 -7 19 L 7 19 C 10 19 13 17 13 13 L 13 -4 L 11 -11 C 10 -15 9 -18 6 -18 Z',
+    path:'M -9 -17 Q -11 -17 -11 -14 L -11 12 Q -11 16 -7 16 L 7 16 Q 11 16 11 12 L 11 -14 Q 11 -17 9 -17 Z',
     scale:1,
-    fillColor:'#1667F2',
+    fillColor:'#FFFFFF',
     fillOpacity:1,
-    strokeColor:'#FFFFFF',
-    strokeWeight:2.5,
+    strokeColor:'#1769D2',
+    strokeWeight:2,
     rotation,
   }
 }
 
-function navigationCarWindowsIcon(rotation:number){
+function navigationTruckDetailsIcon(rotation:number){
   return {
-    path:'M -8 -9 Q 0 -14 8 -9 L 6 -3 L -6 -3 Z M -6 8 L 6 8 L 7 14 Q 0 17 -7 14 Z',
+    // Dark cab-over windshield at the front and quiet cargo-box detailing;
+    // the body outline provides the restrained blue accent, not the roof.
+    path:'M -7 -14 L 7 -14 L 6 -9 L -6 -9 Z M -8 -5 L -7 -5 L -7 10 L -8 10 Z M -6 -1 L 6 -1 L 6 0 L -6 0 Z',
     scale:1,
-    fillColor:'#DCEBFF',
+    fillColor:'#183451',
     fillOpacity:1,
-    strokeColor:'#0B4EC4',
-    strokeWeight:1,
+    strokeColor:'#183451',
+    strokeWeight:.5,
     rotation,
   }
 }
@@ -254,7 +257,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           map,
           position:current.driverMarker.position,
           title:current.driverMarker.title,
-          icon:navigation?navigationCarIcon(navigationRef.current.navigationHeading??0):{
+          icon:navigation?navigationTruckIcon(navigationRef.current.navigationHeading??0):{
             ...driverTruckIcon(current.driverMarker.tone||'#0F1D35'),
           },
           zIndex:1000,
@@ -265,7 +268,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           const details=new maps.Marker({
             map,
             position:current.driverMarker.position,
-            icon:navigationCarWindowsIcon(navigationRef.current.navigationHeading??0),
+            icon:navigationTruckDetailsIcon(navigationRef.current.navigationHeading??0),
             clickable:false,
             zIndex:1001,
           })
@@ -371,8 +374,8 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         else map?.panTo(point)
       }
       const markerRotation=heading-(map?.getHeading?.()||0)
-      marker?.setIcon?.(navigationCarIcon(markerRotation))
-      driverMarkerDetailRef.current?.setIcon?.(navigationCarWindowsIcon(markerRotation))
+      marker?.setIcon?.(navigationTruckIcon(markerRotation))
+      driverMarkerDetailRef.current?.setIcon?.(navigationTruckDetailsIcon(markerRotation))
     }
     if(marker&&previous&&distanceKm(previous,position)<=2){
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)

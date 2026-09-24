@@ -2,6 +2,10 @@
 
 import {useEffect} from 'react'
 
+const SERVICE_WORKER_URL = '/sw.js?v=29'
+const NAVIGATION_STATE_KEY = 'routehub:driver-navigation-active:v1'
+const UPDATE_PENDING_KEY = 'routehub:sw-update-pending:v1'
+
 export default function PwaRegister() {
   useEffect(() => {
     // Standalone PWAs and supported mobile browsers can lock the document to
@@ -28,16 +32,19 @@ export default function PwaRegister() {
     let active = true
 
     const update = () => {
-      if (document.visibilityState === 'visible') void registration?.update()
+      // A normal offline launch must not bubble a worker update rejection to
+      // the global error reporter every minute. The next online/focus event
+      // retries the same check.
+      if (document.visibilityState === 'visible') void registration?.update().catch(() => {})
     }
 
     // Version the script URL as well as the cache name. Some iOS PWA
     // installations keep the old registration when only the script body
     // changes, so the query forces a fresh worker check.
-    navigator.serviceWorker.register('/sw.js?v=29', {updateViaCache: 'none'}).then(value => {
+    navigator.serviceWorker.register(SERVICE_WORKER_URL, {updateViaCache: 'none'}).then(value => {
       if (!active) return
       registration = value
-      void value.update()
+      void value.update().catch(() => {})
       if (value.waiting) value.waiting.postMessage('SKIP_WAITING')
       value.addEventListener('updatefound', () => {
         const worker = value.installing
@@ -54,13 +61,30 @@ export default function PwaRegister() {
     document.addEventListener('visibilitychange', onVisibilityChange)
     const updateTimer = window.setInterval(update, 60_000)
 
-    const onControllerChange = () => {
+    const reloadForUpdate = () => {
       if (sessionStorage.getItem('routehub_sw_reloaded') === '1') return
       sessionStorage.setItem('routehub_sw_reloaded', '1')
       window.location.reload()
     }
+    const onControllerChange = () => {
+      // Never interrupt a driver who is already navigating. The new worker
+      // can safely control the document while its current JS stays alive;
+      // reload as soon as the driver returns to Today instead.
+      if (sessionStorage.getItem(NAVIGATION_STATE_KEY)) {
+        sessionStorage.setItem(UPDATE_PENDING_KEY, '1')
+        return
+      }
+      reloadForUpdate()
+    }
+    const onNavigationState = (event: Event) => {
+      const routeId = (event as CustomEvent<{routeId?: string | null}>).detail?.routeId
+      if (routeId || sessionStorage.getItem(UPDATE_PENDING_KEY) !== '1') return
+      sessionStorage.removeItem(UPDATE_PENDING_KEY)
+      reloadForUpdate()
+    }
     const clearReloadGuard = () => sessionStorage.removeItem('routehub_sw_reloaded')
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+    window.addEventListener('routehub:driver-navigation-state', onNavigationState)
     window.addEventListener('online', update)
     window.addEventListener('focus', update)
     window.addEventListener('pageshow', clearReloadGuard, {once: true})
@@ -68,6 +92,7 @@ export default function PwaRegister() {
       active = false
       window.removeEventListener('beforeinstallprompt', onInstallPrompt)
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+      window.removeEventListener('routehub:driver-navigation-state', onNavigationState)
       window.removeEventListener('online', update)
       window.removeEventListener('focus', update)
       document.removeEventListener('visibilitychange', onVisibilityChange)

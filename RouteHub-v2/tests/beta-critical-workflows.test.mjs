@@ -205,6 +205,20 @@ test('Driver refresh reconstructs current work from backend and realtime follows
   assert.match(middlewareSource, /NextResponse\.rewrite\(url\)[\s\S]*Cache-Control', 'private, no-store/)
 })
 
+test('a restored driver session never presents an old saved coordinate as live GPS', () => {
+  assert.match(driverDataSource, /LIVE_FIX_FRESHNESS_MS\s*=\s*90_000/)
+  assert.match(driverDataSource, /Date\.parse\(session\.last_updated_at \|\| ''\)/)
+  assert.match(driverDataSource, /Date\.now\(\) - timestamp > LIVE_FIX_FRESHNESS_MS/)
+  assert.match(driverDataSource, /setLiveFix\(freshSessionFix\(session\.data\)\)/)
+})
+
+test('empty Driver Today shows an actual successful sync time instead of a fake “just now” state', () => {
+  assert.match(driverDataSource, /const \[lastSyncedAt, setLastSyncedAt\] = useState<number \| null>\(null\)/)
+  assert.match(driverDataSource, /setLastSyncedAt\(Date\.now\(\)\)/)
+  assert.match(driverSource, /lastSyncedAt/)
+  assert.doesNotMatch(driverSource, /Last updated just now/)
+})
+
 test('Driver Truck remains available to a company-wide driver and logs use the truck branch', () => {
   for (const source of [driverTruckSource, driverTruckFuelSource, driverTruckMaintenanceSource]) {
     assert.doesNotMatch(source, /!companyId\s*\|\|\s*!branchId/)

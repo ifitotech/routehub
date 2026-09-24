@@ -82,8 +82,8 @@
 .memberActions { display: flex; align-items: center; gap: 8px; }
 
 .locationIcon,.mailIcon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background:var(--rh-soft-blue); color: var(--primary); }
-.statusBadge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background:var(--rh-success-soft); color: #067647; font-size: .74rem; font-weight: 850; text-transform: capitalize; }
-.statusBadge[data-status='revoked'] { background:var(--rh-surface-2); color: #667085; }
+.statusBadge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background:var(--rh-success-soft); color: var(--rh-success); font-size: .74rem; font-weight: 850; text-transform: capitalize; }
+.statusBadge[data-status='revoked'] { background:var(--rh-surface-2); color: var(--rh-ink-soft); }
 .date { color: var(--muted); font-size: .78rem; }
 .rowActions { display: flex; align-items: center; gap: 10px; }
 .revokeButton { min-height: 42px; padding: 0 14px; border: 1px solid #fecaca; border-radius: 12px; background:var(--rh-card); color: #c02626; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }

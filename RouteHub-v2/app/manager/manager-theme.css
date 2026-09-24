@@ -134,10 +134,7 @@ html[data-theme='dark'] main[data-manager-section] {
   color: var(--rh-ink);
 }
 
-html[data-theme='dark'] main[data-manager-section] .card,
-html[data-theme='dark'] main[data-manager-section] [class*='card'] {
-  background: linear-gradient(145deg, rgba(19, 53, 96, .70), rgba(5, 20, 42, .52));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-color: rgba(125, 180, 255, .14);
-}
+/* Components use the token values above for their own surfaces. Do not
+   match arbitrary CSS-module class names here: a generic "card" override
+   silently changes nested controls and makes dark mode fragile whenever a
+   screen is redesigned. */

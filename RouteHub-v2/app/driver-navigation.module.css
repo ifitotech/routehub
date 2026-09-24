@@ -65,6 +65,7 @@
 .timeIcon{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.04);border:1.5px solid rgba(245,158,11,.55);color:#fbbf24}
 .timeCopy{display:flex;flex-direction:column;gap:1px;min-width:0}
 .timeCopy strong{font-size:clamp(22px,5.6vw,26px);line-height:1.05;font-weight:800;letter-spacing:-.02em;color:var(--rh-text,#f7faff)}
+.timeCopy strong.metricPending{font-size:14px;line-height:1.15;letter-spacing:0;font-weight:800;color:var(--rh-text-muted,#c2d2e8);white-space:nowrap}
 .timeCopy span{font-size:12px;font-weight:650;color:var(--rh-text-subtle,#6f86aa);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Same gradient/inset-highlight recipe as today.module.css .primary,
    scaled down to fit this compact row instead of a full-width 64px CTA. */

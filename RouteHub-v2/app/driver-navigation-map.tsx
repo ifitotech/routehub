@@ -433,11 +433,11 @@ export default function DriverNavigationMap({
   },[voiceEnabled,nextManeuver,guidanceReady,routing,locale,routeKey,formatDistance])
 
   const labels=locale==='es'?{
-    gps:'Buscando GPS preciso',permission:'Permite la ubicación precisa en los ajustes del navegador.',gpsHint:'La guía se pausó hasta recuperar una ubicación fiable.',enable:'Activar GPS',retry:'Reintentar',route:'Vista completa',follow:'Seguir',approx:'ETA aproximado',offRoute:'Comprobando el recorrido',noRoute:'Recorrido por calles no disponible',near:'Cerca del destino',destination:'Destino',now:'Ahora',distance:'Restante',arrival:'Llegada',paused:'Guía pausada',gpsAction:'Reintentar GPS',recalculating:'Recalculando ruta',
+    gps:'Buscando GPS preciso',permission:'Permite la ubicación precisa en los ajustes del navegador.',gpsHint:'La guía se pausó hasta recuperar una ubicación fiable.',enable:'Activar GPS',retry:'Reintentar',route:'Vista completa',follow:'Seguir',approx:'ETA aproximado',offRoute:'Comprobando el recorrido',noRoute:'Recorrido por calles no disponible',near:'Cerca del destino',destination:'Destino',now:'Ahora',distance:'Restante',arrival:'Llegada',paused:'Guía pausada',gpsAction:'Reintentar GPS',recalculating:'Recalculando ruta',calculating:'Calculando ruta…',waitingGps:'Esperando GPS',routeUnavailable:'Ruta no disponible',
   }:locale==='fr'?{
-    gps:'Recherche GPS précis',permission:'Autorisez la position précise dans les réglages du navigateur.',gpsHint:'Guidage en pause jusqu’au retour d’une position fiable.',enable:'Activer GPS',retry:'Réessayer',route:'Vue du trajet',follow:'Suivre',approx:'ETA approximatif',offRoute:'Vérification du trajet',noRoute:'Trajet routier indisponible',near:'Destination proche',destination:'Destination',now:'Maintenant',distance:'Restant',arrival:'Arrivée',paused:'Guidage en pause',gpsAction:'Réessayer GPS',recalculating:'Recalcul de l’itinéraire',
+    gps:'Recherche GPS précis',permission:'Autorisez la position précise dans les réglages du navigateur.',gpsHint:'Guidage en pause jusqu’au retour d’une position fiable.',enable:'Activer GPS',retry:'Réessayer',route:'Vue du trajet',follow:'Suivre',approx:'ETA approximatif',offRoute:'Vérification du trajet',noRoute:'Trajet routier indisponible',near:'Destination proche',destination:'Destination',now:'Maintenant',distance:'Restant',arrival:'Arrivée',paused:'Guidage en pause',gpsAction:'Réessayer GPS',recalculating:'Recalcul de l’itinéraire',calculating:'Calcul de l’itinéraire…',waitingGps:'En attente du GPS',routeUnavailable:'Itinéraire indisponible',
   }:{
-    gps:'Acquiring accurate GPS',permission:'Allow precise location in your browser settings.',gpsHint:'Guidance is paused until a reliable location returns.',enable:'Enable GPS',retry:'Retry',route:'Route overview',follow:'Follow',approx:'Approximate ETA',offRoute:'Checking route',noRoute:'Street route unavailable',near:'Near destination',destination:'Destination',now:'Now',distance:'Remaining',arrival:'Arrival',paused:'Guidance paused',gpsAction:'Retry GPS',recalculating:'Recalculating route',
+    gps:'Acquiring accurate GPS',permission:'Allow precise location in your browser settings.',gpsHint:'Guidance is paused until a reliable location returns.',enable:'Enable GPS',retry:'Retry',route:'Route overview',follow:'Follow',approx:'Approximate ETA',offRoute:'Checking route',noRoute:'Street route unavailable',near:'Near destination',destination:'Destination',now:'Now',distance:'Remaining',arrival:'Arrival',paused:'Guidance paused',gpsAction:'Retry GPS',recalculating:'Recalculating route',calculating:'Calculating route…',waitingGps:'Waiting for GPS',routeUnavailable:'Route unavailable',
   }
   const canGuide=guidanceReady&&!routing
   // A stable state machine instead of a chain of ternaries on `instruction` -
@@ -493,6 +493,19 @@ export default function DriverNavigationMap({
   const shortAddress=(destinationAddress||destinationLabel).split(',')[0]?.trim()||destinationLabel
   const stopKind=validStops[0]?.kind||'delivery'
   const typeLabel=stopKind==='pickup'?'PICKUP':stopKind==='branch'?'RETURN':'DELIVERY'
+  // The original em dash placeholders looked like broken content on a real
+  // phone. ETA and distance are only shown after the route service has
+  // returned a valid estimate; before that, describe the actual state.
+  const metricPendingLabel=navState==='gps-wait'
+    ?labels.waitingGps
+    :navState==='no-route'
+      ?labels.routeUnavailable
+      :labels.calculating
+  const metricPendingDetail=navState==='gps-wait'
+    ?labels.gpsHint
+    :navState==='no-route'
+      ?labels.noRoute
+      :copy.loading
   const upcomingStops=validStops.slice(1,4)
   // No contact-name field reaches this component (PlannedStop only carries
   // address/label/kind/orderNumber/notes) - the expanded panel shows the PO
@@ -588,9 +601,9 @@ export default function DriverNavigationMap({
         <div className={styles.primaryRow}>
           <div className={styles.timeBlock}>
             <span className={styles.timeIcon}><Clock size={16}/></span>
-            <div className={styles.timeCopy}>
-              <strong>{eta!=null?`${eta} min`:'—'}</strong>
-              <span>{[remainingDistance,arrivalTime].filter(Boolean).join(' · ')||'—'}</span>
+            <div className={styles.timeCopy} aria-live="polite">
+              <strong className={eta==null?styles.metricPending:undefined}>{eta!=null?`${eta} min`:metricPendingLabel}</strong>
+              <span>{eta!=null?([remainingDistance,arrivalTime].filter(Boolean).join(' · ')||labels.approx):metricPendingDetail}</span>
             </div>
           </div>
           <div className={styles.navigationActions}>

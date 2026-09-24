@@ -32,8 +32,8 @@ export function isGeoDenied() {
 
 /** True when background GPS may run without opening a new OS prompt. */
 export function canStartBackgroundGps(permission: LocationPermission) {
-  if (permission === 'denied' || permission === 'unsupported' || isGeoDenied()) return false
   if (permission === 'granted') return true
+  if (permission === 'denied' || permission === 'unsupported' || isGeoDenied()) return false
   return typeof window !== 'undefined' && window.sessionStorage.getItem(GEO_OK_SESSION) === '1'
 }
 
