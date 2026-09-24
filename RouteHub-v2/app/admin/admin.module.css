@@ -146,7 +146,8 @@
 .loadingCard p { margin: 0; color: var(--muted); }
 
 .nav { position: fixed; z-index: 10; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; width: max-content; max-width: calc(100% - 24px); gap: 5px; padding: 6px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 18px; background: #0f213a; box-shadow: 0 18px 44px rgb(7 22 44 / 24%); }
-.nav a { min-height: 46px; display: grid; place-items: center; padding: 0 16px; border-radius: 13px; color: #cbd7e8; font-size: .82rem; font-weight: 750; text-decoration: none; white-space: nowrap; }
+.nav a { min-height:46px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 14px; border-radius:13px; color:#cbd7e8; font-size:.82rem; font-weight:750; text-decoration:none; white-space:nowrap; }
+.nav a svg { flex:0 0 auto; }
 .nav a[data-active='true'] { background: var(--primary); color: #fff; }
 
 @keyframes spin { to { transform: rotate(360deg) } }
@@ -163,6 +164,8 @@
      view or clipping the last item - wrapping to two centred rows keeps
      every section visible at a glance instead. */
   .nav { flex-wrap: wrap; justify-content: center; width: calc(100% - 24px); max-width: 420px; }
+  .nav a { min-width:72px; flex:1 0 calc(25% - 5px); flex-direction:column; gap:2px; min-height:50px; padding:5px 8px; font-size:.68rem; }
+  .nav a svg { width:17px; height:17px; }
   .header { align-items:flex-start; }
   .controlHero { align-items:flex-start; flex-direction:column; }
   .controlHeroActions { width:100%; }
@@ -177,7 +180,7 @@
   .rowAside { padding-left: 0; }
   .header { align-items: center; }
   .nav { max-width: calc(100% - 16px); }
-  .nav a { padding: 0 12px; }
+  .nav a { min-width:64px; padding:5px 7px; }
 }
 @media (prefers-reduced-motion: reduce) { .actionCard { transition: none; } .loader { animation: none; } }
 

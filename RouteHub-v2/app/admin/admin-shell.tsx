@@ -2,18 +2,19 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import {AlertTriangle, Building2, Home, LifeBuoy, ScrollText, Settings, ShieldCheck} from 'lucide-react'
 import styles from './admin.module.css'
 
 export type AdminSection = 'home' | 'companies' | 'billing' | 'errors' | 'support' | 'admins' | 'audit' | 'settings'
 
-const nav: {id: AdminSection; href: string; label: string}[] = [
-  {id: 'home', href: '/admin', label: 'Home'},
-  {id: 'companies', href: '/admin/companies', label: 'Companies'},
-  {id: 'errors', href: '/admin/errors', label: 'Errors'},
-  {id: 'support', href: '/admin/support', label: 'Support'},
-  {id: 'admins', href: '/admin/admins', label: 'Admins'},
-  {id: 'audit', href: '/admin/audit', label: 'Audit'},
-  {id: 'settings', href: '/admin/settings', label: 'Settings'},
+const nav: {id: AdminSection; href: string; label: string; icon: typeof Home}[] = [
+  {id: 'home', href: '/admin', label: 'Home', icon: Home},
+  {id: 'companies', href: '/admin/companies', label: 'Companies', icon: Building2},
+  {id: 'errors', href: '/admin/errors', label: 'Errors', icon: AlertTriangle},
+  {id: 'support', href: '/admin/support', label: 'Support', icon: LifeBuoy},
+  {id: 'admins', href: '/admin/admins', label: 'Admins', icon: ShieldCheck},
+  {id: 'audit', href: '/admin/audit', label: 'Audit', icon: ScrollText},
+  {id: 'settings', href: '/admin/settings', label: 'Settings', icon: Settings},
 ]
 
 // Every Admin page used to render its own <nav> at the bottom independently
@@ -33,7 +34,7 @@ export default function AdminShell({children, active}: {children: React.ReactNod
       <main className="app">
         <div className={styles.page}>{children}</div>
         <nav className={styles.nav} aria-label="Admin navigation">
-          {nav.map(item => <Link key={item.id} href={item.href} data-active={active === item.id ? 'true' : 'false'}>{item.label}</Link>)}
+          {nav.map(({id, href, label, icon: Icon}) => <Link key={id} href={href} data-active={active === id ? 'true' : 'false'} aria-current={active === id ? 'page' : undefined}><Icon size={16}/><span>{label}</span></Link>)}
         </nav>
       </main>
     </>
