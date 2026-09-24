@@ -90,6 +90,13 @@
   word-break: break-word;
 }
 
+.meta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: var(--rh-text-muted, #64748b);
+}
+
 .assignSelect {
   width: 100%;
   min-height: 38px;
@@ -189,6 +196,10 @@
 :global(html[data-theme='dark']) .item {
   background: rgba(255, 255, 255, 0.045);
   border-color: rgba(147, 193, 255, 0.14);
+}
+
+:global(html[data-theme='dark']) .meta {
+  color: #9fb2d0;
 }
 
 :global(html[data-theme='dark']) .assignSelect {

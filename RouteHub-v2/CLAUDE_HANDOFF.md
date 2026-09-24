@@ -55,6 +55,7 @@ Lee también `ROUTEHUB_HANDOFF.md` y `CHATGPT_HANDOFF.md`: contienen decisiones 
 
 - Manager y Driver son experiencias distintas; tomar del Driver únicamente referencias de adaptación móvil, zonas seguras, tamaños táctiles y calidad visual.
 - En Manager, asignar/mover/unassign debe ser directo y claro, sin duplicar rutas.
+- El panel de rutas sin asignar muestra destino, tipo de parada y hora programada antes de elegir el conductor; el movimiento conserva el mismo ID y usa la reasignación atómica existente.
 - Billing no es prioridad operativa todavía: debe funcionar lo existente, pero no desarrollar cobro antes de cerrar el piloto.
 
 ## Cambios recientes relevantes (commit `50c002e`)

@@ -49,6 +49,17 @@ export default function UnassignedPanel({routes, drivers, onAssign, busyRouteId,
   const detailsLabel = locale === 'es' ? 'Ver detalles' : locale === 'fr' ? 'Voir les détails' : 'View details'
   const issuesLabel = locale === 'es' ? 'Incidencias' : locale === 'fr' ? 'Incidents' : 'Issues'
   const completedLabel = locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed'
+  const routeMeta = (route: RouteRecord) => {
+    const type = route.mission_type === 'pickup'
+      ? (locale === 'es' ? 'Recogida' : locale === 'fr' ? 'Collecte' : 'Pickup')
+      : route.mission_type === 'return'
+        ? (locale === 'es' ? 'Regreso' : locale === 'fr' ? 'Retour' : 'Return')
+        : (locale === 'es' ? 'Entrega' : locale === 'fr' ? 'Livraison' : 'Delivery')
+    const scheduled = route.scheduled_at
+      ? new Intl.DateTimeFormat(locale === 'es' ? 'es-US' : locale === 'fr' ? 'fr-FR' : 'en-US', {hour: 'numeric', minute: '2-digit'}).format(new Date(route.scheduled_at))
+      : (locale === 'es' ? 'Sin hora' : locale === 'fr' ? 'Sans heure' : 'No time')
+    return `${type} · ${scheduled}`
+  }
 
   return (
     <aside className={styles.panel}>
@@ -73,6 +84,7 @@ export default function UnassignedPanel({routes, drivers, onAssign, busyRouteId,
                 <div className={styles.destination}>
                   {route.destination_name || route.destination_address}
                 </div>
+                <div className={styles.meta}>{routeMeta(route)}</div>
                 {drivers.length > 0 ? (
                   <select
                     className={styles.assignSelect}
