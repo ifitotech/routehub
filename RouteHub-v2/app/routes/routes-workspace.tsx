@@ -1,5 +1,6 @@
 'use client'
 
+import {useEffect} from 'react'
 import {chooseDefaultAssignee} from '../../lib/route-assignment'
 import {getSupabase} from '../../lib/supabase'
 import type {Contact, FormState} from './routes-model'
@@ -11,12 +12,30 @@ export function useRoutesWorkspace() {
   const derived = useRoutesDerived()
   const {
     searchParams, form, setForm, drivers, defaultBranch, routes, setOriginMode,
-    setMessage, setDetailsOpen, setJustCreated, setSelectedDestinationLocation,
+    message, setMessage, setDetailsOpen, setJustCreated, setSelectedDestinationLocation,
     setPendingLocation, setSaveContactOpen, setNewContactName, setContactSaveMessage,
     setInsertBeforeId, setOpen, setEditingRouteId, contacts, setContacts, companyId, branchId,
     selectedDestinationLocation, newContactName, savingContact, setSavingContact,
     c,
   } = derived
+
+  // A success banner ("Route published successfully.", "Route cancelled.",
+  // etc. - anything without the Retry button routes-screen.tsx shows for
+  // real errors) used to stay in the layout until some other action
+  // happened to call setMessage again, permanently eating space above the
+  // list and pushing it into an unwanted scroll. Auto-clear it instead;
+  // error messages (which do show Retry) are left alone so the user has
+  // time to read and act on them.
+  useEffect(() => {
+    if (!message) return
+    // Same check routes-screen.tsx uses to decide whether to render the
+    // Retry button - keep both in sync, since this is what tells a real
+    // error (leave it up) apart from a status message (clear it).
+    const isSuccessMessage = message.includes('successfully') || message.includes('publicad')
+    if (!isSuccessMessage) return
+    const timeout = window.setTimeout(() => setMessage(''), 4000)
+    return () => window.clearTimeout(timeout)
+  }, [message, setMessage])
 
   const saveDestinationAsContact = async () => {
     const address = (selectedDestinationLocation?.formattedAddress || form.destination).trim()
@@ -91,6 +110,6 @@ export function useRoutesWorkspace() {
     setOpen(true)
   }
 
-  const {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId} = useRoutesSave(derived)
-  return {...derived, saveDestinationAsContact, openBuilder, save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId, loadError: derived.message}
+  const {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, moveRouteToPosition, busyRouteId} = useRoutesSave(derived)
+  return {...derived, saveDestinationAsContact, openBuilder, save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, moveRouteToPosition, busyRouteId, loadError: derived.message}
 }
