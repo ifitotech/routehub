@@ -69,31 +69,47 @@ type Props={
   onMarkerDrag?:(id:string,coordinate:MapCoordinate)=>void
 }
 
-// Compact top-down light-duty cab-over truck for active navigation. The
-// cargo box trails behind the cab; Google Maps rotates the SVG symbol to the
-// live GPS heading so it remains crisp at every zoom and device pixel ratio.
+// Professional top-down cab-over truck for active navigation. The primary
+// silhouette, cab glazing and side stripe are separate Google symbols so they
+// retain GPS rotation without falling back to a flat image marker.
 function navigationTruckIcon(rotation:number){
   return {
-    path:'M -9 -17 Q -11 -17 -11 -14 L -11 12 Q -11 16 -7 16 L 7 16 Q 11 16 11 12 L 11 -14 Q 11 -17 9 -17 Z',
-    scale:1,
+    // Narrow cab at the front, full cargo body at the rear and modest mirrors.
+    // This reads as an Isuzu-style delivery truck rather than a generic pin.
+    path:'M -7 -18 Q -9 -18 -10 -15 L -10 -9 L -12 -8 L -12 -5 L -10 -5 L -10 11 Q -10 16 -5 17 L 5 17 Q 10 16 10 11 L 10 -5 L 12 -5 L 12 -8 L 10 -9 L 10 -15 Q 9 -18 7 -18 Z',
+    scale:1.12,
     fillColor:'#FFFFFF',
     fillOpacity:1,
-    strokeColor:'#1769D2',
-    strokeWeight:2,
+    strokeColor:'#0A64D8',
+    strokeWeight:2.25,
     rotation,
   }
 }
 
 function navigationTruckDetailsIcon(rotation:number){
   return {
-    // Dark cab-over windshield at the front and quiet cargo-box detailing;
-    // the body outline provides the restrained blue accent, not the roof.
-    path:'M -7 -14 L 7 -14 L 6 -9 L -6 -9 Z M -8 -5 L -7 -5 L -7 10 L -8 10 Z M -6 -1 L 6 -1 L 6 0 L -6 0 Z',
-    scale:1,
+    // Windshield, grille and axle cues. Keep the roof white; blue is reserved
+    // for the body outline and lower cargo stripe.
+    path:'M -6 -15 L 6 -15 L 7 -10 L -7 -10 Z M -6 -7 L 6 -7 L 6 -5 L -6 -5 Z M -7 11 L -5 11 L -5 14 L -7 14 Z M 5 11 L 7 11 L 7 14 L 5 14 Z',
+    scale:1.12,
     fillColor:'#183451',
     fillOpacity:1,
     strokeColor:'#183451',
-    strokeWeight:.5,
+    strokeWeight:.35,
+    rotation,
+  }
+}
+
+function navigationTruckAccentIcon(rotation:number){
+  return {
+    // One restrained side stripe makes the white vehicle legible over a light
+    // map without turning its entire roof blue.
+    path:'M -8 1 L 8 1 L 8 4 L -8 4 Z',
+    scale:1.12,
+    fillColor:'#1677FF',
+    fillOpacity:1,
+    strokeColor:'#1677FF',
+    strokeWeight:.25,
     rotation,
   }
 }
@@ -147,6 +163,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
   const objectsRef=useRef<MapObject[]>([])
   const driverMarkerRef=useRef<MapObject|null>(null)
   const driverMarkerDetailRef=useRef<MapObject|null>(null)
+  const driverMarkerAccentRef=useRef<MapObject|null>(null)
   const listenersRef=useRef<Listener[]>([])
   const lastDriverPositionRef=useRef<MapCoordinate|null>(null)
   const animationFrameRef=useRef<number|null>(null)
@@ -205,6 +222,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       objectsRef.current=[]
       driverMarkerRef.current=null
       driverMarkerDetailRef.current=null
+      driverMarkerAccentRef.current=null
       routeLinesRef.current={traveled:null,pending:null}
       listenersRef.current.forEach(listener=>listener.remove?.())
       listenersRef.current=[]
@@ -274,6 +292,15 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           })
           objectsRef.current.push(details)
           driverMarkerDetailRef.current=details
+          const accent=new maps.Marker({
+            map,
+            position:current.driverMarker.position,
+            icon:navigationTruckAccentIcon(navigationRef.current.navigationHeading??0),
+            clickable:false,
+            zIndex:1002,
+          })
+          objectsRef.current.push(accent)
+          driverMarkerAccentRef.current=accent
         }
         lastDriverPositionRef.current=current.driverMarker.position
       }
@@ -376,6 +403,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       const markerRotation=heading-(map?.getHeading?.()||0)
       marker?.setIcon?.(navigationTruckIcon(markerRotation))
       driverMarkerDetailRef.current?.setIcon?.(navigationTruckDetailsIcon(markerRotation))
+      driverMarkerAccentRef.current?.setIcon?.(navigationTruckAccentIcon(markerRotation))
     }
     if(marker&&previous&&distanceKm(previous,position)<=2){
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
@@ -387,6 +415,10 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           lng:previous.lng+(position.lng-previous.lng)*progress,
         })
         driverMarkerDetailRef.current?.setPosition?.({
+          lat:previous.lat+(position.lat-previous.lat)*progress,
+          lng:previous.lng+(position.lng-previous.lng)*progress,
+        })
+        driverMarkerAccentRef.current?.setPosition?.({
           lat:previous.lat+(position.lat-previous.lat)*progress,
           lng:previous.lng+(position.lng-previous.lng)*progress,
         })
@@ -403,6 +435,7 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
     }else{
       marker?.setPosition?.(position)
       driverMarkerDetailRef.current?.setPosition?.(position)
+      driverMarkerAccentRef.current?.setPosition?.(position)
       lastDriverPositionRef.current=position
       updateCamera(position,1)
     }

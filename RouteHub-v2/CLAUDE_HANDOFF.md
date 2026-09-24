@@ -1,6 +1,6 @@
 # RouteHub — contexto para continuar con Claude
 
-Actualizado: 23 de septiembre de 2026. Repositorio: `ifitotech/routehub`, rama `main`. Aplicación: `RouteHub-v2/`.
+Actualizado: 24 de septiembre de 2026. Repositorio: `ifitotech/routehub`, rama `main`. Aplicación: `RouteHub-v2/`.
 
 ## Estado de entrega actual
 
@@ -46,9 +46,12 @@ Lee también `ROUTEHUB_HANDOFF.md` y `CHATGPT_HANDOFF.md`: contienen decisiones 
 - Today y mapa comparten sesión, parada, progreso y ubicación; alternar Today/mapa nunca inicia, llega, completa, cancela ni reinicia la ruta.
 - Modo Simple y Pro son independientes de navegación externa/interna. Simple conserva el flujo sencillo y navegación externa. Pro da información y navegación integrada cuando el plan lo permita.
 - Navegación interna debe ser realmente fullscreen: solo mapa y tarjetas flotantes de maniobra y llegada. Sin header, logo, tabs ni barra superior de RouteHub tapando el mapa.
+- La guía superior sigue la jerarquía de navegación móvil: maniobra primaria y voz en una tarjeta redondeada, con la siguiente maniobra contenida dentro de la tarjeta; nunca dejar una pestaña `Then` colgando, cortada o sobre las etiquetas del mapa.
+- El panel inferior debe tener separación visible del borde/safe area (también sin `env(safe-area-inset-bottom)`), no parecer un footer pegado. Mantener `Exit` rojo y `Arrived` verde, con contraste alto en ambos temas.
 - Si no hay GPS actual al abrir una ruta, el mapa sólo enseña los destinos como vista previa. No dibuja una línea desde el origen guardado ni presenta ese origen como la posición del conductor; espera una lectura foreground nueva antes de calcular navegación.
 - La tarjeta inferior de navegación es flotante, compacta, con estética glass (iOS/Android), `Arrived` verde y `Exit` rojo lado a lado. No usar paneles pesados ni texto de bajo contraste.
 - El marcador del conductor debe ser el camión profesional blanco/azul tipo cab-over (Isuzu), no una flecha ni una van infantil.
+- El camión de navegación se dibuja en `components/google-route-canvas.tsx` con tres símbolos rotables de Google Maps (carrocería, cabina y franja lateral). No reemplazarlo por una imagen estática porque perdería su orientación respecto al heading GPS.
 - El modo oscuro tiene que respetarse de extremo a extremo, incluidos mapas/superficies/loader. Nunca renderizar accidentalmente superficies claras en tema oscuro.
 - En History móvil, el gesto de regreso debe ser compacto y vinculado visualmente a los filtros; fecha y búsqueda comparten la misma retícula, y las tarjetas vacías/errores centran su contenido sin dejar espacios desbalanceados.
 - Settings de Driver se ordena por prioridad: jornada, experiencia, navegación, cuenta/sucursal, alertas, permisos del dispositivo, idioma/tema y por último soporte/actualizaciones/salida. No volver a repartir estas preferencias como tarjetas aisladas ni duplicar su función.

@@ -540,14 +540,14 @@ export default function DriverNavigationMap({
           {stateCopy.street&&<span className={styles.streetLine}>{stateCopy.street}</span>}
           {stateCopy.secondary&&<span className={styles.actionLine}>{stateCopy.secondary}</span>}
           {gpsMeta&&<span className={styles.gpsMeta}>{gpsMeta}</span>}
+          {afterManeuver&&afterLabel&&(
+            <span className={styles.afterChip}>
+              <span>{copy.after}</span>
+              <AfterIcon size={13}/>
+            </span>
+          )}
         </div>
         <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={20}/>:<VolumeX size={20}/>}</button>
-        {afterManeuver&&afterLabel&&(
-          <div className={styles.afterChip}>
-            <span>{copy.after}</span>
-            <AfterIcon size={14}/>
-          </div>
-        )}
       </aside>
       <div className={styles.mapArea}>
         <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={gpsReady?line:[]} markers={markers} fitPoints={gpsReady?points:destinationOverview} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={

@@ -2,9 +2,9 @@
 .navigation button{font:inherit;font-weight:750;cursor:pointer;touch-action:manipulation}.navigation button:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.navigation button:disabled{opacity:.5;cursor:wait}
 /* Reserve actual panel heights in layout so Maps centers on the visible area.
    Specificity keeps compact-screen rules from restoring absolute offsets. */
-.navigation .guidance{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));inset-block-end:auto;margin:0;grid-template-columns:38px minmax(0,1fr) 40px;padding:10px 12px;gap:9px}
-.navigation .guidance button{width:38px;height:38px;flex:none}
-.navigation .bottom{position:absolute;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,calc(env(safe-area-inset-bottom,0px) + 8px));gap:0;padding-top:6px;padding-bottom:10px;max-height:46%;max-height:46dvh;overflow-y:auto;min-height:0}
+.navigation .guidance{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));inset-block-end:auto;margin:0;grid-template-columns:44px minmax(0,1fr) 44px;padding:12px 14px;gap:11px}
+.navigation .guidance button{width:44px;height:44px;flex:none}
+.navigation .bottom{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 14px));gap:0;padding-top:7px;padding-bottom:12px;max-height:46%;max-height:46dvh;overflow-y:auto;min-height:0}
 .navigation .bottom[data-expanded='true']{max-height:72%;max-height:72dvh}
 .navigation .controls{bottom:16px}
 .navigation .notice{top:8px}
@@ -21,9 +21,9 @@
    and --rh-border-strong, text uses --rh-text/-muted/-subtle, and the accent
    color is --rh-primary throughout - one token source instead of a second,
    separately-tuned navy/blue palette that used to drift from Today's. */
-.guidance{position:absolute;z-index:4;top:12px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:44px minmax(0,1fr) 40px;align-items:center;gap:10px;padding:12px;background:rgba(7,27,56,.94);border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:18px;color:var(--rh-text,#f7faff);box-shadow:0 12px 28px rgba(3,17,43,.32);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%)}
+.guidance{position:absolute;z-index:4;top:12px;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:11px;padding:12px 14px;background:rgba(7,27,56,.94);border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:22px;color:var(--rh-text,#f7faff);box-shadow:0 14px 30px rgba(3,17,43,.34),inset 0 1px 0 rgba(255,255,255,.1);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%)}
 .maneuver{display:grid;place-items:center;color:var(--rh-primary,#1677ff)}
-.instruction{display:grid;gap:1px;min-width:0}
+.instruction{display:grid;gap:2px;min-width:0}
 .gpsMeta{display:none}
 .bigLine{font-size:clamp(17px,4.6vw,21px);line-height:1.15;font-weight:850;letter-spacing:-.02em;overflow-wrap:anywhere;color:var(--rh-text,#f7faff)}
 .streetLine{font-size:13px;line-height:1.2;font-weight:750;color:var(--rh-text-muted,#9fb2d0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -31,20 +31,20 @@
 /* Circular glass icon button - matches today.module.css .secondaryActionIcon
    exactly (same gradient stops/shadow), not tokenized there so copied as
    literal values with the same dark/light pair instead of drifting apart. */
-.guidance button{display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:50%;background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.22),rgba(10,26,48,.42));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 18px rgba(4,12,26,.4);color:var(--rh-primary-bright,#5fa8ff)}
+.guidance button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:50%;background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.22),rgba(10,26,48,.42));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 18px rgba(4,12,26,.4);color:var(--rh-primary-bright,#5fa8ff)}
 
-/* "Después" - small tab hanging off the card's bottom-left edge, only shown
-   once a confirmed later maneuver is close (see afterManeuver in the TSX).
-   Same soft-tint pill language as Today's pickup/delivery/return badges. */
-.afterChip{position:absolute;left:14px;bottom:-13px;z-index:5;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:10px;background:var(--rh-pickup-bg,rgba(22,119,255,.16));border:1px solid var(--rh-pickup-border,rgba(36,147,255,.25));color:var(--rh-pickup-fg,#8ec7ff);font-size:10px;font-weight:800;letter-spacing:.01em}
+/* The secondary maneuver remains part of the instruction hierarchy instead
+   of hanging below the card, where it could be clipped by the map or overlap
+   street labels on tall phone displays. */
+.afterChip{display:inline-flex;align-items:center;gap:4px;width:max-content;max-width:100%;margin-top:2px;padding:3px 7px;border-radius:999px;background:var(--rh-pickup-bg,rgba(22,119,255,.16));border:1px solid var(--rh-pickup-border,rgba(36,147,255,.25));color:var(--rh-pickup-fg,#8ec7ff);font-size:9.5px;font-weight:800;letter-spacing:.01em}
 
-.controls{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(228px + env(safe-area-inset-bottom,0px));z-index:3}
+.controls{position:absolute;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(248px + env(safe-area-inset-bottom,0px));z-index:3}
 .controls button{display:grid;place-items:center;width:46px;height:46px;padding:0;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:50%;background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.22),rgba(10,26,48,.42));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 18px rgba(4,12,26,.4);color:var(--rh-primary-bright,#5fa8ff)}
 .controls button[aria-pressed=true]{background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.4),rgba(10,26,48,.55));border-color:var(--rh-primary,#1677ff)}
 .notice{position:absolute;z-index:3;top:112px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:7px;max-width:calc(100% - 28px);min-height:38px;padding:7px 12px;border:1px solid #e9c571;border-radius:12px;background:#fff8e7;color:#744a08;font-size:12px;text-align:center;box-shadow:0 2px 8px #071b421a}
 
 /* --- Bottom sheet: same glass card language as the guidance card above --- */
-.bottom{position:absolute;z-index:4;right:0;bottom:0;left:0;display:flex;flex-direction:column;padding:0 16px 10px;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:26px;background:rgba(7,27,56,.84);color:var(--rh-text,#f7faff);box-shadow:0 18px 44px rgba(3,12,28,.34),0 4px 12px rgba(3,12,28,.18),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(24px) saturate(165%);-webkit-backdrop-filter:blur(24px) saturate(165%)}
+.bottom{position:absolute;z-index:4;right:0;bottom:0;left:0;display:flex;flex-direction:column;padding:0 16px 12px;border:1px solid var(--rh-border-strong,rgba(64,142,255,.3));border-radius:28px;background:rgba(7,27,56,.88);color:var(--rh-text,#f7faff);box-shadow:0 22px 48px rgba(3,12,28,.32),0 5px 14px rgba(3,12,28,.2),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:blur(24px) saturate(165%);-webkit-backdrop-filter:blur(24px) saturate(165%)}
 .sheetHandleButton{display:flex;justify-content:center;padding:7px 0 4px;border:0;background:transparent}
 .sheetHandle{width:34px;height:4px;border-radius:99px;background:linear-gradient(90deg,var(--rh-primary,#1677ff),var(--rh-cyan,#17d9d2))}
 .stopSummary{display:flex;align-items:center;gap:7px;min-width:0;padding-bottom:6px;color:var(--rh-text-muted,#9fb2d0);font-size:11.5px;font-weight:750}
