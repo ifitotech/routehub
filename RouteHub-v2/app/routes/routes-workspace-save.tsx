@@ -207,12 +207,25 @@ export function useRoutesSave(w: any) {
   // the update, since after it the route has no driver to look up).
   const unassignRoute = async (route: RouteRecord) => {
     if (!route.driver_id || busyRouteId || routeMoveLocks.current.has(route.id)) return
-    if (['active', 'completed', 'cancelled'].includes(route.status || '')) return
+    if (['completed', 'cancelled'].includes(route.status || '')) return
     const previousDriverId = route.driver_id
+    const wasActive = route.status === 'active'
     routeMoveLocks.current.add(route.id)
     setBusyRouteId(route.id)
     try {
       const client = getSupabase()
+      // The route the driver is actively working right now can still be
+      // pulled back to Unassigned - the customer saying "come back later"
+      // doesn't stop being real just because the driver already left for
+      // it - but only once it's paused: that's the driver app's own signal
+      // to stop treating it as "in progress" before driver_id changes under
+      // it (see the guard in app/driver-v3/page.tsx that closes navigation
+      // instead of silently jumping to a different stop when that happens).
+      if (wasActive) {
+        const {data: paused, error: pauseError} = await client.from('routes').update({status: 'paused', updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).eq('status', 'active').select('id').maybeSingle()
+        if (pauseError) throw pauseError
+        if (!paused) throw new Error(locale === 'es' ? 'La ruta cambió antes de moverla. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'L’itinéraire a changé avant son déplacement. Actualisez et réessayez.' : 'The route changed before it could be moved. Refresh the list and try again.')
+      }
       // Selecting the row back is what makes an RLS refusal visible: a blocked
       // update returns success with zero rows, so without this the manager
       // would get a "moved to unassigned" confirmation for a route that never
@@ -320,7 +333,62 @@ export function useRoutesSave(w: any) {
     }
   }
 
+  // Backs the drag-and-drop board: dropping a route onto another route's
+  // card assigns it to that card's driver (or keeps the same driver, if
+  // reordering within one queue) and inserts it exactly where it was
+  // dropped, instead of just appending it - "drop it where the delivery
+  // would actually happen" per the founder's own description of the flow.
+  // A route the driver is currently working (status 'active') is paused
+  // first as part of the same action: unassignRoute/assignRouteToDriver
+  // both refuse an active row outright, and pausing is also the driver
+  // app's own signal to stop treating it as "in progress" before its
+  // driver_id or queue position changes underneath it - see the guard in
+  // app/driver-v3/page.tsx that closes navigation instead of silently
+  // jumping to a different stop when that happens.
+  const moveRouteToPosition = async (route: RouteRecord, targetDriverId: string, beforeRouteId: string | null) => {
+    if (!targetDriverId || busyRouteId || routeMoveLocks.current.has(route.id)) return
+    if (['completed', 'cancelled'].includes(route.status || '')) return
+    const previousDriverId = route.driver_id || null
+    if (previousDriverId === targetDriverId && beforeRouteId === route.id) return
+    const wasActive = route.status === 'active'
+    routeMoveLocks.current.add(route.id)
+    setBusyRouteId(route.id)
+    try {
+      const client = getSupabase()
+      if (wasActive) {
+        const {data: paused, error: pauseError} = await client.from('routes').update({status: 'paused', updated_version: Date.now()}).eq('id', route.id).eq('company_id', route.company_id).eq('status', 'active').select('id').maybeSingle()
+        if (pauseError) throw pauseError
+        if (!paused) throw new Error(locale === 'es' ? 'La ruta cambió antes de moverla. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'L’itinéraire a changé avant son déplacement. Actualisez et réessayez.' : 'The route changed before it could be moved. Refresh the list and try again.')
+      }
+      if (previousDriverId !== targetDriverId) {
+        const {data, error} = await client.rpc('reassign_upcoming_route', {p_route_id: route.id, p_driver_id: targetDriverId})
+        if (error) throw error
+        if (!Array.isArray(data) || data.length !== 1 || data[0]?.id !== route.id) throw new Error(locale === 'es' ? 'La ruta cambió antes de moverla. Actualiza la lista e intenta de nuevo.' : locale === 'fr' ? 'L’itinéraire a changé avant son déplacement. Actualisez et réessayez.' : 'The route changed before it could be moved. Refresh the list and try again.')
+      }
+      let queueQuery = client.from('routes').select('id,position').eq('company_id', route.company_id).eq('route_date', route.route_date || '').eq('driver_id', targetDriverId).in('status', ['draft', 'pending', 'published', 'paused']).order('position').order('id')
+      queueQuery = route.branch_id == null ? queueQuery.is('branch_id', null) : queueQuery.eq('branch_id', route.branch_id)
+      const {data: queue, error: queueError} = await queueQuery
+      if (queueError) throw queueError
+      const ids = (queue || []).map((item: {id: string}) => item.id).filter((id: string) => id !== route.id)
+      const insertAt = beforeRouteId ? ids.indexOf(beforeRouteId) : -1
+      if (insertAt < 0) ids.push(route.id)
+      else ids.splice(insertAt, 0, route.id)
+      const {error: reorderError} = await client.rpc('reorder_route_queue', {p_route_ids: ids})
+      if (reorderError) throw reorderError
+      if (currentUserId && companyId) await recordActivity({companyId, userId: currentUserId, action: 'route_moved_by_manager', recordId: route.id, after: {driver_id: targetDriverId}}).catch(() => undefined)
+      if (previousDriverId && previousDriverId !== targetDriverId) void sendRoutePush(route.id, 'unassigned', previousDriverId)
+      void sendRoutePush(route.id, previousDriverId !== targetDriverId ? 'assigned' : 'updated')
+      await loadWorkspace()
+      setMessage(locale === 'es' ? 'Ruta movida.' : locale === 'fr' ? 'Itinéraire déplacé.' : 'Route moved.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : c.saveError)
+    } finally {
+      routeMoveLocks.current.delete(route.id)
+      setBusyRouteId('')
+    }
+  }
+
   const renderRouteCards = (_items: RouteRecord[]) => null
 
-  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId}
+  return {save, renderRouteCards, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, moveRouteToPosition, busyRouteId}
 }

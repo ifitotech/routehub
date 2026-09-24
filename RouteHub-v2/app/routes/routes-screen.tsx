@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import {useCallback, useEffect, useMemo, useState} from 'react'
+import {createPortal} from 'react-dom'
 import Link from 'next/link'
 import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from 'lucide-react'
 import RouteRows from './routes-rows'
@@ -22,6 +23,7 @@ import board from './routes-board.module.css'
 import './routes-dispatch.css'
 import {useRoutesWorkspace} from './routes-workspace'
 import {routeDateValue, type RouteRecord} from './routes-model'
+import {useRouteDrag, type RouteDropTarget} from './use-route-drag'
 
 export default function Routes() {
   const w = useRoutesWorkspace()
@@ -35,6 +37,14 @@ export default function Routes() {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewingRouteId, setViewingRouteId] = useState<string | null>(null)
+  // Dragging a route only stages where it would land (driver + position) -
+  // nothing is written to the database or pushed to a driver's phone until
+  // "Done" (the same Edit routes toggle) commits every staged move at once.
+  // Without this, a driver would get a notification for every intermediate
+  // drop while the manager was still deciding where a route actually goes.
+  type PendingMove = {targetDriverId: string | null; beforeRouteId: string | null}
+  const [pendingMoves, setPendingMoves] = useState(() => new globalThis.Map<string, PendingMove>())
+  const [committingMoves, setCommittingMoves] = useState(false)
 
   useEffect(() => {
     try {
@@ -44,7 +54,7 @@ export default function Routes() {
     } catch {}
   }, [])
 
-  const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId, driverIndex, loading, editingRouteId, setEditingRouteId} = w
+  const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, moveRouteToPosition, busyRouteId, driverIndex, loading, editingRouteId, setEditingRouteId} = w
 
   // Shared by the Assigned list's row menu (manage mode only) and the
   // Unassigned panel (always) - a route sitting unassigned or waiting for a
@@ -120,7 +130,7 @@ export default function Routes() {
   }, [currentDateRoutes, selectedDriverId])
 
   // Routes waiting for a driver - the left panel's job
-  const unassignedRoutes = scopedRoutes.unassigned || []
+  const unassignedRoutes = useMemo(() => scopedRoutes.unassigned || [], [scopedRoutes])
 
   const matchesSearch = useCallback((r: any) => {
     if (!searchQuery.trim()) return true
@@ -141,6 +151,79 @@ export default function Routes() {
 
     return combined
   }, [scopedRoutes, searchQuery, matchesSearch])
+
+  // Dragging a card to Unassigned frees its driver; dragging one from
+  // Unassigned onto an assigned card takes that card's driver and drops in
+  // right where it landed - "the spot the delivery would actually happen"
+  // rather than always appending to the end of that driver's queue.
+  const dragRoutesById = useMemo(() => {
+    const map = new globalThis.Map<string, RouteRecord>()
+    for (const item of unassignedRoutes) map.set(item.id, item)
+    for (const item of assignedRoutes) map.set(item.id, item)
+    return map
+  }, [unassignedRoutes, assignedRoutes])
+  // Applies pendingMoves on top of the real unassigned/assigned lists so the
+  // board reflects every staged drag immediately, without any of it having
+  // reached the database yet.
+  const {unassignedRoutes: stagedUnassigned, assignedRoutes: stagedAssigned} = useMemo(() => {
+    if (!pendingMoves.size) return {unassignedRoutes, assignedRoutes}
+    const stagedIds = new Set(pendingMoves.keys())
+    const nextUnassigned = unassignedRoutes.filter(route => !stagedIds.has(route.id))
+    const nextAssigned = assignedRoutes.filter(route => !stagedIds.has(route.id))
+    for (const [routeId, move] of pendingMoves) {
+      const original = dragRoutesById.get(routeId)
+      if (!original) continue
+      // position drops out here - the row's own index in this staged list
+      // is the visible number, not the stale slot it held in its old queue.
+      const staged = {...original, driver_id: move.targetDriverId, position: null}
+      if (move.targetDriverId === null) {
+        nextUnassigned.push(staged)
+      } else {
+        const beforeIndex = move.beforeRouteId ? nextAssigned.findIndex(route => route.id === move.beforeRouteId) : -1
+        if (beforeIndex < 0) nextAssigned.push(staged)
+        else nextAssigned.splice(beforeIndex, 0, staged)
+      }
+    }
+    return {unassignedRoutes: nextUnassigned, assignedRoutes: nextAssigned}
+  }, [unassignedRoutes, assignedRoutes, pendingMoves, dragRoutesById])
+  const handleRouteDrop = useCallback((draggedId: string, target: RouteDropTarget) => {
+    const dragged = dragRoutesById.get(draggedId)
+    if (!dragged) return
+    const targetDriverId = target.kind === 'unassigned' ? null : dragRoutesById.get(target.routeId)?.driver_id || null
+    if (target.kind === 'route' && !targetDriverId) return
+    if (targetDriverId === (dragged.driver_id || null) && target.kind === 'route' && target.routeId === dragged.id) return
+    // Reaching here at all means managing was already on - dragging can
+    // only start once "Edit routes" is active (see canDrag/onDragStart),
+    // so there's nothing to re-enable here.
+    setPendingMoves(current => {
+      const next = new globalThis.Map(current)
+      next.set(draggedId, {targetDriverId, beforeRouteId: target.kind === 'route' ? target.routeId : null})
+      return next
+    })
+  }, [dragRoutesById])
+  const {draggingId, pointer: dragPointer, overTarget: dragOverTarget, startDrag} = useRouteDrag(handleRouteDrop)
+  const draggedRoute = draggingId ? dragRoutesById.get(draggingId) : null
+  const dragOverRouteId = dragOverTarget?.kind === 'route' ? dragOverTarget.routeId : null
+  const dragOverUnassigned = dragOverTarget?.kind === 'unassigned'
+  // Commits every staged drag at once - one real update and one driver
+  // notification per affected route, for its final position only, not one
+  // per intermediate drop while the manager was still rearranging things.
+  const commitPendingMoves = useCallback(async () => {
+    if (!pendingMoves.size) return
+    setCommittingMoves(true)
+    const moves = Array.from(pendingMoves.entries())
+    setPendingMoves(new globalThis.Map())
+    try {
+      for (const [routeId, move] of moves) {
+        const original = dragRoutesById.get(routeId)
+        if (!original) continue
+        if (move.targetDriverId === null) await unassignRoute(original)
+        else await moveRouteToPosition(original, move.targetDriverId, move.beforeRouteId)
+      }
+    } finally {
+      setCommittingMoves(false)
+    }
+  }, [pendingMoves, dragRoutesById, unassignRoute, moveRouteToPosition])
 
   // Live in the sidebar below Unassigned instead - see UnassignedPanel.
   const issueRoutes = useMemo(() => (scopedRoutes.issues || []).filter(matchesSearch), [scopedRoutes, matchesSearch])
@@ -281,8 +364,12 @@ export default function Routes() {
               locale={locale}
             />
             <Link className={styles.secondaryButton} href="/contacts"><Users size={18}/>{t.contacts}</Link>
-            <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} style={{justifyContent: 'center', minWidth: '13ch'}} onClick={() => { setManaging(on => !on); setPane('list') }}>
-              <RouteIcon size={18}/>{managing ? (locale==='es'?'Listo':locale==='fr'?'Terminé':'Done') : c.manage}
+            <button className={styles.secondaryButton} type="button" data-on={managing ? 'true' : 'false'} disabled={committingMoves} style={{justifyContent: 'center', minWidth: '13ch'}} onClick={async () => {
+              if (managing && pendingMoves.size) await commitPendingMoves()
+              setManaging(on => !on)
+              setPane('list')
+            }}>
+              <RouteIcon size={18}/>{committingMoves ? (locale==='es'?'Guardando…':locale==='fr'?'Enregistrement…':'Saving…') : managing ? (locale==='es'?`Listo${pendingMoves.size ? ` (${pendingMoves.size})` : ''}`:locale==='fr'?`Terminé${pendingMoves.size ? ` (${pendingMoves.size})` : ''}`:`Done${pendingMoves.size ? ` (${pendingMoves.size})` : ''}`) : c.manage}
             </button>
             {open
               ? <button className={styles.secondaryButton} type="button" onClick={() => setOpen(false)}><X size={18}/>{locale==='es'?'Cancelar':locale==='fr'?'Annuler':'Cancel'}</button>
@@ -330,7 +417,7 @@ export default function Routes() {
         <DispatchLayout
           sidebar={
             <UnassignedPanel
-              routes={unassignedRoutes}
+              routes={stagedUnassigned}
               drivers={drivers}
               onAssign={assignRouteToDriver}
               onEdit={openEditForm}
@@ -340,6 +427,9 @@ export default function Routes() {
               issueRoutes={issueRoutes}
               completedRoutes={completedRoutes}
               onViewDetails={setViewingRouteId}
+              onDragStart={managing ? startDrag : undefined}
+              draggingRouteId={draggingId}
+              dragOverZone={dragOverUnassigned}
             />
           }
           center={
@@ -366,12 +456,12 @@ export default function Routes() {
               <div
                 className={styles.routesQueuePane}
               >
-                {managing && <p className={board.manageHint}>{locale==='es'?'Sube, baja o cancela las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez ou annulez ici. Aucune autre page.':'Move or cancel routes here. Stay on this page.'}</p>}
+                {managing && <p className={board.manageHint}>{pendingMoves.size ? (locale==='es'?'Cambios sin guardar. El conductor se entera al presionar Listo.':locale==='fr'?'Modifications non enregistrées. Le conducteur est informé en appuyant sur Terminé.':'Unsaved changes. The driver finds out when you press Done.') : (locale==='es'?'Sube, baja, cancela o arrastra las rutas aqui. No se abre otra pagina.':locale==='fr'?'Montez, descendez, annulez ou glissez ici. Aucune autre page.':'Move, cancel or drag routes here. Stay on this page.')}</p>}
                 {loading ? (
                   <section className={styles.routeGrid} aria-label={c.loadError}>
                     {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
                   </section>
-                ) : assignedRoutes.length > 0 ? (
+                ) : stagedAssigned.length > 0 ? (
                   <section className={styles.routeSection}>
                     {/* Matches Unassigned's header shape (icon chip + label +
                         count) instead of a bare heading + badge - the two
@@ -380,11 +470,11 @@ export default function Routes() {
                       <div className={styles.sectionIcon}><RouteIcon size={18}/></div>
                       <div className={styles.sectionLabelGroup}>
                         <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
-                        <span>{assignedRoutes.length}</span>
+                        <span>{stagedAssigned.length}</span>
                       </div>
                     </div>
                     <RouteRows
-                      items={assignedRoutes}
+                      items={stagedAssigned}
                       locale={locale}
                       c={c}
                       driverIndex={driverIndex}
@@ -398,6 +488,9 @@ export default function Routes() {
                       onEdit={openEditForm}
                       busyRouteId={busyRouteId}
                       managing={managing}
+                      onDragStart={startDrag}
+                      draggingRouteId={draggingId}
+                      dragOverRouteId={dragOverRouteId}
                     />
                   </section>
                 ) : (
@@ -416,6 +509,12 @@ export default function Routes() {
           focus={open || Boolean(viewingRoute)}
         />
       </div>
+      {draggedRoute && dragPointer && typeof document !== 'undefined' && createPortal(
+        <div className={styles.dragGhost} style={{left: dragPointer.x, top: dragPointer.y}}>
+          {draggedRoute.destination_name || draggedRoute.destination_address}
+        </div>,
+        document.body,
+      )}
     </ManagerShell>
   )
 }

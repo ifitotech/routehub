@@ -90,6 +90,29 @@
   word-break: break-word;
 }
 
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  margin-top: 1px;
+  color: var(--rh-text-muted, #64748b);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Highlights the whole panel while a dragged card is hovering over it, so
+   dropping "somewhere in Unassigned" (not necessarily on another card) is
+   clearly a valid target. */
+.dropZoneActive {
+  outline: 2px dashed var(--rh-primary, #1660f0);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
 .meta {
   font-size: 11px;
   font-weight: 700;

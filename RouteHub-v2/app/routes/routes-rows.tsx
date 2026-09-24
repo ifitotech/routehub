@@ -1,11 +1,11 @@
 'use client'
 
-import {ChevronDown, ChevronRight, ChevronUp, Pause, Pencil, Play, X} from 'lucide-react'
+import {ChevronDown, ChevronRight, ChevronUp, GripVertical, Pause, Pencil, Play, X} from 'lucide-react'
 import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './routes-model'
 import type {Driver, RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
 
-export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, onAssign, drivers = [], onViewDetails, onEdit, busyRouteId, managing}: {
+export default function RouteRows({items, locale, c, driverIndex, onCancel, onMove, onTogglePause, onUnassign, onAssign, drivers = [], onViewDetails, onEdit, busyRouteId, managing, onDragStart, draggingRouteId, dragOverRouteId}: {
   items: RouteRecord[]
   locale: string
   c: any
@@ -20,6 +20,9 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   onEdit?: (route: RouteRecord) => void
   busyRouteId?: string
   managing?: boolean
+  onDragStart?: (routeId: string, event: React.PointerEvent) => void
+  draggingRouteId?: string | null
+  dragOverRouteId?: string | null
 }) {
   const label = locale === 'es'
     ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', edit: 'Editar', moveTo: 'Mover a…', unassigned: 'Sin asignar', details: 'Ver detalles'}
@@ -51,18 +54,34 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         const canMoveAssignee = ['draft', 'pending', 'published', 'paused'].includes(status) && Boolean(onAssign && onUnassign && drivers.length)
         const busy = busyRouteId === route.id
         const po = route.mission_type === 'return' ? '' : (route.order_number || '')
+        // Dragging works for the driver's current stop too (status 'active')
+        // - that's the whole point of the founder's ask: the customer wants
+        // it later today, not cancelled, even mid-drive. It only starts once
+        // "Edit routes" (managing) is already on, same as Move/Pause below -
+        // a stray drag on the normal board is exactly the kind of accident
+        // this gate exists to prevent.
+        const canDrag = canManage && !['completed', 'cancelled'].includes(status) && Boolean(onDragStart)
+        const dragging = draggingRouteId === route.id
+        const dragOver = dragOverRouteId === route.id
         return (
           <article
             key={route.id}
             className={styles.row}
             data-status={status}
             data-managing={managing ? 'true' : 'false'}
-            style={canEdit ? {cursor: 'pointer'} : undefined}
+            data-drag-route={route.id}
+            style={{...(canEdit ? {cursor: 'pointer'} : {}), ...(dragging ? {opacity: 0.4} : {}), ...(dragOver ? {outline: '2px dashed var(--rh-primary, #1660f0)', outlineOffset: -2} : {})}}
             onClick={canEdit && !busy ? () => onEdit?.(route) : undefined}
           >
-            <span className={styles.num}>
-              {String(route.position || index + 1).padStart(2, '0')}
-            </span>
+            {canDrag ? (
+              <span className={styles.dragHandle} onPointerDown={event => { event.stopPropagation(); onDragStart?.(route.id, event) }} onClick={event => event.stopPropagation()} aria-hidden="true">
+                <GripVertical size={16} />
+              </span>
+            ) : (
+              <span className={styles.num}>
+                {String(route.position || index + 1).padStart(2, '0')}
+              </span>
+            )}
             <div className={styles.body}>
               <div className={styles.topline}>
                 <small>{typeLabel(route.mission_type, c)}</small>

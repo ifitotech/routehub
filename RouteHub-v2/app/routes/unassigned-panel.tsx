@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Pencil, Truck, X} from 'lucide-react'
+import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, GripVertical, Pencil, Truck, X} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -21,9 +21,12 @@ type UnassignedPanelProps = {
   issueRoutes?: RouteRecord[]
   completedRoutes?: RouteRecord[]
   onViewDetails?: (routeId: string) => void
+  onDragStart?: (routeId: string, event: React.PointerEvent) => void
+  draggingRouteId?: string | null
+  dragOverZone?: boolean
 }
 
-export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
+export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails, onDragStart, draggingRouteId, dragOverZone}: UnassignedPanelProps) {
   // Both start collapsed - an open list (especially Issues, which can run
   // long) crowded out Unassigned above it and made the panel feel heavy to
   // scan. The header (with its count) always shows on its own either way,
@@ -76,16 +79,24 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
       </div>
 
       {routes.length === 0 ? (
-        <p className={styles.empty}>
-          {locale === 'es' ? 'Todas las rutas están asignadas.' : locale === 'fr' ? 'Tous les itinéraires sont attribués.' : 'All routes are assigned.'}
+        <p className={`${styles.empty} ${dragOverZone ? styles.dropZoneActive : ''}`} data-drop-zone="unassigned">
+          {onDragStart
+            ? (locale === 'es' ? 'Todas las rutas están asignadas. Arrastra una ruta aquí para quitarle el conductor.' : locale === 'fr' ? 'Tous les itinéraires sont attribués. Glissez-en un ici pour retirer son conducteur.' : 'All routes are assigned. Drag one here to clear its driver.')
+            : (locale === 'es' ? 'Todas las rutas están asignadas.' : locale === 'fr' ? 'Tous les itinéraires sont attribués.' : 'All routes are assigned.')}
         </p>
       ) : (
-        <div className={styles.list}>
+        <div className={`${styles.list} ${dragOverZone ? styles.dropZoneActive : ''}`} data-drop-zone="unassigned">
           {routes.map(route => {
             const busy = busyRouteId === route.id
+            const dragging = draggingRouteId === route.id
             return (
-              <div key={route.id} className={styles.item}>
+              <div key={route.id} className={styles.item} data-drag-route={route.id} style={dragging ? {opacity: 0.4} : undefined}>
                 <div className={styles.destination}>
+                  {onDragStart && (
+                    <span className={styles.dragHandle} onPointerDown={event => onDragStart(route.id, event)} aria-hidden="true">
+                      <GripVertical size={14} />
+                    </span>
+                  )}
                   {route.destination_name || route.destination_address}
                 </div>
                 <div className={styles.meta}>{routeMeta(route)}</div>
