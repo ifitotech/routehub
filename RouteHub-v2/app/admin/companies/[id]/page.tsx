@@ -1,5 +1,5 @@
 'use client'
-import {Building2, ChevronDown, ChevronLeft, ChevronUp, Eye, EyeOff, Pencil, Plus, RefreshCw, Users} from 'lucide-react'
+import {AlertTriangle, Building2, ChevronDown, ChevronLeft, ChevronUp, Eye, EyeOff, Pencil, Plus, RefreshCw, Users} from 'lucide-react'
 import Link from 'next/link'
 import {useParams} from 'next/navigation'
 import {useEffect, useState} from 'react'
@@ -38,6 +38,8 @@ export default function OrganizationPage() {
   const [company, setCompany] = useState<{name: string; abbreviation: string | null} | null>(null)
   const [branches, setBranches] = useState<Branch[]>([])
   const [usage, setUsage] = useState({routes: 0, drivers: 0, members: 0})
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({name: '', number: '', address: '', email: '', isTest: false, active: false})
   const [message, setMessage] = useState('')
@@ -105,23 +107,28 @@ export default function OrganizationPage() {
   })
 
   const load = async () => {
+    setLoading(true)
+    try {
     const client = getSupabase()
-    const [{data: org}, {data: rows}, {data: invites}, {count: routes}, {data: members}] = await Promise.all([
+    const [{data: org, error: orgError}, {data: rows, error: branchError}, {data: invites, error: inviteError}, {count: routes, error: routeError}, {data: members, error: memberError}] = await Promise.all([
       client.from('companies').select('name,abbreviation').eq('id', id).maybeSingle(),
       client.from('branches').select('id,name,branch_number,address,is_test,active').eq('company_id', id).order('name'),
       client.from('invitations').select('branch_id,email,status,created_at').eq('company_id', id).order('created_at', {ascending: false}),
       client.from('routes').select('id', {count: 'exact', head: true}).eq('company_id', id),
       client.from('company_users').select('user_id,branch_id,role,users(email,name,phone)').eq('company_id', id),
     ])
+    if (orgError || branchError || inviteError || routeError || memberError) throw orgError || branchError || inviteError || routeError || memberError
+    if (!org) throw new Error('This organization was not found or is no longer available.')
     const latest = new Map<string, {email: string; status: string}>()
     ;(invites || []).forEach((invite: {branch_id: string | null; email: string; status: string}) => { if (invite.branch_id && !latest.has(invite.branch_id)) latest.set(invite.branch_id, {email: invite.email, status: invite.status}) })
     // A second query, not a join: RLS on beta_account_credentials is
     // platform-admin-only, and it only ever has rows for accounts this
     // Admin tooling itself created - most members won't have one.
     const memberIds = (members || []).map((row: any) => row.user_id)
-    const {data: creds} = memberIds.length
+    const {data: creds, error: credentialError} = memberIds.length
       ? await client.from('beta_account_credentials').select('user_id,password').in('user_id', memberIds)
-      : {data: [] as {user_id: string; password: string}[]}
+      : {data: [] as {user_id: string; password: string}[], error: null}
+    if (credentialError) throw credentialError
     const passwordByUser = new Map((creds || []).map((row: {user_id: string; password: string}) => [row.user_id, row.password]))
     const membersByBranch = new Map<string, Member[]>()
     ;(members || []).forEach((row: any) => {
@@ -132,6 +139,12 @@ export default function OrganizationPage() {
     })
     setCompany(org); setBranches((rows || []).map((branch: {id: string; name: string; branch_number: string | null; address: string | null; is_test: boolean; active: boolean}) => ({...branch, invite: latest.get(branch.id) || null, members: membersByBranch.get(branch.id) || []})))
     setUsage({routes: routes || 0, drivers: (members || []).filter((row: any) => row.role === 'driver').length, members: (members || []).length})
+    setLoadError('')
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Unable to load this organization.')
+    } finally {
+      setLoading(false)
+    }
   }
   useEffect(() => { void load() }, [id])
 
@@ -348,8 +361,13 @@ export default function OrganizationPage() {
           <h1 className={styles.title}>{company?.name || 'Organization'}</h1>
           <p className={styles.subtitle}>Branches, their team and testing logins - all in one place, grouped by branch.</p>
         </div>
-        <button className={styles.primaryButton} onClick={() => { const opening = !open; setOpen(opening); if (opening) setForm(current => ({...current, number: company?.abbreviation || current.number})) }}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button>
+        <div style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
+          <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? styles.spinning : undefined}/>{loading ? 'Updating…' : 'Refresh'}</button>
+          <button className={styles.primaryButton} disabled={loading || !!loadError} onClick={() => { const opening = !open; setOpen(opening); if (opening) setForm(current => ({...current, number: company?.abbreviation || current.number})) }}><Plus size={18}/>{open ? 'Close' : 'Add branch'}</button>
+        </div>
       </header>
+
+      {loadError ? <section className={styles.loadError} role="alert"><AlertTriangle size={19}/><div><strong>Organization data could not be refreshed.</strong><p>{loadError}</p></div><button className={styles.secondaryButton} type="button" onClick={() => void load()}>Try again</button></section> : loading ? <section className={styles.empty} aria-live="polite"><span><RefreshCw className={styles.spinning} size={24}/></span><h2>Loading organization…</h2><p>Gathering branches, team and operational totals.</p></section> : <>
 
       {!editingCompany ? (
         <p className={styles.subtitle} style={{marginTop: -8, display: 'flex', alignItems: 'center', gap: 8}}>
@@ -569,6 +587,7 @@ export default function OrganizationPage() {
         )
       })}
       {!branches.length && <section className={styles.empty}><Building2 size={24}/><h2>No branches yet</h2><p>Add the first organization branch for this company.</p></section>}
+      </>}
     </AdminShell>
   )
 }
