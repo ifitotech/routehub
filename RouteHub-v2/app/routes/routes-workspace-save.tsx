@@ -99,6 +99,14 @@ export function useRoutesSave(w: any) {
         // Editing an existing route (opened via "click to edit" in Edit
         // mode) - update it in place instead of inserting a duplicate, and
         // leave its queue position untouched since it isn't moving.
+        // status above always resets to 'published', but that alone doesn't
+        // stop driverOperationPhase() (lib/driver/driver-state.ts) from
+        // still reading route_started_at/arrived_at from BEFORE this edit -
+        // a route that had been started or arrived (then edited to fix an
+        // address/time/driver) kept showing the driver "Ruta activa" or
+        // even "Llegué" for a stop they never actually started this time.
+        payload.route_started_at = null
+        payload.arrived_at = null
         let updated = await client.from('routes').update(payload).eq('id', editingRouteId).select('id').single()
         if (updated.error && /destination_contact_name|schema cache|column/i.test(updated.error.message || '')) {
           delete payload.destination_contact_name
