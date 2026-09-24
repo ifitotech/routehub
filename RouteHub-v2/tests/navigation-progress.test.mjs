@@ -87,6 +87,9 @@ test('Driver navigation has its own surface and Manager keeps its previous compo
   assert.doesNotMatch(navigation,/supabase|OperationsMap|Leaflet|markArrived\(/)
   assert.match(navigation,/navigationProgress=\{currentProgress\}/)
   assert.match(navigation,/source==='google'\?estimate\.coordinates:\[\]/)
+  assert.match(navigation,/const start=usableNavigationFix\(deviceLocation,Date\.now\(\)\)\?sanitizeCoordinate\(deviceLocation\):null/)
+  assert.match(navigation,/A saved origin belongs to the route plan, never to the driver/)
+  assert.match(navigation,/path=\{gpsReady\?line:\[\]\}/)
 })
 test('distance projection stays within segment endpoints and handles repeated points',()=>{
   const point={lat:25,lng:-80}

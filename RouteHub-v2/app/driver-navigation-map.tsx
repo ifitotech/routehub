@@ -228,11 +228,15 @@ export default function DriverNavigationMap({
       setPoints(coordinates)
       setDestinations(resolved.slice(1))
       setLoading(false)
-      const start=(usableNavigationFix(deviceLocation,Date.now())?sanitizeCoordinate(deviceLocation):null)||sanitizeCoordinate(resolved[0])
+      const start=usableNavigationFix(deviceLocation,Date.now())?sanitizeCoordinate(deviceLocation):null
       const rest=resolved.slice(1)
       // Do not silently skip an unresolved current destination and route to a
       // later stop. The assigned order remains authoritative.
       if(rest.some(point=>!point)){setEstimate(null);setLine([]);setRouting(false);return}
+      // A saved origin belongs to the route plan, never to the driver. Until
+      // foreground GPS gives us a fresh fix, keep the map as a destination
+      // preview instead of drawing a blue route from where the driver was
+      // earlier (or from the branch) and making it look like their location.
       if(!start||!rest.length){setEstimate(null);setLine([]);setRouting(false);return}
       // The saved origin must never become a waypoint behind the moving driver.
       lastReroute.current=Date.now()
@@ -366,6 +370,7 @@ export default function DriverNavigationMap({
   const destination=destinations[0]
   const near=Boolean(deviceLocation&&destination&&distanceMeters(deviceLocation,destination)<75)
   const gpsReady=usableNavigationFix(deviceLocation,clock)
+  const destinationOverview=useMemo(()=>destinations.filter((point):point is Coordinate=>Boolean(point)),[destinations])
   const onRoad=Boolean(gpsReady&&deviceLocation&&line.length>1&&distanceFromNavigationPath(deviceLocation,line)<=Math.min(40,Math.max(15,deviceLocation.accuracy)))
   const currentProgress=progressRef.current?.line===line?progress:null
   const matched=Boolean(onRoad&&deviceLocation&&currentProgress&&distanceMeters(deviceLocation,currentProgress.coordinate)<=Math.min(40,Math.max(15,deviceLocation.accuracy)))
@@ -545,7 +550,7 @@ export default function DriverNavigationMap({
         )}
       </aside>
       <div className={styles.mapArea}>
-        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={line} markers={markers} fitPoints={points} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
+        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={gpsReady?line:[]} markers={markers} fitPoints={gpsReady?points:destinationOverview} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
           canGuide && nextManeuver
             ? nextManeuver.distanceToManeuverMeters < 90
               ? 18.5

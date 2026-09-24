@@ -46,6 +46,7 @@ Lee también `ROUTEHUB_HANDOFF.md` y `CHATGPT_HANDOFF.md`: contienen decisiones 
 - Today y mapa comparten sesión, parada, progreso y ubicación; alternar Today/mapa nunca inicia, llega, completa, cancela ni reinicia la ruta.
 - Modo Simple y Pro son independientes de navegación externa/interna. Simple conserva el flujo sencillo y navegación externa. Pro da información y navegación integrada cuando el plan lo permita.
 - Navegación interna debe ser realmente fullscreen: solo mapa y tarjetas flotantes de maniobra y llegada. Sin header, logo, tabs ni barra superior de RouteHub tapando el mapa.
+- Si no hay GPS actual al abrir una ruta, el mapa sólo enseña los destinos como vista previa. No dibuja una línea desde el origen guardado ni presenta ese origen como la posición del conductor; espera una lectura foreground nueva antes de calcular navegación.
 - La tarjeta inferior de navegación es flotante, compacta, con estética glass (iOS/Android), `Arrived` verde y `Exit` rojo lado a lado. No usar paneles pesados ni texto de bajo contraste.
 - El marcador del conductor debe ser el camión profesional blanco/azul tipo cab-over (Isuzu), no una flecha ni una van infantil.
 - El modo oscuro tiene que respetarse de extremo a extremo, incluidos mapas/superficies/loader. Nunca renderizar accidentalmente superficies claras en tema oscuro.
