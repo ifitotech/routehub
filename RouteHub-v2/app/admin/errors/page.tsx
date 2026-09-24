@@ -42,9 +42,13 @@ export default function AdminErrors() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [message, setMessage] = useState('Loading error reports…')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
   const load = async () => {
+    setLoading(true)
+    setLoadError('')
     try {
       const supabase = getSupabase()
       const {data: userData} = await supabase.auth.getUser()
@@ -54,9 +58,10 @@ export default function AdminErrors() {
       const {data, error} = await supabase.from('app_error_reports').select('id,action,error_message,context,created_at,resolved_at,company_id,user_id,companies(name),users(email,name)').order('created_at', {ascending: false}).limit(200)
       if (error) throw error
       setRows((data || []) as unknown as ErrorRow[])
-      setMessage('')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to load error reports.')
+      setLoadError(error instanceof Error ? error.message : 'Unable to load error reports.')
+    } finally {
+      setLoading(false)
     }
   }
   useEffect(() => { void load() }, [])
@@ -97,8 +102,10 @@ export default function AdminErrors() {
           <h1 className={styles.title}>Errors</h1>
           <p className={styles.subtitle}>Crashes and failures reported automatically from every company&apos;s Manager and Driver app. Copy one and hand it over to get it fixed.</p>
         </div>
-        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={message.startsWith('Loading')}><RefreshCw size={16}/>Refresh</button>
+        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? styles.spinning : undefined}/>{loading ? 'Updating…' : 'Refresh'}</button>
       </header>
+
+      {loadError ? <section className={styles.loadError} role="alert"><AlertTriangle size={19}/><div><strong>Error reports could not be refreshed.</strong><p>{loadError}</p></div><button className={styles.secondaryButton} type="button" onClick={() => void load()}>Try again</button></section> : loading ? <section className={styles.empty} aria-live="polite"><span><RefreshCw className={styles.spinning} size={24}/></span><h2>Loading error reports…</h2><p>Checking the latest reports from Driver and Manager.</p></section> : <>
 
       <div className={styles.formGrid} style={{gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'stretch'}}>
         {(['open', 'resolved', 'all'] as Filter[]).map(value => (
@@ -147,6 +154,7 @@ export default function AdminErrors() {
           </section>
         )}
       </section>
+      </>}
     </AdminShell>
   )
 }

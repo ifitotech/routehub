@@ -31,11 +31,15 @@ function formatForCopy(row: SupportRow) {
 export default function AdminSupport() {
   const [rows, setRows] = useState<SupportRow[]>([])
   const [filter, setFilter] = useState<Filter>('open')
-  const [message, setMessage] = useState('Loading support requests…')
+  const [message, setMessage] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
   const load = async () => {
+    setLoading(true)
+    setLoadError('')
     try {
       const supabase = getSupabase()
       const {data: userData} = await supabase.auth.getUser()
@@ -45,9 +49,10 @@ export default function AdminSupport() {
       const {data, error} = await supabase.from('support_requests').select('id,message,created_at,resolved_at,company_id,user_id,companies(name),users(email,name)').order('created_at', {ascending: false}).limit(200)
       if (error) throw error
       setRows((data || []) as unknown as SupportRow[])
-      setMessage('')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to load support requests.')
+      setLoadError(error instanceof Error ? error.message : 'Unable to load support requests.')
+    } finally {
+      setLoading(false)
     }
   }
   useEffect(() => { void load() }, [])
@@ -91,8 +96,10 @@ export default function AdminSupport() {
           <h1 className={styles.title}>Support</h1>
           <p className={styles.subtitle}>Requests Managers and Drivers send from Settings &gt; Contact support.</p>
         </div>
-        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={message.startsWith('Loading')}><RefreshCw size={16}/>Refresh</button>
+        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? styles.spinning : undefined}/>{loading ? 'Updating…' : 'Refresh'}</button>
       </header>
+
+      {loadError ? <section className={styles.loadError} role="alert"><LifeBuoy size={19}/><div><strong>Support requests could not be refreshed.</strong><p>{loadError}</p></div><button className={styles.secondaryButton} type="button" onClick={() => void load()}>Try again</button></section> : loading ? <section className={styles.empty} aria-live="polite"><span><RefreshCw className={styles.spinning} size={24}/></span><h2>Loading support requests…</h2><p>Checking the latest requests from Driver and Manager.</p></section> : <>
 
       <div className={styles.formGrid} style={{gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'stretch'}}>
         {(['open', 'resolved', 'all'] as Filter[]).map(value => (
@@ -129,6 +136,7 @@ export default function AdminSupport() {
           </section>
         )}
       </section>
+      </>}
     </AdminShell>
   )
 }
