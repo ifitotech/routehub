@@ -1,6 +1,8 @@
 'use client'
 import Link from 'next/link'
 import {useEffect, useState} from 'react'
+import {createPortal} from 'react-dom'
+import {Capacitor} from '@capacitor/core'
 import {Bell, BookOpen, Building2, CalendarDays, ChevronRight, CircleHelp, Download, FileText, LifeBuoy, LogOut, Navigation, Send, Shield, UserRound} from 'lucide-react'
 import {useLocale, useThemePreference} from '../../../lib/use-preferences'
 import DriverV3Shell from '../../../components/driver-v3/DriverV3Shell'
@@ -42,6 +44,16 @@ export default function DriverV3Settings() {
   const [notify, setNotify] = useState<'on' | 'off'>('off')
   const [notifyBusy, setNotifyBusy] = useState(false)
   const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'downloading' | 'current' | 'available' | 'error'>('idle')
+  // The Android APK download/update flow means nothing on an iPhone (there is
+  // no equivalent file to install) or inside the Android app itself (it's
+  // already installed) - showing it there was just confusing chrome with no
+  // real function behind it.
+  const [showAndroidInstall, setShowAndroidInstall] = useState(false)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return
+    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+    setShowAndroidInstall(!isIOS)
+  }, [])
   const [latestVersion, setLatestVersion] = useState('')
   const [workspace, setWorkspace] = useState<{company: string; branch: string}>({company: '', branch: ''})
   const [supportOpen, setSupportOpen] = useState(false)
@@ -172,8 +184,13 @@ export default function DriverV3Settings() {
   const signOut = async () => {
     if (signingOut) return
     setSigningOut(true)
-    await getSupabase().auth.signOut()
-    window.location.assign('/login')
+    try {
+      await getSupabase().auth.signOut()
+      window.location.assign('/login')
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : t.drvOpFailed)
+      setSigningOut(false)
+    }
   }
 
   const checkForUpdates = async () => {
@@ -308,16 +325,18 @@ export default function DriverV3Settings() {
           </div>
         </section>
 
-        <section className={styles.section}>
-          <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
-            <span className={styles.rowIcon}><Download size={18} /></span>
-            <span className={styles.rowCopy}>
-              <strong>{locale === 'es' ? 'Descargar app Android' : locale === 'fr' ? 'Télécharger l’app Android' : 'Download Android app'}</strong>
-              <small>{locale === 'es' ? 'Instala la versión de prueba en cualquier Android' : locale === 'fr' ? 'Installer la version de test sur Android' : 'Install the test build on any Android device'}</small>
-            </span>
-            <ChevronRight className={styles.rowChevron} size={19} />
-          </a>
-        </section>
+        {showAndroidInstall && (
+          <section className={styles.section}>
+            <a href="/routehub-driver.apk" download="routehub-driver.apk" className={styles.row}>
+              <span className={styles.rowIcon}><Download size={18} /></span>
+              <span className={styles.rowCopy}>
+                <strong>{locale === 'es' ? 'Descargar app Android' : locale === 'fr' ? 'Télécharger l’app Android' : 'Download Android app'}</strong>
+                <small>{locale === 'es' ? 'Instala la versión de prueba en cualquier Android' : locale === 'fr' ? 'Installer la version de test sur Android' : 'Install the test build on any Android device'}</small>
+              </span>
+              <ChevronRight className={styles.rowChevron} size={19} />
+            </a>
+          </section>
+        )}
 
         <section className={`${styles.section} ${styles.preferencesSection}`}>
           <div className={styles.sectionHeader}><h2>{t.drvLanguage}</h2></div>
@@ -411,7 +430,7 @@ export default function DriverV3Settings() {
 
         {message ? <p className={styles.footer} role="status">{message}</p> : null}
         <DevicePermissions locale={locale} />
-        {updateState === 'available' || updateState === 'downloading' ? <button type="button" className={styles.row} disabled={updateState === 'downloading'} onClick={() => void installUpdate()}>
+        {showAndroidInstall && (updateState === 'available' || updateState === 'downloading' ? <button type="button" className={styles.row} disabled={updateState === 'downloading'} onClick={() => void installUpdate()}>
           <span className={styles.rowIcon}><Download size={18} /></span>
           <span className={styles.rowCopy}>
             <strong>{updateState === 'downloading' ? (locale === 'es' ? 'Descargando actualización…' : 'Downloading update…') : (locale === 'es' ? 'Descargar actualización' : locale === 'fr' ? 'Télécharger la mise à jour' : 'Download update')}</strong>
@@ -425,7 +444,7 @@ export default function DriverV3Settings() {
             <small>{updateState === 'checking' ? (locale === 'es' ? 'Comprobando…' : 'Checking…') : updateState === 'current' ? (locale === 'es' ? 'Tienes la versión más reciente' : 'You have the latest version') : locale === 'es' ? `Versión instalada ${DRIVER_APP_VERSION}` : `Installed version ${DRIVER_APP_VERSION}`}</small>
           </span>
           <ChevronRight className={styles.rowChevron} size={19} />
-        </button>}
+        </button>)}
 
         <section className={styles.section}>
           <button
@@ -442,7 +461,15 @@ export default function DriverV3Settings() {
         <p className={styles.footer}>RouteHub Driver · {copy.versionLabel} {DRIVER_APP_VERSION}</p>
       </div>
 
-      {confirmEnd && (
+      {confirmEnd && typeof document !== 'undefined' && createPortal((
+        // Portaled to document.body - mounted inline, this position:fixed
+        // backdrop sat inside .content (the scrollable settings list), which
+        // has -webkit-overflow-scrolling:touch. That combination is a known
+        // WebKit bug: a fixed element nested in a touch-scrolling container
+        // stops anchoring to the real viewport and tracks the container's
+        // own scroll position instead, so the dialog could render above the
+        // visible screen until the driver scrolled back to where they were
+        // when it opened.
         <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
           <div className={confirmStyles.confirmSheet}>
             <h2>{t.drvEndDayQ}</h2>
@@ -457,9 +484,9 @@ export default function DriverV3Settings() {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
-      {confirmSignOut && (
+      {confirmSignOut && typeof document !== 'undefined' && createPortal((
         <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
           <div className={confirmStyles.confirmSheet}>
             <h2>{copy.signOutQ}</h2>
@@ -474,7 +501,7 @@ export default function DriverV3Settings() {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </DriverV3Shell>
   )
 }

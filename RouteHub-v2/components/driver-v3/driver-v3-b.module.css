@@ -131,7 +131,13 @@
 }
 
 .confirmBackdrop{
-  position:fixed;inset:0;z-index:210;background:rgba(15,29,53,.52);
+  position:fixed;inset:0;
+  /* Portaled to document.body (see the .tsx call sites) so it's compared
+     against every other element in the real root stacking context - the
+     Driver header sits at z-index:300 (DriverV3Shell.tsx), so this needs to
+     clear that plus a margin, while staying below .navLayer's 10000 (live
+     in-app navigation always wins if both were somehow open at once). */
+  z-index:500;background:rgba(15,29,53,.52);
   display:flex;align-items:flex-end;justify-content:center;animation:sheetFade .18s ease;
 }
 .confirmSheet{

@@ -73,7 +73,7 @@ export default function DriverV3Page() {
   const freshLiveFix = liveFix && Number.isFinite(liveFixTime) && Date.now() - liveFixTime <= 90_000 ? liveFix : null
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState('')
-  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info' | 'next'>(null)
+  const [sheet,setSheet]=useState<null | 'pickup' | 'delivery' | 'return' | 'info'>(null)
   const [recipient,setRecipient]=useState('')
   const [photo,setPhoto]=useState<File | null>(null)
   const [signed,setSigned]=useState(false)
@@ -733,7 +733,7 @@ export default function DriverV3Page() {
       {sheet==='pickup'&&route&&(
         <PickupSheet
           route={route} t={t} busy={busy} message={message} issueOpen={issueOpen} issueNote={issueNote}
-          onIssueNoteChange={setIssueNote} onSavePickupNote={()=>void savePickupNote()} onConfirmPickup={()=>void confirmPickup()}
+          onIssueNoteChange={setIssueNote} onSavePickupNote={()=>void savePickupNote()} onConfirmPickup={()=>setConfirmPickupOpen(true)}
           onOpenIssue={()=>setIssueOpen(true)} onClose={()=>{setSheet(null);setIssueOpen(false)}}
         />
       )}
@@ -797,7 +797,15 @@ export default function DriverV3Page() {
       </div>
     ),document.body)}
     </div>
-    {confirmPickupOpen&&(
+    {confirmPickupOpen&&typeof document!=='undefined'&&createPortal((
+      // Portaled straight to document.body - mounted inline, this
+      // position:fixed backdrop sat inside .content (today.module.css's
+      // scrollable region), which has -webkit-overflow-scrolling:touch.
+      // That combination is a known WebKit bug: a fixed element nested in a
+      // touch-scrolling container stops anchoring to the real viewport and
+      // instead tracks the container's own scroll position, so the dialog
+      // could render above the visible screen until the driver scrolled
+      // .content back to where it was when the dialog opened.
       <div className={confirmStyles.confirmBackdrop} role="dialog" aria-modal="true">
         <div className={confirmStyles.confirmSheet}>
           <h2>{locale==='es'?'¿Completar recogida?':'Complete this pickup?'}</h2>
@@ -810,7 +818,7 @@ export default function DriverV3Page() {
           </div>
         </div>
       </div>
-    )}
+    ),document.body)}
     </>
   </DriverV3Shell>
 }
