@@ -168,6 +168,21 @@ export default function OnboardingGate() {
     : locale === 'fr'
       ? 'Écran réel de RouteHub Driver'
       : 'Real RouteHub Driver screen'
+  // Manager has no real-screen captures yet - these illustrations match the
+  // actual current interface (same source guide.html uses) instead of the
+  // generic route-line/icon placeholder that used to sit here regardless of
+  // which slide was showing.
+  const managerScreens = [
+    '/guide-manager-add-route.svg',
+    '/guide-manager-dashboard.svg',
+    '/guide-manager-settings.svg',
+  ]
+  const managerScreen = identity.audience === 'manager' ? managerScreens[slideIndex] : null
+  const managerScreenAlt = locale === 'es'
+    ? 'Interfaz de RouteHub Manager'
+    : locale === 'fr'
+      ? 'Interface de RouteHub Manager'
+      : 'RouteHub Manager interface'
   const permissionCopy = locale === 'es' ? {
     eyebrow:'PREPARA TU DISPOSITIVO', title:'Permisos para usar RouteHub', description:'Al continuar, tu iPhone o Android te preguntará si permites notificaciones y ubicación. La ubicación solo se usa durante una ruta activa con la navegación interna abierta; esta preparación no envía tu posición.',
     location:'Ubicación para centrar y actualizar el mapa durante la navegación interna.', notifications:'Avisos de rutas asignadas y cambios importantes.', button:'Permitir y continuar', continue:'Continuar al recorrido', later:'Ahora no', busy:'Solicitando permisos…', granted:'Permitido', denied:'No permitido. Puedes activarlo en los ajustes del dispositivo.', unavailable:'No disponible en este navegador o dispositivo.', error:'No se pudo completar. Revisa los ajustes si ya rechazaste el permiso.',
@@ -205,8 +220,10 @@ export default function OnboardingGate() {
         <button className={styles.next} type="button" disabled={deviceSetupBusy} onClick={()=>deviceSetupResult?setDeviceSetupNeeded(false):void prepareDevice()}>{deviceSetupBusy?permissionCopy.busy:deviceSetupResult?permissionCopy.continue:permissionCopy.button}<ChevronRight size={18}/></button>
       </div></footer>
       </> : <>
-      <div className={`${styles.visual} ${driverScreen ? styles.realVisual : styles[slide.accent]}`} data-screen={driverScreen ? String(slideIndex) : undefined}>
-        {driverScreen ? <Image className={styles.realScreen} src={driverScreen} alt={driverScreenAlt} fill sizes="(max-width: 520px) 100vw, 460px" priority/> : <>
+      <div className={`${styles.visual} ${driverScreen || managerScreen ? styles.realVisual : styles[slide.accent]}`} data-screen={driverScreen ? String(slideIndex) : undefined}>
+        {driverScreen ? <Image className={styles.realScreen} src={driverScreen} alt={driverScreenAlt} fill sizes="(max-width: 520px) 100vw, 460px" priority/>
+          : managerScreen ? <img className={styles.illustrationScreen} src={managerScreen} alt={managerScreenAlt} />
+          : <>
           <div className={styles.routeLine} aria-hidden="true"><i/><i/><i/></div>
           <div className={styles.heroIcon}><Icon size={44}/></div>
           <div className={styles.previewCard}>

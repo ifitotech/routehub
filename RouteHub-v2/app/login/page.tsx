@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import {ArrowRight, CheckCircle2, MapPin, Menu, Plus, ShieldCheck, Users, X, Zap} from 'lucide-react'
+import {ArrowRight, BellRing, CheckCircle2, MapPin, Menu, Navigation, Plus, ShieldCheck, Users, X, Zap} from 'lucide-react'
 import type {LucideIcon} from 'lucide-react'
 import {useEffect, useState} from 'react'
 import {getSupabase} from '../../lib/supabase'
@@ -37,7 +37,7 @@ function WorkflowPreview() {
   // the icon summary below it if the screenshot hasn't been uploaded yet.
   return <div className={styles.workflowPreview} aria-label="RouteHub Manager dashboard preview">
     <div className={styles.workflowShot}>
-      <img src="/guide-manager-dashboard.png" alt="RouteHub Manager dashboard" onError={event => { (event.currentTarget.closest(`.${styles.workflowShot}`) as HTMLElement | null)?.style.setProperty('display', 'none') }} />
+      <img src="/guide-manager-dashboard.svg" alt="RouteHub Manager dashboard" onError={event => { (event.currentTarget.closest(`.${styles.workflowShot}`) as HTMLElement | null)?.style.setProperty('display', 'none') }} />
     </div>
     <div className={styles.workflowProof}><span className={styles.workflowProofIcon}><CheckCircle2 size={18}/></span><div><strong>Live operations preview</strong><small>Manager routes, Driver Today and proof of delivery stay connected.</small></div></div>
   </div>
@@ -115,7 +115,7 @@ export default function Login() {
     <section className={styles.hero} id="product"><div className={styles.heroCopy}><p className={styles.badge}><i/> Pickup &amp; delivery operations</p><h1>Run every pickup and delivery from one place.</h1><p className={styles.subtitle}>Create routes, assign drivers, track progress and keep proof of delivery together.</p><div className={styles.heroActions}>{primaryAction}<button type="button" className={styles.secondaryButton} onClick={() => open('sign-in')}>Sign in <ArrowRight size={17}/></button></div><div className={styles.heroBenefits}><article><Zap/><div><b>Create &amp; assign</b><span>Build work and send it to the right driver.</span></div></article><article><MapPin/><div><b>Track operations</b><span>See routes, stops and progress in one view.</span></div></article><article><ShieldCheck/><div><b>Complete with proof</b><span>Keep photos, signatures and notes together.</span></div></article></div></div><div className={styles.previewWrap}><WorkflowPreview/></div></section>
     <section className={styles.positioningMessage}><p className={styles.sectionEyebrow}>THE OPERATION AROUND THE ROUTE</p><h2>There are plenty of navigation apps.<br/>You already know the one that works.<br/><em>RouteHub handles everything else.</em></h2><p>RouteHub keeps dispatch, drivers and proof of delivery connected from the first assignment to the completed job.</p></section>
     <section className={styles.how} id="how-it-works"><p className={styles.sectionEyebrow}>A SIMPLE OPERATIONAL FLOW</p><h2>Create. Assign. Track. Complete.</h2><p>Everything your team needs to move pickup and delivery work forward.</p><div className={styles.steps}>{steps.map(({Icon, title, copy}) => <article key={title}><i><Icon size={24}/></i><b>{title}</b><span>{copy}</span></article>)}</div></section>
-    <section className={styles.features} aria-label="RouteHub benefits"><article><i><Zap/></i><div><b>Faster Operations</b><p>Create and organize pickups and deliveries with fewer steps.</p></div><CheckCircle2/></article><article><i><MapPin/></i><div><b>Real-Time Visibility</b><p>See active operations, route progress and current driver location.</p></div><CheckCircle2/></article><article><i><ShieldCheck/></i><div><b>Proof of Delivery</b><p>Keep photos, signatures, notes and completion records together.</p></div><CheckCircle2/></article></section>
+    <section className={styles.features} aria-label="RouteHub benefits"><article><i><Zap/></i><div><b>Faster Operations</b><p>Create and organize pickups and deliveries with fewer steps.</p></div><CheckCircle2/></article><article><i><MapPin/></i><div><b>Real-Time Visibility</b><p>See active operations, route progress and current driver location.</p></div><CheckCircle2/></article><article><i><ShieldCheck/></i><div><b>Proof of Delivery</b><p>Keep photos, signatures, notes and completion records together.</p></div><CheckCircle2/></article><article><i><Navigation/></i><div><b>Smart Navigation</b><p>Drivers get in-app or phone navigation based on their plan, no manual setup needed.</p></div><CheckCircle2/></article><article><i><BellRing/></i><div><b>Always Ready</b><p>Location and notifications turn on automatically during onboarding, not buried in settings.</p></div><CheckCircle2/></article></section>
     <InstallAppCard/>
     <footer className={styles.footer}><span>© {new Date().getFullYear()} RouteHub</span><span style={{display:'inline-flex',alignItems:'center',gap:18}}><Link href="/terms" style={{color:'var(--blue)',fontWeight:800,textDecoration:'none'}}>Terms of Use</Link><button onClick={() => open('sign-in')}>Sign in</button></span></footer>
     {dialog && <div className={styles.modalBackdrop} role="presentation">
