@@ -2,7 +2,7 @@
 import {AlertTriangle, Building2, ChevronDown, ChevronLeft, ChevronUp, Eye, EyeOff, Pencil, Plus, RefreshCw, Users} from 'lucide-react'
 import Link from 'next/link'
 import {useParams} from 'next/navigation'
-import {useEffect, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {getSupabase} from '../../../../lib/supabase'
 import AdminShell from '../../admin-shell'
 import styles from '../../admin.module.css'
@@ -106,7 +106,7 @@ export default function OrganizationPage() {
     return next
   })
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
     const client = getSupabase()
@@ -145,8 +145,8 @@ export default function OrganizationPage() {
     } finally {
       setLoading(false)
     }
-  }
-  useEffect(() => { void load() }, [id])
+  }, [id])
+  useEffect(() => { void load() }, [load])
 
   // Every branch across every company, for "Import contacts" - the old
   // branch a CEO wants to copy from is often in a different company
