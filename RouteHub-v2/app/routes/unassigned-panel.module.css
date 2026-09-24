@@ -1,91 +1,170 @@
-.panel {
+.wrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  padding: 16px;
-  background: var(--rh-card, #fff);
-  border: 1px solid var(--rh-border, #dde5ee);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
-  transition: border-color 120ms ease, background-color 120ms ease;
+  gap: 0;
 }
 
-.header {
+.bar {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 14px;
+  background: var(--rh-card, #0D213A);
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
+  border-radius: 12px;
+  transition: outline-color 120ms ease;
 }
 
-.headerIcon {
+.barSegment {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 2px 4px;
+}
+
+.barSegment:hover {
+  background: rgba(255, 255, 255, .04);
+}
+
+.barIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: rgba(100, 116, 139, 0.1);
-  color:var(--rh-ink-soft);
-  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--rh-soft-blue, rgba(40, 120, 255, .16));
+  color: var(--rh-blue, #3486FF);
 }
 
-.headerLabel {
+.barText {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.barText strong {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--rh-text, #f7faff);
+}
+
+.barText small {
+  overflow: hidden;
+  color: var(--rh-text-secondary, #9fb2d0);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barChips {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex: 1;
+  align-items: center;
   gap: 8px;
+  flex: none;
 }
 
-.headerLabel h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--rh-text, #0f1d35);
-}
-
-.count {
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rh-text-secondary, #9fb2d0);
   font-size: 12px;
   font-weight: 700;
-  color: var(--rh-text-muted, #64748b);
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--rh-soft-bg, #f1f5f9);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip b {
+  font-weight: 800;
+  color: var(--rh-text, #f7faff);
+}
+
+.chip[data-tone='issue'] {
+  border-color: rgba(255, 107, 122, .3);
+  color: #ff6b7a;
+}
+
+.chip[data-tone='issue'] b {
+  color: #ff6b7a;
+}
+
+.chip[data-tone='done'] {
+  border-color: rgba(37, 216, 133, .3);
+  color: #25d885;
+}
+
+.chip[data-tone='done'] b {
+  color: #25d885;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, .04);
+}
+
+/* Highlights the whole bar while a dragged card is hovering over it, so
+   dropping "somewhere in Unassigned" (not necessarily on a card inside an
+   open flyout) is clearly a valid target even collapsed. */
+.dropZoneActive {
+  outline: 2px dashed var(--rh-primary, #3486FF);
+  outline-offset: 3px;
+}
+
+.flyout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--rh-surface-2, rgba(255, 255, 255, .03));
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
+  border-radius: 12px;
+  max-height: 260px;
+  overflow-y: auto;
 }
 
 .empty {
   margin: 0;
-  padding: 12px;
-  border-radius: 10px;
-  background: var(--rh-soft-bg, #f1f5f9);
-  color: var(--rh-text-muted, #64748b);
-  font-size: 13px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--rh-surface-2, rgba(255, 255, 255, .03));
+  color: var(--rh-text-secondary, #9fb2d0);
+  font-size: 12px;
   text-align: center;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding: 10px;
   border-radius: 10px;
-  background: var(--rh-soft-bg, #f1f5f9);
-  border: 1px solid rgba(100, 116, 139, 0.15);
+  background: var(--rh-page-bg, #102842);
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
 }
 
 .destination {
   display: flex;
   align-items: flex-start;
-  gap: 4px;
+  gap: 6px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--rh-text, #0f1d35);
+  font-weight: 600;
+  color: var(--rh-text, #f7faff);
   line-height: 1.3;
   word-break: break-word;
 }
@@ -95,7 +174,7 @@
   align-items: center;
   flex: none;
   margin-top: 1px;
-  color: var(--rh-text-muted, #64748b);
+  color: var(--rh-text-secondary, #9fb2d0);
   cursor: grab;
   touch-action: none;
 }
@@ -104,43 +183,31 @@
   cursor: grabbing;
 }
 
-/* Highlights the whole panel while a dragged card is hovering over it, so
-   dropping "somewhere in Unassigned" (not necessarily on another card) is
-   clearly a valid target. */
-.dropZoneActive {
-  outline: 2px dashed var(--rh-primary, #1660f0);
-  outline-offset: 4px;
-  border-radius: 12px;
-}
-
 .meta {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .01em;
-  color: var(--rh-text-muted, #64748b);
+  color: var(--rh-text-secondary, #9fb2d0);
 }
 
 .assignSelect {
   width: 100%;
-  min-height: 38px;
-  padding: 7px 10px;
-  border: 1.5px solid var(--rh-border, #dde5ee);
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--rh-border, rgba(130, 170, 220, .2));
   border-radius: 8px;
-  background:var(--rh-card);
-  color: var(--rh-text, #0f1d35);
+  background: var(--rh-card, #0D213A);
+  color: var(--rh-text, #f7faff);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .assignSelect:disabled {
-  opacity: 0.6;
+  opacity: .6;
   cursor: not-allowed;
 }
 
-/* A route waiting here still needs a way to fix a wrong address/time/PO or
-   drop it entirely - without these the only path was opening Edit routes
-   first, which felt like an extra detour for something this common. */
 .rowActions {
   display: flex;
   gap: 6px;
@@ -152,80 +219,25 @@
   justify-content: center;
   gap: 6px;
   flex: 1;
-  min-height: 32px;
+  min-height: 30px;
   padding: 0 8px;
-  border: 1.5px solid var(--rh-border, #dde5ee);
+  border: 1.5px solid var(--rh-border, rgba(130, 170, 220, .2));
   border-radius: 8px;
-  background: var(--rh-card);
-  color: var(--rh-text, #0f1d35);
+  background: var(--rh-card, #0D213A);
+  color: var(--rh-text, #f7faff);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .actionButton:disabled {
-  opacity: 0.6;
+  opacity: .6;
   cursor: not-allowed;
 }
 
 .actionButton[data-tone='cancel'] {
-  border-color: rgba(220, 38, 38, 0.3);
-  color: var(--rh-danger, #dc2626);
-}
-
-:global(html[data-theme='dark']) .actionButton {
-  border-color: rgba(147, 193, 255, 0.14);
-  background: rgba(255, 255, 255, 0.045);
-  color: #bbd3f7;
-}
-
-:global(html[data-theme='dark']) .actionButton[data-tone='cancel'] {
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #f87171;
-}
-
-/* Issues / Completed live below Unassigned in the same panel instead of
-   leaving it empty once every route is assigned - a light divider keeps
-   them read as separate groups within one surface. */
-.subsection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--rh-border, #dde5ee);
-}
-
-.subsectionToggle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-}
-
-.chevron,
-.chevronOpen {
-  flex: none;
-  color:var(--rh-ink-soft);
-  transition: transform 140ms ease;
-}
-
-.chevronOpen {
-  transform: rotate(180deg);
-}
-
-.headerIconIssue {
-  background: rgba(220, 38, 38, 0.1);
-  color:var(--rh-danger);
-}
-
-.headerIconDone {
-  background: rgba(5, 150, 105, 0.1);
-  color:var(--rh-success);
+  border-color: rgba(255, 107, 122, .3);
+  color: #ff6b7a;
 }
 
 .detailsButton {
@@ -236,7 +248,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--rh-primary, #1660f0);
+  color: var(--rh-primary, #3486FF);
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -247,50 +259,27 @@
   text-decoration: underline;
 }
 
-:global(html[data-theme='dark']) .panel {
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: 0 4px 16px rgba(2, 8, 20, 0.35);
+/* Light mode - the app-wide default is dark, but Manager can still run
+   light per user preference. */
+:global(html[data-theme='light']) .bar,
+:global(html[data-theme='light']) .item,
+:global(html[data-theme='light']) .assignSelect,
+:global(html[data-theme='light']) .actionButton {
+  background: var(--rh-card, #fff);
 }
 
-:global(html[data-theme='dark']) .headerIcon {
-  background: rgba(147, 193, 255, 0.1);
-}
-
-:global(html[data-theme='dark']) .count,
-:global(html[data-theme='dark']) .empty {
-  background: rgba(255, 255, 255, 0.06);
-  color: #9fb2d0;
-}
-
-:global(html[data-theme='dark']) .item {
-  background: rgba(255, 255, 255, 0.045);
-  border-color: rgba(147, 193, 255, 0.14);
-}
-
-:global(html[data-theme='dark']) .meta {
-  color: #9fb2d0;
-}
-
-:global(html[data-theme='dark']) .assignSelect {
-  border-color: rgba(147, 193, 255, 0.14);
-  background: rgba(255, 255, 255, 0.045);
-  color: #bbd3f7;
-}
-
-:global(html[data-theme='dark']) .subsection {
-  border-top-color: rgba(147, 193, 255, 0.14);
-}
-
-:global(html[data-theme='dark']) .headerIconIssue {
-  background: rgba(248, 113, 113, 0.14);
-}
-
-:global(html[data-theme='dark']) .headerIconDone {
-  background: rgba(52, 211, 153, 0.14);
+:global(html[data-theme='light']) .flyout,
+:global(html[data-theme='light']) .empty {
+  background: var(--rh-surface-2, #f1f5f9);
 }
 
 @media (max-width: 768px) {
-  .panel {
-    border-radius: 12px;
+  .bar {
+    flex-wrap: wrap;
+  }
+
+  .barChips {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

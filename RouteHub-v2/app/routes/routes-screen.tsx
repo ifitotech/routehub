@@ -14,6 +14,7 @@ import RouteDetailView from './route-detail-view'
 import RoutesBoard from './routes-board'
 import DispatchCalendar from './dispatch-calendar'
 import UnassignedPanel from './unassigned-panel'
+import TruckBar from './truck-bar'
 import DispatchLayout from './dispatch-layout'
 import DriverDropdown from './driver-dropdown'
 import DailyProgress from './daily-progress'
@@ -37,6 +38,10 @@ export default function Routes() {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewingRouteId, setViewingRouteId] = useState<string | null>(null)
+  // "View unassigned" in the empty state has nothing to link to (Unassigned
+  // is a bar above, not its own route) - bumping this tells the panel to
+  // open its own flyout instead.
+  const [viewUnassignedSignal, setViewUnassignedSignal] = useState(0)
   // Dragging a route only stages where it would land (driver + position) -
   // nothing is written to the database or pushed to a driver's phone until
   // "Done" (the same Edit routes toggle) commits every staged move at once.
@@ -415,7 +420,7 @@ export default function Routes() {
         </div>
 
         <DispatchLayout
-          sidebar={
+          unassignedBar={
             <UnassignedPanel
               routes={stagedUnassigned}
               drivers={drivers}
@@ -430,6 +435,8 @@ export default function Routes() {
               onDragStart={managing ? startDrag : undefined}
               draggingRouteId={draggingId}
               dragOverZone={dragOverUnassigned}
+              managing={managing}
+              forceOpenSignal={viewUnassignedSignal}
             />
           }
           center={
@@ -496,15 +503,20 @@ export default function Routes() {
                 ) : (
                   <section className={styles.emptyState}>
                     <div><RouteIcon size={28}/></div>
-                    <h2>{locale==='es'?'Sin rutas asignadas':locale==='fr'?'Aucun itinéraire attribué':'No assigned routes'}</h2>
-                    <p>{locale==='es'?'Asigna rutas desde la lista de la izquierda para verlas aquí.':locale==='fr'?'Attribuez des itinéraires depuis la liste de gauche pour les voir ici.':'Assign routes from the list on the left to see them here.'}</p>
-                    <button className={styles.primaryButton} type="button" onClick={() => openBuilder(selectedDate)}><Plus size={18}/>{c.add}</button>
+                    <h2>{locale==='es'?'Sin rutas asignadas para hoy':locale==='fr'?'Aucun itinéraire attribué aujourd’hui':'No assigned routes for today'}</h2>
+                    <p>{locale==='es'?'Las rutas nuevas aparecerán aquí cuando se publiquen o asignen.':locale==='fr'?'Les nouveaux itinéraires apparaîtront ici une fois publiés ou attribués.':'New routes will appear here once they are published or assigned.'}</p>
+                    <p>{locale==='es'?'Crea una ruta o revisa las rutas sin asignar para empezar.':locale==='fr'?'Créez un itinéraire ou consultez les non attribués pour commencer.':'Create a route or review unassigned stops to get started.'}</p>
+                    <div className={styles.emptyStateActions}>
+                      <button className={styles.primaryButton} type="button" onClick={() => openBuilder(selectedDate)}><Plus size={18}/>{c.add}</button>
+                      <button className={styles.secondaryButton} type="button" onClick={() => setViewUnassignedSignal(n => n + 1)}>{locale==='es'?'Ver sin asignar':locale==='fr'?'Voir non attribuées':'View unassigned'}</button>
+                    </div>
                   </section>
                 )}
               </div>
             )
           }
           map={<RoutesBoard routes={open ? (planningMapRoutes || []) : mapRoutes} locale={locale} c={c} driverIndex={driverIndex} detailsOpen={mapDetailsOpen} setDetailsOpen={setMapDetailsOpen} />}
+          truckBar={<TruckBar locale={locale} />}
           pane={pane}
           focus={open || Boolean(viewingRoute)}
         />

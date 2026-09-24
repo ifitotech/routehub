@@ -54,11 +54,11 @@
   align-items: center;
   justify-content: center;
   flex: 0 1 100px;
-  min-width: 0;
-  min-height: 40px;
+  min-width: 92px;
+  min-height: 50px;
   padding: 4px 6px;
-  border: 1px solid var(--rh-border, #dde5ee);
-  border-radius: 9px;
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
+  border-radius: 10px;
   background:var(--rh-card);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.01);
   color: var(--rh-text, #0f1d35);
@@ -72,15 +72,15 @@
 }
 
 .day:hover {
-  border-color: #b8cdf4;
+  border-color: var(--rh-primary, #3486FF);
   background:var(--rh-surface-2);
 }
 
 .day.selected {
-  background: linear-gradient(135deg, #1660f0, #3b82f6);
-  border-color:var(--rh-blue);
+  background: linear-gradient(135deg, var(--rh-blue, #2878FF), var(--rh-blue-700, #3486FF));
+  border-color:var(--rh-blue, #2878FF);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(22, 96, 240, 0.2);
+  box-shadow: 0 4px 12px rgba(40, 120, 255, 0.28);
 }
 
 .day.today:not(.selected) {

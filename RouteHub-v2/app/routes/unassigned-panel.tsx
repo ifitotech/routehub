@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, GripVertical, Pencil, Truck, X} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
@@ -15,24 +15,39 @@ type UnassignedPanelProps = {
   locale: string
   // Completed/issue routes have nothing left to do in the active board, so
   // they live here instead - out of the way of today's active work, but
-  // still one click from their proof-of-delivery details. Without these,
-  // this panel goes empty the moment every route is assigned, which reads
-  // as broken rather than "caught up".
+  // still one click from their proof-of-delivery details.
   issueRoutes?: RouteRecord[]
   completedRoutes?: RouteRecord[]
   onViewDetails?: (routeId: string) => void
   onDragStart?: (routeId: string, event: React.PointerEvent) => void
   draggingRouteId?: string | null
   dragOverZone?: boolean
+  // Nothing here changes a route until "Edit routes" is on - same rule as
+  // the assigned list (routes-rows.tsx's canManage) - so a route sitting
+  // wrong can be looked at, but not moved/edited/cancelled, from the
+  // normal board where a stray tap could hit a real route by accident.
+  managing?: boolean
+  // Bumped by the empty-state's "View unassigned" button, which has no
+  // route of its own to link to - Unassigned lives in this bar, not a page.
+  forceOpenSignal?: number
 }
 
-export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails, onDragStart, draggingRouteId, dragOverZone}: UnassignedPanelProps) {
-  // Both start collapsed - an open list (especially Issues, which can run
-  // long) crowded out Unassigned above it and made the panel feel heavy to
-  // scan. The header (with its count) always shows on its own either way,
-  // so nothing goes missing - it's just a click away instead of forced open.
-  const [issuesOpen, setIssuesOpen] = useState(false)
-  const [completedOpen, setCompletedOpen] = useState(false)
+type Section = 'unassigned' | 'issues' | 'completed' | null
+
+// A single compact horizontal bar (not a permanent side column) sitting
+// above Assigned Routes - Unassigned, Issues and Completed are equally
+// "things with nothing left to do in the active queue right now", so they
+// share one bar of three segments instead of three separate panels
+// competing for space. Clicking a segment reveals its list inline below
+// the bar; only one is open at a time. The bar itself (not just the
+// flyout) stays a valid drop target at all times, per the drag-and-drop
+// feature - dropping a route here works whether or not it's expanded.
+export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails, onDragStart, draggingRouteId, dragOverZone, managing, forceOpenSignal}: UnassignedPanelProps) {
+  const [open, setOpen] = useState<Section>(null)
+  const toggle = (section: Section) => setOpen(current => current === section ? null : section)
+  useEffect(() => {
+    if (forceOpenSignal) setOpen('unassigned')
+  }, [forceOpenSignal])
   // Assignees span several branch roles, not just drivers. When a profile has
   // no readable name the role names them, so the picker can't show the same
   // word several times over.
@@ -54,8 +69,14 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
   const detailsLabel = locale === 'es' ? 'Ver detalles' : locale === 'fr' ? 'Voir les détails' : 'View details'
   const editLabel = locale === 'es' ? 'Editar' : locale === 'fr' ? 'Modifier' : 'Edit'
   const cancelLabel = locale === 'es' ? 'Cancelar' : locale === 'fr' ? 'Annuler' : 'Cancel'
+  const unassignedLabel = locale === 'es' ? 'sin asignar' : locale === 'fr' ? 'non attribuées' : 'unassigned'
   const issuesLabel = locale === 'es' ? 'Incidencias' : locale === 'fr' ? 'Incidents' : 'Issues'
   const completedLabel = locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed'
+  const unassignedHint = routes.length === 0
+    ? (locale === 'es' ? 'No hay rutas sin asignar por el momento.' : locale === 'fr' ? 'Aucun itinéraire non attribué pour le moment.' : 'No unassigned routes at the moment.')
+    : onDragStart
+      ? (locale === 'es' ? 'Arrastra una ruta aquí para quitarle el conductor, o haz clic para ver.' : locale === 'fr' ? 'Glissez un itinéraire ici pour retirer son conducteur, ou cliquez pour voir.' : 'Drag a route here to unassign, or click to view.')
+      : (locale === 'es' ? 'Haz clic para ver.' : locale === 'fr' ? 'Cliquez pour voir.' : 'Click to view.')
   const routeMeta = (route: RouteRecord) => {
     const type = route.mission_type === 'pickup'
       ? (locale === 'es' ? 'Recogida' : locale === 'fr' ? 'Collecte' : 'Pickup')
@@ -69,23 +90,27 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
   }
 
   return (
-    <aside className={styles.panel}>
-      <div className={styles.header}>
-        <div className={styles.headerIcon}><Truck size={18} /></div>
-        <div className={styles.headerLabel}>
-          <h3>{locale === 'es' ? 'Sin asignar' : locale === 'fr' ? 'Non attribuées' : 'Unassigned'}</h3>
-          <span className={styles.count}>{routes.length}</span>
+    <div className={styles.wrap}>
+      <div className={`${styles.bar} ${dragOverZone ? styles.dropZoneActive : ''}`} data-drop-zone="unassigned">
+        <button type="button" className={styles.barSegment} onClick={() => toggle('unassigned')} aria-expanded={open === 'unassigned'}>
+          <span className={styles.barIcon}><Truck size={16} /></span>
+          <span className={styles.barText}>
+            <strong>{routes.length} {unassignedLabel}</strong>
+            <small>{unassignedHint}</small>
+          </span>
+        </button>
+        <div className={styles.barChips}>
+          <button type="button" className={styles.chip} data-tone="issue" onClick={() => toggle('issues')} aria-expanded={open === 'issues'}>
+            <AlertTriangle size={13} />{issuesLabel} <b>{issueRoutes.length}</b>
+          </button>
+          <button type="button" className={styles.chip} data-tone="done" onClick={() => toggle('completed')} aria-expanded={open === 'completed'}>
+            <CheckCircle2 size={13} />{completedLabel} <b>{completedRoutes.length}</b>
+          </button>
         </div>
       </div>
 
-      {routes.length === 0 ? (
-        <p className={`${styles.empty} ${dragOverZone ? styles.dropZoneActive : ''}`} data-drop-zone="unassigned">
-          {onDragStart
-            ? (locale === 'es' ? 'Todas las rutas están asignadas. Arrastra una ruta aquí para quitarle el conductor.' : locale === 'fr' ? 'Tous les itinéraires sont attribués. Glissez-en un ici pour retirer son conducteur.' : 'All routes are assigned. Drag one here to clear its driver.')
-            : (locale === 'es' ? 'Todas las rutas están asignadas.' : locale === 'fr' ? 'Tous les itinéraires sont attribués.' : 'All routes are assigned.')}
-        </p>
-      ) : (
-        <div className={`${styles.list} ${dragOverZone ? styles.dropZoneActive : ''}`} data-drop-zone="unassigned">
+      {open === 'unassigned' && routes.length > 0 && (
+        <div className={styles.flyout}>
           {routes.map(route => {
             const busy = busyRouteId === route.id
             const dragging = draggingRouteId === route.id
@@ -100,7 +125,7 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
                   {route.destination_name || route.destination_address}
                 </div>
                 <div className={styles.meta}>{routeMeta(route)}</div>
-                {drivers.length > 0 ? (
+                {!managing ? null : drivers.length > 0 ? (
                   <select
                     className={styles.assignSelect}
                     disabled={busy}
@@ -114,7 +139,7 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
                     ))}
                   </select>
                 ) : <p className={styles.empty}>{locale === 'es' ? 'Agrega un miembro disponible para mover esta ruta.' : locale === 'fr' ? 'Ajoutez un membre disponible pour déplacer cet itinéraire.' : 'Add an available team member to move this route.'}</p>}
-                {(onEdit || onCancel) && (
+                {managing && (onEdit || onCancel) && (
                   <div className={styles.rowActions}>
                     {onEdit && (
                       <button type="button" className={styles.actionButton} disabled={busy} onClick={() => onEdit(route)} aria-label={`${editLabel} ${route.destination_name || route.destination_address || ''}`}>
@@ -134,55 +159,31 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
         </div>
       )}
 
-      <div className={styles.subsection}>
-        <button type="button" className={styles.subsectionToggle} onClick={() => setIssuesOpen(value => !value)} aria-expanded={issuesOpen}>
-          <div className={`${styles.headerIcon} ${styles.headerIconIssue}`}><AlertTriangle size={18} /></div>
-          <div className={styles.headerLabel}>
-            <h3>{issuesLabel}</h3>
-            <span className={styles.count}>{issueRoutes.length}</span>
-          </div>
-          <ChevronDown size={16} className={issuesOpen ? styles.chevronOpen : styles.chevron} />
-        </button>
-        {issuesOpen && (
-          issueRoutes.length === 0 ? (
-            <p className={styles.empty}>
-              {locale === 'es' ? 'Sin incidencias.' : locale === 'fr' ? 'Aucun incident.' : 'No issues.'}
-            </p>
-          ) : (
-            <div className={styles.list}>
-              {issueRoutes.map(route => (
-                <div key={route.id} className={styles.item}>
-                  <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
-                  {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
-                </div>
-              ))}
+      {open === 'issues' && (
+        <div className={styles.flyout}>
+          {issueRoutes.length === 0 ? (
+            <p className={styles.empty}>{locale === 'es' ? 'Sin incidencias.' : locale === 'fr' ? 'Aucun incident.' : 'No issues.'}</p>
+          ) : issueRoutes.map(route => (
+            <div key={route.id} className={styles.item}>
+              <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+              {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13} /></button>}
             </div>
-          )
-        )}
-      </div>
-
-      {completedRoutes.length > 0 && (
-        <div className={styles.subsection}>
-          <button type="button" className={styles.subsectionToggle} onClick={() => setCompletedOpen(value => !value)} aria-expanded={completedOpen}>
-            <div className={`${styles.headerIcon} ${styles.headerIconDone}`}><CheckCircle2 size={18} /></div>
-            <div className={styles.headerLabel}>
-              <h3>{completedLabel}</h3>
-              <span className={styles.count}>{completedRoutes.length}</span>
-            </div>
-            <ChevronDown size={16} className={completedOpen ? styles.chevronOpen : styles.chevron} />
-          </button>
-          {completedOpen && (
-            <div className={styles.list}>
-              {completedRoutes.map(route => (
-                <div key={route.id} className={styles.item}>
-                  <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
-                  {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13}/></button>}
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       )}
-    </aside>
+
+      {open === 'completed' && (
+        <div className={styles.flyout}>
+          {completedRoutes.length === 0 ? (
+            <p className={styles.empty}>{locale === 'es' ? 'Sin completadas.' : locale === 'fr' ? 'Aucun terminé.' : 'Nothing completed yet.'}</p>
+          ) : completedRoutes.map(route => (
+            <div key={route.id} className={styles.item}>
+              <div className={styles.destination}>{route.destination_name || route.destination_address}</div>
+              {onViewDetails && <button type="button" className={styles.detailsButton} onClick={() => onViewDetails(route.id)}>{detailsLabel}<ChevronRight size={13} /></button>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

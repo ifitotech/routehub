@@ -1,7 +1,7 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import {Clock, MapPin, Package, Route as RouteIcon, Truck, Undo2, X} from 'lucide-react'
+import {Package, Truck, Undo2, X} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
 import type {OperationsDriverLocation, OperationsRoute, OperationsSummary} from '../operations-map'
@@ -102,17 +102,14 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
       <div className={styles.mapPane}>
         <div className={styles.dashboardStats}>
           <div className={styles.statChip}>
-            <RouteIcon size={13} />
             <span>{copy.totalRoutes}</span>
             <strong>{summary?.count ?? activeRouteCount}</strong>
           </div>
           <div className={styles.statChip}>
-            <Clock size={13} />
             <span>{copy.totalEta}</span>
             <strong>{formatTotalEta(summary?.durationSeconds, locale, dash)}</strong>
           </div>
           <div className={styles.statChip}>
-            <MapPin size={13} />
             <span>{copy.totalDistance}</span>
             <strong>{formatTotalDistance(summary?.distanceMeters, dash)}</strong>
           </div>

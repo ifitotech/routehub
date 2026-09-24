@@ -93,16 +93,17 @@ html[data-theme='dark'] main[data-manager-section] {
   --rh-ink: #f7faff;
   --rh-ink-soft: #9fb2d0;
   --rh-muted: #6f86aa;
-  --rh-line: rgba(101, 162, 255, 0.16);
+  --rh-line: rgba(130, 170, 220, 0.2);
   --rh-divider: rgba(151, 185, 234, 0.16);
-  --rh-page-bg: #06152c;
-  --rh-card: rgba(19, 53, 96, 0.55);
+  --rh-page-bg: #07182b;
+  --rh-card: #0d213a;
   --rh-surface-2: rgba(255, 255, 255, 0.045);
 
-  --rh-blue: #1677ff;
-  --rh-blue-700: #0a5fe8;
-  --rh-blue-pressed: #0a5fe8;
-  --rh-soft-blue: rgba(22, 119, 255, 0.16);
+  --rh-blue: #2878ff;
+  --rh-blue-700: #3486ff;
+  --rh-blue-pressed: #3486ff;
+  --rh-blue-bright: #4592ff;
+  --rh-soft-blue: rgba(40, 120, 255, 0.16);
 
   --rh-success: #25d885;
   --rh-success-soft: rgba(37, 216, 133, 0.14);

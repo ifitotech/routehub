@@ -20,37 +20,39 @@
   gap: 8px;
 }
 
+/* Vertical layout (small uppercase label, large value) instead of a
+   horizontal icon+label+value row - a stat you can read at a glance, not
+   competing with Assigned Routes for attention. */
 .statChip {
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border: 1px solid #e5e7eb;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
   border-radius: 10px;
-  background: #fff;
-  color: var(--rh-blue, #1660f0);
+  background: var(--rh-card, #0D213A);
 }
 
 .statChip span {
-  flex: 1;
-  min-width: 0;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
   overflow: hidden;
+  color: var(--rh-text-secondary, #9fb2d0);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .statChip strong {
-  flex: none;
-  color: #0f1d35;
-  font-size: 13px;
+  color: var(--rh-text, #f7faff);
+  font-size: 22px;
   font-weight: 800;
+  line-height: 1;
 }
 
 .mapWrap {
@@ -59,26 +61,23 @@
   position: relative;
 }
 
-:global(html[data-theme='dark']) .statChip {
-  background: #18263b;
-  border-color: var(--rh-border, #30445f);
-  color: #6fb3ff;
-}
-
-:global(html[data-theme='dark']) .statChip span {
-  color: var(--rh-text-secondary, #b7c5d9);
-}
-
-:global(html[data-theme='dark']) .statChip strong {
-  color: var(--rh-text, #f8fafc);
+:global(html[data-theme='light']) .statChip {
+  background: #fff;
+  border-color: #e5e7eb;
 }
 
 @media (max-width: 420px) {
   .dashboardStats {
     gap: 6px;
   }
-  .statChip span {
-    display: none;
+
+  .statChip {
+    min-height: 52px;
+    padding: 6px 8px;
+  }
+
+  .statChip strong {
+    font-size: 17px;
   }
 }
 

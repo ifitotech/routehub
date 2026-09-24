@@ -1,92 +1,72 @@
 .layout {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
-  height: 100%;
 }
 
-/* What's above the board: the shell's 68px top bar, 14px content padding,
-   the ~52px header toolbar row, the ~56px calendar and the 16px gaps between
-   them - about 240px. The columns claim the rest of the viewport so nothing
-   is cut short with dead space underneath. */
-.workspace {
-  --board-height: calc(100dvh - 250px);
+.unassignedRow {
+  flex: none;
+}
 
+/* .page (routes.module.css) becomes a height-constrained flex column at
+   this breakpoint - .layout is its last child, so it's the one that
+   should absorb the remaining space and let .center (below) scroll
+   inside it, instead of the whole page growing past the viewport. */
+@media (min-width: 1024px) {
+  .layout {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+/* Assigned Routes is the protagonist (70-78% of the width); the right
+   column (stats + map) is a fixed, compact support column, never
+   competing with it. Only .center scrolls internally - the map and truck
+   bar stay put. */
+.workspace {
   display: grid;
-  grid-template-columns: 0.75fr 1fr 1.4fr;
-  align-items: start;
-  gap: 20px;
-  width: 100%;
-  min-height: 420px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: stretch;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
   transition: grid-template-columns 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Focus mode: while the Add Route form is open, the sidebar collapses to
-   0 and that space (plus a share of the map's) goes to the form column, so
-   creating a route gets a roomier two-field-per-row layout without opening
-   a separate overlay. Both columns animate back to the resting three-column
-   layout once the form closes. */
+/* Focus mode: while the Add Route form is open, the map's column shrinks
+   and the form gets most of the width instead of opening a separate
+   overlay. */
 .workspace[data-focus='true'] {
-  grid-template-columns: 0fr 1.5fr 1.5fr;
-  gap: 8px 20px;
-}
-
-.sidebar {
-  grid-column: 1;
-  max-height: var(--board-height);
-  overflow-y: auto;
-  overflow-x: hidden;
-  min-width: 0;
-  transition: opacity 260ms ease;
-}
-
-.workspace[data-focus='true'] .sidebar {
-  opacity: 0;
-  pointer-events: none;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
 }
 
 .center {
-  grid-column: 2;
-  max-height: var(--board-height);
+  grid-column: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 16px;
-  background: var(--rh-card, #fff);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
-}
-
-/* While the Add Route form is open, match the map's full height instead of
-   shrinking to the form's own content height - side by side with the
-   always-full-height map, a shorter form read as cramped even after
-   trimming its internal spacing. */
-.workspace[data-focus='true'] .center {
-  height: var(--board-height);
+  overflow-x: hidden;
 }
 
 .map {
-  grid-column: 3;
-  align-self: stretch;
-  position: sticky;
-  top: 0;
-  height: var(--board-height);
-  min-height: 420px;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(15, 29, 53, 0.08);
+  grid-column: 2;
+  min-height: 0;
+  min-width: 0;
 }
 
-@media (max-width: 1600px) {
-  .workspace {
-    grid-template-columns: 0.8fr 1fr 1.25fr;
-  }
+.truckBar {
+  flex: none;
+}
 
-  .workspace[data-focus='true'] {
-    grid-template-columns: 0fr 1.5fr 1.5fr;
+@media (max-width: 1440px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) 280px;
   }
 }
 
 @media (max-width: 1200px) {
+
   .workspace,
   .workspace[data-focus='true'] {
     grid-template-columns: 1fr;
@@ -94,29 +74,16 @@
     height: auto;
   }
 
-  .sidebar {
-    grid-column: 1;
-    order: 1;
-  }
-
   .center {
     grid-column: 1;
-    order: 2;
+    order: 1;
+    max-height: none;
+    overflow: visible;
   }
 
   .map {
     grid-column: 1;
-    order: 3;
-    position: relative;
-    top: auto;
-    height: 300px;
-  }
-
-  /* Below the 3-column breakpoint there's no room to animate a column
-     width - the sidebar just gets out of the way entirely while the form
-     is open, the same way the list/map toggle already hides panes here. */
-  .workspace[data-focus='true'] .sidebar {
-    display: none;
+    order: 2;
   }
 
   /* Below the 3-column breakpoint, list and map compete for the same
@@ -126,7 +93,6 @@
     display: none;
   }
 
-  .layout[data-pane='map'] .sidebar,
   .layout[data-pane='map'] .center {
     display: none;
   }
@@ -148,17 +114,12 @@
     height: auto;
   }
 
-  .sidebar {
-    order: 2;
-  }
-
   .center {
     order: 1;
-    padding: 12px;
   }
 
   .map {
-    order: 3;
+    order: 2;
     height: 250px;
   }
 
@@ -166,13 +127,4 @@
     height: calc(100vh - 260px);
     min-height: 260px;
   }
-}
-
-/* Dark mode styles for center column */
-:global(html[data-theme='dark']) .center {
-  background: #0f172a;
-}
-
-:global(html[data-theme='dark']) .workspace {
-  --board-height: calc(100dvh - 250px);
 }
