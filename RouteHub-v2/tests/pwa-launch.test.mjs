@@ -19,6 +19,7 @@ test('installed RouteHub opens the login session gate instead of forcing the pub
 test('the install identity is RouteHub Driver before authentication', () => {
   const manifest = JSON.parse(read('../public/manifest.json'))
   const rootLayout = read('../app/layout.tsx')
+  const driverLayout = read('../app/driver-v3/layout.tsx')
 
   assert.equal(manifest.id, '/driver')
   assert.equal(manifest.name, 'RouteHub Driver')
@@ -28,6 +29,8 @@ test('the install identity is RouteHub Driver before authentication', () => {
   assert.equal(manifest.icons[1].sizes, '512x512')
   assert.match(rootLayout, /applicationName: 'RouteHub Driver'/)
   assert.match(rootLayout, /routehub-driver-pwa-512\.png/)
+  assert.match(driverLayout, /statusBarStyle: 'black-translucent'/)
+  assert.match(driverLayout, /viewportFit: 'cover'/)
 })
 
 test('Manager and Driver install as distinct role-aware PWAs', () => {

@@ -14,28 +14,13 @@ export const metadata: Metadata = {
   // Version the manifest URL so installed PWAs re-read orientation/theme
   // metadata instead of retaining the browser's previous manifest snapshot.
   manifest: '/manifest-driver.json?v=22',
-  // Keep the system/status area opaque - translucent (black-translucent)
-  // lets iOS draw content under the status bar, and iOS 26/27's "Liquid
-  // Glass" material then applies its own system backdrop-blur over that
-  // strip regardless of what's painted behind it (a real, current iOS
-  // platform behavior, not something fixable from this side).
-  //
-  // 'black' was tried first (reasoning: same opaque/non-translucent
-  // behavior as 'default', just dark instead of light) but a driver
-  // confirmed the blur on a fully-reinstalled PWA even with 'black' live
-  // in production, verified by fetching this app's own deployed HTML.
-  // 'default' is the one combination with an actual confirmed real-world
-  // fix for this specific iOS 26/27 bug (a fixed white bar, mismatched
-  // with Driver's dark-by-default theme, but no blur) - reverted to it to
-  // prioritize killing the blur regression over the color match. If this
-  // is confirmed fixed, revisit getting closer to Driver's navy without
-  // reintroducing the blur (e.g. a native status-bar-color capability
-  // instead of this web meta tag, which only ever offers white/black/
-  // translucent).
+  // Navigation is a continuous map surface. A translucent status area lets
+  // the driving canvas extend behind the system indicators; route cards keep
+  // their own contrast rather than reserving a separate navy strip.
   appleWebApp: {
     capable: true,
     title: 'RouteHub Driver',
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
   },
   icons: {
     icon: '/routehub-driver-pwa-512.png',
@@ -56,10 +41,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // Keep the status-area outside the web canvas. On iOS PWAs `cover` lets
-  // Safari composite its translucent scroll-edge material over the header;
-  // `contain` gives the system an opaque, theme-colored strip instead.
-  viewportFit: 'contain',
+  // Required for the map to reach the status area during in-app navigation.
+  viewportFit: 'cover',
   themeColor: [
     {media: '(prefers-color-scheme: light)', color: '#FFFFFF'},
     {media: '(prefers-color-scheme: dark)', color: '#0F1D35'},

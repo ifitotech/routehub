@@ -9,11 +9,9 @@
 .navigation .controls{bottom:16px}
 .navigation .notice{top:8px}
 .mapArea{position:absolute;inset:0;min-width:0;min-height:120px;overflow:hidden;background:var(--rh-ink,#06152c)}.canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-/* --rh-ink already theme-switches via driver-theme-tokens.css; the
-   data-map-theme duplicates below exist only for the brief window before
-   the page-level theme observer resolves html[data-theme] (see the note
-   further down) - kept in sync with the same token values by hand. */
-.navigation::before{content:'';position:absolute;z-index:3;top:0;right:0;left:0;height:env(safe-area-inset-top,0px);background:var(--rh-navy,#0f1d35)}
+/* Navigation deliberately has no safe-area scrim. With viewport-fit=cover
+   the map continues underneath the system status area; only actionable
+   cards float above it, which preserves the continuous driving canvas. */
 
 /* --- Maneuver / guidance card ---
    Same "glass" language as Today's hero (driver-theme-tokens.css /
@@ -95,11 +93,8 @@
 :global(html[data-theme='light']) .controls button{background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.14),rgba(255,255,255,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 16px rgba(15,29,53,.1)}
 
 /* Navigation can be restored before the page-level theme observer finishes.
-   Keep its map overlays and the iOS-safe top strip in the same resolved
-   RouteHub theme during that short window instead of flashing light - the
-   values below are the same tokens as above, just re-stated as literals
-   since a JS-driven data attribute (not html[data-theme]) selects them. */
-.navigation[data-map-theme='light']::before{background:#f5f9ff}
+   Keep the map canvas and overlays in the same resolved RouteHub theme
+   during that short window instead of flashing light. */
 .navigation[data-map-theme='light'] .mapArea{background:#f5f9ff}
 .navigation[data-map-theme='light']{--rh-ink:#f5f9ff;--rh-navy:#fff;--rh-primary:#075fd8;--rh-primary-bright:#075fd8;--rh-cyan:#087f91;--rh-text:#10233d;--rh-text-muted:#334b68;--rh-text-subtle:#526985;--rh-border-strong:rgba(31,96,170,.32);--rh-divider:rgba(11,31,58,.16);--rh-surface-soft:rgba(15,62,120,.07);--rh-success:#087f52;--rh-pickup-bg:rgba(22,119,255,.1);--rh-pickup-border:rgba(22,119,255,.28);--rh-pickup-fg:#064db1;--rh-delivery-bg:rgba(139,92,246,.11);--rh-delivery-border:rgba(109,40,217,.28);--rh-delivery-fg:#5422a6;--rh-return-bg:rgba(88,112,143,.1);--rh-return-border:rgba(88,112,143,.25);--rh-return-fg:#344c68}
 .navigation[data-map-theme='light'] .guidance,.navigation[data-map-theme='light'] .bottom{background:rgba(248,251,255,.84);color:#10233d;border-color:rgba(31,96,170,.28);box-shadow:0 18px 42px rgba(15,35,60,.18),0 4px 12px rgba(15,35,60,.08),inset 0 1px 0 rgba(255,255,255,.82)}
@@ -109,7 +104,6 @@
 .navigation[data-map-theme='light'] .guidance button,
 .navigation[data-map-theme='light'] .controls button{background:radial-gradient(circle at 34% 28%,rgba(120,170,255,.14),rgba(255,255,255,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 16px rgba(15,29,53,.1)}
 .navigation[data-map-theme='dark']{background:#06152c}
-.navigation[data-map-theme='dark']::before{background:#0f1d35}
 .navigation[data-map-theme='dark'] .mapArea{background:#06152c}
 
 /* A distinct lift from the map (not a full-bleed footer). Keep the native
