@@ -7,9 +7,13 @@
 <style>
 :root{--bg:#0b1526;--card:#152438;--ink:#f4f7fb;--muted:#9bb0c9;--line:#2a3d59;--blue:#1667F2}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,sans-serif;padding-top:calc(52px + env(safe-area-inset-top))}
 a{color:#8cb4ff}
 img{max-width:100%;height:auto;display:block}
+header{position:fixed;top:0;left:0;right:0;background:var(--card);border-bottom:1px solid var(--line);z-index:999;display:flex;align-items:center;gap:12px;height:52px;padding-top:env(safe-area-inset-top);box-sizing:border-box}
+header button{background:none;border:none;color:var(--ink);cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px}
+header button:hover{opacity:.7}
+header .title{flex:1;font-weight:700;white-space:nowrap}
 .wrap{max-width:880px;margin:0 auto;padding:20px 16px calc(80px + env(safe-area-inset-bottom))}
 .hero{display:flex;gap:12px;align-items:center;margin-bottom:8px}
 .hero img{width:48px;height:48px;border-radius:12px;object-fit:cover;flex:0 0 auto}
@@ -31,6 +35,10 @@ footer{margin-top:22px;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
+<header>
+  <button type="button" id="backBtn" aria-label="Volver">←</button>
+  <span class="title" id="headerTitle">Guía</span>
+</header>
 <div class="wrap">
   <div class="hero">
     <img src="/routehub-driver-new.jpg" alt="RouteHub">
@@ -122,13 +130,14 @@ footer{margin-top:22px;color:var(--muted);font-size:13px}
   </footer>
 </div>
 <script>
-var L={es:{lead:'App en vivo. Las pantallas de abajo abren la función real.',title:'Guía',m1t:'Ver el día',m1:'Dashboard = calendario + lista + mapa. En el teléfono cambia List / Map. Pide cuenta Manager.',m2t:'Crear ruta',m2:'Pickup, Delivery o Return. PO solo en Pickup. El botón abre /routes.',m3t:'Mover o cancelar',m3:'Edit routes está en la misma página. Solo rutas que no estén activas o cerradas.',m4t:'Ajustes',m4:'Idioma, tema, notificaciones, sucursal, esta guía, privacidad y términos.',d1t:'Hoy',d1:'Mapa + ficha. Tabs reales: Today, Routes, Truck, More.',d2t:'Completar',d2:'START DELIVERY abre la hoja. Delivery: nombre y foto. Pickup: material y PO. Return: sin PO. Issue si no se puede.',d3t:'Ajustes',d3:'Driving Day, ubicación y alertas. Ayuda pide login de Driver.',d4t:'GPS',d4:'Driving Day y el permiso del teléfono son distintos. La PWA no sigue el GPS con la app cerrada.',foot:'Enlaces reales: /routes · /driver · /settings · /terms · /privacy'},en:{lead:'Live app. Buttons below open the real screens.',title:'Guide',m1t:'See the day',m1:'Dashboard = calendar + list + map. Phone uses List / Map.',m2t:'Create a route',m2:'Pickup, Delivery or Return. PO on Pickup only.',m3t:'Move or cancel',m3:'Same page. Only open stops.',m4t:'Settings',m4:'Language, theme, notifications, this guide, privacy and terms.',d1t:'Today',d1:'Map + sheet. Tabs: Today, Routes, Truck, More.',d2t:'Finish',d2:'START DELIVERY opens the sheet. Use Issue if it cannot close.',d3t:'Settings',d3:'Driving Day, location, alerts. In-app Help needs Driver login.',d4t:'GPS',d4:'Driving Day is not the phone permission. No GPS after you leave the PWA.',foot:'Live links: /routes · /driver · /settings · /terms · /privacy'},fr:{lead:'App réelle. Les boutons ouvrent les écrans.',title:'Guide',m1t:'Journée',m1:'Calendrier + liste + carte.',m2t:'Créer',m2:'PO seulement à la collecte.',m3t:'Gérer',m3:'Même page, arrêts ouverts.',m4t:'Réglages',m4:'Langue, thème, guide, confidentialité.',d1t:'Aujourd’hui',d1:'Carte + fiche. Today, Routes, Truck, More.',d2t:'Terminer',d2:'START DELIVERY. Incident si impossible.',d3t:'Réglages',d3:'Driving Day et alertes.',d4t:'GPS',d4:'Pas de GPS appli fermée.',foot:'/routes · /driver · /settings · /terms · /privacy'}};
-function lang(c){var t=L[c];document.documentElement.lang=c;document.getElementById('title').textContent=t.title;['lead','m1t','m1','m2t','m2','m3t','m3','m4t','m4','d1t','d1','d2t','d2','d3t','d3','d4t','d4','foot'].forEach(function(id){document.getElementById(id).textContent=t[id]});}
-function show(w){document.getElementById('pane-m').hidden=w!=='m';document.getElementById('pane-d').hidden=w!=='d';document.getElementById('tab-m').setAttribute('aria-pressed',w==='m'?'true':'false');document.getElementById('tab-d').setAttribute('aria-pressed',w==='d'?'true':'false');}
-document.getElementById('tab-m').onclick=function(){show('m')};
-document.getElementById('tab-d').onclick=function(){show('d')};
-document.querySelectorAll('[data-lang]').forEach(function(b){b.onclick=function(){lang(b.getAttribute('data-lang'))}});
-lang('es');
+var L={es:{lead:’App en vivo. Las pantallas de abajo abren la función real.’,title:’Guía’,m1t:’Ver el día’,m1:’Dashboard = calendario + lista + mapa. En el teléfono cambia List / Map. Pide cuenta Manager.’,m2t:’Crear ruta’,m2:’Pickup, Delivery o Return. PO solo en Pickup. El botón abre /routes.’,m3t:’Mover o cancelar’,m3:’Edit routes está en la misma página. Solo rutas que no estén activas o cerradas.’,m4t:’Ajustes’,m4:’Idioma, tema, notificaciones, sucursal, esta guía, privacidad y términos.’,d1t:’Hoy’,d1:’Mapa + ficha. Tabs reales: Today, Routes, Truck, More.’,d2t:’Completar’,d2:’START DELIVERY abre la hoja. Delivery: nombre y foto. Pickup: material y PO. Return: sin PO. Issue si no se puede.’,d3t:’Ajustes’,d3:’Driving Day, ubicación y alertas. Ayuda pide login de Driver.’,d4t:’GPS’,d4:’Driving Day y el permiso del teléfono son distintos. La PWA no sigue el GPS con la app cerrada.’,foot:’Enlaces reales: /routes · /driver · /settings · /terms · /privacy’},en:{lead:’Live app. Buttons below open the real screens.’,title:’Guide’,m1t:’See the day’,m1:’Dashboard = calendar + list + map. Phone uses List / Map.’,m2t:’Create a route’,m2:’Pickup, Delivery or Return. PO on Pickup only.’,m3t:’Move or cancel’,m3:’Same page. Only open stops.’,m4t:’Settings’,m4:’Language, theme, notifications, this guide, privacy and terms.’,d1t:’Today’,d1:’Map + sheet. Tabs: Today, Routes, Truck, More.’,d2t:’Finish’,d2:’START DELIVERY opens the sheet. Use Issue if it cannot close.’,d3t:’Settings’,d3:’Driving Day, location, alerts. In-app Help needs Driver login.’,d4t:’GPS’,d4:’Driving Day is not the phone permission. No GPS after you leave the PWA.’,foot:’Live links: /routes · /driver · /settings · /terms · /privacy’},fr:{lead:’App réelle. Les boutons ouvrent les écrans.’,title:’Guide’,m1t:’Journée’,m1:’Calendrier + liste + carte.’,m2t:’Créer’,m2:’PO seulement à la collecte.’,m3t:’Gérer’,m3:’Même page, arrêts ouverts.’,m4t:’Réglages’,m4:’Langue, thème, guide, confidentialité.’,d1t:’Aujourd’hui’,d1:’Carte + fiche. Today, Routes, Truck, More.’,d2t:’Terminer’,d2:’START DELIVERY. Incident si impossible.’,d3t:’Réglages’,d3:’Driving Day et alertes.’,d4t:’GPS’,d4:’Pas de GPS appli fermée.’,foot:’/routes · /driver · /settings · /terms · /privacy’}};
+function lang(c){var t=L[c];document.documentElement.lang=c;document.getElementById(‘title’).textContent=t.title;document.getElementById(‘headerTitle’).textContent=t.title;[‘lead’,’m1t’,’m1’,’m2t’,’m2’,’m3t’,’m3’,’m4t’,’m4’,’d1t’,’d1’,’d2t’,’d2’,’d3t’,’d3’,’d4t’,’d4’,’foot’].forEach(function(id){document.getElementById(id).textContent=t[id]});}
+function show(w){document.getElementById(‘pane-m’).hidden=w!==’m’;document.getElementById(‘pane-d’).hidden=w!==’d’;document.getElementById(‘tab-m’).setAttribute(‘aria-pressed’,w===’m’?’true’:’false’);document.getElementById(‘tab-d’).setAttribute(‘aria-pressed’,w===’d’?’true’:’false’);}
+document.getElementById(‘tab-m’).onclick=function(){show(‘m’)};
+document.getElementById(‘tab-d’).onclick=function(){show(‘d’)};
+document.getElementById(‘backBtn’).onclick=function(){window.history.back()};
+document.querySelectorAll(‘[data-lang]’).forEach(function(b){b.onclick=function(){lang(b.getAttribute(‘data-lang’))}});
+lang(‘es’);
 </script>
 </body>
 </html>
