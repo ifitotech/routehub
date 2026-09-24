@@ -283,8 +283,7 @@ html[data-theme='light'] .emptyToday{color:#0f1d35;background:radial-gradient(ci
 @media(max-height:700px){.emptyToday{padding-top:10px}.emptyHeroArt{width:min(100%,330px);margin-top:4px}.emptyToday h2{font-size:27px}.activityCard{margin-top:12px}}
 :global(html[data-theme='light']) .stateCard{border-color:rgba(95,151,224,.18);background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(242,247,255,.9));box-shadow:0 14px 34px rgba(53,105,170,.08)}
 :global(html[data-theme='light']) .stateCard h1{color:#0b1f3a}.stateCard p{font-weight:600}
-.loading{display:flex;flex-direction:column;gap:12px}
-.loading{position:relative;display:grid;place-items:center;min-height:calc(100dvh - 132px);overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(34,123,255,.12),transparent 34%);isolation:isolate}
+.loading{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:calc(100dvh - 132px);padding-top:48px;overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(34,123,255,.12),transparent 34%);isolation:isolate}
 .loadingScene{position:relative;width:min(72vw,230px);height:48px}
 .loadingRoad{position:absolute;right:0;bottom:7px;left:0;height:4px;overflow:hidden;border-radius:999px;background:rgba(147,193,255,.2)}
 .loadingRoad i{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(102,178,255,.85) 0 11px,transparent 11px 21px);animation:loadingRoadMove .9s linear infinite}

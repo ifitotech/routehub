@@ -1,0 +1,44 @@
+<svg viewBox="0 0 320 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .header { fill: #0f1d35; }
+      .card { fill: #fff; stroke: #dde5ee; stroke-width: 1; }
+      .text-dark { fill: #0f1d35; font-family: system-ui; font-size: 12px; }
+      .text-muted { fill: #667892; font-family: system-ui; font-size: 10px; }
+      .text-white { fill: #fff; font-family: system-ui; font-size: 13px; font-weight: 700; }
+      .blue { fill: #1667f2; }
+      .marker { fill: #2ecc71; }
+    </style>
+  </defs>
+
+  <rect width="320" height="500" class="bg"/>
+
+  <!-- Header -->
+  <rect width="320" height="48" class="header"/>
+  <circle cx="24" cy="24" r="12" fill="#1667f2"/>
+  <text x="160" y="32" class="text-white" text-anchor="middle" font-weight="700">Hoy</text>
+
+  <!-- Map Area -->
+  <rect x="0" y="48" width="320" height="200" fill="#e0e8f0"/>
+  <circle cx="100" cy="120" r="4" fill="#1667f2"/>
+  <circle cx="240" cy="180" r="4" class="marker"/>
+  <line x1="100" y1="120" x2="240" y2="180" stroke="#1667f2" stroke-width="2" stroke-dasharray="4"/>
+  <text x="160" y="260" class="text-muted" text-anchor="middle" font-size="10">Mapa en vivo</text>
+
+  <!-- Current Stop Card -->
+  <rect x="12" y="280" width="296" height="100" class="card" rx="8"/>
+  <text x="20" y="295" class="text-dark" font-weight="700">Parada Actual</text>
+  <line x1="20" y1="302" x2="300" y2="302" stroke="#dde5ee" stroke-width="1"/>
+
+  <circle cx="28" cy="325" r="12" fill="#2ecc71"/>
+  <text x="48" y="320" class="text-dark" font-weight="700" font-size="12">Recogida</text>
+  <text x="48" y="332" class="text-muted" font-size="10">Calle Principal, 123</text>
+
+  <text x="20" y="355" class="text-muted" font-size="9">DESTINATARIO</text>
+  <text x="20" y="368" class="text-dark" font-size="11">Juan García</text>
+
+  <!-- Action Button -->
+  <rect x="48" y="390" width="224" height="40" class="blue" rx="8"/>
+  <text x="160" y="416" class="text-white" text-anchor="middle" font-weight="700">INICIAR ENTREGA</text>
+</svg>
