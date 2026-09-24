@@ -504,6 +504,25 @@ export default function DriverV3Page() {
     setDriverNavigationRouteId(navOpen&&route?.id?String(route.id):null)
   },[navOpen,route?.id])
   useEffect(()=>()=>setDriverNavigationRouteId(null),[])
+  // Manager Routes can now drag the driver's current stop away mid-drive
+  // (customer wants a different time, so it's paused and moved rather than
+  // cancelled). realtime then hands this component a different route as
+  // "current" while navOpen may still be true. Silently swapping the live
+  // navigator to a different stop's directions underneath the driver would
+  // be dangerous - close it and say why instead of jumping.
+  const navigatingRouteIdRef=useRef<string|null>(null)
+  useEffect(()=>{
+    navigatingRouteIdRef.current=navOpen&&route?.id?String(route.id):null
+  },[navOpen])
+  useEffect(()=>{
+    const watchedId=navigatingRouteIdRef.current
+    if(!navOpen||watchedId===null)return
+    const currentId=route?.id?String(route.id):null
+    if(currentId!==watchedId){
+      setNavigationVisible(false)
+      setMessage(locale==='es'?'Tu manager movió esta parada. Se cerró la navegación.':locale==='fr'?'Votre manager a déplacé cet arrêt. La navigation a été fermée.':'Your manager moved this stop. Navigation was closed.')
+    }
+  },[route?.id,navOpen])
   // A live drag (either handle) needs the navigator mounted before it has
   // fully "opened" in the navOpen sense - dragMountForce keeps it mounted
   // for the duration of the gesture even though navOpen only flips once
