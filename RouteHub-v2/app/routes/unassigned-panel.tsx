@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Truck} from 'lucide-react'
+import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Pencil, Truck, X} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -9,6 +9,8 @@ type UnassignedPanelProps = {
   routes: RouteRecord[]
   drivers: Driver[]
   onAssign: (route: RouteRecord, driverId: string) => void
+  onEdit?: (route: RouteRecord) => void
+  onCancel?: (route: RouteRecord) => void
   busyRouteId?: string
   locale: string
   // Completed/issue routes have nothing left to do in the active board, so
@@ -21,7 +23,7 @@ type UnassignedPanelProps = {
   onViewDetails?: (routeId: string) => void
 }
 
-export default function UnassignedPanel({routes, drivers, onAssign, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
+export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails}: UnassignedPanelProps) {
   // Both start collapsed - an open list (especially Issues, which can run
   // long) crowded out Unassigned above it and made the panel feel heavy to
   // scan. The header (with its count) always shows on its own either way,
@@ -47,6 +49,8 @@ export default function UnassignedPanel({routes, drivers, onAssign, busyRouteId,
   }
   const pickLabel = locale === 'es' ? 'Mover a conductor…' : locale === 'fr' ? 'Déplacer vers…' : 'Move to driver…'
   const detailsLabel = locale === 'es' ? 'Ver detalles' : locale === 'fr' ? 'Voir les détails' : 'View details'
+  const editLabel = locale === 'es' ? 'Editar' : locale === 'fr' ? 'Modifier' : 'Edit'
+  const cancelLabel = locale === 'es' ? 'Cancelar' : locale === 'fr' ? 'Annuler' : 'Cancel'
   const issuesLabel = locale === 'es' ? 'Incidencias' : locale === 'fr' ? 'Incidents' : 'Issues'
   const completedLabel = locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed'
   const routeMeta = (route: RouteRecord) => {
@@ -99,6 +103,20 @@ export default function UnassignedPanel({routes, drivers, onAssign, busyRouteId,
                     ))}
                   </select>
                 ) : <p className={styles.empty}>{locale === 'es' ? 'Agrega un miembro disponible para mover esta ruta.' : locale === 'fr' ? 'Ajoutez un membre disponible pour déplacer cet itinéraire.' : 'Add an available team member to move this route.'}</p>}
+                {(onEdit || onCancel) && (
+                  <div className={styles.rowActions}>
+                    {onEdit && (
+                      <button type="button" className={styles.actionButton} disabled={busy} onClick={() => onEdit(route)} aria-label={`${editLabel} ${route.destination_name || route.destination_address || ''}`}>
+                        <Pencil size={13} />{editLabel}
+                      </button>
+                    )}
+                    {onCancel && (
+                      <button type="button" className={styles.actionButton} data-tone="cancel" disabled={busy} onClick={() => onCancel(route)} aria-label={`${cancelLabel} ${route.destination_name || route.destination_address || ''}`}>
+                        <X size={13} />{cancelLabel}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )
           })}

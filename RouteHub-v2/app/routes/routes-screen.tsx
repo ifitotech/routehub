@@ -21,7 +21,7 @@ import styles from './routes.module.css'
 import board from './routes-board.module.css'
 import './routes-dispatch.css'
 import {useRoutesWorkspace} from './routes-workspace'
-import {routeDateValue} from './routes-model'
+import {routeDateValue, type RouteRecord} from './routes-model'
 
 export default function Routes() {
   const w = useRoutesWorkspace()
@@ -45,6 +45,33 @@ export default function Routes() {
   }, [])
 
   const {c, locale, t, defaultBranch, open, saving, justCreated, previewOpen, form, setForm, selectedContact, originMode, detailsOpen, setDetailsOpen, todayValue, oc, branches, contacts, drivers, save, pendingLocation, setPendingLocation, useConfirmedDestination, updateDestination, destinationSuggestions, selectDestinationContact, selectExternalDestination, searchContext, selectedDestinationLocation, setSelectedDestinationLocation, insertBeforeId, setInsertBeforeId, priorityRoutes, saveContactOpen, setSaveContactOpen, contactSaveMessage, setContactSaveMessage, newContactName, setNewContactName, savingContact, saveDestinationAsContact, planningMapRoutes, setOpen, setPreviewOpen, setOriginSource, selectDriver, openBuilder, message, cancelRoute, moveRoute, toggleRoutePause, assignRouteToDriver, unassignRoute, busyRouteId, driverIndex, loading, editingRouteId, setEditingRouteId} = w
+
+  // Shared by the Assigned list's row menu (manage mode only) and the
+  // Unassigned panel (always) - a route sitting unassigned or waiting for a
+  // driver still needs a way to fix a wrong address/time/PO without
+  // cancelling and re-creating it from scratch.
+  const openEditForm = (route: RouteRecord) => {
+    const scheduled = route.scheduled_at ? new Date(route.scheduled_at) : null
+    const time = scheduled ? scheduled.toISOString().slice(11, 16) : ''
+    setForm({
+      type: (route.mission_type === 'pickup' || route.mission_type === 'delivery' || route.mission_type === 'transfer' || route.mission_type === 'return' ? route.mission_type : 'delivery') as any,
+      origin: route.origin_name || route.origin_address || '',
+      destination: route.destination_name || route.destination_address || '',
+      destination_label: route.destination_name || route.destination_address || '',
+      destination_phone: route.destination_phone || '',
+      stop_contact_name: route.destination_contact_name || '',
+      contact_id: '',
+      priority: (route.priority === 'priority' || route.priority === 'urgent' ? route.priority : 'normal') as any,
+      order_number: route.order_number || '',
+      notes: route.notes || '',
+      date: route.route_date || '',
+      time,
+      driver_id: route.driver_id || '',
+      insert_before_id: '',
+    })
+    setEditingRouteId(route.id)
+    setOpen(true)
+  }
 
   // Add Route opens defaulted to whichever date was selected in the
   // calendar strip - but tapping a different day in that strip while the
@@ -306,6 +333,8 @@ export default function Routes() {
               routes={unassignedRoutes}
               drivers={drivers}
               onAssign={assignRouteToDriver}
+              onEdit={openEditForm}
+              onCancel={cancelRoute}
               busyRouteId={busyRouteId}
               locale={locale}
               issueRoutes={issueRoutes}
@@ -366,28 +395,7 @@ export default function Routes() {
                       onAssign={assignRouteToDriver}
                       drivers={drivers}
                       onViewDetails={setViewingRouteId}
-                      onEdit={managing ? (route) => {
-                        const scheduled = route.scheduled_at ? new Date(route.scheduled_at) : null
-                        const time = scheduled ? scheduled.toISOString().slice(11, 16) : ''
-                        setForm({
-                          type: (route.mission_type === 'pickup' || route.mission_type === 'delivery' || route.mission_type === 'transfer' || route.mission_type === 'return' ? route.mission_type : 'delivery') as any,
-                          origin: route.origin_name || route.origin_address || '',
-                          destination: route.destination_name || route.destination_address || '',
-                          destination_label: route.destination_name || route.destination_address || '',
-                          destination_phone: route.destination_phone || '',
-                          stop_contact_name: route.destination_contact_name || '',
-                          contact_id: '',
-                          priority: (route.priority === 'priority' || route.priority === 'urgent' ? route.priority : 'normal') as any,
-                          order_number: route.order_number || '',
-                          notes: route.notes || '',
-                          date: route.route_date || '',
-                          time,
-                          driver_id: route.driver_id || '',
-                          insert_before_id: '',
-                        })
-                        setEditingRouteId(route.id)
-                        setOpen(true)
-                      } : undefined}
+                      onEdit={openEditForm}
                       busyRouteId={busyRouteId}
                       managing={managing}
                     />

@@ -1,6 +1,6 @@
 'use client'
 
-import {ChevronDown, ChevronRight, ChevronUp, Pause, Play, X} from 'lucide-react'
+import {ChevronDown, ChevronRight, ChevronUp, Pause, Pencil, Play, X} from 'lucide-react'
 import {driverDetails, routeDate, routeTime, statusLabel, typeLabel} from './routes-model'
 import type {Driver, RouteRecord} from './routes-model'
 import styles from './routes-rows.module.css'
@@ -22,10 +22,10 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
   managing?: boolean
 }) {
   const label = locale === 'es'
-    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', moveTo: 'Mover a…', unassigned: 'Sin asignar', details: 'Ver detalles'}
+    ? {up: 'Subir', down: 'Bajar', pause: 'Pausar', resume: 'Reanudar', cancel: 'Cancelar', edit: 'Editar', moveTo: 'Mover a…', unassigned: 'Sin asignar', details: 'Ver detalles'}
     : locale === 'fr'
-      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', moveTo: 'Déplacer vers…', unassigned: 'Non attribué', details: 'Voir les détails'}
-      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', moveTo: 'Move to…', unassigned: 'Unassigned', details: 'View details'}
+      ? {up: 'Monter', down: 'Descendre', pause: 'Mettre en pause', resume: 'Reprendre', cancel: 'Annuler', edit: 'Modifier', moveTo: 'Déplacer vers…', unassigned: 'Non attribué', details: 'Voir les détails'}
+      : {up: 'Move up', down: 'Move down', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', edit: 'Edit', moveTo: 'Move to…', unassigned: 'Unassigned', details: 'View details'}
 
   return (
     <div className={styles.list}>
@@ -35,7 +35,14 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
         const origin = route.origin_name || route.origin_address || c.branch
         const driver = driverDetails(route.driver_id ? driverIndex?.get(route.driver_id) : undefined, c.teamDriver)
         const canManage = Boolean(managing) && !['completed', 'cancelled'].includes(status)
-        const canCancel = canManage && status !== 'active' && Boolean(onCancel)
+        // Edit and Cancel used to only show up once "Edit routes" (managing)
+        // was switched on - a route sitting wrong (bad address, time, PO)
+        // shouldn't need that extra detour to fix. Reordering and pausing
+        // stay behind managing since those are queue operations, not a
+        // single route's own details.
+        const editableStatus = !['completed', 'cancelled', 'active'].includes(status)
+        const canCancel = editableStatus && Boolean(onCancel)
+        const canEdit = editableStatus && Boolean(onEdit)
         // The reorder queue on the server only tracks draft/pending/published/paused
         // routes - an 'issue' route isn't part of it, so a Move button here would
         // click and silently do nothing. Only show it where it can actually work.
@@ -50,8 +57,8 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
             className={styles.row}
             data-status={status}
             data-managing={managing ? 'true' : 'false'}
-            style={managing && onEdit ? {cursor: 'pointer'} : undefined}
-            onClick={managing && onEdit && !busy ? () => onEdit(route) : undefined}
+            style={canEdit ? {cursor: 'pointer'} : undefined}
+            onClick={canEdit && !busy ? () => onEdit?.(route) : undefined}
           >
             <span className={styles.num}>
               {String(route.position || index + 1).padStart(2, '0')}
@@ -79,7 +86,7 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                   {label.details}<ChevronRight size={14} />
                 </button>
               )}
-              {canManage || canMoveAssignee ? (
+              {canManage || canMoveAssignee || canEdit || canCancel ? (
                 <div className={styles.actions} onClick={event => event.stopPropagation()}>
                   {canMoveAssignee ? (
                     <select
@@ -130,6 +137,11 @@ export default function RouteRows({items, locale, c, driverIndex, onCancel, onMo
                       aria-label={status === 'paused' ? label.resume : label.pause}
                     >
                       {status === 'paused' ? <Play size={15} /> : <Pause size={15} />}
+                    </button>
+                  ) : null}
+                  {canEdit ? (
+                    <button type="button" className={styles.iconButton} disabled={busy} onClick={() => onEdit?.(route)} title={label.edit} aria-label={label.edit}>
+                      <Pencil size={15} />
                     </button>
                   ) : null}
                   {canCancel ? (

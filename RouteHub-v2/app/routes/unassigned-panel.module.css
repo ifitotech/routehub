@@ -115,6 +115,52 @@
   cursor: not-allowed;
 }
 
+/* A route waiting here still needs a way to fix a wrong address/time/PO or
+   drop it entirely - without these the only path was opening Edit routes
+   first, which felt like an extra detour for something this common. */
+.rowActions {
+  display: flex;
+  gap: 6px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1.5px solid var(--rh-border, #dde5ee);
+  border-radius: 8px;
+  background: var(--rh-card);
+  color: var(--rh-text, #0f1d35);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actionButton[data-tone='cancel'] {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: var(--rh-danger, #dc2626);
+}
+
+:global(html[data-theme='dark']) .actionButton {
+  border-color: rgba(147, 193, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  color: #bbd3f7;
+}
+
+:global(html[data-theme='dark']) .actionButton[data-tone='cancel'] {
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
 /* Issues / Completed live below Unassigned in the same panel instead of
    leaving it empty once every route is assigned - a light divider keeps
    them read as separate groups within one surface. */
