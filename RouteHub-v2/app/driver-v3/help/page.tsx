@@ -40,14 +40,22 @@ function topics(locale: string) {
   }
   if (locale === 'fr') {
     return [
-      ['Aujourd’hui', 'Carte en haut, fiche en bas : type (collecte, livraison, retour), adresse, contact et PO si collecte. Vide = pas encore de travail.'],
-      ['Terminer un arrêt', 'Maps ouvre la navigation du téléphone. À l’arrivée, confirmez. Collecte : confirmez le matériel. Livraison : nom du destinataire et photo. Retour : succursale, sans PO. Incident si c’est impossible.'],
-      ['Incident', 'Client absent, mauvaise adresse ou dégât : Incident. Visible par la succursale. N’inventez pas de destinataire.'],
-      ['Journée et GPS', 'Driving Day On démarre le service. Le permis de l’appareil est séparé. Pas de GPS appli fermée.'],
-      ['Cartes', 'Maps ouvre Plans/Google. RouteHub place les arrêts géocodés.'],
-      ['Alertes', 'Cloche et réglage Ajustes. Pour tout couper : Réglages du téléphone → RouteHub.'],
-      ['Camion et historique', 'Camion = véhicule assigné. Historique = arrêts déjà terminés.'],
-      ['Compte', 'Compte et rôle gérés par l’entreprise. Confidentialité et Conditions dans Ajustes.'],
+      ['Aujourd’hui',
+        'Aujourd’hui est l’arrêt qui vous concerne maintenant. La carte de l’itinéraire est en haut. La fiche en dessous montre le type (Collecte, Livraison ou Retour), l’adresse, le contact et, pour une collecte, le PO. Vide signifie que la succursale ne vous a pas encore assigné de travail aujourd’hui.'],
+      ['Comment terminer un arrêt',
+        'Utilisez Maps pour ouvrir la navigation du téléphone avec l’adresse réelle. À l’arrivée, glissez ou confirmez l’arrivée. Une fiche s’ouvre sur Aujourd’hui : Collecte demande de confirmer le matériel transporté; Livraison demande le nom du destinataire et une photo; Retour consiste à arriver à la succursale, sans PO. Utilisez Incident si l’arrêt ne peut pas être terminé.'],
+      ['Incident',
+        'Client absent, mauvaise adresse ou marchandise endommagée : signalez un Incident sur cet arrêt. Il reste visible dans l’historique pour la succursale. N’inventez jamais un nom de destinataire seulement pour clore une livraison.'],
+      ['Journée et GPS',
+        'Driving Day activé démarre le service; désactivé, il le termine. La permission de localisation de l’iPhone ou de l’Android est un interrupteur séparé. Si vous la refusez, vous pouvez quand même travailler; le point en direct ne bougera pas. Cette PWA ne peut pas continuer à suivre le GPS une fois l’application fermée.'],
+      ['Cartes',
+        'Maps transmet l’adresse réelle à Apple Plans ou Google Maps. La carte de RouteHub trace les arrêts qui ont déjà des coordonnées. Sans signal, aucun trajet n’est dessiné.'],
+      ['Alertes',
+        'La cloche de l’en-tête et l’interrupteur dans Réglages envoient les alertes de nouveaux itinéraires et de changements. Si vous les désactivez ici et qu’elles continuent d’apparaître, désactivez-les aussi dans les Réglages du téléphone → RouteHub.'],
+      ['Camion et historique',
+        'Camion affiche le véhicule assigné. Historique liste les arrêts déjà terminés de la journée, dans l’ordre : collecte, livraison, puis retour.'],
+      ['Compte et mentions légales',
+        'Identifiant, succursale et rôle sont définis par votre entreprise. Mot de passe ou camion mal assigné : contactez votre manager. Confidentialité et Conditions se trouvent dans Réglages. Le guide complet s’ouvre depuis Réglages → Guide d’utilisation.'],
     ]
   }
   return [

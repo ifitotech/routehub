@@ -7,7 +7,7 @@
 // the values/callbacks it already computes. Splitting this out only moves
 // code; it does not change what any of it does.
 
-import {Camera, PackageCheck, PackagePlus, Phone, TriangleAlert, Warehouse, X} from 'lucide-react'
+import {Camera, Phone, TriangleAlert, X} from 'lucide-react'
 import {useRef, useState} from 'react'
 import type {PointerEvent as ReactPointerEvent, RefObject} from 'react'
 import styles from './today.module.css'
@@ -126,36 +126,6 @@ export function ReturnSheet({route, t, busy, message, onComplete, onClose}: {rou
         <p className="muted" style={{margin: '0 0 16px', fontSize: 14, lineHeight: '20px'}}>{t.drvReturnHelp || t.drvReturn}</p>
         {message && <p className={`${styles.feedback} ${styles.feedbackError}`}>{message}</p>}
         <button className="primary" disabled={busy} onClick={onComplete} style={{background: '#16B96B', width: '100%'}}>{busy ? t.drvBusy : t.drvCompleteReturn}</button>
-      </section>
-    </div>
-  )
-}
-
-export function NextStopSheet({nextRoute, nextKind, nextLabel, t, onClose, onOpenMaps, onViewHistory}: {
-  nextRoute: any; nextKind: string; nextLabel: string; t: any; onClose: () => void; onOpenMaps: () => void; onViewHistory: () => void
-}) {
-  const NextIcon = nextKind === 'pickup' ? PackagePlus : nextKind === 'delivery' ? PackageCheck : Warehouse
-  return (
-    <div className={styles.completionOverlay} style={overlay} onTouchMove={e => e.preventDefault()} onClick={onClose}>
-      <section className={`card ${styles.completionDialog}`} style={dialog} onClick={e => e.stopPropagation()}>
-        <SheetHeader label={t.drvNextStop} onClose={onClose} t={t} />
-        <span className={`${styles.typeBadge} ${styles[nextKind || 'return']}`} style={{marginBottom: 12}}><NextIcon />{nextLabel}</span>
-        <h2 style={{margin: '0 0 4px', fontSize: 22, lineHeight: '26px'}}>{nextRoute.destination_name || nextRoute.destination_address || t.drvCurrentStopName}</h2>
-        {nextRoute.destination_address && <p className="muted" style={{margin: '0 0 10px'}}>{nextRoute.destination_address}</p>}
-        {nextKind !== 'return' && nextRoute.order_number ? <p style={{margin: '0 0 12px', fontSize: 22, fontWeight: 800}}>PO {nextRoute.order_number}</p> : null}
-        <p style={{margin: '0 0 14px', fontSize: 14, lineHeight: 1.45, color: 'var(--rh-text-muted, #334155)'}}>
-          {nextKind === 'pickup' ? t.drvPickupHelp : nextKind === 'delivery' ? t.drvDeliveryHelp : (t.drvReturnHelp || t.drvReturn)}
-        </p>
-        {nextRoute.notes || nextRoute.driver_note ? <p className="muted" style={{margin: '0 0 14px'}}>{nextRoute.notes || nextRoute.driver_note}</p> : null}
-        {nextRoute.destination_phone ? (
-          <a href={`tel:${String(nextRoute.destination_phone).replace(/[^\d+]/g, '')}`} className="primary" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', marginBottom: 10}}>
-            <Phone size={18} />{t.drvCall || 'Call'} {nextRoute.destination_phone}
-          </a>
-        ) : null}
-        <div style={{display: 'grid', gap: 10}}>
-          <button className="secondary" type="button" onClick={onOpenMaps}>{t.drvOpenMaps}</button>
-          <button className="secondary" type="button" onClick={onViewHistory}>{t.routes || 'Routes'}</button>
-        </div>
       </section>
     </div>
   )
