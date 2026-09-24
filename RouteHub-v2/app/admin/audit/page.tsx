@@ -30,6 +30,7 @@ export default function Audit() {
       if (error) throw error
       setEvents((data || []) as unknown as AuditEvent[])
     } catch (error) {
+      setEvents([])
       setMessage(error instanceof Error ? error.message : 'Unable to load audit activity.')
     } finally {
       setLoading(false)

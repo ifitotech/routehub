@@ -12,7 +12,8 @@ export default function PlatformAdmins() {
   const [rows, setRows] = useState<AdminRow[]>([])
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState('Loading platform admins…')
+  const [message, setMessage] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [selfId, setSelfId] = useState('')
   const [loading, setLoading] = useState(true)
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
@@ -20,6 +21,7 @@ export default function PlatformAdmins() {
 
   const load = async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const supabase = getSupabase()
       const {data: userData} = await supabase.auth.getUser()
@@ -33,9 +35,9 @@ export default function PlatformAdmins() {
       const {data: people} = ids.length ? await supabase.from('users').select('id,email,name').in('id', ids) : {data: []}
       const byId = new Map((people || []).map((person: {id: string; email: string; name: string | null}) => [person.id, person]))
       setRows((data || []).map(row => ({...row, email: byId.get(row.user_id)?.email, name: byId.get(row.user_id)?.name})))
-      setMessage('')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to load platform admins.')
+      setRows([])
+      setLoadError(error instanceof Error ? error.message : 'Unable to load platform admins.')
     } finally {
       setLoading(false)
     }
@@ -91,6 +93,8 @@ export default function PlatformAdmins() {
         <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} className={loading ? styles.spinning : undefined}/>{loading ? 'Updating…' : 'Refresh'}</button>
       </header>
 
+      {loadError ? <section className={styles.loadError} role="alert"><ShieldAlert size={19}/><div><strong>Platform admins could not be refreshed.</strong><p>{loadError}</p></div><button className={styles.secondaryButton} type="button" onClick={() => void load()}>Try again</button></section> : <>
+
       <section className={styles.panel}>
         <header className={styles.panelHeader}><div><h2>Grant admin access</h2><p>The person needs a RouteHub account already (they must have signed in at least once).</p></div><span className={styles.panelIcon}><UserPlus size={21}/></span></header>
         <div className={styles.formGrid}>
@@ -114,6 +118,7 @@ export default function PlatformAdmins() {
         ))}
         {!rows.length && !message && <section className={styles.empty}><span><ShieldAlert size={24}/></span><h2>No platform admins found</h2><p>Something is wrong - this screen should not be reachable without one.</p></section>}
       </section>
+      </>}
     </AdminShell>
   )
 }
