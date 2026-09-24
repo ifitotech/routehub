@@ -76,16 +76,16 @@ export default function AdminErrors() {
     setBusyId(id)
     const {data: userData} = await getSupabase().auth.getUser()
     const {error} = await getSupabase().from('app_error_reports').update({resolved_at: new Date().toISOString(), resolved_by: userData.user?.id}).eq('id', id)
-    setMessage(error ? error.message : '')
-    if (!error) await load()
+    if (error) setMessage(error.message)
+    else { await load(); setMessage('Error marked as resolved.') }
     setBusyId(null)
   }
   const reopen = async (id: string) => {
     if (busyId) return
     setBusyId(id)
     const {error} = await getSupabase().from('app_error_reports').update({resolved_at: null, resolved_by: null}).eq('id', id)
-    setMessage(error ? error.message : '')
-    if (!error) await load()
+    if (error) setMessage(error.message)
+    else { await load(); setMessage('Error reopened.') }
     setBusyId(null)
   }
 
