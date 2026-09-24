@@ -21,6 +21,7 @@ test('driver and manager get different three-step tours', () => {
   assert.match(gate, /onboarding-driver-navigation\.jpg/)
   assert.match(gate, /onboarding-driver-route\.jpg/)
   assert.match(gate, /onboarding-driver-settings\.jpg/)
+  assert.match(gate, /data-screen=\{driverScreen \? String\(slideIndex\) : undefined\}/)
   assert.match(gate, /slides\.length - 1/)
 })
 

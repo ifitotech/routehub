@@ -187,7 +187,7 @@ export default function OnboardingGate() {
         <button className={styles.close} type="button" aria-label={copy.skip} onClick={complete}><X size={21}/></button>
       </header>
       {deviceSetupNeeded ? <>
-      <div className={`${styles.visual} ${styles.realVisual}`}>
+      <div className={`${styles.visual} ${styles.realVisual}`} data-screen="0">
         <Image className={styles.realScreen} src="/onboarding-driver-navigation.jpg" alt={driverScreenAlt} fill sizes="(max-width: 520px) 100vw, 460px" priority/>
       </div>
       <div className={styles.content}>
@@ -205,7 +205,7 @@ export default function OnboardingGate() {
         <button className={styles.next} type="button" disabled={deviceSetupBusy} onClick={()=>deviceSetupResult?setDeviceSetupNeeded(false):void prepareDevice()}>{deviceSetupBusy?permissionCopy.busy:deviceSetupResult?permissionCopy.continue:permissionCopy.button}<ChevronRight size={18}/></button>
       </div></footer>
       </> : <>
-      <div className={`${styles.visual} ${driverScreen ? styles.realVisual : styles[slide.accent]}`}>
+      <div className={`${styles.visual} ${driverScreen ? styles.realVisual : styles[slide.accent]}`} data-screen={driverScreen ? String(slideIndex) : undefined}>
         {driverScreen ? <Image className={styles.realScreen} src={driverScreen} alt={driverScreenAlt} fill sizes="(max-width: 520px) 100vw, 460px" priority/> : <>
           <div className={styles.routeLine} aria-hidden="true"><i/><i/><i/></div>
           <div className={styles.heroIcon}><Icon size={44}/></div>

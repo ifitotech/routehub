@@ -29,6 +29,7 @@ test('the install identity is RouteHub Driver before authentication', () => {
   assert.equal(manifest.icons[1].sizes, '512x512')
   assert.match(rootLayout, /applicationName: 'RouteHub Driver'/)
   assert.match(rootLayout, /routehub-driver-pwa-512\.png/)
+  assert.match(rootLayout, /statusBarStyle: 'black-translucent'/)
   assert.match(driverLayout, /statusBarStyle: 'black-translucent'/)
   assert.match(driverLayout, /viewportFit: 'cover'/)
 })

@@ -17,6 +17,7 @@ La PWA está preparada para el piloto en código. Al cerrar esta entrega, los ca
 - `51b1ee5` mejora guía, tarjeta inferior y el camión cab-over orientado por GPS. La guía secundaria queda dentro de la tarjeta, no flotando/cortada; Exit/Arrived mantienen alto contraste.
 - `50bc900` sincroniza la base de Google Maps con RouteHub claro/oscuro mediante `colorScheme`. Al cambiar tema se recrea únicamente el canvas, porque Google no permite cambiar ese esquema en una instancia existente.
 - `4ebf1b1` extiende el mapa detrás de la barra de estado durante navegación (`viewportFit: 'cover'`, estado translúcido y sin scrim superior). Probar en una PWA instalada y relanzada en iPhone: iOS lee esos metadatos al inicio, no durante hot reload.
+- Bloque local posterior: el layout raíz también declara `black-translucent`, porque su metadata puede prevalecer sobre la anidada de Driver en una PWA instalada. El botón de recenter usa el alto real de la tarjeta inferior y queda por encima de ella, no oculto detrás. El tour encuadra cada captura real por intención: guía (slide 1), llegada (slide 2) y Navigation mode (slide 3), en vez de un `object-position` único.
 - Las tres piezas pasaron `npm run typecheck`, `npm test` (170 pruebas) y `npm run build`. Los avisos de lint/build mencionados abajo ya existían antes de este bloque.
 
 La pendiente principal no es otra reescritura: es validación física del piloto en iPhone y Android. No afirmar que algo de GPS, cámara, firma, notificaciones o retorno desde Maps funciona en todos los dispositivos sin probarlo en un teléfono real.

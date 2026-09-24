@@ -19,7 +19,10 @@ export const metadata = {
   // must be present before a driver signs in.
   applicationName: 'RouteHub Driver',
   manifest: '/manifest.json?v=22',
-  appleWebApp: {capable: true, title: 'RouteHub Driver', statusBarStyle: 'default' as const},
+  // This is the metadata read first by an installed PWA. Keep it aligned
+  // with the Driver layout so in-app navigation can draw the map behind the
+  // system indicators instead of inheriting an opaque root status strip.
+  appleWebApp: {capable: true, title: 'RouteHub Driver', statusBarStyle: 'black-translucent' as const},
   icons: {icon: '/routehub-driver-pwa-512.png', apple: '/routehub-driver-pwa-512.png'},
 }
 
