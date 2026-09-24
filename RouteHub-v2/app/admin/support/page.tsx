@@ -1,6 +1,6 @@
 'use client'
 
-import {Check, LifeBuoy, RotateCcw} from 'lucide-react'
+import {Check, LifeBuoy, RefreshCw, RotateCcw} from 'lucide-react'
 import {useEffect, useMemo, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
 import AdminShell from '../admin-shell'
@@ -23,6 +23,7 @@ export default function AdminSupport() {
   const [rows, setRows] = useState<SupportRow[]>([])
   const [filter, setFilter] = useState<Filter>('open')
   const [message, setMessage] = useState('Loading support requests…')
+  const [busyId, setBusyId] = useState<string | null>(null)
 
   const load = async () => {
     try {
@@ -45,15 +46,21 @@ export default function AdminSupport() {
   const openCount = rows.filter(row => !row.resolved_at).length
 
   const resolve = async (id: string) => {
+    if (busyId) return
+    setBusyId(id)
     const {data: userData} = await getSupabase().auth.getUser()
     const {error} = await getSupabase().from('support_requests').update({resolved_at: new Date().toISOString(), resolved_by: userData.user?.id}).eq('id', id)
     setMessage(error ? error.message : '')
     if (!error) await load()
+    setBusyId(null)
   }
   const reopen = async (id: string) => {
+    if (busyId) return
+    setBusyId(id)
     const {error} = await getSupabase().from('support_requests').update({resolved_at: null, resolved_by: null}).eq('id', id)
     setMessage(error ? error.message : '')
     if (!error) await load()
+    setBusyId(null)
   }
 
   return (
@@ -64,6 +71,7 @@ export default function AdminSupport() {
           <h1 className={styles.title}>Support</h1>
           <p className={styles.subtitle}>Requests Managers and Drivers send from Settings &gt; Contact support.</p>
         </div>
+        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={message.startsWith('Loading')}><RefreshCw size={16}/>Refresh</button>
       </header>
 
       <div className={styles.formGrid} style={{gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'stretch'}}>
@@ -87,8 +95,8 @@ export default function AdminSupport() {
             </div>
             <div className={styles.rowAside} style={{flexDirection: 'column', alignItems: 'stretch', gap: 8}}>
               {row.resolved_at
-                ? <button type="button" className={styles.secondaryButton} onClick={() => void reopen(row.id)}><RotateCcw size={14}/> Reopen</button>
-                : <button type="button" className={styles.dangerButton} style={{color: '#067647', borderColor: '#bbf0d0'}} onClick={() => void resolve(row.id)}><Check size={14}/> Resolve</button>}
+                ? <button type="button" className={styles.secondaryButton} disabled={busyId === row.id} onClick={() => void reopen(row.id)}><RotateCcw size={14}/> {busyId === row.id ? 'Saving…' : 'Reopen'}</button>
+                : <button type="button" className={styles.dangerButton} disabled={busyId === row.id} style={{color: '#067647', borderColor: '#bbf0d0'}} onClick={() => void resolve(row.id)}><Check size={14}/> {busyId === row.id ? 'Saving…' : 'Resolve'}</button>}
             </div>
           </article>
         ))}

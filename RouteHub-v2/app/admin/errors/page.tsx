@@ -1,6 +1,6 @@
 'use client'
 
-import {AlertTriangle, Check, ChevronDown, Copy, RotateCcw} from 'lucide-react'
+import {AlertTriangle, Check, ChevronDown, Copy, RefreshCw, RotateCcw} from 'lucide-react'
 import {useEffect, useMemo, useState} from 'react'
 import {getSupabase} from '../../../lib/supabase'
 import AdminShell from '../admin-shell'
@@ -41,6 +41,7 @@ export default function AdminErrors() {
   const [filter, setFilter] = useState<Filter>('open')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
   const [message, setMessage] = useState('Loading error reports…')
 
   const load = async () => {
@@ -71,15 +72,21 @@ export default function AdminErrors() {
     } catch { setMessage('Could not copy to clipboard.') }
   }
   const resolve = async (id: string) => {
+    if (busyId) return
+    setBusyId(id)
     const {data: userData} = await getSupabase().auth.getUser()
     const {error} = await getSupabase().from('app_error_reports').update({resolved_at: new Date().toISOString(), resolved_by: userData.user?.id}).eq('id', id)
     setMessage(error ? error.message : '')
     if (!error) await load()
+    setBusyId(null)
   }
   const reopen = async (id: string) => {
+    if (busyId) return
+    setBusyId(id)
     const {error} = await getSupabase().from('app_error_reports').update({resolved_at: null, resolved_by: null}).eq('id', id)
     setMessage(error ? error.message : '')
     if (!error) await load()
+    setBusyId(null)
   }
 
   return (
@@ -90,6 +97,7 @@ export default function AdminErrors() {
           <h1 className={styles.title}>Errors</h1>
           <p className={styles.subtitle}>Crashes and failures reported automatically from every company&apos;s Manager and Driver app. Copy one and hand it over to get it fixed.</p>
         </div>
+        <button className={styles.refreshButton} type="button" onClick={() => void load()} disabled={message.startsWith('Loading')}><RefreshCw size={16}/>Refresh</button>
       </header>
 
       <div className={styles.formGrid} style={{gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'stretch'}}>
@@ -125,8 +133,8 @@ export default function AdminErrors() {
               <div className={styles.rowAside} style={{flexDirection: 'column', alignItems: 'stretch', gap: 8}}>
                 <button type="button" className={styles.secondaryButton} onClick={() => void copyReport(row)}>{copiedId === row.id ? <><Check size={14}/> Copied</> : <><Copy size={14}/> Copy</>}</button>
                 {row.resolved_at
-                  ? <button type="button" className={styles.secondaryButton} onClick={() => void reopen(row.id)}><RotateCcw size={14}/> Reopen</button>
-                  : <button type="button" className={styles.dangerButton} style={{color: '#067647', borderColor: '#bbf0d0'}} onClick={() => void resolve(row.id)}><Check size={14}/> Resolve</button>}
+                  ? <button type="button" className={styles.secondaryButton} disabled={busyId === row.id} onClick={() => void reopen(row.id)}><RotateCcw size={14}/> {busyId === row.id ? 'Saving…' : 'Reopen'}</button>
+                  : <button type="button" className={styles.dangerButton} disabled={busyId === row.id} style={{color: '#067647', borderColor: '#bbf0d0'}} onClick={() => void resolve(row.id)}><Check size={14}/> {busyId === row.id ? 'Saving…' : 'Resolve'}</button>}
               </div>
             </article>
           )
