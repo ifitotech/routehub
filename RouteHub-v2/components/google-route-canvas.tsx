@@ -23,6 +23,8 @@ type GoogleMap={
 type MapsApi={
   Map:new(element:HTMLElement,options:Record<string,unknown>)=>GoogleMap
   Marker:new(options:Record<string,unknown>)=>MapObject&{addListener?:(event:string,handler:(event:unknown)=>void)=>Listener}
+  Size:new(width:number,height:number)=>unknown
+  Point:new(x:number,y:number)=>unknown
   Polyline:new(options:Record<string,unknown>)=>MapObject
   TrafficLayer:new()=>MapObject
   LatLngBounds:new()=>{extend:(point:MapCoordinate)=>void}
@@ -70,48 +72,14 @@ type Props={
   onMarkerDrag?:(id:string,coordinate:MapCoordinate)=>void
 }
 
-// Professional top-down cab-over truck for active navigation. The primary
-// silhouette, cab glazing and side stripe are separate Google symbols so they
-// retain GPS rotation without falling back to a flat image marker.
-function navigationTruckIcon(rotation:number){
+// The follow camera keeps travel direction at the top of the screen, so this
+// real RouteHub vehicle remains naturally forward-facing without a second
+// pin, arrow, or decorative marker layered beneath it.
+function navigationTruckIcon(maps:MapsApi){
   return {
-    // Narrow cab at the front, full cargo body at the rear and modest mirrors.
-    // This reads as an Isuzu-style delivery truck rather than a generic pin.
-    path:'M -7 -18 Q -9 -18 -10 -15 L -10 -9 L -12 -8 L -12 -5 L -10 -5 L -10 11 Q -10 16 -5 17 L 5 17 Q 10 16 10 11 L 10 -5 L 12 -5 L 12 -8 L 10 -9 L 10 -15 Q 9 -18 7 -18 Z',
-    scale:1.12,
-    fillColor:'#FFFFFF',
-    fillOpacity:1,
-    strokeColor:'#0A64D8',
-    strokeWeight:2.25,
-    rotation,
-  }
-}
-
-function navigationTruckDetailsIcon(rotation:number){
-  return {
-    // Windshield, grille and axle cues. Keep the roof white; blue is reserved
-    // for the body outline and lower cargo stripe.
-    path:'M -6 -15 L 6 -15 L 7 -10 L -7 -10 Z M -6 -7 L 6 -7 L 6 -5 L -6 -5 Z M -7 11 L -5 11 L -5 14 L -7 14 Z M 5 11 L 7 11 L 7 14 L 5 14 Z',
-    scale:1.12,
-    fillColor:'#183451',
-    fillOpacity:1,
-    strokeColor:'#183451',
-    strokeWeight:.35,
-    rotation,
-  }
-}
-
-function navigationTruckAccentIcon(rotation:number){
-  return {
-    // One restrained side stripe makes the white vehicle legible over a light
-    // map without turning its entire roof blue.
-    path:'M -8 1 L 8 1 L 8 4 L -8 4 Z',
-    scale:1.12,
-    fillColor:'#1677FF',
-    fillOpacity:1,
-    strokeColor:'#1677FF',
-    strokeWeight:.25,
-    rotation,
+    url:'/navigation-truck-marker.png',
+    scaledSize:new maps.Size(48,48),
+    anchor:new maps.Point(24,24),
   }
 }
 
@@ -164,8 +132,6 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
   const navigationThemeRef=useRef<'light'|'dark'|null>(null)
   const objectsRef=useRef<MapObject[]>([])
   const driverMarkerRef=useRef<MapObject|null>(null)
-  const driverMarkerDetailRef=useRef<MapObject|null>(null)
-  const driverMarkerAccentRef=useRef<MapObject|null>(null)
   const listenersRef=useRef<Listener[]>([])
   const lastDriverPositionRef=useRef<MapCoordinate|null>(null)
   const animationFrameRef=useRef<number|null>(null)
@@ -241,8 +207,6 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
       objectsRef.current=[]
       driverMarkerRef.current=null
-      driverMarkerDetailRef.current=null
-      driverMarkerAccentRef.current=null
       routeLinesRef.current={traveled:null,pending:null}
       listenersRef.current.forEach(listener=>listener.remove?.())
       listenersRef.current=[]
@@ -295,33 +259,13 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
           map,
           position:current.driverMarker.position,
           title:current.driverMarker.title,
-          icon:navigation?navigationTruckIcon(navigationRef.current.navigationHeading??0):{
+          icon:navigation?navigationTruckIcon(maps):{
             ...driverTruckIcon(current.driverMarker.tone||'#0F1D35'),
           },
           zIndex:1000,
         })
         objectsRef.current.push(item)
         driverMarkerRef.current=item
-        if(navigation){
-          const details=new maps.Marker({
-            map,
-            position:current.driverMarker.position,
-            icon:navigationTruckDetailsIcon(navigationRef.current.navigationHeading??0),
-            clickable:false,
-            zIndex:1001,
-          })
-          objectsRef.current.push(details)
-          driverMarkerDetailRef.current=details
-          const accent=new maps.Marker({
-            map,
-            position:current.driverMarker.position,
-            icon:navigationTruckAccentIcon(navigationRef.current.navigationHeading??0),
-            clickable:false,
-            zIndex:1002,
-          })
-          objectsRef.current.push(accent)
-          driverMarkerAccentRef.current=accent
-        }
         lastDriverPositionRef.current=current.driverMarker.position
       }
       if(onMapClick){
@@ -420,10 +364,6 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
         if(map?.moveCamera)map.moveCamera({center:point,heading,tilt:45,zoom})
         else map?.panTo(point)
       }
-      const markerRotation=heading-(map?.getHeading?.()||0)
-      marker?.setIcon?.(navigationTruckIcon(markerRotation))
-      driverMarkerDetailRef.current?.setIcon?.(navigationTruckDetailsIcon(markerRotation))
-      driverMarkerAccentRef.current?.setIcon?.(navigationTruckAccentIcon(markerRotation))
     }
     if(marker&&previous&&distanceKm(previous,position)<=2){
       if(animationFrameRef.current!==null)cancelAnimationFrame(animationFrameRef.current)
@@ -431,14 +371,6 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       const animate=(now:number)=>{
         const progress=Math.min(1,(now-started)/1000)
         marker.setPosition?.({
-          lat:previous.lat+(position.lat-previous.lat)*progress,
-          lng:previous.lng+(position.lng-previous.lng)*progress,
-        })
-        driverMarkerDetailRef.current?.setPosition?.({
-          lat:previous.lat+(position.lat-previous.lat)*progress,
-          lng:previous.lng+(position.lng-previous.lng)*progress,
-        })
-        driverMarkerAccentRef.current?.setPosition?.({
           lat:previous.lat+(position.lat-previous.lat)*progress,
           lng:previous.lng+(position.lng-previous.lng)*progress,
         })
@@ -454,8 +386,6 @@ export default function GoogleRouteCanvas({className,ariaLabel,path=[],markers=[
       animationFrameRef.current=requestAnimationFrame(animate)
     }else{
       marker?.setPosition?.(position)
-      driverMarkerDetailRef.current?.setPosition?.(position)
-      driverMarkerAccentRef.current?.setPosition?.(position)
       lastDriverPositionRef.current=position
       updateCamera(position,1)
     }
