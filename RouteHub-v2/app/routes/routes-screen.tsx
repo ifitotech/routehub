@@ -26,6 +26,56 @@ import {useRoutesWorkspace} from './routes-workspace'
 import {routeDateValue, type RouteRecord} from './routes-model'
 import {useRouteDrag, type RouteDropTarget} from './use-route-drag'
 
+// Same palette family as UnassignedPanel's own drop-hint illustration
+// (unassigned-panel.tsx's dropBoxes SVG) and TruckBar's van, so the empty
+// board reads as the same illustration set rather than a one-off graphic.
+function EmptyRoutesIllustration() {
+  return (
+    <svg className={styles.emptyIllustration} viewBox="0 0 300 168" aria-hidden="true">
+      <ellipse cx="150" cy="152" rx="118" ry="8" fill="rgba(0,0,0,.25)" />
+      <rect x="14" y="66" width="30" height="70" rx="3" fill="#16304f" opacity=".55" />
+      <rect x="252" y="50" width="34" height="86" rx="3" fill="#16304f" opacity=".55" />
+      <path d="M52 20q10-10 20 0q8-8 16 2" stroke="#2f4d78" strokeWidth="3" strokeLinecap="round" fill="none" opacity=".5" />
+      <path d="M214 12q10-9 19 0q8-7 15 2" stroke="#2f4d78" strokeWidth="3" strokeLinecap="round" fill="none" opacity=".5" />
+
+      {/* Folded map */}
+      <g transform="translate(80 34)">
+        <path d="M40 0 80 16 40 32 0 16z" fill="#2f5282" />
+        <path d="M0 16 40 32V78L0 62z" fill="#17325a" />
+        <path d="M40 32 80 16V62L40 78z" fill="#20416c" />
+        <path d="M13 27 40 38l0 22-27-11z" fill="none" stroke="rgba(255,255,255,.14)" strokeWidth="1.5" />
+        <path d="M67 27 40 38l0 22 27-11z" fill="none" stroke="rgba(255,255,255,.14)" strokeWidth="1.5" />
+        <path d="M17 46q11 10 23 2q10-8 22 1" stroke="#8fb4ff" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" fill="none" />
+        <circle cx="17" cy="46" r="5" fill="#4592ff" stroke="#0b1c33" strokeWidth="1.5" />
+        <circle cx="62" cy="49" r="5" fill="#4592ff" stroke="#0b1c33" strokeWidth="1.5" />
+      </g>
+
+      {/* Clipboard */}
+      <g transform="translate(180 40)">
+        <rect x="0" y="6" width="48" height="64" rx="6" fill="#1d3a60" />
+        <rect x="16" y="0" width="16" height="10" rx="3" fill="#4592ff" />
+        <rect x="8" y="20" width="32" height="4" rx="2" fill="#5b7ba6" />
+        <rect x="8" y="32" width="32" height="4" rx="2" fill="#5b7ba6" />
+        <rect x="8" y="44" width="22" height="4" rx="2" fill="#5b7ba6" />
+        <circle cx="10" cy="21.5" r="0" fill="none" />
+        <path d="M9 43.5 12 46.5 18 40.5" stroke="#25d885" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" transform="translate(-1 -12)" />
+      </g>
+
+      {/* Van */}
+      <g transform="translate(196 96)">
+        <path d="M2 30V22c0-2 1-4 2.6-5.2L13 10c1.4-1.3 3.1-2 5-2H70c2.4 0 4.2 1.9 4.2 4.2V30z" fill="#2a4a74" />
+        <path d="M2 25h72v6H2z" fill="#16304f" />
+        <path d="M8.5 17.5 16.5 10.7c.6-.5 1.3-.8 2-.8H24v8z" fill="#0b1c33" />
+        <rect x="27" y="9" width="10" height="8" rx="1" fill="#0b1c33" />
+        <circle cx="19" cy="30.5" r="5" fill="#0b1c33" />
+        <circle cx="19" cy="30.5" r="2" fill="#7d93b8" />
+        <circle cx="63" cy="30.5" r="5" fill="#0b1c33" />
+        <circle cx="63" cy="30.5" r="2" fill="#7d93b8" />
+      </g>
+    </svg>
+  )
+}
+
 export default function Routes() {
   const w = useRoutesWorkspace()
   const [pane, setPane] = useState<'list' | 'map'>('list')
@@ -528,7 +578,7 @@ export default function Routes() {
                   </section>
                 ) : (
                   <section className={styles.emptyState}>
-                    <div><RouteIcon size={28}/></div>
+                    <EmptyRoutesIllustration/>
                     <h2>{locale==='es'?'Sin rutas asignadas para hoy':locale==='fr'?'Aucun itinéraire attribué aujourd’hui':'No assigned routes for today'}</h2>
                     <p>{locale==='es'?'Las rutas nuevas aparecerán aquí cuando se publiquen o asignen.':locale==='fr'?'Les nouveaux itinéraires apparaîtront ici une fois publiés ou attribués.':'New routes will appear here once they are published or assigned.'}</p>
                     <p>{locale==='es'?'Crea una ruta o revisa las rutas sin asignar para empezar.':locale==='fr'?'Créez un itinéraire ou consultez les non attribués pour commencer.':'Create a route or review unassigned stops to get started.'}</p>

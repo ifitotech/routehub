@@ -17,6 +17,13 @@
   grid-template-columns: minmax(0, 1.45fr) minmax(min(100%, 200px), 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   width: 100%;
+  /* Without this the panel only sizes to its own content - short next to the
+     map, which fills its whole column height - leaving a large empty gap
+     below Cancel/Assign instead of the card reading as tall as the map
+     beside it. Its parent (.formViewFade, routes.module.css) is already
+     height:100% of .center, itself stretched to the map's row height by
+     .workspace's align-items:stretch (dispatch-layout.module.css). */
+  height: 100%;
   background: var(--rh-card, #fff);
   border-radius: 16px;
   /* Fluid rather than stepped: the panel lives in the dispatch board's centre
@@ -422,8 +429,17 @@
 }
 
 /* One column once the two no longer fit side by side - the divider becomes
-   a rule above the assignment fields instead of beside them. */
-@media (max-width: 1450px) {
+   a rule above the assignment fields instead of beside them.
+   Keyed to the actual width .center (this panel's parent) has left after
+   the map's own column - dispatch-layout.module.css marks .center as the
+   query container - instead of the page/viewport width. A 1600px-wide
+   monitor with the map at its normal share still squeezes this panel just
+   as much as a 1300px-wide one; a viewport media query couldn't tell the
+   difference, so it either broke one of them or switched too early/late for
+   the other. 760px is this panel's own floor: below it the type-card row
+   (372px min) plus the sidebar's 200px floor plus gaps/padding no longer
+   both fit on one line. */
+@container route-center (max-width: 760px) {
   .responsivePanel {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -651,7 +667,7 @@
   color: var(--rh-text-secondary);
 }
 
-@media (max-width: 1450px) {
+@container route-center (max-width: 760px) {
   :global(html[data-theme='dark']) .sidebar {
     border-top-color: var(--rh-border);
   }

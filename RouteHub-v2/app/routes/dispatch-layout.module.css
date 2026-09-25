@@ -47,6 +47,13 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Lets children (the New route form) query how much width is actually
+     left after the map's own column, instead of guessing from the full
+     page/viewport width - the map can be 380-440px wide or gone entirely
+     (stacked below on narrow screens), so "the page is wide" doesn't mean
+     "this column is wide". */
+  container-type: inline-size;
+  container-name: route-center;
 }
 
 .map {

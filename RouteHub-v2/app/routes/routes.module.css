@@ -81,6 +81,13 @@
 :global(html[data-theme="dark"]) .status_paused{background:#463319;color:#fcd34d}
 :global(html[data-theme="dark"]) .status_issue{background:#4a2029;color:#fda4af}
 :global(html[data-theme="dark"]) .emptyState{border-color:var(--rh-border);background:#142238}
+/* Illustration replacing the old 54px icon badge - .emptyState>div (the
+   minified rule above) sized/centered that badge, but also matches
+   .emptyStateActions (also a direct-child div of .emptyState), so both
+   overrides below are needed at a specificity (.emptyState > .class) that
+   wins over that plain (.emptyState > div) rule. */
+.emptyIllustration{display:block;width:min(300px,80%);height:auto;margin:0 auto 18px}
+.emptyState > .emptyStateActions{width:auto;height:auto;margin:18px 0 0;border-radius:0;background:transparent;display:flex}
 :global(html[data-theme="dark"]) .formColumn,
 :global(html[data-theme="dark"]) .previewSummary,
 :global(html[data-theme="dark"]) .builder{border-color:var(--rh-border);background:#142238;color:var(--rh-text)}
@@ -152,9 +159,10 @@
 @media(max-width:640px){
   .headerActions .primaryButton{grid-column:1/-1}
   .listHeading{margin-top:4px}
-  .emptyState{padding:28px 18px;text-align:left;display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}
-  .emptyState>div{grid-row:1 / span 3;margin:0}
-  .emptyState .primaryButton{grid-column:1/-1;width:100%;margin-top:8px}
+  .emptyState{padding:28px 18px;text-align:center}
+  .emptyIllustration{width:min(220px,84%);margin:0 auto 14px}
+  .emptyState .primaryButton{width:100%}
+  .emptyStateActions{flex-direction:column;align-items:stretch}
 }
 
 /* Leaflet panes use high z-index values; the route builder must always sit above them. */
