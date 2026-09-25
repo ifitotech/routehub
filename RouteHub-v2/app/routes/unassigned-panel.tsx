@@ -43,13 +43,14 @@ type Section = 'unassigned' | 'issues' | 'completed' | null
 // flyout) stays a valid drop target at all times, per the drag-and-drop
 // feature - dropping a route here works whether or not it's expanded.
 export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails, onDragStart, draggingRouteId, dragOverZone, managing, forceOpenSignal}: UnassignedPanelProps) {
-  if (routes.length === 0) return null
-
   const [open, setOpen] = useState<Section>(null)
   const toggle = (section: Section) => setOpen(current => current === section ? null : section)
   useEffect(() => {
     if (forceOpenSignal) setOpen('unassigned')
   }, [forceOpenSignal])
+
+  if (routes.length === 0) return null
+
   // Assignees span several branch roles, not just drivers. When a profile has
   // no readable name the role names them, so the picker can't show the same
   // word several times over.
