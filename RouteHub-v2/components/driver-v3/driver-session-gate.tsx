@@ -59,16 +59,31 @@ export default function DriverSessionGate({children}: {children: React.ReactNode
     }
   }, [router])
 
-  if (!ready) {
-    return (
-      <div className="driver-v3-splash" role="status" aria-live="polite" aria-label={locale === 'es' ? 'Cargando RouteHub Driver' : locale === 'fr' ? 'Chargement de RouteHub Driver' : 'Loading RouteHub Driver'}>
-        <div className="driver-v3-splash-loader" aria-hidden="true">
-          <span className="driver-v3-splash-track" />
-          <span className="driver-v3-splash-truck"><Truck size={30} strokeWidth={2.2}/></span>
+  return (
+    <>
+      {!ready && (
+        <div
+          className="driver-v3-splash"
+          role="status"
+          aria-live="polite"
+          aria-label={locale === 'es' ? 'Cargando RouteHub Driver' : locale === 'fr' ? 'Chargement de RouteHub Driver' : 'Loading RouteHub Driver'}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#06152C',
+          }}
+        >
+          <div className="driver-v3-splash-loader" aria-hidden="true">
+            <span className="driver-v3-splash-track" />
+            <span className="driver-v3-splash-truck"><Truck size={30} strokeWidth={2.2}/></span>
+          </div>
         </div>
-      </div>
-    )
-  }
-
-  return <>{children}</>
+      )}
+      {children}
+    </>
+  )
 }
