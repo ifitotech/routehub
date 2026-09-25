@@ -3,7 +3,7 @@
 .calendar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
   width: 100%;
   padding: 4px 8px;
   border-radius: 10px;

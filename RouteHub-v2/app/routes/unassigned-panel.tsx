@@ -43,6 +43,8 @@ type Section = 'unassigned' | 'issues' | 'completed' | null
 // flyout) stays a valid drop target at all times, per the drag-and-drop
 // feature - dropping a route here works whether or not it's expanded.
 export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCancel, busyRouteId, locale, issueRoutes = [], completedRoutes = [], onViewDetails, onDragStart, draggingRouteId, dragOverZone, managing, forceOpenSignal}: UnassignedPanelProps) {
+  if (routes.length === 0) return null
+
   const [open, setOpen] = useState<Section>(null)
   const toggle = (section: Section) => setOpen(current => current === section ? null : section)
   useEffect(() => {
@@ -121,16 +123,20 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
           </span>
         </div>
         <div className={styles.barChips}>
-          <button type="button" className={styles.chip} data-tone="issue" onClick={() => toggle('issues')} aria-expanded={open === 'issues'}>
-            <AlertTriangle size={20} />
-            <span>{issuesLabel}</span>
-            <b>{issueRoutes.length}</b>
-          </button>
-          <button type="button" className={styles.chip} data-tone="done" onClick={() => toggle('completed')} aria-expanded={open === 'completed'}>
-            <CheckCircle2 size={20} />
-            <span>{completedLabel}</span>
-            <b>{completedRoutes.length}</b>
-          </button>
+          {issueRoutes.length > 0 && (
+            <button type="button" className={styles.chip} data-tone="issue" onClick={() => toggle('issues')} aria-expanded={open === 'issues'}>
+              <AlertTriangle size={20} />
+              <span>{issuesLabel}</span>
+              <b>{issueRoutes.length}</b>
+            </button>
+          )}
+          {completedRoutes.length > 0 && (
+            <button type="button" className={styles.chip} data-tone="done" onClick={() => toggle('completed')} aria-expanded={open === 'completed'}>
+              <CheckCircle2 size={20} />
+              <span>{completedLabel}</span>
+              <b>{completedRoutes.length}</b>
+            </button>
+          )}
         </div>
       </div>
 
