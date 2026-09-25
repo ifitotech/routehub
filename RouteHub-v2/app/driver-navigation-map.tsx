@@ -185,6 +185,27 @@ export default function DriverNavigationMap({
     return()=>{observer.disconnect();window.removeEventListener('routehub:theme-change',syncTheme)}
   },[])
 
+  useEffect(()=>{
+    if(typeof navigator==='undefined'||!navigator.geolocation||!trackDevice)return
+    watchRef.current=navigator.geolocation.watchPosition(position=>{
+      const next=sanitizeCoordinate({lat:position.coords.latitude,lng:position.coords.longitude})
+      if(!next)return
+      setDeviceLocation(previous=>{
+        const accuracy=position.coords.accuracy
+        const updatedAt=position.timestamp
+        const materiallyMorePrecise=Boolean(previous&&Number.isFinite(accuracy)&&accuracy+15<previous.accuracy)
+        const elapsedSeconds=previous?Math.max(1,(updatedAt-previous.updatedAt)/1000):0
+        const moved=previous?distanceMeters(previous,next):0
+        const allowedTravel=Math.max(40,elapsedSeconds*45+(accuracy+(previous?.accuracy||0))*1.5)
+        const muchWorse=Boolean(previous&&accuracy>Math.max(75,previous.accuracy*1.8))
+        if(previous&&((muchWorse&&!materiallyMorePrecise)||(moved>allowedTravel&&!materiallyMorePrecise)))return previous
+        return {lat:next.lat,lng:next.lng,accuracy,updatedAt,heading:Number.isFinite(position.coords.heading)?position.coords.heading:null}
+      })
+      setGpsMessage('')
+    },error=>setGpsMessage(error.code===1?'permission':'unavailable'),{enableHighAccuracy:true,maximumAge:0,timeout:12_000})
+    return()=>{if(watchRef.current!=null)navigator.geolocation.clearWatch(watchRef.current);watchRef.current=null}
+  },[])
+
   const validStops=useMemo(()=>stops.filter(stop=>Boolean(stop.id||stop.address||stop.label||stop.coordinate)),[stops])
   const safeOrigin=sanitizeCoordinate(originCoordinate)
   const routeKey=useMemo(()=>[
@@ -331,7 +352,7 @@ export default function DriverNavigationMap({
   },[sharedLat,sharedLng,sharedAccuracy,sharedAt,sharedHeading])
 
   useEffect(()=>{
-    if((!trackDevice&&!foregroundGps)||typeof navigator==='undefined'||!navigator.geolocation)return
+    if(!foregroundGps||typeof navigator==='undefined'||!navigator.geolocation)return
     watchRef.current=navigator.geolocation.watchPosition(position=>{
       const next=sanitizeCoordinate({lat:position.coords.latitude,lng:position.coords.longitude})
       if(!next)return
@@ -358,7 +379,7 @@ export default function DriverNavigationMap({
       if(watchRef.current!=null)navigator.geolocation.clearWatch(watchRef.current)
       watchRef.current=null
     }
-  },[trackDevice,foregroundGps])
+  },[foregroundGps])
 
   useEffect(()=>()=>{
     if(watchRef.current!=null&&typeof navigator!=='undefined')navigator.geolocation.clearWatch(watchRef.current)
