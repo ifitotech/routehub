@@ -550,7 +550,7 @@ export default function DriverNavigationMap({
         <button type="button" aria-label={voiceEnabled?copy.voiceOn:copy.voiceOff} aria-pressed={voiceEnabled} onClick={toggleVoice}>{voiceEnabled?<Volume2 size={20}/>:<VolumeX size={20}/>}</button>
       </aside>
       <div className={styles.mapArea}>
-        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={gpsReady?line:[]} markers={markers} fitPoints={gpsReady?points:destinationOverview} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive showTraffic navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
+        <GoogleRouteCanvas className={styles.canvas} ariaLabel="Navigation map" path={gpsReady?line:[]} markers={markers} fitPoints={gpsReady?points:destinationOverview} followPosition={displayLocation} followToken={followToken} followDevice={Boolean(navigationOnly||autoStartNavigation)} interactive navigation theme={mapTheme} cameraMode={cameraMode} onCameraModeChange={setCameraMode} navigationProgress={currentProgress} navigationHeading={heading} navigationZoom={
           canGuide && nextManeuver
             ? nextManeuver.distanceToManeuverMeters < 90
               ? 18.5
