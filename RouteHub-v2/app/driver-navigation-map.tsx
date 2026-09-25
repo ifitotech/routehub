@@ -510,7 +510,7 @@ export default function DriverNavigationMap({
             ?{big:labels.offRoute,street:null,secondary:''}
             :navState==='near'
               ?{big:labels.near,street:null,secondary:arrivalSummary}
-              :{big:instructionDistance||labels.now,street:guidingStreetLine,secondary:guidingActionLine}
+              :{big:guidingActionLine||labels.now,street:null,secondary:instructionDistance}
   const gpsMeta=deviceLocation&&Number.isFinite(deviceLocation.accuracy)
     ?`${locale==='es'?'GPS ±':'GPS ±'}${Math.round(deviceLocation.accuracy)} m · ${Math.max(0,Math.round((Date.now()-deviceLocation.updatedAt)/1000))}${locale==='es'?' s':'s'}`
     :null
