@@ -163,8 +163,8 @@
   top:0;
   left:0;
   right:0;
-  background:#0F1D35;
-  background-color:#0F1D35;
+  background:#06152C;
+  background-color:#06152C;
   color:#fff;
   /* Kept in sync with DriverV3Shell.tsx's inline style, which is what
      actually wins on the rendered element (inline beats class for the
