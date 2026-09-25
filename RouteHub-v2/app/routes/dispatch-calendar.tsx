@@ -46,6 +46,8 @@ function toDateString(date: Date): string {
 export default function DispatchCalendar({selectedDate, onDateChange, locale, routeCounts = {}, pendingCounts = {}}: DispatchCalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dayCount, setDayCount] = useState(9)
+  // Track if user is manually navigating with arrows - if so, don't auto-recenter
+  const [isManuallyNavigating, setIsManuallyNavigating] = useState(false)
 
   useEffect(() => {
     const el = containerRef.current
@@ -68,15 +70,18 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
   })
 
   useEffect(() => {
-    setWeekStart(() => {
-      const date = toLocalDate(selectedDate)
-      date.setDate(date.getDate() - Math.floor(dayCount / 2))
-      return date
-    })
-    // Only re-center when dayCount changes (screen resize) or the selected
-    // date jumps outside the visible strip - not on every render.
+    // Only re-center when dayCount changes (screen resize) or when the user
+    // hasn't been manually navigating - tapping arrows unlocks this re-centering
+    // until a date is clicked, at which point we re-center and lock it again.
+    if (!isManuallyNavigating) {
+      setWeekStart(() => {
+        const date = toLocalDate(selectedDate)
+        date.setDate(date.getDate() - Math.floor(dayCount / 2))
+        return date
+      })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dayCount])
+  }, [dayCount, selectedDate, isManuallyNavigating])
 
   const days = Array.from({length: dayCount}, (_, i) => {
     const day = new Date(weekStart)
@@ -97,12 +102,19 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
     const newStart = new Date(weekStart)
     newStart.setDate(newStart.getDate() - 7)
     setWeekStart(newStart)
+    setIsManuallyNavigating(true)
   }
 
   const handleNextWeek = () => {
     const newStart = new Date(weekStart)
     newStart.setDate(newStart.getDate() + 7)
     setWeekStart(newStart)
+    setIsManuallyNavigating(true)
+  }
+
+  const handleDateChange = (dateStr: string) => {
+    onDateChange(dateStr)
+    setIsManuallyNavigating(false)
   }
 
   const todayString = toDateString(new Date())
@@ -127,7 +139,7 @@ export default function DispatchCalendar({selectedDate, onDateChange, locale, ro
             <button
               key={dateStr}
               className={`${styles.day} ${isSelected ? styles.selected : ''} ${isToday(day) ? styles.today : ''}`}
-              onClick={() => onDateChange(dateStr)}
+              onClick={() => handleDateChange(dateStr)}
               aria-label={`${dayName} ${dayNum}${isSelected ? ', selected' : ''}`}
             >
               <span className={styles.dayLabel}>
