@@ -82,7 +82,7 @@ export default function DriverV3Shell({
       {!hideHeader && <div aria-hidden="true" style={{height: 'calc(48px + env(safe-area-inset-top))'}} />}
       <header
         style={{
-          position: 'absolute',
+          position: 'fixed',
           display: hideHeader ? 'none' : undefined,
           top: 0,
           left: 0,
