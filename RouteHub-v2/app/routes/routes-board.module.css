@@ -20,50 +20,156 @@
   gap: 8px;
 }
 
-/* Vertical layout (small uppercase label, large value) instead of a
-   horizontal icon+label+value row - a stat you can read at a glance, not
-   competing with Assigned Routes for attention. */
 .statChip {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  min-height: 64px;
-  padding: 8px 12px;
+  align-items: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 10px 12px;
   border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--rh-card, #0D213A);
+}
+
+.statChip i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--rh-blue-bright, #4592ff);
+}
+
+.statChip div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .statChip span {
   overflow: hidden;
   color: var(--rh-text-secondary, #9fb2d0);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .statChip strong {
+  overflow: hidden;
   color: var(--rh-text, #f7faff);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .mapWrap {
   flex: 1;
   min-height: 0;
   position: relative;
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.mapWrap > div {
+  border-radius: 0;
+}
+
+.mapExpand {
+  position: absolute;
+  z-index: 600;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
+  border-radius: 10px;
+  background: rgba(13, 33, 58, .92);
+  color: #e6eefc;
+  cursor: pointer;
+}
+
+.mapExpand:hover {
+  border-color: var(--rh-primary, #3486FF);
+  color: #fff;
+}
+
+/* Zoom sits top-right like the approved dashboard, not Leaflet's default
+   top-left. */
+.mapWrap :global(.leaflet-top.leaflet-left) {
+  left: auto;
+  right: 0;
+}
+
+.mapWrap :global(.leaflet-top.leaflet-left .leaflet-control) {
+  margin: 12px 12px 0 0;
+}
+
+.mapWrap :global(.leaflet-control-zoom) {
+  overflow: hidden;
+  border: 1px solid rgba(130, 170, 220, .2) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+.mapWrap :global(.leaflet-control-zoom a) {
+  width: 34px !important;
+  height: 34px !important;
+  border-bottom-color: rgba(130, 170, 220, .2) !important;
+  background: rgba(13, 33, 58, .92) !important;
+  color: #e6eefc !important;
+  font-size: 18px !important;
+  line-height: 34px !important;
+}
+
+.mapWrap :global(.leaflet-control-zoom a:hover) {
+  background: #16304f !important;
+}
+
+/* Dark-mode basemap: OSM only ships light tiles, so the tile layer (not the
+   markers or route lines) is filtered to a navy map. No new tile provider. */
+:global(html[data-theme='dark']) .mapWrap :global(.leaflet-tile-pane) {
+  filter: invert(1) grayscale(1) brightness(0.8) contrast(1.15) sepia(1) hue-rotate(178deg) saturate(2.6) brightness(0.95) contrast(1.1);
+}
+
+:global(html[data-theme='dark']) .mapWrap :global(.leaflet-container) {
+  background: #0b1a2e;
+}
+
+:global(html[data-theme='dark']) .mapWrap :global(.leaflet-control-attribution) {
+  background: rgba(8, 20, 38, .75);
+  color: #8ea3c0;
+}
+
+:global(html[data-theme='dark']) .mapWrap :global(.leaflet-control-attribution a) {
+  color: #8ea3c0;
+}
+
+:global(html[data-theme='light']) .mapExpand,
+:global(html[data-theme='light']) .mapWrap :global(.leaflet-control-zoom a) {
+  background: #fff !important;
+  color: #0f1d35 !important;
 }
 
 :global(html[data-theme='light']) .statChip {
   background: #fff;
   border-color: #e5e7eb;
+}
+
+@media (max-width: 1440px) {
+  .statChip {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .statChip strong {
+    font-size: 18px;
+  }
 }
 
 @media (max-width: 420px) {

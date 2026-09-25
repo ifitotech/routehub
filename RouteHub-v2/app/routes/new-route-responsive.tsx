@@ -37,6 +37,12 @@ export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
   const {saving, setOpen, justCreated, locale, c, form, setForm, defaultBranch, save, openBuilder, editingRouteId} = p
   const isEditing = Boolean(editingRouteId)
 
+  // Mirrors routes-workspace-save.tsx's own requirement check, so the button
+  // reflects reality instead of looking ready and then silently doing
+  // nothing (save() just sets a message and returns when these are missing).
+  const hasDestination = form.type === 'return' || Boolean(form.destination.trim())
+  const canSubmit = hasDestination && Boolean(form.driver_id)
+
   const assignLabel = isEditing
     ? (locale === 'es' ? 'Guardar cambios' : locale === 'fr' ? 'Enregistrer' : 'Save changes')
     : form.type === 'pickup'
@@ -98,6 +104,7 @@ export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
                       type="button"
                       role="radio"
                       aria-checked={active}
+                      data-type={entry.value}
                       className={active ? `${styles.typeCard} ${styles.typeCardActive}` : styles.typeCard}
                       onClick={() => setForm((current: any) => ({...current, type: entry.value}))}
                     >
@@ -135,7 +142,8 @@ export default function NewRouteResponsive(p: NewRouteResponsiveProps) {
               <button
                 className={styles.btnSubmit}
                 onClick={save}
-                disabled={saving || !form.type}
+                disabled={saving || !canSubmit}
+                title={!canSubmit ? (locale === 'es' ? 'Falta destino o conductor' : locale === 'fr' ? 'Destination ou conducteur manquant' : 'Missing destination or driver') : undefined}
                 type="button"
               >
                 {saving ? `${c.publishing}` : assignLabel}

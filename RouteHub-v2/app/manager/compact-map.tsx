@@ -14,6 +14,7 @@ type CompactMapProps = {
   locale?: string
   interactive?: boolean
   hideFooter?: boolean
+  hideLegend?: boolean
   expandLabel?: string
   collapseLabel?: string
   className?: string
@@ -27,7 +28,7 @@ type CompactMapProps = {
  * one implementation means the map behaves and looks identical everywhere
  * instead of each screen inventing its own compact/zoom mechanism.
  */
-export default function CompactMap({routes, driverLocations, locale, interactive, hideFooter = true, expandLabel = 'Expand map', collapseLabel = 'Collapse map', className, onSummary}: CompactMapProps) {
+export default function CompactMap({routes, driverLocations, locale, interactive, hideFooter = true, hideLegend, expandLabel = 'Expand map', collapseLabel = 'Collapse map', className, onSummary}: CompactMapProps) {
   const [expanded, setExpanded] = useState(false)
   return (
     <div className={`${styles.wrap} ${className || ''}`} data-expanded={expanded ? 'true' : 'false'}>
@@ -35,7 +36,7 @@ export default function CompactMap({routes, driverLocations, locale, interactive
         {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         {expanded ? collapseLabel : expandLabel}
       </button>
-      <OperationsMap routes={routes} driverLocations={driverLocations} locale={locale} interactive={interactive ?? expanded} hideFooter={hideFooter} onSummary={onSummary} />
+      <OperationsMap routes={routes} driverLocations={driverLocations} locale={locale} interactive={interactive ?? expanded} hideFooter={hideFooter} hideLegend={hideLegend} onSummary={onSummary} />
     </div>
   )
 }

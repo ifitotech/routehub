@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {createPortal} from 'react-dom'
 import Link from 'next/link'
-import {AlertTriangle, ArrowRight, Map, Plus, Route as RouteIcon, Users, X} from 'lucide-react'
+import {AlertTriangle, ArrowRight, ArrowUpDown, ChevronDown, Map, Plus, Route as RouteIcon, Users, X} from 'lucide-react'
 import RouteRows from './routes-rows'
 import ManagerShell from '../manager/manager-shell'
 import TemporaryRouteAssignments from '../temporary-route-assignments'
@@ -42,6 +42,7 @@ export default function Routes() {
   // is a bar above, not its own route) - bumping this tells the panel to
   // open its own flyout instead.
   const [viewUnassignedSignal, setViewUnassignedSignal] = useState(0)
+  const [sortBy, setSortBy] = useState<'stop' | 'time' | 'status'>('stop')
   // Dragging a route only stages where it would land (driver + position) -
   // nothing is written to the database or pushed to a driver's phone until
   // "Done" (the same Edit routes toggle) commits every staged move at once.
@@ -191,6 +192,20 @@ export default function Routes() {
     }
     return {unassignedRoutes: nextUnassigned, assignedRoutes: nextAssigned}
   }, [unassignedRoutes, assignedRoutes, pendingMoves, dragRoutesById])
+  // Display-only ordering. Edit routes always works on stop order, since
+  // that's the order drag/move actually change.
+  const effectiveSort = managing ? 'stop' : sortBy
+  const visibleAssigned = useMemo(() => {
+    if (effectiveSort === 'stop') return stagedAssigned
+    const statusRank: Record<string, number> = {active: 0, paused: 1, issue: 2, pending: 3, published: 4, draft: 5, completed: 6, cancelled: 7}
+    const timeOf = (route: RouteRecord) => {
+      const value = route.scheduled_at ? new Date(route.scheduled_at).getTime() : NaN
+      return Number.isNaN(value) ? Number.POSITIVE_INFINITY : value
+    }
+    return stagedAssigned.slice().sort((a, b) => effectiveSort === 'time'
+      ? timeOf(a) - timeOf(b)
+      : (statusRank[a.status || 'pending'] ?? 9) - (statusRank[b.status || 'pending'] ?? 9) || timeOf(a) - timeOf(b))
+  }, [stagedAssigned, effectiveSort])
   const handleRouteDrop = useCallback((draggedId: string, target: RouteDropTarget) => {
     const dragged = dragRoutesById.get(draggedId)
     if (!dragged) return
@@ -469,19 +484,26 @@ export default function Routes() {
                     {[0, 1, 2].map(item => <div className={styles.skeletonCard} key={item}><i/><b/><span/></div>)}
                   </section>
                 ) : stagedAssigned.length > 0 ? (
-                  <section className={styles.routeSection}>
-                    {/* Matches Unassigned's header shape (icon chip + label +
-                        count) instead of a bare heading + badge - the two
-                        panels used to read as two different surfaces. */}
-                    <div className={styles.sectionHeading}>
-                      <div className={styles.sectionIcon}><RouteIcon size={18}/></div>
-                      <div className={styles.sectionLabelGroup}>
-                        <h2>{locale==='es'?'Asignadas':locale==='fr'?'Attribuées':'Assigned'}</h2>
-                        <span>{stagedAssigned.length}</span>
-                      </div>
+                  <section className={`${styles.routeSection} ${styles.assignedPanel}`}>
+                    <div className={styles.assignedHeader}>
+                      <RouteIcon size={20} className={styles.assignedIcon}/>
+                      <h2>{locale==='es'?'Rutas asignadas':locale==='fr'?'Itinéraires attribués':'Assigned Routes'}</h2>
+                      <span className={styles.assignedCount}>{stagedAssigned.length}</span>
+                      <label className={styles.sortControl}>
+                        <ArrowUpDown size={15}/>
+                        <span>{locale==='es'?'Ordenar por':locale==='fr'?'Trier par':'Sort by'}</span>
+                        <span className={styles.sortSelectWrap}>
+                          <select value={effectiveSort} disabled={managing} onChange={event => setSortBy(event.target.value as 'stop' | 'time' | 'status')}>
+                            <option value="stop">{locale==='es'?'Orden de paradas':locale==='fr'?'Ordre des arrêts':'Stop order'}</option>
+                            <option value="time">{locale==='es'?'Hora programada':locale==='fr'?'Heure prévue':'Scheduled time'}</option>
+                            <option value="status">{locale==='es'?'Estado':locale==='fr'?'Statut':'Status'}</option>
+                          </select>
+                          <ChevronDown size={15}/>
+                        </span>
+                      </label>
                     </div>
                     <RouteRows
-                      items={stagedAssigned}
+                      items={visibleAssigned}
                       locale={locale}
                       c={c}
                       driverIndex={driverIndex}
@@ -492,9 +514,13 @@ export default function Routes() {
                       onAssign={assignRouteToDriver}
                       drivers={drivers}
                       onViewDetails={setViewingRouteId}
-                      onEdit={openEditForm}
+                      onEdit={(route) => openEditForm(route)}
+                      onSave={save}
                       busyRouteId={busyRouteId}
+                      editingRouteId={editingRouteId}
+                      formOpen={open}
                       managing={managing}
+                      onRequestManage={() => setManaging(true)}
                       onDragStart={startDrag}
                       draggingRouteId={draggingId}
                       dragOverRouteId={dragOverRouteId}
@@ -521,6 +547,7 @@ export default function Routes() {
           focus={open || Boolean(viewingRoute)}
         />
       </div>
+
       {draggedRoute && dragPointer && typeof document !== 'undefined' && createPortal(
         <div className={styles.dragGhost} style={{left: dragPointer.x, top: dragPointer.y}}>
           {draggedRoute.destination_name || draggedRoute.destination_address}

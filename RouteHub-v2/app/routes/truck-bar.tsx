@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react'
 import Link from 'next/link'
-import {ChevronRight, Truck as TruckIcon} from 'lucide-react'
+import {ChevronRight} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
 import styles from './truck-bar.module.css'
@@ -65,18 +65,47 @@ export default function TruckBar({locale}: {locale: string}) {
   const serviceDate = lastService?.serviced_at
     ? new Intl.DateTimeFormat(locale === 'es' ? 'es-US' : locale === 'fr' ? 'fr-FR' : 'en-US', {month: 'short', day: 'numeric', year: 'numeric'}).format(new Date(lastService.serviced_at))
     : null
-  const lastServiceLabel = serviceDate
-    ? (locale === 'es' ? `último servicio ${serviceDate}${lastService?.odometer != null ? `, ${lastService.odometer.toLocaleString()} mi` : ''}` : locale === 'fr' ? `dernier entretien ${serviceDate}${lastService?.odometer != null ? `, ${lastService.odometer.toLocaleString()} mi` : ''}` : `last service ${serviceDate}${lastService?.odometer != null ? `, ${lastService.odometer.toLocaleString()} mi` : ''}`)
+  const lastServiceValue = serviceDate
+    ? `${serviceDate}${lastService?.odometer != null ? `, ${lastService.odometer.toLocaleString(locale === 'es' ? 'es-US' : locale === 'fr' ? 'fr-FR' : 'en-US')} mi` : ''}`
     : null
 
   return (
     <Link href="/manager/truck" className={styles.bar}>
-      <span className={styles.icon}><TruckIcon size={18} /></span>
+      <VanIllustration />
+      <span className={styles.divider} aria-hidden="true" />
       <span className={styles.text}>
-        <strong>{locale === 'es' ? 'Camión' : locale === 'fr' ? 'Camion' : 'Truck'} · {label}</strong>
-        {(odometer || lastServiceLabel) && <small>{[odometer, lastServiceLabel].filter(Boolean).join(' · ')}</small>}
+        <span className={styles.titleRow}>
+          <strong>{locale === 'es' ? 'Camión' : locale === 'fr' ? 'Camion' : 'Truck'} · {label}</strong>
+          {/* The query above only ever loads a truck with active = true. */}
+          <span className={styles.active}><i />{locale === 'es' ? 'Activo' : locale === 'fr' ? 'Actif' : 'Active'}</span>
+        </span>
+        {(odometer || lastServiceValue) && (
+          <small>
+            {odometer && <b>{odometer}</b>}
+            {odometer && lastServiceValue && <span className={styles.sep}>|</span>}
+            {lastServiceValue && <>{locale === 'es' ? 'Último servicio' : locale === 'fr' ? 'Dernier entretien' : 'Last service'} <b>{lastServiceValue}</b></>}
+          </small>
+        )}
       </span>
       <span className={styles.view}>{locale === 'es' ? 'Ver' : locale === 'fr' ? 'Voir' : 'View'}<ChevronRight size={15} /></span>
     </Link>
+  )
+}
+
+function VanIllustration() {
+  return (
+    <svg className={styles.van} viewBox="0 0 120 52" aria-hidden="true">
+      <ellipse cx="60" cy="48" rx="54" ry="3" fill="rgba(0,0,0,.35)" />
+      <path d="M8 41V29c0-3 1.4-5.2 3.6-6.8L22.5 12c2-1.9 4.4-3 7.3-3H106c3.3 0 6 2.7 6 6v26z" fill="#eef2f7" />
+      <path d="M8 34h104v7H8z" fill="#cfd8e3" />
+      <path d="M13.5 24.5 23.8 14.2c.8-.8 1.9-1.2 3-1.2H34v11.5z" fill="#1b2a40" />
+      <rect x="37" y="13" width="15" height="11.5" rx="1.5" fill="#1b2a40" />
+      <path d="M54.5 11v28M88 11v28" stroke="#c3ccd8" strokeWidth="1" />
+      <rect x="6" y="36" width="10" height="4" rx="1.5" fill="#9aa7b8" />
+      <circle cx="28" cy="41.5" r="7" fill="#111c2b" />
+      <circle cx="28" cy="41.5" r="3" fill="#9aa7b8" />
+      <circle cx="94" cy="41.5" r="7" fill="#111c2b" />
+      <circle cx="94" cy="41.5" r="3" fill="#9aa7b8" />
+    </svg>
   )
 }

@@ -63,6 +63,7 @@ type Props={
  locale?:string
  interactive?:boolean
  hideFooter?:boolean
+ hideLegend?:boolean
  onSummary?:(summary:Summary|null)=>void
 }
 
@@ -239,7 +240,7 @@ async function resolveCoordinate(address:string|null|undefined,lat:number|null|u
  try{return (await geocodeAddress(address))?.coordinate||null}catch{return null}
 }
 
-export default function OperationsMap({routes,driverLocations=[],fitDriverLocations=false,locale='en',interactive=true,hideFooter=false,onSummary}:Props){
+export default function OperationsMap({routes,driverLocations=[],fitDriverLocations=false,locale='en',interactive=true,hideFooter=false,hideLegend=false,onSummary}:Props){
  const [resolved,setResolved]=useState<ResolvedRoute[]>([])
  const [sequences,setSequences]=useState<ResolvedSequence[]>([])
  const summaryRef=useRef(onSummary)
@@ -370,7 +371,7 @@ export default function OperationsMap({routes,driverLocations=[],fitDriverLocati
     </Marker>)}
     </MapContainer>
     {!hasOperationalInput&&<div className={styles.emptyOverlay}>{copy.unavailable}</div>}
-    <div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.completed}/>{copy.completed}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{visibleRoutes.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</span></div>
+    {!hideLegend&&<div className={styles.legend} aria-label={copy.label}><span><i className={styles.current}/>{copy.current}</span><span><i className={styles.pending}/>{copy.pending}</span><span><i className={styles.completed}/>{copy.completed}</span><span><i className={styles.issue}/>{copy.issue}</span><span><Truck size={13}/>{visibleRoutes.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</span></div>}
   </div>
   {!hideFooter&&<footer><span>{visibleRoutes.length} {locale==='es'?'rutas':locale==='fr'?'itinéraires':'routes'}</span><small>{locale==='es'?'Vista de rutas asignadas':locale==='fr'?'Vue des itinéraires attribués':'Assigned routes view'}</small></footer>}
  </section>

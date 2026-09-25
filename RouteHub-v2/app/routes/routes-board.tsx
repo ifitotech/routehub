@@ -1,7 +1,7 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import {Package, Truck, Undo2, X} from 'lucide-react'
+import {Clock, Maximize2, MapPin, Package, Route as RouteIcon, Truck, Undo2, X} from 'lucide-react'
 import {currentMembership} from '../../lib/data'
 import {getSupabase} from '../../lib/supabase'
 import type {OperationsDriverLocation, OperationsRoute, OperationsSummary} from '../operations-map'
@@ -51,6 +51,16 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
 }) {
   const [drivers, setDrivers] = useState<OperationsDriverLocation[]>([])
   const [summary, setSummary] = useState<OperationsSummary | null>(null)
+  // Pan/zoom only where the map owns a full-height column; stacked below
+  // 1201px it sits inside a scrolling page and must not trap touch scroll.
+  const [desktop, setDesktop] = useState(false)
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 1201px)')
+    const sync = () => setDesktop(query.matches)
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [])
   useEffect(() => {
     let disposed = false
     const load = async () => {
@@ -102,16 +112,25 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
       <div className={styles.mapPane}>
         <div className={styles.dashboardStats}>
           <div className={styles.statChip}>
-            <span>{copy.totalRoutes}</span>
-            <strong>{summary?.count ?? activeRouteCount}</strong>
+            <i><RouteIcon size={18} /></i>
+            <div>
+              <span>{copy.totalRoutes}</span>
+              <strong>{summary?.count ?? activeRouteCount}</strong>
+            </div>
           </div>
           <div className={styles.statChip}>
-            <span>{copy.totalEta}</span>
-            <strong>{formatTotalEta(summary?.durationSeconds, locale, dash)}</strong>
+            <i><Clock size={18} /></i>
+            <div>
+              <span>{copy.totalEta}</span>
+              <strong>{formatTotalEta(summary?.durationSeconds, locale, dash)}</strong>
+            </div>
           </div>
           <div className={styles.statChip}>
-            <span>{copy.totalDistance}</span>
-            <strong>{formatTotalDistance(summary?.distanceMeters, dash)}</strong>
+            <i><MapPin size={18} /></i>
+            <div>
+              <span>{copy.totalDistance}</span>
+              <strong>{formatTotalDistance(summary?.distanceMeters, dash)}</strong>
+            </div>
           </div>
         </div>
         <div className={styles.mapWrap}>
@@ -119,11 +138,18 @@ export default function RoutesBoard({routes, locale, c, driverIndex, detailsOpen
             routes={routes}
             driverLocations={drivers}
             locale={locale}
+            interactive={desktop ? true : undefined}
             hideFooter
+            hideLegend={desktop}
             expandLabel={copy.expand}
             collapseLabel={copy.collapse}
             onSummary={setSummary}
           />
+          {desktop && (
+            <button type="button" className={styles.mapExpand} onClick={() => setDetailsOpen(true)} aria-label={copy.expand} title={copy.expand}>
+              <Maximize2 size={16} />
+            </button>
+          )}
         </div>
       </div>
 

@@ -996,3 +996,40 @@
   .emptyState h2{font-size:21px}
   .emptyState p{font-size:14px;line-height:1.4}
 }
+
+/* Assigned Routes: one panel holding its own header (title, count, sort)
+   and the rows, so the list reads as a single surface next to the map. */
+.assignedPanel{padding:0 10px 10px;border:1px solid var(--rh-border,rgba(130,170,220,.2));border-radius:14px;background:#0b1d34}
+.assignedHeader{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;min-height:60px;margin:0 -10px 4px;padding:10px 12px 10px 16px;border-radius:14px 14px 0 0;background:inherit}
+.assignedIcon{flex:none;color:var(--rh-text-secondary,#9fb2d0)}
+.assignedHeader h2{margin:0;color:var(--rh-text,#f7faff);font-size:16px;font-weight:750;line-height:1.2}
+.assignedCount{display:grid;place-items:center;min-width:28px;height:26px;padding:0 8px;border-radius:8px;background:rgba(40,120,255,.2);color:#8fbaff;font-size:13px;font-weight:800}
+.sortControl{display:inline-flex;align-items:center;gap:8px;margin-left:auto;height:40px;padding:0 4px 0 12px;border:1px solid var(--rh-border,rgba(130,170,220,.2));border-radius:10px;color:var(--rh-text-secondary,#9fb2d0);font-size:13px;font-weight:600;white-space:nowrap}
+.sortSelectWrap{position:relative;display:inline-flex;align-items:center}
+.sortSelectWrap select{appearance:none;-webkit-appearance:none;height:34px;padding:0 30px 0 8px;border:0;border-radius:8px;background:transparent;color:var(--rh-text,#f7faff);font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.sortSelectWrap select:disabled{cursor:not-allowed;opacity:.6}
+.sortSelectWrap select option{background:#0f2440;color:#e6eefc}
+.sortSelectWrap svg{position:absolute;right:8px;pointer-events:none;color:var(--rh-text-secondary,#9fb2d0)}
+:global(html[data-theme='light']) .assignedPanel{background:#f8fafc}
+:global(html[data-theme='light']) .assignedCount{background:#e9f1fe;color:#1660f0}
+:global(html[data-theme='light']) .sortSelectWrap select option{background:#fff;color:#0f1d35}
+@media(max-width:640px){
+  .assignedHeader{flex-wrap:wrap;gap:8px 10px}
+  .sortControl{margin-left:0}
+}
+
+.quickEditBackdrop{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(2px)}
+.quickEditModal{position:relative;z-index:910;width:90%;max-width:360px;padding:20px;border:1px solid rgba(130,170,220,.2);border-radius:14px;background:var(--rh-card,#0d213a);box-shadow:0 20px 60px rgba(15,23,42,.3)}
+.quickEditHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.quickEditHeader h3{margin:0;color:var(--rh-text,#f7faff);font-size:16px;font-weight:750}
+.quickEditHeader button{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--rh-text-secondary,#9fb2d0);cursor:pointer;font:inherit;font-size:18px}
+.quickEditHeader button:hover{background:rgba(255,255,255,.1);color:var(--rh-text,#f7faff)}
+.quickEditField{display:grid;gap:6px;margin-bottom:14px}
+.quickEditField label{color:var(--rh-text-secondary,#9fb2d0);font-size:12px;font-weight:650;text-transform:uppercase;letter-spacing:.05em}
+.quickEditField input{width:100%;height:40px;padding:0 12px;border:1px solid rgba(130,170,220,.2);border-radius:8px;background:rgba(3,12,26,.35);color:var(--rh-text,#f7faff);font:inherit;font-size:14px}
+.quickEditField input:focus{outline:none;border-color:var(--rh-primary,#3486ff);background:rgba(3,12,26,.6)}
+.quickEditSave{width:100%;height:40px;border:0;border-radius:8px;background:var(--rh-primary,#3486ff);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:background-color 120ms ease}
+.quickEditSave:hover{background:var(--rh-blue-700,#3486ff)}
+:global(html[data-theme='light']) .quickEditModal{background:#fff;border-color:#dde5ee}
+:global(html[data-theme='light']) .quickEditField input{background:#f8fafc;border-color:#dde5ee}
+:global(html[data-theme='light']) .quickEditField input:focus{background:#fff;border-color:#1660f0}

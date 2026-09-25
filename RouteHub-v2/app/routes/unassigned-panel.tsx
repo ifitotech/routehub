@@ -1,7 +1,7 @@
 'use client'
 
 import {useEffect, useState} from 'react'
-import {AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, GripVertical, Pencil, Truck, X} from 'lucide-react'
+import {AlertTriangle, Boxes, CheckCircle2, ChevronRight, GripVertical, Pencil, X} from 'lucide-react'
 import {driverDetails, type Driver, type RouteRecord} from './routes-model'
 import styles from './unassigned-panel.module.css'
 
@@ -74,9 +74,9 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
   const completedLabel = locale === 'es' ? 'Completadas' : locale === 'fr' ? 'Terminées' : 'Completed'
   const unassignedHint = routes.length === 0
     ? (locale === 'es' ? 'No hay rutas sin asignar por el momento.' : locale === 'fr' ? 'Aucun itinéraire non attribué pour le moment.' : 'No unassigned routes at the moment.')
-    : onDragStart
-      ? (locale === 'es' ? 'Arrastra una ruta aquí para quitarle el conductor, o haz clic para ver.' : locale === 'fr' ? 'Glissez un itinéraire ici pour retirer son conducteur, ou cliquez pour voir.' : 'Drag a route here to unassign, or click to view.')
-      : (locale === 'es' ? 'Haz clic para ver.' : locale === 'fr' ? 'Cliquez pour voir.' : 'Click to view.')
+    : (locale === 'es' ? 'Haz clic para ver.' : locale === 'fr' ? 'Cliquez pour voir.' : 'Click to view.')
+  const dropTitle = locale === 'es' ? 'Arrastra una ruta aquí para desasignarla' : locale === 'fr' ? 'Glissez un itinéraire ici pour le désattribuer' : 'Drag a route here to unassign'
+  const dropHint = locale === 'es' ? 'Las rutas aparecerán aquí al quedar sin asignar.' : locale === 'fr' ? 'Les itinéraires apparaîtront ici une fois désattribués.' : 'Routes will appear here when unassigned.'
   const routeMeta = (route: RouteRecord) => {
     const type = route.mission_type === 'pickup'
       ? (locale === 'es' ? 'Recogida' : locale === 'fr' ? 'Collecte' : 'Pickup')
@@ -93,18 +93,43 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
     <div className={styles.wrap}>
       <div className={`${styles.bar} ${dragOverZone ? styles.dropZoneActive : ''}`} data-drop-zone="unassigned">
         <button type="button" className={styles.barSegment} onClick={() => toggle('unassigned')} aria-expanded={open === 'unassigned'}>
-          <span className={styles.barIcon}><Truck size={16} /></span>
+          <span className={styles.barIcon}><Boxes size={34} strokeWidth={1.6} /></span>
           <span className={styles.barText}>
             <strong>{routes.length} {unassignedLabel}</strong>
             <small>{unassignedHint}</small>
           </span>
         </button>
+        <div className={styles.dropHint} aria-hidden="true">
+          <svg className={styles.dropBoxes} viewBox="0 0 124 62">
+            <path d="M26 30 40 37 26 44 12 37z" fill="#2a4a74" />
+            <path d="M12 37 26 44v14l-14-7z" fill="#16304f" />
+            <path d="M26 44 40 37v14l-14 7z" fill="#1d3a60" />
+            <path d="M62 6 86 18 62 30 38 18z" fill="#2f5282" />
+            <path d="M38 18 62 30v26L38 44z" fill="#17325a" />
+            <path d="M62 30 86 18v26L62 56z" fill="#20416c" />
+            <path d="M104 30 116 36 104 42 92 36z" fill="#2a4a74" />
+            <path d="M92 36 104 42v12l-12-6z" fill="#16304f" />
+            <path d="M104 42 116 36v12l-12 6z" fill="#1d3a60" />
+          </svg>
+          <svg className={styles.dropArrow} viewBox="0 0 64 16">
+            <path d="M2 8h52" stroke="currentColor" strokeWidth="1.6" strokeDasharray="5 5" strokeLinecap="round" />
+            <path d="M52 3l6 5-6 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className={styles.dropText}>
+            <strong>{dropTitle}</strong>
+            <small>{dropHint}</small>
+          </span>
+        </div>
         <div className={styles.barChips}>
           <button type="button" className={styles.chip} data-tone="issue" onClick={() => toggle('issues')} aria-expanded={open === 'issues'}>
-            <AlertTriangle size={13} />{issuesLabel} <b>{issueRoutes.length}</b>
+            <AlertTriangle size={20} />
+            <span>{issuesLabel}</span>
+            <b>{issueRoutes.length}</b>
           </button>
           <button type="button" className={styles.chip} data-tone="done" onClick={() => toggle('completed')} aria-expanded={open === 'completed'}>
-            <CheckCircle2 size={13} />{completedLabel} <b>{completedRoutes.length}</b>
+            <CheckCircle2 size={20} />
+            <span>{completedLabel}</span>
+            <b>{completedRoutes.length}</b>
           </button>
         </div>
       </div>
@@ -125,30 +150,30 @@ export default function UnassignedPanel({routes, drivers, onAssign, onEdit, onCa
                   {route.destination_name || route.destination_address}
                 </div>
                 <div className={styles.meta}>{routeMeta(route)}</div>
-                {!managing ? null : drivers.length > 0 ? (
-                  <select
-                    className={styles.assignSelect}
-                    disabled={busy}
-                    value=""
-                    onChange={e => { if (e.target.value) onAssign(route, e.target.value) }}
-                    aria-label={`${pickLabel} ${route.destination_name || route.destination_address || ''}`}
-                  >
-                    <option value="" disabled>{busy ? '…' : pickLabel}</option>
-                    {drivers.map(driver => (
-                      <option key={driver.user_id} value={driver.user_id}>{nameFor(driver)}</option>
-                    ))}
-                  </select>
-                ) : <p className={styles.empty}>{locale === 'es' ? 'Agrega un miembro disponible para mover esta ruta.' : locale === 'fr' ? 'Ajoutez un membre disponible pour déplacer cet itinéraire.' : 'Add an available team member to move this route.'}</p>}
-                {managing && (onEdit || onCancel) && (
-                  <div className={styles.rowActions}>
+                {managing && (
+                  <div className={styles.itemActions}>
+                    {drivers.length > 0 ? (
+                      <select
+                        className={styles.assignSelect}
+                        disabled={busy}
+                        value=""
+                        onChange={e => { if (e.target.value) onAssign(route, e.target.value) }}
+                        aria-label={`${pickLabel} ${route.destination_name || route.destination_address || ''}`}
+                      >
+                        <option value="" disabled>{busy ? '…' : pickLabel}</option>
+                        {drivers.map(driver => (
+                          <option key={driver.user_id} value={driver.user_id}>{nameFor(driver)}</option>
+                        ))}
+                      </select>
+                    ) : <p className={styles.empty}>{locale === 'es' ? 'Agrega un miembro disponible para mover esta ruta.' : locale === 'fr' ? 'Ajoutez un membre disponible pour déplacer cet itinéraire.' : 'Add an available team member to move this route.'}</p>}
                     {onEdit && (
-                      <button type="button" className={styles.actionButton} disabled={busy} onClick={() => onEdit(route)} aria-label={`${editLabel} ${route.destination_name || route.destination_address || ''}`}>
-                        <Pencil size={13} />{editLabel}
+                      <button type="button" className={styles.iconButton} disabled={busy} onClick={() => onEdit(route)} title={editLabel} aria-label={`${editLabel} ${route.destination_name || route.destination_address || ''}`}>
+                        <Pencil size={14} />
                       </button>
                     )}
                     {onCancel && (
-                      <button type="button" className={styles.actionButton} data-tone="cancel" disabled={busy} onClick={() => onCancel(route)} aria-label={`${cancelLabel} ${route.destination_name || route.destination_address || ''}`}>
-                        <X size={13} />{cancelLabel}
+                      <button type="button" className={styles.iconButton} data-tone="cancel" disabled={busy} onClick={() => onCancel(route)} title={cancelLabel} aria-label={`${cancelLabel} ${route.destination_name || route.destination_address || ''}`}>
+                        <X size={14} />
                       </button>
                     )}
                   </div>

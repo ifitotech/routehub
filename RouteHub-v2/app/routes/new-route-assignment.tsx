@@ -86,9 +86,10 @@ export default function NewRouteAssignment(p: any) {
           })}
         </div>}
         {form.driver_id && form.date === todayValue && priorityRoutes?.length > 0 && <label className={`${ui.field} ${ui.fieldSpaced}`}>
+          <span>{locale==='es' ? 'Posición en la ruta de hoy' : locale==='fr' ? 'Position dans la tournée du jour' : 'Position in today’s queue'}</span>
           <select value={insertBeforeId} onChange={event => setInsertBeforeId(event.target.value)}>
-            <option value="">{locale==='es' ? 'Agregar al final' : 'Add to end'}</option>
-            {priorityRoutes.map((route: any) => <option key={route.id} value={route.id}>{locale==='es'?'Antes de':'Before'} {route.destination_name || route.destination_address}</option>)}
+            <option value="">{locale==='es' ? 'Agregar al final' : locale==='fr' ? 'Ajouter à la fin' : 'Add to end'}</option>
+            {priorityRoutes.map((route: any) => <option key={route.id} value={route.id}>{locale==='es'?'Antes de':locale==='fr'?'Avant':'Before'} {route.destination_name || route.destination_address}</option>)}
           </select>
         </label>}
       </div>

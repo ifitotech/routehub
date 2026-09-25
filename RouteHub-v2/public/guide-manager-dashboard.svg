@@ -21,45 +21,45 @@
 
   <!-- Calendar Row -->
   <rect x="12" y="60" width="296" height="40" class="card" rx="8"/>
-  <text x="20" y="77" class="text-dark" font-weight="700">Hoy</text>
+  <text x="20" y="77" class="text-dark" font-weight="700">Today</text>
   <circle cx="280" cy="80" r="12" class="blue"/>
 
   <!-- Stats -->
   <rect x="12" y="110" width="88" height="60" class="card" rx="8"/>
-  <text x="20" y="125" class="text-muted" font-size="9">PENDIENTE</text>
+  <text x="20" y="125" class="text-muted" font-size="9">PENDING</text>
   <text x="20" y="145" class="text-dark" font-weight="700" font-size="20">12</text>
-  <text x="20" y="163" class="text-muted" font-size="9">rutas</text>
+  <text x="20" y="163" class="text-muted" font-size="9">routes</text>
 
   <rect x="110" y="110" width="88" height="60" class="card" rx="8"/>
-  <text x="118" y="125" class="text-muted" font-size="9">EN PROGRESO</text>
+  <text x="118" y="125" class="text-muted" font-size="9">IN PROGRESS</text>
   <text x="118" y="145" class="text-dark" font-weight="700" font-size="20">3</text>
-  <text x="118" y="163" class="text-muted" font-size="9">rutas</text>
+  <text x="118" y="163" class="text-muted" font-size="9">routes</text>
 
   <rect x="208" y="110" width="88" height="60" class="card" rx="8"/>
-  <text x="216" y="125" class="text-muted" font-size="9">COMPLETADO</text>
+  <text x="216" y="125" class="text-muted" font-size="9">COMPLETED</text>
   <text x="216" y="145" class="text-dark" font-weight="700" font-size="20">8</text>
-  <text x="216" y="163" class="text-muted" font-size="9">rutas</text>
+  <text x="216" y="163" class="text-muted" font-size="9">routes</text>
 
   <!-- Route List -->
   <rect x="12" y="180" width="296" height="50" class="card" rx="8"/>
   <rect x="20" y="188" width="280" height="1" fill="#dde5ee"/>
-  <text x="20" y="205" class="text-dark" font-weight="700">Ruta #001</text>
-  <text x="20" y="218" class="text-muted" font-size="11">Calle Principal, 123</text>
+  <text x="20" y="205" class="text-dark" font-weight="700">Route #001</text>
+  <text x="20" y="218" class="text-muted" font-size="11">123 Main St</text>
   <circle cx="280" cy="205" r="8" fill="#2ecc71"/>
 
   <rect x="12" y="242" width="296" height="50" class="card" rx="8"/>
-  <text x="20" y="259" class="text-dark" font-weight="700">Ruta #002</text>
-  <text x="20" y="272" class="text-muted" font-size="11">Avenida Central, 456</text>
+  <text x="20" y="259" class="text-dark" font-weight="700">Route #002</text>
+  <text x="20" y="272" class="text-muted" font-size="11">456 Central Ave</text>
   <circle cx="280" cy="259" r="8" fill="#f39c12"/>
 
   <!-- Map Area -->
   <rect x="12" y="304" width="296" height="120" class="card" rx="8"/>
-  <text x="20" y="320" class="text-dark" font-weight="700" font-size="11">Mapa en vivo</text>
+  <text x="20" y="320" class="text-dark" font-weight="700" font-size="11">Live map</text>
   <!-- Simple map representation -->
   <circle cx="70" cy="340" r="4" class="blue"/>
   <text x="78" y="344" class="text-muted" font-size="9">Driver 1</text>
   <circle cx="180" cy="360" r="4" fill="#2ecc71"/>
   <text x="188" y="364" class="text-muted" font-size="9">Driver 2</text>
   <line x1="20" y1="385" x2="300" y2="385" stroke="#dde5ee" stroke-width="1"/>
-  <text x="20" y="408" class="text-muted" font-size="10">5 drivers en vivo</text>
+  <text x="20" y="408" class="text-muted" font-size="10">5 drivers live</text>
 </svg>

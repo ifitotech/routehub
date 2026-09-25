@@ -6,30 +6,31 @@
 
 .bar {
   display: flex;
-  align-items: stretch;
-  gap: 10px;
-  min-height: 56px;
-  padding: 8px 14px;
+  align-items: center;
+  gap: 16px;
+  min-height: 84px;
+  padding: 10px 14px 10px 16px;
   background: var(--rh-card, #0D213A);
   border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
-  border-radius: 12px;
+  border-radius: 14px;
   transition: outline-color 120ms ease;
 }
 
 .barSegment {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
+  gap: 16px;
+  flex: 0 1 auto;
   min-width: 0;
+  align-self: stretch;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  border-radius: 8px;
-  padding: 2px 4px;
+  border-radius: 10px;
+  padding: 4px 10px 4px 6px;
 }
 
 .barSegment:hover {
@@ -40,29 +41,75 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: var(--rh-soft-blue, rgba(40, 120, 255, .16));
-  color: var(--rh-blue, #3486FF);
+  width: 52px;
+  height: 52px;
+  color: var(--rh-blue-bright, #4592ff);
 }
 
 .barText {
   display: grid;
-  gap: 1px;
+  gap: 4px;
   min-width: 0;
 }
 
 .barText strong {
-  font-size: 13px;
-  font-weight: 750;
+  font-size: 18px;
+  font-weight: 800;
   color: var(--rh-text, #f7faff);
 }
 
 .barText small {
   overflow: hidden;
   color: var(--rh-text-secondary, #9fb2d0);
-  font-size: 11px;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Illustration + "drag here" hint between the count and the chips, so the
+   bar reads as the drop target it already is. Decorative only - the whole
+   bar is the drop zone, not this block. */
+.dropHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  color: var(--rh-text-secondary, #9fb2d0);
+}
+
+.dropBoxes {
+  flex: none;
+  width: 110px;
+  height: 56px;
+}
+
+.dropArrow {
+  flex: none;
+  width: 56px;
+  height: 14px;
+  color: #6f86a8;
+}
+
+.dropText {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dropText strong {
+  overflow: hidden;
+  color: var(--rh-text, #f7faff);
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropText small {
+  overflow: hidden;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -70,51 +117,80 @@
 .barChips {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex: none;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
+  gap: 12px;
+  min-width: 176px;
+  height: 60px;
+  padding: 0 12px 0 16px;
   border: 1px solid var(--rh-border, rgba(130, 170, 220, .2));
-  border-radius: 999px;
-  background: transparent;
-  color: var(--rh-text-secondary, #9fb2d0);
-  font-size: 12px;
-  font-weight: 700;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .02);
+  color: var(--rh-text, #f7faff);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
   cursor: pointer;
   white-space: nowrap;
 }
 
+.chip span {
+  flex: 1;
+  text-align: left;
+}
+
 .chip b {
-  font-weight: 800;
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(3, 12, 26, .55);
   color: var(--rh-text, #f7faff);
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.chip[data-tone='issue'] {
-  border-color: rgba(255, 107, 122, .3);
-  color: #ff6b7a;
+.chip[data-tone='issue'] svg {
+  color: #ff5a6e;
 }
 
-.chip[data-tone='issue'] b {
-  color: #ff6b7a;
-}
-
-.chip[data-tone='done'] {
-  border-color: rgba(37, 216, 133, .3);
-  color: #25d885;
-}
-
-.chip[data-tone='done'] b {
-  color: #25d885;
+.chip[data-tone='done'] svg {
+  color: #0b1a2e;
+  fill: #25d885;
 }
 
 .chip:hover {
+  border-color: var(--rh-primary, #3486FF);
   background: rgba(255, 255, 255, .04);
+}
+
+@media (max-width: 1360px) {
+  .dropBoxes,
+  .dropArrow {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dropHint {
+    display: none;
+  }
+
+  .barSegment {
+    flex: 1;
+  }
+
+  .chip {
+    min-width: 0;
+    height: 44px;
+  }
 }
 
 /* Highlights the whole bar while a dragged card is hovering over it, so
@@ -190,8 +266,15 @@
   color: var(--rh-text-secondary, #9fb2d0);
 }
 
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .assignSelect {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 34px;
   padding: 6px 10px;
   border: 1.5px solid var(--rh-border, rgba(130, 170, 220, .2));
@@ -208,36 +291,42 @@
   cursor: not-allowed;
 }
 
-.rowActions {
-  display: flex;
-  gap: 6px;
-}
-
-.actionButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1;
-  min-height: 30px;
-  padding: 0 8px;
+/* Same visual language as routes-rows.module.css's .iconButton, so an
+   unassigned route's row and an assigned route's row feel like the same
+   control set instead of two different widget styles. */
+.iconButton {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
   border: 1.5px solid var(--rh-border, rgba(130, 170, 220, .2));
   border-radius: 8px;
   background: var(--rh-card, #0D213A);
   color: var(--rh-text, #f7faff);
-  font-size: 11px;
-  font-weight: 700;
   cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.actionButton:disabled {
+.iconButton:hover:not(:disabled) {
+  border-color: var(--rh-primary, #3486FF);
+  background: var(--rh-soft-blue, rgba(52, 134, 255, .16));
+  color: var(--rh-primary, #3486FF);
+}
+
+.iconButton:disabled {
   opacity: .6;
   cursor: not-allowed;
 }
 
-.actionButton[data-tone='cancel'] {
-  border-color: rgba(255, 107, 122, .3);
+.iconButton[data-tone='cancel'] {
   color: #ff6b7a;
+}
+
+.iconButton[data-tone='cancel']:hover:not(:disabled) {
+  background: rgba(255, 90, 110, .14);
+  border-color: #ff5a6e;
+  color: #ff5a6e;
 }
 
 .detailsButton {
@@ -264,13 +353,21 @@
 :global(html[data-theme='light']) .bar,
 :global(html[data-theme='light']) .item,
 :global(html[data-theme='light']) .assignSelect,
-:global(html[data-theme='light']) .actionButton {
+:global(html[data-theme='light']) .iconButton {
   background: var(--rh-card, #fff);
 }
 
 :global(html[data-theme='light']) .flyout,
 :global(html[data-theme='light']) .empty {
   background: var(--rh-surface-2, #f1f5f9);
+}
+
+:global(html[data-theme='light']) .chip b {
+  background: #eef2f7;
+}
+
+:global(html[data-theme='light']) .chip[data-tone='done'] svg {
+  color: #fff;
 }
 
 @media (max-width: 768px) {

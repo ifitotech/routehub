@@ -22,35 +22,35 @@
 
   <!-- GPS Status Card -->
   <rect x="12" y="65" width="296" height="90" class="card" rx="8"/>
-  <text x="20" y="80" class="text-dark" font-weight="700">Estado GPS</text>
+  <text x="20" y="80" class="text-dark" font-weight="700">GPS Status</text>
   <line x1="20" y1="87" x2="300" y2="87" stroke="#dde5ee" stroke-width="1"/>
 
   <circle cx="28" cy="110" r="8" class="success"/>
-  <text x="44" y="115" class="text-dark" font-weight="700" font-size="12">Ubicación Activa</text>
-  <text x="44" y="128" class="text-muted" font-size="10">Precisión: ±12 metros</text>
+  <text x="44" y="115" class="text-dark" font-weight="700" font-size="12">Location Active</text>
+  <text x="44" y="128" class="text-muted" font-size="10">Accuracy: ±12 meters</text>
 
-  <text x="268" y="125" class="text-muted" font-size="10" text-anchor="end">Hace 2s</text>
+  <text x="268" y="125" class="text-muted" font-size="10" text-anchor="end">2s ago</text>
 
   <!-- Location Info -->
   <rect x="12" y="165" width="296" height="100" class="card" rx="8"/>
-  <text x="20" y="180" class="text-dark" font-weight="700">Información de Ubicación</text>
+  <text x="20" y="180" class="text-dark" font-weight="700">Location Info</text>
   <line x1="20" y1="187" x2="300" y2="187" stroke="#dde5ee" stroke-width="1"/>
 
-  <text x="20" y="205" class="text-muted" font-size="9">LATITUD</text>
+  <text x="20" y="205" class="text-muted" font-size="9">LATITUDE</text>
   <text x="20" y="218" class="text-dark" font-size="11" font-family="monospace">40.7128° N</text>
 
-  <text x="20" y="238" class="text-muted" font-size="9">LONGITUD</text>
+  <text x="20" y="238" class="text-muted" font-size="9">LONGITUDE</text>
   <text x="20" y="251" class="text-dark" font-size="11" font-family="monospace">74.0060° W</text>
 
   <!-- Info Card -->
   <rect x="12" y="275" width="296" height="110" class="card" rx="8"/>
   <circle cx="28" cy="295" r="6" fill="#f39c12"/>
-  <text x="44" y="300" class="text-dark" font-weight="700" font-size="12">Nota Importante</text>
+  <text x="44" y="300" class="text-dark" font-weight="700" font-size="12">Important Note</text>
 
-  <text x="20" y="325" class="text-muted" font-size="10">La Jornada de Conducción y</text>
-  <text x="20" y="338" class="text-muted" font-size="10">el permiso del dispositivo son</text>
-  <text x="20" y="351" class="text-muted" font-size="10">cosas distintas.</text>
+  <text x="20" y="325" class="text-muted" font-size="10">Driving Day and the device</text>
+  <text x="20" y="338" class="text-muted" font-size="10">permission are two separate</text>
+  <text x="20" y="351" class="text-muted" font-size="10">things.</text>
 
-  <text x="20" y="370" class="text-muted" font-size="10">La PWA no obtiene GPS cuando</text>
-  <text x="20" y="383" class="text-muted" font-size="10">la aplicación está cerrada.</text>
+  <text x="20" y="370" class="text-muted" font-size="10">The PWA does not get GPS</text>
+  <text x="20" y="383" class="text-muted" font-size="10">while the app is closed.</text>
 </svg>

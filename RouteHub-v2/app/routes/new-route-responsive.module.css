@@ -205,18 +205,35 @@
   border-radius: 50%;
 }
 
+/* Same accent per type as routes-rows.module.css's .row[data-type] - a
+   pickup card here should look like a pickup row in the list below it. */
+.typeCard {
+  --type-accent: #1660f0;
+  --type-accent-soft: var(--rh-soft-blue, #eaf2ff);
+}
+
+.typeCard[data-type='pickup'] {
+  --type-accent: #a871ff;
+  --type-accent-soft: rgba(168, 113, 255, 0.12);
+}
+
+.typeCard[data-type='return'] {
+  --type-accent: #16a35f;
+  --type-accent-soft: rgba(37, 216, 133, 0.14);
+}
+
 .typeCardActive {
-  border-color: #1660f0;
-  background: var(--rh-soft-blue, #eaf2ff);
-  color: #1e40af;
+  border-color: var(--type-accent);
+  background: var(--type-accent-soft);
+  color: var(--type-accent);
 }
 
 .typeCardActive .typeCardIcon {
-  color: #1660f0;
+  color: var(--type-accent);
 }
 
 .typeCardActive .typeRadio {
-  border-color: #1660f0;
+  border-color: var(--type-accent);
 }
 
 .typeCardActive .typeRadio::after {
@@ -224,7 +241,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #1660f0;
+  background: var(--type-accent);
 }
 
 /* Assignment fields, flattened out of their grey card. These reach into the
@@ -568,26 +585,23 @@
   color: var(--rh-text-secondary);
 }
 
-:global(html[data-theme='dark']) .typeCardActive {
-  background: rgba(36, 147, 255, 0.14);
-  border-color: #4a7fe0;
-  color: #bcd6ff;
+:global(html[data-theme='dark']) .typeCard {
+  --type-accent: #7fb0ff;
+  --type-accent-soft: rgba(36, 147, 255, 0.14);
 }
 
-:global(html[data-theme='dark']) .typeCardActive .typeCardIcon {
-  color: #7fb0ff;
+:global(html[data-theme='dark']) .typeCard[data-type='pickup'] {
+  --type-accent: #c9a8ff;
+  --type-accent-soft: rgba(168, 113, 255, 0.16);
+}
+
+:global(html[data-theme='dark']) .typeCard[data-type='return'] {
+  --type-accent: #3ee39a;
+  --type-accent-soft: rgba(37, 216, 133, 0.16);
 }
 
 :global(html[data-theme='dark']) .typeRadio {
   border-color: #4c72a4;
-}
-
-:global(html[data-theme='dark']) .typeCardActive .typeRadio {
-  border-color: #7fb0ff;
-}
-
-:global(html[data-theme='dark']) .typeCardActive .typeRadio::after {
-  background: #7fb0ff;
 }
 
 :global(html[data-theme='dark']) .sidebar {
