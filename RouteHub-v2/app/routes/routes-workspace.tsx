@@ -31,9 +31,9 @@ export function useRoutesWorkspace() {
     // Same check routes-screen.tsx uses to decide whether to render the
     // Retry button - keep both in sync, since this is what tells a real
     // error (leave it up) apart from a status message (clear it).
-    const isSuccessMessage = message.includes('successfully') || message.includes('publicad')
+    const isSuccessMessage = message.includes('successfully') || message.includes('publicad') || message.includes('cancel')
     if (!isSuccessMessage) return
-    const timeout = window.setTimeout(() => setMessage(''), 4000)
+    const timeout = window.setTimeout(() => setMessage(''), 5000)
     return () => window.clearTimeout(timeout)
   }, [message, setMessage])
 
