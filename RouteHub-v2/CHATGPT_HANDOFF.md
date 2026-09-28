@@ -1,5 +1,129 @@
 # RouteHub — handoff for ChatGPT / Grok
-Updated: 17 Sep 2026 (Claude Sonnet 5). Founder: Fito.
+Updated: 28 Sep 2026 (Claude Sonnet 5). Founder: Fito.
+
+## 28 Sep 2026 session — Claude worked directly on Driver, now handing it back to ChatGPT
+
+Founder had Claude work directly on `app/driver-v3/**` and the root-level
+Driver navigation files this session (explicit, in-session direction,
+overriding the normal split below for this stretch of work). Handing Driver
+back to ChatGPT now — Claude returns to Manager only. Everything below is
+committed to `main`; read it before touching the same files so work doesn't
+collide with what's here.
+
+**Splash/loading screens:**
+- `components/driver-v3/driver-session-gate.tsx`: the auth splash is now a
+  full-viewport `position:fixed` overlay (`zIndex:9999`) that covers
+  everything until the session actually resolves, instead of an early
+  `return` — this is what stopped the splash → intermediate loading states →
+  app sequence the founder didn't want; now it's splash → app, one transition.
+- `components/driver-v3/DriverV3Shell.tsx`: header changed from
+  `position:absolute` to `position:fixed`. This was the actual fix for a
+  multi-day "blurry header icons" bug — root cause was iOS applying a
+  preemptive blur-guard effect to `position:absolute` elements with an
+  opacity transition. Several other things were tried first and didn't work
+  (removing the opacity transition alone, forcing icons to `position:fixed`
+  with high z-index alone) — only changing the header's own position fixed
+  it. If icons ever look blurry again on iOS, check this first before
+  chasing blur/filter CSS.
+- `app/driver-v3/today.module.css`'s `.loading` (the `TodayLoading` /
+  route-loading screen) had its own `radial-gradient` background removed —
+  it was rendering with an unexplained greenish tint on-device. **Status:
+  unconfirmed.** The founder reported the green tint again after this was
+  live, then clarified they were testing the PWA (not the rebuilt native
+  APK), and the conversation moved on before they confirmed whether a full
+  close+reopen of the PWA (to pick up the new JS bundle) actually cleared
+  it. If it's still happening, the gradient removal was not the real fix —
+  investigate further before assuming this is closed.
+- `android/app/build.gradle` + `MainActivity.java`: added
+  `androidx.webkit` and disabled WebView's algorithmic dark-mode
+  re-rendering (`WebSettingsCompat.setAlgorithmicDarkeningAllowed(...,
+  false)`), as a theory for the same green tint. **This only affects the
+  native Capacitor APK, not the PWA, and is completely untested** — the
+  founder was testing the PWA when this was written, so it's unverified and
+  possibly unnecessary. Capacitor loads the live Vercel URL
+  (`capacitor.config.ts` → `server.url`), so a plain web fix ships to the
+  APK on push with no rebuild needed either way — only genuine native-code
+  changes like this one need an actual APK rebuild to take effect.
+
+**Navigation (`app/driver-navigation-map.tsx`, `app/driver-navigation.module.css`):**
+- Removed the `showTraffic` prop from the map (was cluttering it).
+- `fitPoints` now stays empty (`[]`) while GPS is still acquiring, instead of
+  centering on the destination — the map shows the driver's real position
+  once GPS is ready rather than jumping between destination-then-user.
+- Guidance card was simplified to show the turn action as the big line
+  (`guidingActionLine`) instead of the raw distance — then the founder
+  correctly flagged that hiding the street name entirely (`street:null`)
+  went too far; a turn instruction with no street name is not enough
+  context (compared explicitly to Google/Waze always naming the street).
+  **Fixed**: street name (`guidingStreetLine`) is shown again, right under
+  the big action line. Current shape: big = action, middle = street name,
+  small = distance.
+- Removed `backdrop-filter` from `.guidance` and `.bottom` cards (was
+  inconsistent with the rest of the app, and blur-guard risk on iOS — see
+  above).
+- Controls (`.controls`, the re-center button) moved from
+  `bottom: 248px` to `bottom: 170px` to sit closer to the arrival card.
+- The bottom arrival card's `sheetExpanded` panel (drag the handle up) was
+  already there before this session — shows full address, PO/notes,
+  upcoming stops, "Abrir Mapas". Not touched functionally, only discussed
+  as the base for a possible restyle (see "Not yet implemented" below).
+
+**GPS timing (new):**
+- `lib/driver-v3/gps-warmup.ts` (new file) + `app/driver-v3/driver-gps-warmup.tsx`
+  (new file, mounted in `app/driver-v3/layout.tsx` next to
+  `DriverLiveLocation`): starts a passive, local-only `watchPosition` the
+  moment the Driver app opens (any screen), caching the most recent fix in
+  memory. Never shares this to the server — `lib/driver-v3/use-driver-live-location.ts`'s
+  existing route-sharing watch is untouched and still only runs while a
+  started route is actively being navigated, by design (privacy/battery).
+  Only starts if geolocation permission is already granted — never triggers
+  a permission prompt on its own.
+- `app/driver-navigation-map.tsx`'s `deviceLocation` state is now seeded
+  from `getWarmGpsFix()` on mount instead of `null` — this is what actually
+  removes the 10-20s "searching for GPS" delay the founder saw every time
+  they tapped "Comenzar" — navigation now usually opens with a fix already
+  in hand instead of starting `watchPosition` cold.
+- `lib/location.ts`: `GEO_OK_SESSION` moved from `sessionStorage` to
+  `localStorage` (kept the same key name for backward compat with values
+  already on installed devices). Root cause fixed: iOS Safari's
+  `navigator.permissions.query('geolocation')` unreliably reports `'prompt'`
+  even once actually granted, so the app leaned on this flag as a fallback —
+  but `sessionStorage` was wiped every time the PWA was fully closed and
+  reopened, making the app act like location had never been granted on every
+  fresh cold launch (this is also why the GPS warm-up above would not have
+  actually started until some other action re-confirmed location that
+  session). Now durable across restarts, like a normal website's remembered
+  permission.
+
+**Not yet implemented — just discussed/mocked, no code changed:**
+A "Today Pro fused with navigation" concept was explored in a design canvas
+(bottom-sheet-over-live-map ideas), then narrowed down to something much
+smaller and lower-risk after the founder pushed back on inventing new nav
+UI: restyle the *existing* `.bottom` card (the one with `sheetExpanded`
+above) with 3 specific tweaks — (1) destination name shown bigger/bolder
+above the metrics, (2) distance and ETA split into two labelled chips
+instead of one combined line, (3) "Salir" and "Abrir Mapas" become small
+icon-only buttons flanking the big green "He llegado" button instead of
+"Abrir Mapas" being buried only inside the expanded panel. None of this is
+in code yet — it's a live discussion the founder may resume with ChatGPT
+directly (they were about to generate reference images externally and said
+they'd share whichever one they liked). Read the actual current card in
+`driver-navigation-map.tsx` (`.stopSummary` / `.primaryRow` / `.expandedPanel`
+around line 590-660) before proposing changes here — it already has more
+built (the expand/collapse mechanism, PO/notes, upcoming stops) than a fresh
+mockup would assume.
+
+**Also found but not fixed (flagged, not acted on — outside this session's
+scope):** `app/driver-v3/driver-preferences.module.css`'s `.row:active`
+(the Perfil/Settings list row) sets a light background
+(`background-color:#f2f6fb`) with no dark-mode override anywhere in that
+file — on a `<Link>` row specifically, a stuck/lingering `:active` state
+after navigating can show this light residue in dark mode. Also, nothing in
+the app resets `-webkit-tap-highlight-color` anywhere (`app/globals.css` or
+layout), which is the likely root cause of tap-highlight artifacts more
+generally, not just this one row. Founder wants this checked in Manager too
+before it's fixed — Claude will look at the Manager side; the Driver-side
+`.row:active` fix itself is still open.
 
 **Do not undo Grok work. Do not invent ETA/fake GPS. Add Route was redesigned again 16–17 Sep with founder approval (two-column panel, mobile full-screen takeover — see "17 Sep 2026" section below) — that supersedes the old "it's approved, don't touch it" line; the current shape is in `app/routes/new-route-responsive.tsx` + `.module.css`, not the retired `new-route-panel.tsx`. Driver v3 was touched on 12 Sep with explicit founder approval (see "Driver v3 cleanup" below) — the old blanket "do not touch Driver" is lifted, but treat it as sensitive: Driver is daily-use by real drivers, verify before changing, and never touch `app/driver/` (frozen V2 fallback, physically unreachable — middleware rewrites every `/driver/*` request to `/driver-v3/*`).**
 
