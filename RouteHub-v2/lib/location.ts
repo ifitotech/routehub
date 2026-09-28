@@ -1,6 +1,10 @@
 export type Coordinates = {lat: number; lng: number; accuracy: number}
 export type LocationPermission = 'granted' | 'denied' | 'prompt' | 'unsupported'
 
+// Kept as "_SESSION" in the key name for backward compatibility with values
+// already written to storage on installed devices - it now lives in
+// localStorage, not sessionStorage, so it survives fully closing and
+// reopening the PWA (see markGeoGranted/canStartBackgroundGps below).
 export const GEO_OK_SESSION = 'routehub_geo_ok'
 export const GEO_DENIED = 'routehub_geo_denied'
 
@@ -15,9 +19,16 @@ export async function getLocationPermission(): Promise<LocationPermission> {
   }
 }
 
+// iOS Safari's Permissions API for geolocation is unreliable - it commonly
+// reports 'prompt' even once the user has actually granted access, so
+// getLocationPermission() alone cannot be trusted to say "already granted".
+// This flag is the fallback: once a location request has genuinely
+// succeeded once, remember it durably (localStorage, not sessionStorage) so
+// a driver who granted access does not see the app treat every fresh PWA
+// launch as if it were asking for the first time again.
 export function markGeoGranted() {
   if (typeof window === 'undefined') return
-  window.sessionStorage.setItem(GEO_OK_SESSION, '1')
+  window.localStorage.setItem(GEO_OK_SESSION, '1')
   window.localStorage.removeItem(GEO_DENIED)
 }
 
@@ -34,7 +45,7 @@ export function isGeoDenied() {
 export function canStartBackgroundGps(permission: LocationPermission) {
   if (permission === 'granted') return true
   if (permission === 'denied' || permission === 'unsupported' || isGeoDenied()) return false
-  return typeof window !== 'undefined' && window.sessionStorage.getItem(GEO_OK_SESSION) === '1'
+  return typeof window !== 'undefined' && window.localStorage.getItem(GEO_OK_SESSION) === '1'
 }
 
 export function getCurrentLocation(options: {maximumAge?: number} = {}): Promise<Coordinates> {
