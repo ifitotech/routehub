@@ -11,6 +11,7 @@ import {distanceFromNavigationPath,usableNavigationFix,projectNavigationPosition
 import {reportAppError} from '../lib/error-reporting'
 import {openNavigationWithFallback} from '../lib/maps/external-navigation'
 import {resolvedTheme,themePreference} from '../lib/use-preferences'
+import {getWarmGpsFix} from '../lib/driver-v3/gps-warmup'
 import styles from './driver-navigation.module.css'
 
 type Coordinate={lat:number;lng:number}
@@ -120,7 +121,11 @@ export default function DriverNavigationMap({
   const [points,setPoints]=useState<Coordinate[]>([])
   const [line,setLine]=useState<Coordinate[]>([])
   const [estimate,setEstimate]=useState<RouteEstimate|null>(null)
-  const [deviceLocation,setDeviceLocation]=useState<GpsFix|null>(null)
+  // Seeded from the app-wide GPS warm-up (running since Today opened) instead
+  // of null, so a driver who just tapped "Comenzar" sees their position right
+  // away instead of waiting for this component's own watchPosition to get its
+  // first fix from a cold start.
+  const [deviceLocation,setDeviceLocation]=useState<GpsFix|null>(()=>getWarmGpsFix())
   const [loading,setLoading]=useState(true)
   const [arriving,setArriving]=useState(false)
   // Persisted per device instead of resetting to off every time navigation
