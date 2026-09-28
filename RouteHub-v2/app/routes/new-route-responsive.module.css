@@ -467,8 +467,17 @@
    sliver of a phone viewport for the form itself, so it stops trying to fit
    inside the board's centre column and instead covers the whole screen -
    header, a scrolling middle, and a footer pinned above the safe area, laid
-   out as three stacked flex regions rather than the desktop grid. */
-@media (max-width: 640px) {
+   out as three stacked flex regions rather than the desktop grid.
+   A width-only query misses a phone turned sideways - landscape width on
+   virtually any phone clears 640px, so without the max-height branch this
+   whole takeover (and its height:100dvh/overflow-y:auto) never applied in
+   landscape: the panel fell back to being an ordinary grid item sized by
+   whatever the dispatch board's row happened to leave it, with no scroll
+   container of its own - the exact "form is cut off, nothing scrolls"
+   report from a phone rotated sideways. 500px covers real phones in
+   landscape (even large ones land well under it) without also catching a
+   genuine tablet/desktop window that's merely short. */
+@media (max-width: 640px), (max-height: 500px) and (orientation: landscape) {
   .responsivePanel {
     position: fixed;
     inset: 0;
@@ -673,7 +682,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (max-height: 500px) and (orientation: landscape) {
   :global(html[data-theme='dark']) .responsivePanel {
     background: #0f172a;
   }
