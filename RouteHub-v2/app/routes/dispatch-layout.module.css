@@ -62,8 +62,20 @@
   min-width: 0;
 }
 
+/* Was just the last flex item in .layout - fine on paper ("only .center
+   scrolls, the truck bar stays put"), but that only holds if .layout itself
+   is stretched to the full viewport height, which nothing here actually
+   guarantees (.page, its ancestor in routes.module.css, has no height tied
+   to the viewport). On a short day (few or no routes), .layout ends up
+   exactly as tall as its content, and the truck bar lands right under it -
+   high up, with a dead gap of page background below it instead of sitting
+   at the bottom of the screen. Sticky achieves "stays at the bottom" the
+   direct way, regardless of how tall the content above it happens to be. */
 .truckBar {
   flex: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
 }
 
 @media (max-width: 1440px) {
